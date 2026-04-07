@@ -25,11 +25,14 @@ var _creation: Def   # CreationDef
 var stat_values: Dictionary = {}
 var stat_marks: Dictionary = {}
 var points_remaining: int = 0
+var _gender: String = "male"
 var _stat_name_labels: Dictionary = {}
 var _stat_value_labels: Dictionary = {}
 var _mark_buttons: Dictionary = {}
 
 @onready var name_input: LineEdit = $Margin/VBox/Header/NameInput
+@onready var btn_male: Button = $Margin/VBox/Header/GenderRow/BtnMale
+@onready var btn_female: Button = $Margin/VBox/Header/GenderRow/BtnFemale
 @onready var stats_columns: HBoxContainer = $Margin/VBox/StatsColumns
 @onready var skills_columns: HBoxContainer = $Margin/VBox/SkillsColumns
 @onready var points_label: Label = $Margin/VBox/InfoRow/PointsLabel
@@ -52,6 +55,8 @@ func _ready() -> void:
 	btn_back.pressed.connect(_on_back_pressed)
 	btn_start.pressed.connect(_on_start_pressed)
 	name_input.text_changed.connect(func(_t: String) -> void: _validate())
+	btn_male.pressed.connect(_on_gender.bind("male"))
+	btn_female.pressed.connect(_on_gender.bind("female"))
 	btn_start.disabled = true
 
 func _init_stats() -> void:
@@ -268,6 +273,11 @@ func _validate() -> void:
 
 # --- Navigation ---
 
+func _on_gender(gender: String) -> void:
+	_gender = gender
+	btn_male.button_pressed = gender == "male"
+	btn_female.button_pressed = gender == "female"
+
 func _on_back_pressed() -> void:
 	var scene: PackedScene = The.ui("module_select")
 	if scene:
@@ -310,6 +320,7 @@ func _on_start_pressed() -> void:
 	The.session["player_id"] = spec["id"]
 	The.session["player_name"] = player_name
 	The.session["player_age"] = 15
+	The.session["player_gender"] = _gender
 	The.session["mode"] = "player"
 	The.session["week"] = 1
 	The.session["day"] = 1

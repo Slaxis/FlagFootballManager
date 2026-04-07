@@ -1,7 +1,7 @@
 {
   "id": "brasil_2026",
   "name": {"pt": "Brasil 2026 Demo", "en": "Brazil 2026 Demo"},
-  "description": {"pt": "Campeonato brasileiro de flag football com 8 times reais. Versão demo.", "en": "Brazilian flag football league with 8 real teams. Demo version."},
+  "description": {"pt": "Campeonato brasileiro de flag football com 8 times reais e atletas fictícios. Versão demo.", "en": "Brazilian flag football league with 8 real teams and fictional athletes. Demo version."},
   "version": "0.1.0",
   "order": 1,
   "requires": []
