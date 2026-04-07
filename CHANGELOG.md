@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- Module select screen: choose campaign module before character creation
+- Module manifest now supports i18n fields (name, description) and version
+- Player age set to 15 (was 16)
+
+### Changed
+- Main menu START → module select → character creation (was: START → creation)
+- Character creation BACK → module select (was: BACK → main menu)
+
 ## [0.0.1] — 2026-04-07
 
 ### Added

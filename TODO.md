@@ -8,12 +8,12 @@ Player is 15, has 4 weeks to prepare for a flag football tryout while keeping up
 
 Everything before character creation.
 
-### 1.1 — Module select screen
+### 1.1 — Module select screen ✅
 - New screen between main menu and character creation
 - Lists available modules from `Drive.list_modules()`
-- Each module shows: name, description, version, team count
+- Each module shows: name, description, version (i18n-ready)
 - Player selects a module → `Drive.set_module()` → proceeds to creation
-- Module manifest gets new fields: `description`, `version`, `team_count`
+- Module manifest updated with `description`, `version` fields (i18n dicts)
 
 ### 1.2 — Language toggle
 - Button on home screen top bar: PT / EN

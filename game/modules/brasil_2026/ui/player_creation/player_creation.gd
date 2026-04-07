@@ -269,7 +269,7 @@ func _validate() -> void:
 # --- Navigation ---
 
 func _on_back_pressed() -> void:
-	var scene: PackedScene = The.ui("main_menu")
+	var scene: PackedScene = The.ui("module_select")
 	if scene:
 		The.next_scene(scene)
 
@@ -309,7 +309,7 @@ func _on_start_pressed() -> void:
 
 	The.session["player_id"] = spec["id"]
 	The.session["player_name"] = player_name
-	The.session["player_age"] = 16
+	The.session["player_age"] = 15
 	The.session["mode"] = "player"
 	The.session["week"] = 1
 	The.session["day"] = 1

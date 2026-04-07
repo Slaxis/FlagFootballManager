@@ -8,7 +8,7 @@ func _ready() -> void:
 	btn_quit.pressed.connect(_on_quit_pressed)
 
 func _on_start_pressed() -> void:
-	var scene: PackedScene = The.ui("player_creation")
+	var scene: PackedScene = The.ui("module_select")
 	if scene:
 		The.next_scene(scene)
 
