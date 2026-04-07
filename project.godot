@@ -1,0 +1,29 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Flag Football Manager"
+run/main_scene="res://engine/game/game.tscn"
+config/features=PackedStringArray("4.6", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Air="*res://engine/globals/air.gd"
+Log="*res://engine/globals/log.gd"
+Drive="*res://engine/globals/drive/drive.gd"
+God="*res://engine/globals/god.gd"
+The="*res://engine/globals/the.gd"
+I18n="*res://engine/globals/i18n.gd"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"

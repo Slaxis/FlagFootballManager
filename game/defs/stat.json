@@ -1,0 +1,34 @@
+{
+  "groups": [
+    {
+      "id": "brutality",
+      "label": "BRUTALITY",
+      "base": 5,
+      "stats": [
+        {"id": "speed",    "name": "Speed",    "desc": "Top speed in the open field"},
+        {"id": "strength", "name": "Strength", "desc": "Contact resistance, blocking push, flag pulls"},
+        {"id": "stamina",  "name": "Stamina",  "desc": "Gas tank — endurance through the whole game"}
+      ]
+    },
+    {
+      "id": "finesse",
+      "label": "FINESSE",
+      "base": 5,
+      "stats": [
+        {"id": "agility",   "name": "Agility",   "desc": "Acceleration, deceleration, direction changes"},
+        {"id": "dexterity", "name": "Dexterity", "desc": "Ball handling, hand-eye coordination, one-handers"},
+        {"id": "balance",   "name": "Balance",   "desc": "Body control, stability through cuts and contact"}
+      ]
+    },
+    {
+      "id": "cognition",
+      "label": "COGNITION",
+      "base": 5,
+      "stats": [
+        {"id": "perception",   "name": "Perception",   "desc": "Field awareness — find the open man, read zone coverage"},
+        {"id": "intelligence", "name": "Intelligence", "desc": "Learning speed, XP gain, perk unlocks"},
+        {"id": "charisma",     "name": "Charisma",     "desc": "Crowd energy, taunting opponents, leadership"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "groups": [
+    {
+      "id": "offense",
+      "label": "OFFENSE",
+      "stats": [
+        {"id": "snap",          "name": "Snap",          "desc": "Center snap accuracy and speed, then get into the route"},
+        {"id": "release",       "name": "Release",       "desc": "Beat press coverage off the line, get into the route clean"},
+        {"id": "route_running", "name": "Route Running", "desc": "Precision routes, timing, breaks"},
+        {"id": "catching",      "name": "Catching",      "desc": "Hands, concentration catches under pressure"},
+        {"id": "throwing",      "name": "Throwing",      "desc": "Pass accuracy, spiral, touch passes"}
+      ]
+    },
+    {
+      "id": "defense",
+      "label": "DEFENSE",
+      "stats": [
+        {"id": "pass_rush",    "name": "Pass Rush",    "desc": "Rush moves, timing the count, contain"},
+        {"id": "coverage",     "name": "Coverage",     "desc": "Man technique, zone drops, hip turns"},
+        {"id": "deflecting",   "name": "Deflecting",   "desc": "Swat passes, break up catches, hand timing"},
+        {"id": "flag_pulling", "name": "Flag Pulling", "desc": "Timing, technique, pursuit angles"}
+      ]
+    },
+    {
+      "id": "general",
+      "label": "GENERAL",
+      "stats": [
+        {"id": "play_reading", "name": "Play Reading",  "desc": "Pre-snap reads, recognize formations and audibles"},
+        {"id": "game_rules",   "name": "Game Rules",    "desc": "Know the rulebook, argue calls, work the refs"},
+        {"id": "trash_talk",   "name": "Trash Talk",    "desc": "Get in their head, taunting, hype the crowd"}
+      ]
+    }
+  ]
+}

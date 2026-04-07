@@ -1,0 +1,84 @@
+# Coordinator for the Thing system and content resolver.
+# Layer: The -> God -> Drive.
+extends Node
+
+const _CatalogScript := preload("res://engine/thing/adapters/catalog.gd")
+
+var _catalog: Resource = null
+var _thing_assets: Dictionary = {}
+var _thing_assets_ready: bool = false
+
+func _ready() -> void:
+	_catalog = _CatalogScript.new()
+
+func _key(id: String) -> String:
+	return String(id).strip_edges().to_lower()
+
+func _ensure_thing_assets() -> void:
+	if _thing_assets_ready:
+		return
+	_thing_assets_ready = true
+	_thing_assets.clear()
+	var root: String = Drive.things_path()
+	if root == "":
+		return
+	var assets: Array[Asset] = Drive.list(root)
+	for asset in assets:
+		if asset.kind != "gd":
+			continue
+		_thing_assets[_key(asset.id)] = asset
+
+# --- Thing System ---
+
+func create(type_id: String) -> Node:
+	return _catalog.create(type_id)
+
+func build_instance(thing_id: String, script_id: String, data: Dictionary, parts: Array[String]) -> Node:
+	return _catalog.build_instance(thing_id, script_id, data, parts)
+
+func register_type(spec: Dictionary, replace: bool = true) -> ThingType:
+	return _catalog.register_runtime_type(spec, replace)
+
+func load_types(specs: Array) -> void:
+	_catalog.load_runtime_types(specs)
+
+func list_by_group(group_id: String) -> Array[String]:
+	return _catalog.list_ids_by_group(group_id)
+
+func resolve_type(type_id: String) -> ThingType:
+	return _catalog.resolve_type(type_id)
+
+func thing_script(script_id: String) -> Script:
+	var key: String = _key(script_id)
+	if key == "":
+		return null
+	if key == "thing":
+		var base_path: String = Drive.thing_base_script()
+		if base_path == "" or not ResourceLoader.exists(base_path):
+			return null
+		return load(base_path) as Script
+	_ensure_thing_assets()
+	var asset: Asset = _thing_assets.get(key, null)
+	if asset == null:
+		return null
+	return load(asset.path) as Script
+
+# --- Content resolvers ---
+
+func rules() -> Rules:
+	var new_rules: Rules = Drive.rules()
+	if new_rules == null:
+		return Rules.new()
+	return new_rules
+
+func ui(ui_id: String) -> PackedScene:
+	var path: String = Drive.ui(ui_id)
+	if path == "":
+		return null
+	return load(path) as PackedScene
+
+func all_content() -> Array[Dictionary]:
+	return Drive.list_all_content()
+
+func thing_content(thing_id: String) -> Dictionary:
+	return Drive.read_content(Drive.content_path(thing_id))
