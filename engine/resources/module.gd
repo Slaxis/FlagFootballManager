@@ -9,10 +9,17 @@ var requires: Array[String] = []
 var native_path: String = ""
 var user_path: String = ""
 
+static func _resolve_name(value: Variant, fallback: String) -> String:
+	if value is String:
+		return value
+	if value is Dictionary:
+		return I18n.text(value, fallback)
+	return fallback
+
 static func from_dict(data: Dictionary, base_path: String) -> ModuleInfo:
 	var info := ModuleInfo.new()
-	info.id          = String(data.get("id",    "")).strip_edges().to_lower()
-	info.name        = String(data.get("name",  info.id))
+	info.id          = String(data.get("id", "")).strip_edges().to_lower()
+	info.name        = _resolve_name(data.get("name", null), info.id)
 	info.order       = int(data.get("order", 0))
 	info.native_path = base_path
 	var req: Variant = data.get("requires", [])
