@@ -28,6 +28,21 @@
 - Week summary popup: vitals before/after, money delta, activities by color
 - Cutscene: BACK/NEXT/SKIP buttons
 - Weekly quests sidebar: injectable per week via Things, live tracking, summary results
+- 9 attribute training activities with 3 events each (pos/neu/neg), stat bonuses
+- HP vital, Room (quarto) vital
+- Activity categories: BRUTALITY/FINESSE/COGNITION/SCHOOL/FAMILY/FRIENDS with grouped dropdowns
+- All activities available in all 4 time slots (soft margins via modifiers, no hard locks)
+- Late night global energy penalty (-15 for non-sleep activities)
+- Fridge meal system: cooking stocks meals, hunger=0 eats from fridge before collapse
+- Floating draggable fridge window with live meal count
+- Week schedule carryover (copies previous week's choices)
+- Beach Football and Video Games activities
+- Quest type: activity_category_count (tracks any activity from a category)
+
+### Changed
+- Removed gym/academia, train_solo, socialize, stay_up_late activities
+- Renamed activities for 15yo context: Hill Sprints, Calisthenics, Parkour, etc.
+- Cooking now stocks fridge (+3 meals) instead of direct hunger restore
 
 ### Changed
 - Home screen layout: grid takes ~75% width (left), room + vitals + log on right
