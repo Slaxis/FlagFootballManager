@@ -10,28 +10,28 @@
   "activities": [
     {
       "id": "train_speed",
-      "name": {"pt": "Corrida no parque", "en": "Park Sprints"},
-      "desc": {"pt": "Tiros curtos no parque perto de casa", "en": "Short bursts at the park nearby"},
+      "name": {"pt": "Sprint na ladeira", "en": "Hill Sprints"},
+      "desc": {"pt": "Tiros de subida na ladeira do bairro", "en": "Uphill bursts on the neighborhood hill"},
       "category": "brutality", "attribute": "speed",
       "slots": ["morning", "afternoon"],
       "effects": {"energy": -20, "hunger": -10},
       "slot_modifiers": {"morning": 1.3, "afternoon": 1.0},
       "events": [
         {"type": "positive", "chance": 0.2, "text": {"pt": "Runner's high! Bateu recorde pessoal.", "en": "Runner's high! Beat your personal record."}, "stat_bonus": {"speed": 2, "stamina": 1}, "vital_bonus": {"energy": -5}},
-        {"type": "neutral", "chance": 0.6, "text": {"pt": "Boa corridinha. Progresso constante.", "en": "Good run. Steady progress."}, "stat_bonus": {"speed": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Escorregou no chao molhado. Ralou o joelho.", "en": "Slipped on wet ground. Scraped your knee."}, "stat_bonus": {}, "vital_bonus": {"hp": -10, "energy": -10}}
+        {"type": "neutral", "chance": 0.6, "text": {"pt": "Boa subida. Progresso constante.", "en": "Good climb. Steady progress."}, "stat_bonus": {"speed": 1}},
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Escorregou na descida. Ralou o joelho.", "en": "Slipped downhill. Scraped your knee."}, "stat_bonus": {}, "vital_bonus": {"hp": -10, "energy": -10}}
       ]
     },
     {
       "id": "train_strength",
-      "name": {"pt": "Calistenia", "en": "Calisthenics"},
-      "desc": {"pt": "Flexoes, agachamentos, barra no parque", "en": "Push-ups, squats, pull-up bar at the park"},
+      "name": {"pt": "Flexao e barra", "en": "Push-ups & Pull-ups"},
+      "desc": {"pt": "Flexoes no chao, barra no parque", "en": "Push-ups on the ground, pull-up bar at the park"},
       "category": "brutality", "attribute": "strength",
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -18, "hunger": -12},
       "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.8},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Bateu um recorde de flexoes! Ficou empolgado.", "en": "Push-up record! Feeling pumped."}, "stat_bonus": {"strength": 2, "stamina": 1}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Bateu recorde de flexoes!", "en": "Push-up record!"}, "stat_bonus": {"strength": 2, "stamina": 1}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Treino feito. Musculos doloridos no bom sentido.", "en": "Workout done. Good kind of sore."}, "stat_bonus": {"strength": 1}},
         {"type": "negative", "chance": 0.2, "text": {"pt": "Forcou demais. Dor nas costas.", "en": "Overdid it. Back pain."}, "stat_bonus": {}, "vital_bonus": {"hp": -5, "energy": -10}}
       ]
@@ -52,51 +52,50 @@
     },
     {
       "id": "train_agility",
-      "name": {"pt": "Drills improvisados", "en": "Improvised Drills"},
-      "desc": {"pt": "Garrafas PET como cones, zigue-zague no quintal", "en": "PET bottles as cones, zigzag in the yard"},
+      "name": {"pt": "Parkour", "en": "Parkour"},
+      "desc": {"pt": "Pular muros, escalar, saltar obstaculos do bairro", "en": "Jump walls, climb, vault obstacles around the neighborhood"},
       "category": "finesse", "attribute": "agility",
       "slots": ["morning", "afternoon"],
-      "effects": {"energy": -18, "hunger": -8},
+      "effects": {"energy": -20, "hunger": -10},
       "slot_modifiers": {"morning": 1.2, "afternoon": 1.0},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Na zona! Cada corte mais afiado.", "en": "In the zone! Every cut sharper."}, "stat_bonus": {"agility": 2, "balance": 1}},
-        {"type": "neutral", "chance": 0.6, "text": {"pt": "Treino feito. Boa sessao.", "en": "Drills complete. Good session."}, "stat_bonus": {"agility": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Pisou numa garrafa e torceu o pe.", "en": "Stepped on a bottle and twisted your foot."}, "stat_bonus": {}, "vital_bonus": {"hp": -8, "energy": -10}}
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Flow perfeito! Cada salto mais preciso.", "en": "Perfect flow! Every jump more precise."}, "stat_bonus": {"agility": 2, "balance": 1}},
+        {"type": "neutral", "chance": 0.6, "text": {"pt": "Sessao boa. Corpo mais agil.", "en": "Good session. Body feels agile."}, "stat_bonus": {"agility": 1}},
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Errou o salto. Caiu feio.", "en": "Missed the jump. Fell hard."}, "stat_bonus": {}, "vital_bonus": {"hp": -12, "energy": -10}}
       ]
     },
     {
       "id": "train_dexterity",
-      "name": {"pt": "Malabarismo de bola", "en": "Ball Juggling"},
-      "desc": {"pt": "Bolinha de tenis na parede, coordenação motora", "en": "Tennis ball against the wall, hand-eye coordination"},
+      "name": {"pt": "Malabarismo", "en": "Juggling"},
+      "desc": {"pt": "Malabarismo com bolinhas, coordenacao motora fina", "en": "Juggling balls, fine motor coordination"},
       "category": "finesse", "attribute": "dexterity",
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -10, "hunger": -5},
       "slot_modifiers": {"morning": 1.0, "afternoon": 1.2, "night": 0.9},
       "events": [
         {"type": "positive", "chance": 0.2, "text": {"pt": "Maos rapidas! Reflexo em dia.", "en": "Quick hands! Reflexes on point."}, "stat_bonus": {"dexterity": 2}},
-        {"type": "neutral", "chance": 0.6, "text": {"pt": "Repetiu os exercicios. Melhoria gradual.", "en": "Ran the drills. Gradual improvement."}, "stat_bonus": {"dexterity": 1}},
+        {"type": "neutral", "chance": 0.6, "text": {"pt": "Repetiu os movimentos. Melhoria gradual.", "en": "Ran the motions. Gradual improvement."}, "stat_bonus": {"dexterity": 1}},
         {"type": "negative", "chance": 0.2, "text": {"pt": "Bola na cara. Doeu o orgulho.", "en": "Ball to the face. Hurt your pride."}, "stat_bonus": {}, "vital_bonus": {"hp": -3, "social": -5}}
       ]
     },
     {
       "id": "train_balance",
-      "name": {"pt": "Alongamento / Yoga", "en": "Stretching / Yoga"},
-      "desc": {"pt": "Video de yoga no celular, alongar em casa", "en": "Follow a yoga video on your phone, stretch at home"},
+      "name": {"pt": "Alongamento", "en": "Stretching"},
+      "desc": {"pt": "Alongar em casa seguindo video no celular", "en": "Stretch at home following a video on your phone"},
       "category": "finesse", "attribute": "balance",
-      "requires_item": [],
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -8, "hunger": -3, "hp": 3},
       "slot_modifiers": {"morning": 1.3, "afternoon": 1.0, "night": 1.0},
       "events": [
         {"type": "positive", "chance": 0.2, "text": {"pt": "Foco profundo. Sessao meditativa.", "en": "Deep focus. Meditative session."}, "stat_bonus": {"balance": 2, "perception": 1}, "vital_bonus": {"leisure": 10}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Bom alongamento. Corpo mais solto.", "en": "Good stretch. Body feels loose."}, "stat_bonus": {"balance": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Forcou demais o alongamento. Doeu.", "en": "Overstretched. Ouch."}, "stat_bonus": {}, "vital_bonus": {"hp": -5}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Forcou demais. Doeu.", "en": "Overstretched. Ouch."}, "stat_bonus": {}, "vital_bonus": {"hp": -5}}
       ]
     },
     {
       "id": "train_perception",
-      "name": {"pt": "Assistir flag no YouTube", "en": "Watch Flag on YouTube"},
-      "desc": {"pt": "Estudar jogadas e formacoes online", "en": "Study plays and formations online"},
+      "name": {"pt": "Assistir videos de flag", "en": "Watch Flag Videos"},
+      "desc": {"pt": "Estudar jogadas e formacoes no YouTube", "en": "Study plays and formations on YouTube"},
       "category": "cognition", "attribute": "perception",
       "slots": ["morning", "afternoon", "night", "late_night"],
       "effects": {"energy": -8, "leisure": -3},
@@ -123,44 +122,53 @@
     },
     {
       "id": "train_charisma",
-      "name": {"pt": "Papo com a galera", "en": "Chat with People"},
-      "desc": {"pt": "Puxar assunto, conhecer gente, se enturmar", "en": "Strike up conversations, meet people, socialize"},
+      "name": {"pt": "Role na praca", "en": "Hang at the Square"},
+      "desc": {"pt": "Ir na praca do bairro, falar com os locais", "en": "Hit the neighborhood square, chat with locals"},
       "category": "cognition", "attribute": "charisma",
-      "slots": ["afternoon", "night", "late_night"],
+      "slots": ["afternoon", "night"],
       "effects": {"energy": -8, "social": 15, "hunger": -8},
-      "slot_modifiers": {"afternoon": 0.8, "night": 1.3, "late_night": 1.2},
+      "slot_modifiers": {"afternoon": 1.0, "night": 1.3},
       "events": [
         {"type": "positive", "chance": 0.2, "text": {"pt": "Conexao feita! Conheceu alguem legal.", "en": "Connection made! Met someone cool."}, "stat_bonus": {"charisma": 2}, "vital_bonus": {"social": 10}},
-        {"type": "neutral", "chance": 0.6, "text": {"pt": "Boa conversa. Expandiu o circulo.", "en": "Good chat. Expanded your circle."}, "stat_bonus": {"charisma": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Clima estranho. Ficou sem graça.", "en": "Awkward vibe. Felt out of place."}, "stat_bonus": {}, "vital_bonus": {"social": -10}}
+        {"type": "neutral", "chance": 0.6, "text": {"pt": "Boa conversa com a galera da praca.", "en": "Good chat with the square crew."}, "stat_bonus": {"charisma": 1}},
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Clima estranho. Galera te ignorou.", "en": "Weird vibe. People ignored you."}, "stat_bonus": {}, "vital_bonus": {"social": -10}}
       ]
     },
     {
       "id": "study",
-      "name": {"pt": "Estudar / Licao", "en": "Homework"},
-      "desc": {"pt": "Fazer licao de casa, manter as notas em dia", "en": "Do homework, keep your grades up"},
+      "name": {"pt": "Estudar", "en": "Study"},
+      "desc": {"pt": "Licao de casa, manter as notas em dia", "en": "Homework, keep your grades up"},
       "category": "school",
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -10, "hunger": -5, "leisure": -5},
       "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.8}
     },
     {
-      "id": "chores",
-      "name": {"pt": "Tarefas de casa", "en": "House Chores"},
-      "desc": {"pt": "Arrumar quarto, lavar louca, ajudar em casa", "en": "Clean room, wash dishes, help around the house"},
+      "id": "clean_room",
+      "name": {"pt": "Arrumar o quarto", "en": "Clean Room"},
+      "desc": {"pt": "Organizar, limpar, tirar a bagunca", "en": "Organize, clean up, reduce the mess"},
       "category": "family",
       "slots": ["morning", "afternoon"],
-      "effects": {"energy": -10, "hunger": -5, "social": 5},
+      "effects": {"energy": -10, "hunger": -5, "mess": -30},
+      "slot_modifiers": {"morning": 1.2, "afternoon": 1.0}
+    },
+    {
+      "id": "chores",
+      "name": {"pt": "Ajudar em casa", "en": "Help Around the House"},
+      "desc": {"pt": "Lavar louca, varrer, ajudar os pais", "en": "Wash dishes, sweep, help your parents"},
+      "category": "family",
+      "slots": ["morning", "afternoon"],
+      "effects": {"energy": -10, "hunger": -5, "social": 5, "mess": -10},
       "money": 10,
       "slot_modifiers": {"morning": 1.0, "afternoon": 1.0}
     },
     {
-      "id": "eat_well",
-      "name": {"pt": "Cozinhar e comer", "en": "Cook & Eat"},
-      "desc": {"pt": "Preparar uma refeicao decente", "en": "Prepare a proper meal"},
+      "id": "cook",
+      "name": {"pt": "Preparar refeicoes", "en": "Prepare Meals"},
+      "desc": {"pt": "Cozinhar algo decente pra comer", "en": "Cook something decent to eat"},
       "category": "family",
       "slots": ["morning", "afternoon", "night"],
-      "effects": {"hunger": 35, "energy": -5},
+      "effects": {"hunger": 35, "energy": -5, "mess": 5},
       "money": -15,
       "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0}
     },
@@ -192,15 +200,6 @@
       "slot_modifiers": {"morning": 1.0}
     },
     {
-      "id": "socialize",
-      "name": {"pt": "Sair com amigos", "en": "Hang Out"},
-      "desc": {"pt": "Encontrar a galera, conversar, zoar", "en": "Meet the crew, talk, goof around"},
-      "category": "social",
-      "slots": ["afternoon", "night", "late_night"],
-      "effects": {"energy": -5, "social": 25, "leisure": 15, "hunger": -10},
-      "slot_modifiers": {"afternoon": 0.8, "night": 1.3, "late_night": 1.5}
-    },
-    {
       "id": "watch_tv",
       "name": {"pt": "Assistir TV / Streaming", "en": "Watch TV / Stream"},
       "desc": {"pt": "Relaxar no sofa, maratonar serie", "en": "Couch time, binge a show"},
@@ -224,7 +223,7 @@
       "desc": {"pt": "Ficar acordado de madrugada", "en": "Pull a late night"},
       "category": "social",
       "slots": ["late_night"],
-      "effects": {"energy": -20, "leisure": 15},
+      "effects": {"energy": -20, "leisure": 15, "mess": 5},
       "slot_modifiers": {"late_night": 1.0}
     },
     {
@@ -261,6 +260,13 @@
       "desc": {"pt": "O tedio venceu. Horas no celular.", "en": "Boredom won. Hours on the phone."},
       "recovery_for": "leisure", "slots": [],
       "effects": {"leisure": 20, "energy": -5}, "slot_modifiers": {}
+    },
+    {
+      "id": "_recover_mess",
+      "name": {"pt": "FAXINA FORCADA", "en": "FORCED CLEANUP"},
+      "desc": {"pt": "Sua mae mandou arrumar AGORA. Sem discussao.", "en": "Your mom made you clean up NOW. No arguments."},
+      "recovery_for": "mess", "slots": [],
+      "effects": {"mess": -40, "energy": -15, "leisure": -10}, "slot_modifiers": {}
     }
   ]
 }

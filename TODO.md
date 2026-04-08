@@ -276,6 +276,9 @@ Legend: ✅ merged | ⚙ in progress | · pending
 3.2 Life activities      · homework, chores, family, friends
 3.3 Effect system        · events produce timed effects that modify next slots
 3.4 Activity unlock/lock · requires: age, school, team, day, one_time
+3.5 Hunger cascade       · hunger=0: eat from fridge (free) -> pedir comida (costs $) -> comer fora (costs $$) -> collapse. No slot consumed unless collapse.
+3.6 Social from phone    · "Sair com amigos" becomes a phone-initiated event (pick friend, pick activity, schedule in calendar)
+3.7 Fridge inventory     · buy food via phone shop, stored in fridge. Meals consume fridge items. Empty fridge = forced alternatives.
 
 4.1 Play card data       · see card definitions
 4.2 Minigame scene       · play the card game standalone

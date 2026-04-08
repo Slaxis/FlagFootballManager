@@ -53,11 +53,12 @@ const COLOR_QUEST_DONE := Color(0.2, 0.75, 0.2)
 const COLOR_QUEST_PENDING := Color(0.6, 0.6, 0.6)
 
 const VITAL_NAMES: Dictionary = {
-	"hp":      {"pt": "HP",      "en": "HP"},
-	"energy":  {"pt": "Energia", "en": "Energy"},
-	"hunger":  {"pt": "Fome",    "en": "Hunger"},
-	"social":  {"pt": "Social",  "en": "Social"},
-	"leisure": {"pt": "Lazer",   "en": "Leisure"},
+	"hp":      {"pt": "HP",       "en": "HP"},
+	"energy":  {"pt": "Energia",  "en": "Energy"},
+	"hunger":  {"pt": "Fome",     "en": "Hunger"},
+	"social":  {"pt": "Social",   "en": "Social"},
+	"leisure": {"pt": "Lazer",    "en": "Leisure"},
+	"mess":    {"pt": "Bagunca",  "en": "Mess"},
 }
 
 const COLOR_SYNERGY := Color(0.2, 0.75, 0.2)
@@ -408,7 +409,7 @@ func _on_room_item(item_id: String) -> void:
 # --- Vitals ---
 
 func _build_vitals() -> void:
-	var vital_ids: Array[String] = ["hp", "energy", "hunger", "social", "leisure"]
+	var vital_ids: Array[String] = ["hp", "energy", "hunger", "social", "leisure", "mess"]
 	for vid: String in vital_ids:
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_theme_constant_override("separation", 4)

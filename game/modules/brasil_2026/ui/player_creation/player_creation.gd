@@ -361,7 +361,7 @@ func _on_start_pressed() -> void:
 	The.session["week"] = 1
 	The.session["day"] = 1
 	The.session["money"] = 500
-	The.session["vitals"] = {"hp": 100, "energy": 100, "hunger": 80, "social": 50, "leisure": 50}
+	The.session["vitals"] = {"hp": 100, "energy": 100, "hunger": 80, "social": 50, "leisure": 50, "mess": 20}
 	Log.log(self, "info", "Career: " + player_name + " registered as Thing '" + spec["id"] + "'")
 	var scene: PackedScene = The.ui("cutscene")
 	if scene:
