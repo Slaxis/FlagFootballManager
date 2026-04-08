@@ -33,7 +33,7 @@ const T_ROOM: Dictionary = {"pt": "SEU QUARTO", "en": "YOUR ROOM"}
 const T_VITALS: Dictionary = {"pt": "SINAIS VITAIS", "en": "VITALS"}
 const T_WELCOME: Dictionary = {"pt": "Bem-vindo! Planeje sua semana.", "en": "Welcome home. Plan your week."}
 const T_PHONE: Dictionary = {"pt": "Celular", "en": "Phone"}
-const T_TV: Dictionary = {"pt": "TV", "en": "TV"}
+const T_COMPUTER: Dictionary = {"pt": "Computador", "en": "Computer"}
 const T_FRIDGE: Dictionary = {"pt": "Geladeira", "en": "Fridge"}
 const T_WARDROBE: Dictionary = {"pt": "Armario", "en": "Wardrobe"}
 const T_NOT_IMPL: Dictionary = {"pt": " -- nao implementado", "en": " -- not yet implemented"}
@@ -213,7 +213,7 @@ func _rebuild_room() -> void:
 		child.queue_free()
 	var items: Array[Dictionary] = [
 		{"label": T_PHONE, "id": "phone"},
-		{"label": T_TV, "id": "tv"},
+		{"label": T_COMPUTER, "id": "computer"},
 		{"label": T_FRIDGE, "id": "fridge"},
 		{"label": T_WARDROBE, "id": "wardrobe"},
 	]
@@ -264,8 +264,18 @@ func _update_vitals() -> void:
 
 # --- Resolve single day ---
 
+func _next_unresolved_day() -> String:
+	for d: String in DAYS:
+		if not _day_resolved.get(d, false):
+			return d
+	return ""
+
 func _on_play_day(day_id: String) -> void:
 	if _resolving or _day_resolved.get(day_id, false):
+		return
+	# Must resolve days in order
+	var next: String = _next_unresolved_day()
+	if next != "" and next != day_id:
 		return
 	_resolving = true
 	_set_buttons_enabled(false)

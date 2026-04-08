@@ -209,7 +209,22 @@ One dedicated training activity per attribute, each with 3 possible events.
 
 ---
 
-## Phase 6 — Color Revamp & Polish
+## Phase 6 — Room Interactive Menus
+
+### 6.1 — Floating draggable menus for room objects
+- Phone, Computer, Fridge, Wardrobe become floating panels (draggable, closable)
+- Click object button → opens a floating Window/PanelContainer with content
+- Multiple can be open at once, player arranges them freely
+- **Phone**: browse teams, sign up for tryouts (adds event to calendar), chat contacts, shop for small items
+- **Computer**: view team roster (Elifoot-style), watch game film, check league standings, browse jobs
+- **Fridge**: inventory of food items, eat to recover hunger, items bought via phone shop
+- **Wardrobe**: equipment slots, change outfit, see outfit bonuses/penalties, items bought via phone shop
+- Each menu is its own scene, injectable per module
+- Items purchased appear in the relevant menu (buy food → fridge, buy gear → wardrobe)
+
+---
+
+## Phase 7 — Color Revamp & Polish
 
 ### 5.1 — Theme
 - Dark background, accent colors for each section
