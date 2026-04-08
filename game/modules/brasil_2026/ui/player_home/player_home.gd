@@ -670,11 +670,6 @@ func _show_week_summary() -> void:
 	var m_prefix: String = "+" if money_delta >= 0 else ""
 	lines.append(I18n.text(T_MONEY_CHANGE) + ": R$" + str(_week_money_start) + " -> R$" + str(money_now) + " (" + m_prefix + "R$" + str(money_delta) + ")")
 
-	lines.append("")
-
-	# Stats
-	lines.append(I18n.text(T_SYNERGIES) + ": " + str(_week_synergies) + "  |  " + I18n.text(T_COLLAPSES) + ": " + str(_week_collapses))
-
 	# Activities sorted by color (green, yellow, red) then by count desc
 	if not _week_activities.is_empty():
 		lines.append("")
