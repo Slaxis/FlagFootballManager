@@ -641,15 +641,11 @@ func _track_slot(act: Dictionary, collapsed: bool, synergy: bool) -> void:
 	if synergy:
 		_week_synergies += 1
 	var act_id: String = String(act.get("id", "?"))
-	# color_rank: 0=green(synergy), 1=yellow(normal), 2=red(collapse)
 	var color_rank: int = 2 if collapsed else (0 if synergy else 1)
-	if not _week_activities.has(act_id):
-		_week_activities[act_id] = {"count": 0, "color_rank": color_rank}
-	_week_activities[act_id]["count"] = int(_week_activities[act_id]["count"]) + 1
-	# Keep the worst color rank for this activity
-	var current_rank: int = int(_week_activities[act_id]["color_rank"])
-	if color_rank > current_rank:
-		_week_activities[act_id]["color_rank"] = color_rank
+	var key: String = act_id + "_" + str(color_rank)
+	if not _week_activities.has(key):
+		_week_activities[key] = {"id": act_id, "count": 0, "color_rank": color_rank}
+	_week_activities[key]["count"] = int(_week_activities[key]["count"]) + 1
 
 func _show_week_summary() -> void:
 	var vitals_now: Dictionary = The.session.get("vitals", {})
@@ -684,9 +680,9 @@ func _show_week_summary() -> void:
 		lines.append("")
 		lines.append("[b]" + I18n.text(T_ACTIVITIES) + "[/b]")
 		var sorted_acts: Array[Dictionary] = []
-		for act_id: String in _week_activities:
-			var entry: Dictionary = _week_activities[act_id]
-			sorted_acts.append({"id": act_id, "count": int(entry["count"]), "color_rank": int(entry["color_rank"])})
+		for key: String in _week_activities:
+			var entry: Dictionary = _week_activities[key]
+			sorted_acts.append({"id": entry["id"], "count": int(entry["count"]), "color_rank": int(entry["color_rank"])})
 		sorted_acts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 			if int(a["color_rank"]) != int(b["color_rank"]):
 				return int(a["color_rank"]) < int(b["color_rank"])
