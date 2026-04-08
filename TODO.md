@@ -271,7 +271,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 2.4 Next Week            ✅ (merged into 2.1)
 2.5 Weekly quests        ✅
 
-3.1 Attribute activities · new activities in palette
+3.1 Attribute activities ⚙ new activities in palette
 3.2 Life activities      · homework, chores in grid
 3.3 Event resolution     · random events fire during week
 

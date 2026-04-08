@@ -528,6 +528,28 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 	var money_delta: int = int(int(act.get("money", 0)) * modifier)
 	money += money_delta
 
+	# Roll event if activity has events
+	var event_text: String = ""
+	var event_rolled: Dictionary = {}
+	var events_raw: Variant = act.get("events", null)
+	if not collapsed and events_raw is Array and not (events_raw as Array).is_empty():
+		event_rolled = _roll_event(events_raw as Array)
+		if not event_rolled.is_empty():
+			event_text = I18n.text(event_rolled.get("text", ""))
+			# Apply stat bonuses
+			var stat_bonus: Dictionary = event_rolled.get("stat_bonus", {})
+			for sid: String in stat_bonus.keys():
+				var player_stats: Dictionary = The.session.get("player_stats", {})
+				player_stats[sid] = int(player_stats.get(sid, 0)) + int(stat_bonus[sid])
+				The.session["player_stats"] = player_stats
+			# Apply vital bonuses
+			var vital_bonus: Dictionary = event_rolled.get("vital_bonus", {})
+			for vid: String in vital_bonus.keys():
+				var current: int = int(vitals.get(vid, 0))
+				var bonus: int = int(vital_bonus[vid])
+				vitals[vid] = clampi(current + bonus, 0, 100)
+				deltas[vid] = int(deltas.get(vid, 0)) + bonus
+
 	# Determine color: green=synergy, yellow=normal, red=collapse
 	var is_synergy: bool = not collapsed and modifier > 1.01
 	var outcome_color: Color
@@ -563,6 +585,10 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 		delta_str = " (" + ", ".join(delta_parts) + ")"
 
 	_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + money_str + delta_str, outcome_color)
+	if event_text != "":
+		var event_type: String = String(event_rolled.get("type", "neutral"))
+		var event_color: Color = COLOR_SYNERGY if event_type == "positive" else (COLOR_COLLAPSE if event_type == "negative" else COLOR_NORMAL)
+		_log("    " + event_text, event_color)
 
 	# Color the dropdown + update text if collapsed
 	_set_select_color(select, outcome_color)
@@ -698,6 +724,26 @@ func _quests_completed() -> int:
 		if _is_quest_done(quest):
 			count += 1
 	return count
+
+# --- Event rolling ---
+
+func _roll_event(events: Array) -> Dictionary:
+	var total_chance: float = 0.0
+	for e: Variant in events:
+		if e is Dictionary:
+			total_chance += float((e as Dictionary).get("chance", 0.0))
+	if total_chance <= 0.0:
+		return {}
+	var roll: float = randf() * total_chance
+	var acc: float = 0.0
+	for e: Variant in events:
+		if not e is Dictionary:
+			continue
+		var entry: Dictionary = e as Dictionary
+		acc += float(entry.get("chance", 0.0))
+		if roll <= acc:
+			return entry
+	return {}
 
 # --- Week tracking ---
 
