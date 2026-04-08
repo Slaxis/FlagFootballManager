@@ -209,7 +209,25 @@ One dedicated training activity per attribute, each with 3 possible events.
 
 ---
 
-## Phase 6 — Room Interactive Menus
+## Phase 6 — Name Generator
+
+### 6.1 — Brazilian name generator
+- Port weighted name generator from ScrapWarriors (`the-scrap-warriors/game/content/system/naming.json`)
+- Adapted for Brazilian names: first names, surnames, and nicknames (apelidos)
+- Def: `game/defs/naming.gd` + `naming.json`
+- JSON structure per gender:
+  - `"first_names"`: weighted list of Brazilian first names (male/female)
+  - `"surnames"`: weighted list of common Brazilian surnames (Silva, Santos, Oliveira, etc.)
+  - `"nicknames"`: weighted list of common apelidos + generators (diminutives, abbreviations)
+  - `"generators"`: patterns like `["first_name", "surname"]`, `["nickname"]`, `["first_name", "surname", "surname"]`
+- Character creation: player can type name manually OR click randomize button
+- Randomize generates: Nome, Sobrenome, Apelido separately
+- NPC names generated automatically using same system
+- Injectable via JSON — modules can add regional name pools (e.g., gaúcho names, nordestino names)
+
+---
+
+## Phase 7 — Room Interactive Menus
 
 ### 6.1 — Floating draggable menus for room objects
 - Phone, Computer, Fridge, Wardrobe become floating panels (draggable, closable)
@@ -240,33 +258,39 @@ One dedicated training activity per attribute, each with 3 possible events.
 
 ## Execution Order (Incremental & Testable)
 
+Legend: ✅ merged | ⚙ in progress | · pending
+
 ```
 1.1 Module select       ✅
 1.2 Language toggle      ✅
 1.3 Injectable cutscene  ✅
 
 2.1 Week grid UI         ✅ (7x4 grid, per-day play, color coding)
-2.2 Slot synergy         ← testable: see modifier preview on hover
-2.3 Vital collapse       ← testable: plan bad week, see overrides
+2.2 Slot synergy         · see modifier preview on hover
+2.3 Vital collapse       · plan bad week, see overrides
 2.4 Next Week            ✅ (merged into 2.1)
-2.5 Weekly quests        ← testable: see objectives, complete them
+2.5 Weekly quests        · see objectives, complete them
 
-3.1 Attribute activities ← testable: new activities in palette
-3.2 Life activities      ← testable: homework, chores in grid
-3.3 Event resolution     ← testable: random events fire during week
+3.1 Attribute activities · new activities in palette
+3.2 Life activities      · homework, chores in grid
+3.3 Event resolution     · random events fire during week
 
-4.1 Play card data       ← testable: see card definitions
-4.2 Minigame scene       ← testable: play the card game standalone
-4.3 Tryout event         ← testable: go to tryout, play minigame
-4.4 Training             ← testable: team training uses minigame
-4.5 Field viz            ← testable: see routes animate on field
+4.1 Play card data       · see card definitions
+4.2 Minigame scene       · play the card game standalone
+4.3 Tryout event         · go to tryout, play minigame
+4.4 Training             · team training uses minigame
+4.5 Field viz            · see routes animate on field
 
-5.1 Calendar year        ← testable: real dates in top bar
-5.2 Origin system        ← testable: pick origin at creation, see locked school slots
-5.3 School schedule      ← testable: locked cells in grid, attendance quest
+5.1 Calendar year        · real dates in top bar
+5.2 Origin system        · pick origin at creation, see locked school slots
+5.3 School schedule      · locked cells in grid, attendance quest
 
-6.1 Theme                ← visual: color revamp
-6.2 Top bar              ← visual: time of day, week progress
+6.1 Name generator       · Brazilian names (port from ScrapWarriors)
+
+7.1 Room floating menus  · phone, computer, fridge, wardrobe as draggable panels
+
+8.1 Theme                · color revamp
+8.2 Top bar              · time of day, week progress
 ```
 
 Each step produces a testable increment. Feedback after each step can redirect the next.

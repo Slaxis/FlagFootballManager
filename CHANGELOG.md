@@ -13,6 +13,12 @@
 - Weekly planner: 7x4 grid (Mon-Sun x Morning/Afternoon/Night/Late Night) replaces daily slots
 - Late Night time slot added to activities, "Stay Up Late" activity added
 - NEXT WEEK button resolves all 28 slots, CLEAR resets grid
+- Per-day play buttons: [>] resolves one day, changes to [ok] when done
+- Days must be resolved in order (Mon->Tue->Wed...)
+- Color-coded outcomes: blue (running), green (good), yellow (neutral), red (bad)
+- Log text colored to match outcomes via BBCode
+- Progressive resolution with 500ms delay per slot, vitals update live
+- TV renamed to Computer
 
 ### Changed
 - Home screen layout: grid takes ~75% width (left), room + vitals + log on right
