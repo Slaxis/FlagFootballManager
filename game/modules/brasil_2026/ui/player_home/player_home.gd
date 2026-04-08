@@ -81,7 +81,7 @@ var _week_collapses: int = 0
 var _week_synergies: int = 0
 var _week_money_start: int = 0
 var _week_vitals_start: Dictionary = {}
-var _week_activities: Dictionary = {}  # activity_id -> count
+var _week_activities: Dictionary = {}  # activity_id -> {count, color}
 var _vital_labels: Dictionary = {}
 var _vital_value_labels: Dictionary = {}
 var _effects: Array[Dictionary] = []
@@ -641,7 +641,15 @@ func _track_slot(act: Dictionary, collapsed: bool, synergy: bool) -> void:
 	if synergy:
 		_week_synergies += 1
 	var act_id: String = String(act.get("id", "?"))
-	_week_activities[act_id] = int(_week_activities.get(act_id, 0)) + 1
+	# color_rank: 0=green(synergy), 1=yellow(normal), 2=red(collapse)
+	var color_rank: int = 2 if collapsed else (0 if synergy else 1)
+	if not _week_activities.has(act_id):
+		_week_activities[act_id] = {"count": 0, "color_rank": color_rank}
+	_week_activities[act_id]["count"] = int(_week_activities[act_id]["count"]) + 1
+	# Keep the worst color rank for this activity
+	var current_rank: int = int(_week_activities[act_id]["color_rank"])
+	if color_rank > current_rank:
+		_week_activities[act_id]["color_rank"] = color_rank
 
 func _show_week_summary() -> void:
 	var vitals_now: Dictionary = The.session.get("vitals", {})
@@ -671,19 +679,24 @@ func _show_week_summary() -> void:
 	# Stats
 	lines.append(I18n.text(T_SYNERGIES) + ": " + str(_week_synergies) + "  |  " + I18n.text(T_COLLAPSES) + ": " + str(_week_collapses))
 
-	# Top activities
+	# Activities sorted by color (green, yellow, red) then by count desc
 	if not _week_activities.is_empty():
 		lines.append("")
 		lines.append("[b]" + I18n.text(T_ACTIVITIES) + "[/b]")
 		var sorted_acts: Array[Dictionary] = []
 		for act_id: String in _week_activities:
-			sorted_acts.append({"id": act_id, "count": _week_activities[act_id]})
+			var entry: Dictionary = _week_activities[act_id]
+			sorted_acts.append({"id": act_id, "count": int(entry["count"]), "color_rank": int(entry["color_rank"])})
 		sorted_acts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			if int(a["color_rank"]) != int(b["color_rank"]):
+				return int(a["color_rank"]) < int(b["color_rank"])
 			return int(a["count"]) > int(b["count"]))
+		var rank_colors: Array[Color] = [COLOR_SYNERGY, COLOR_NORMAL, COLOR_COLLAPSE]
 		for entry: Dictionary in sorted_acts:
 			var act_data: Dictionary = _activity_def.get_activity(entry["id"])
 			var act_name: String = I18n.text(act_data.get("name", entry["id"]))
-			lines.append("  " + act_name + " x" + str(entry["count"]))
+			var hex: String = rank_colors[int(entry["color_rank"])].to_html(false)
+			lines.append("  [color=#" + hex + "]" + act_name + " x" + str(entry["count"]) + "[/color]")
 
 	# Create popup
 	var week_num: int = int(The.session.get("week", 1)) - 1
