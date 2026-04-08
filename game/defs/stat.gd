@@ -34,7 +34,7 @@ func load_data(raw: Dictionary) -> void:
 				_base_index[s_id] = base
 		groups.append({
 			"id": String(group.get("id", "")).strip_edges().to_lower(),
-			"label": String(group.get("label", "")),
+			"label": group.get("label", ""),
 			"base": base,
 			"stats": stats,
 		})
