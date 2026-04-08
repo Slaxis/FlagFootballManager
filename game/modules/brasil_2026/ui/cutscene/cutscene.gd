@@ -1,7 +1,7 @@
 extends Control
 
 const PAGES: Array[String] = [
-	"You're 16. School, friends, weekend pickup games at the park.\nLife is simple enough.",
+	"You're 15. School, friends, weekend pickup games at the park.\nLife is simple enough.",
 	"Then one Saturday you see them — a flag football team practicing on the field next door.\nFast cuts, tight spirals, trash talk between plays. You can't look away.",
 	"You walk over. Someone tosses you a ball.\n\"Wanna run a route?\"\nYou don't even know what a route is. You say yes anyway.",
 	"That afternoon changes everything.\nYou're not great — not yet — but something clicks.\nThe speed, the strategy, the rush of pulling a flag at the last second.",
