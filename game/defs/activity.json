@@ -247,15 +247,6 @@
       "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0, "late_night": 1.0}
     },
     {
-      "id": "stay_up_late",
-      "name": {"pt": "Virar a noite", "en": "Stay Up Late"},
-      "desc": {"pt": "Ficar acordado de madrugada fazendo nada util", "en": "Stay up late doing nothing useful"},
-      "category": "social",
-      "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"energy": -20, "leisure": 15, "room": -5},
-      "slot_modifiers": {"morning": 0.3, "afternoon": 0.3, "night": 0.5, "late_night": 1.0}
-    },
-    {
       "id": "_recover_hp",
       "name": {"pt": "LESAO", "en": "INJURY"},
       "desc": {"pt": "Seu corpo nao aguentou. Precisou parar.", "en": "Your body broke down. Had to stop."},

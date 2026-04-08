@@ -643,6 +643,14 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 	var money_delta: int = int(int(act.get("money", 0)) * modifier)
 	money += money_delta
 
+	# Late night penalty: not sleeping in late_night costs extra energy
+	var act_id: String = String(act.get("id", ""))
+	if slot_id == "late_night" and not collapsed and act_id != "sleep" and act_id != "sleep_in":
+		var penalty: int = -15
+		var current_ene: int = int(vitals.get("energy", 0))
+		vitals["energy"] = clampi(current_ene + penalty, 0, 100)
+		deltas["energy"] = int(deltas.get("energy", 0)) + penalty
+
 	# Fridge: cooking adds meals
 	var fridge_add: int = int(act.get("fridge_add", 0))
 	if fridge_add > 0:
