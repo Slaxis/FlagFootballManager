@@ -28,6 +28,11 @@ const T_WEEK: Dictionary = {"pt": "Semana", "en": "Week"}
 const T_DAY: Dictionary = {"pt": "Dia", "en": "Day"}
 const T_PLAN: Dictionary = {"pt": "PLANEJE SUA SEMANA", "en": "PLAN YOUR WEEK"}
 const T_NEXT_WEEK: Dictionary = {"pt": ">> SEMANA", "en": ">> WEEK"}
+const T_TIP_SLOT: Dictionary = {"pt": "Resolver proximo horario", "en": "Resolve next time slot"}
+const T_TIP_DAY: Dictionary = {"pt": "Resolver dia inteiro", "en": "Resolve full day"}
+const T_TIP_WEEK: Dictionary = {"pt": "Resolver semana inteira", "en": "Resolve full week"}
+const T_TIP_CLEAR: Dictionary = {"pt": "Limpar planejamento", "en": "Clear all planned activities"}
+const T_COLUMN_EMPTY: Dictionary = {"pt": "---", "en": "---"}
 const T_CLEAR: Dictionary = {"pt": "LIMPAR", "en": "CLEAR"}
 const T_ROOM: Dictionary = {"pt": "SEU QUARTO", "en": "YOUR ROOM"}
 const T_VITALS: Dictionary = {"pt": "SINAIS VITAIS", "en": "VITALS"}
@@ -57,10 +62,13 @@ const SLOT_DELAY: float = 0.5
 var _activity_def: Def
 var _grid_selects: Dictionary = {}      # "day_slot" -> OptionButton
 var _grid_activities: Dictionary = {}   # "day_slot" -> Array[Dictionary]
+var _column_selects: Dictionary = {}    # slot_id -> OptionButton (column header)
+var _column_activities: Dictionary = {} # slot_id -> Array[Dictionary]
 var _day_play_buttons: Dictionary = {}  # "day" -> Button (single slot >)
 var _day_fast_buttons: Dictionary = {}  # "day" -> Button (full day >>)
 var _day_resolved: Dictionary = {}      # "day" -> bool
 var _day_slot_index: Dictionary = {}    # "day" -> int (next slot to resolve)
+var _updating_column: bool = false
 var _vital_bars: Dictionary = {}
 var _vital_labels: Dictionary = {}
 var _vital_value_labels: Dictionary = {}
@@ -104,7 +112,9 @@ func _ready() -> void:
 func _update_text() -> void:
 	plan_header.text = I18n.text(T_PLAN)
 	btn_next_week.text = I18n.text(T_NEXT_WEEK)
+	btn_next_week.tooltip_text = I18n.text(T_TIP_WEEK)
 	btn_clear.text = I18n.text(T_CLEAR)
+	btn_clear.tooltip_text = I18n.text(T_TIP_CLEAR)
 	room_header.text = I18n.text(T_ROOM)
 	vitals_header.text = I18n.text(T_VITALS)
 	for vid: String in _vital_labels:
@@ -125,8 +135,7 @@ func _update_header() -> void:
 # --- Week Grid ---
 
 func _build_grid() -> void:
-	# Columns: day label + slots + play + fast = SLOTS.size() + 3
-	grid_container.columns = SLOTS.size() + 3
+	grid_container.columns = SLOTS.size() + 3  # day label + 4 slots + > + >>
 
 	# Corner cell
 	var corner: Label = Label.new()
@@ -134,23 +143,31 @@ func _build_grid() -> void:
 	corner.custom_minimum_size = Vector2(36, 0)
 	grid_container.add_child(corner)
 
-	# Slot headers
+	# Column header dropdowns (one per slot)
 	for slot_id: String in SLOTS:
-		var header: Label = Label.new()
-		header.text = I18n.text(SLOT_LABELS[slot_id])
-		header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		header.add_theme_font_size_override("font_size", 11)
-		grid_container.add_child(header)
+		var col_select: OptionButton = OptionButton.new()
+		col_select.add_theme_font_size_override("font_size", 10)
+		col_select.custom_minimum_size = Vector2(0, 24)
+		col_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var available: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
+		_column_activities[slot_id] = available
+		col_select.add_item(I18n.text(SLOT_LABELS[slot_id]))  # index 0 = label/empty
+		for act: Dictionary in available:
+			col_select.add_item(I18n.text(act.get("name", "?")))
+		col_select.selected = 0
+		col_select.item_selected.connect(_on_column_changed.bind(slot_id))
+		_column_selects[slot_id] = col_select
+		grid_container.add_child(col_select)
 
-	# Play columns header (spans 2 cells visually)
-	var play_header: Label = Label.new()
-	play_header.text = ""
-	play_header.custom_minimum_size = Vector2(28, 0)
-	grid_container.add_child(play_header)
-	var fast_header: Label = Label.new()
-	fast_header.text = ""
-	fast_header.custom_minimum_size = Vector2(28, 0)
-	grid_container.add_child(fast_header)
+	# Play columns header
+	var ph: Label = Label.new()
+	ph.text = ""
+	ph.custom_minimum_size = Vector2(28, 0)
+	grid_container.add_child(ph)
+	var fh: Label = Label.new()
+	fh.text = ""
+	fh.custom_minimum_size = Vector2(28, 0)
+	grid_container.add_child(fh)
 
 	# Day rows
 	for day_id: String in DAYS:
@@ -164,45 +181,63 @@ func _build_grid() -> void:
 		grid_container.add_child(row_label)
 
 		for slot_id: String in SLOTS:
-			var available: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
+			var avail: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
 			var key: String = day_id + "_" + slot_id
 			var select: OptionButton = OptionButton.new()
 			select.custom_minimum_size = Vector2(0, 28)
 			select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			select.add_theme_font_size_override("font_size", 10)
-			_grid_activities[key] = available
-			for act: Dictionary in available:
+			_grid_activities[key] = avail
+			for act: Dictionary in avail:
 				select.add_item(I18n.text(act.get("name", "?")))
 			select.item_selected.connect(_on_grid_select_changed.bind(key, slot_id))
 			if slot_id == "late_night":
-				for i: int in available.size():
-					if available[i].get("id", "") == "sleep":
+				for i: int in avail.size():
+					if avail[i].get("id", "") == "sleep":
 						select.selected = i
 						break
 			_update_select_tooltip(select, key, slot_id)
 			_grid_selects[key] = select
 			grid_container.add_child(select)
 
-		# Single slot play button
 		var btn_play: Button = Button.new()
 		btn_play.text = ">"
 		btn_play.custom_minimum_size = Vector2(28, 28)
+		btn_play.tooltip_text = I18n.text(T_TIP_SLOT)
 		btn_play.pressed.connect(_on_play_slot.bind(day_id))
 		_day_play_buttons[day_id] = btn_play
 		grid_container.add_child(btn_play)
 
-		# Full day fast-forward button
 		var btn_fast: Button = Button.new()
 		btn_fast.text = ">>"
 		btn_fast.custom_minimum_size = Vector2(28, 28)
+		btn_fast.tooltip_text = I18n.text(T_TIP_DAY)
 		btn_fast.pressed.connect(_on_play_day.bind(day_id))
 		_day_fast_buttons[day_id] = btn_fast
 		grid_container.add_child(btn_fast)
+
+func _on_column_changed(index: int, slot_id: String) -> void:
+	if index == 0 or _updating_column:
+		return  # header label selected, ignore
+	_updating_column = true
+	var act_index: int = index - 1  # offset by the header item
+	for day_id: String in DAYS:
+		var key: String = day_id + "_" + slot_id
+		var select: OptionButton = _grid_selects.get(key, null)
+		if select and not _day_resolved.get(day_id, false):
+			var acts: Array[Dictionary] = _grid_activities.get(key, [])
+			if act_index >= 0 and act_index < acts.size():
+				select.selected = act_index
+				_update_select_tooltip(select, key, slot_id)
+	_updating_column = false
 
 func _on_grid_select_changed(_index: int, key: String, slot_id: String) -> void:
 	var select: OptionButton = _grid_selects.get(key, null)
 	if select:
 		_update_select_tooltip(select, key, slot_id)
+	# Reset column header to label when individual cell changes
+	if not _updating_column and _column_selects.has(slot_id):
+		_column_selects[slot_id].selected = 0
 
 func _update_select_tooltip(select: OptionButton, key: String, slot_id: String) -> void:
 	var acts: Array[Dictionary] = _grid_activities.get(key, [])
@@ -415,14 +450,10 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 	var select: OptionButton = _grid_selects.get(key, null)
 	if select == null:
 		return
-	var index: int = select.selected
-	var acts: Array[Dictionary] = _grid_activities.get(key, [])
-	if index < 0 or index >= acts.size():
-		return
-	var act: Dictionary = acts[index]
+	var act: Dictionary = {}
 	var collapsed: bool = false
 
-	# Check vital collapse
+	# Check vital collapse first
 	for vid: String in vitals:
 		if int(vitals[vid]) <= 0:
 			var recovery: Dictionary = _activity_def.get_recovery_for(vid)
@@ -430,6 +461,14 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 				act = recovery
 				collapsed = true
 				break
+
+	# If no collapse, use the planned activity
+	if not collapsed:
+		var index: int = select.selected
+		var acts: Array[Dictionary] = _grid_activities.get(key, [])
+		if index < 0 or index >= acts.size():
+			return
+		act = acts[index]
 
 	var act_name: String = I18n.text(act.get("name", "?"))
 
@@ -492,9 +531,9 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 	# Color the dropdown + update text if collapsed
 	_set_select_color(select, outcome_color)
 	if collapsed:
-		# Show collapse activity name in the dropdown
-		select.add_item(act_name)
-		select.selected = select.item_count - 1
+		var sel_idx: int = select.selected
+		if sel_idx >= 0:
+			select.set_item_text(sel_idx, act_name)
 
 	await get_tree().create_timer(SLOT_DELAY * 0.7).timeout
 
@@ -531,6 +570,14 @@ func _finalize_week() -> void:
 		_day_fast_buttons[day_id].disabled = false
 	for key: String in _grid_selects:
 		_reset_select_color(_grid_selects[key])
+		# Restore original item text if it was overwritten by collapse
+		var select: OptionButton = _grid_selects[key]
+		var acts: Array[Dictionary] = _grid_activities.get(key, [])
+		if not acts.is_empty():
+			for i: int in acts.size():
+				select.set_item_text(i, I18n.text(acts[i].get("name", "?")))
+	for slot_id: String in _column_selects:
+		_column_selects[slot_id].selected = 0
 
 func _update_effects_check() -> void:
 	var vitals: Dictionary = The.session.get("vitals", {})
