@@ -60,3 +60,12 @@ text = "OPTIONS"
 layout_mode = 2
 custom_minimum_size = Vector2(280, 40)
 text = "QUIT"
+
+[node name="LangSpacer" type="Control" parent="Center/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 8)
+
+[node name="BtnLang" type="Button" parent="Center/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 32)
+text = "PT"

@@ -50,8 +50,6 @@ var _effects: Array[Dictionary] = []
 @onready var day_label: Label = $Margin/VBox/TopBar/DayLabel
 @onready var week_label: Label = $Margin/VBox/TopBar/WeekLabel
 @onready var player_label: Label = $Margin/VBox/TopBar/PlayerLabel
-@onready var btn_lang: Button = $Margin/VBox/TopBar/BtnLang
-
 @onready var plan_header: Label = $Margin/VBox/Content/LeftPanel/PlanHeader
 @onready var slots_panel: VBoxContainer = $Margin/VBox/Content/LeftPanel/Slots
 @onready var btn_next: Button = $Margin/VBox/Content/LeftPanel/BtnNextDay
@@ -77,18 +75,9 @@ func _ready() -> void:
 	_update_header()
 	_update_vitals()
 	btn_next.pressed.connect(_on_next_day)
-	btn_lang.pressed.connect(_on_lang_toggle)
 	_log(I18n.text(T_WELCOME))
 
-# --- Language toggle ---
-
-func _on_lang_toggle() -> void:
-	var next_lang: String = "pt" if I18n.lang == "en" else "en"
-	I18n.set_lang(next_lang)
-	_update_all_text()
-
 func _update_all_text() -> void:
-	btn_lang.text = I18n.lang.to_upper()
 	plan_header.text = I18n.text(T_PLAN)
 	btn_next.text = I18n.text(T_NEXT)
 	room_header.text = I18n.text(T_ROOM)

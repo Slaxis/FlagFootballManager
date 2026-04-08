@@ -56,11 +56,6 @@ theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 text = "Week 1"
 
-[node name="BtnLang" type="Button" parent="Margin/VBox/TopBar"]
-layout_mode = 2
-custom_minimum_size = Vector2(40, 28)
-text = "EN"
-
 [node name="TopSep" type="HSeparator" parent="Margin/VBox"]
 layout_mode = 2
 
