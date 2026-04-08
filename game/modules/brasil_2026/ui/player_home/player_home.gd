@@ -18,6 +18,12 @@ const SLOT_LABELS: Dictionary = {
 	"night":      {"pt": "NOITE",      "en": "NITE"},
 	"late_night": {"pt": "MADRUGADA",  "en": "LATE"},
 }
+const SLOT_ICONS: Dictionary = {
+	"morning":    "☀",
+	"afternoon":  "⛅",
+	"night":      "☾",
+	"late_night": "★",
+}
 const T_WEEK: Dictionary = {"pt": "Semana", "en": "Week"}
 const T_DAY: Dictionary = {"pt": "Dia", "en": "Day"}
 const T_PLAN: Dictionary = {"pt": "PLANEJE SUA SEMANA", "en": "PLAN YOUR WEEK"}
@@ -260,7 +266,7 @@ func _resolve_week() -> void:
 			elif money_delta < 0:
 				money_str = " (-R$" + str(absi(money_delta)) + ")"
 
-			_log(day_text + " " + I18n.text(SLOT_LABELS[slot_id]) + ": " + act_name + money_str)
+			_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + money_str)
 
 			# Update vitals progressively
 			The.session["vitals"] = vitals
