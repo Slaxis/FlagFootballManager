@@ -172,7 +172,44 @@ One dedicated training activity per attribute, each with 3 possible events.
 
 ---
 
-## Phase 5 — Color Revamp & Polish
+## Phase 5 — Calendar Year & Origins
+
+### 5.1 — Calendar year from module
+- Module manifest gets `start_year` field (e.g., 2026)
+- Top bar shows real date: "Seg 06/Jan/2026" instead of "Day 1"
+- Week/day counters map to actual calendar dates starting from module's start date
+- Start date injectable via module JSON: `"start_date": "2026-01-05"` (first Monday)
+
+### 5.2 — Origin system (Arcanum-style)
+- New Def: `game/defs/origin.gd` + `origin.json`
+- Origins are character backgrounds chosen at creation (after stats, before cutscene)
+- Each origin defines:
+  - `name`, `desc` (i18n)
+  - `stat_modifiers`: bonuses/penalties to attributes (e.g., +2 speed, -1 intelligence)
+  - `skill_modifiers`: bonuses/penalties to skills
+  - `school`: which school the player attends (reference to school Thing)
+  - `schedule`: locked time slots (e.g., school occupies night slots Mon-Fri)
+  - `allowance`: weekly mesada amount
+  - `traits`: flavor tags for event resolution
+- Example origins:
+  - **Estudante Municipal (Noturno)**: school at night Mon-Fri, low allowance, +1 strength, +1 charisma, -1 intelligence. "You go to public school at night. Tough neighborhood, tougher kids."
+  - **Estudante Classe Media (Manha)**: school mornings Mon-Fri, medium allowance, +1 intelligence, +1 perception, -1 strength. "Private school kid. Good grades expected."
+  - **Tecnico (Tarde)**: school afternoons Mon-Fri, medium allowance, +1 dexterity, +1 intelligence, -1 charisma. "Technical school. You're learning a trade."
+  - **Bully do Noturno**: school at night Mon-Fri, low allowance, +2 charisma, +1 strength, -2 intelligence, +1 trash_talk. "Everyone knows your name. Not for good reasons."
+  - **Atleta Escolar**: school mornings Mon-Fri, medium allowance, +1 speed, +1 stamina, +1 agility, -1 intelligence, -1 charisma. "You're already on the school track team."
+  - **Nerd Quieto**: school mornings Mon-Fri, high allowance, +2 intelligence, +2 perception, -2 charisma, -1 strength. "Top of your class. Bottom of the social ladder."
+- School occupies slots → those slots are locked in the weekly planner (greyed out, can't change)
+- Missing school → penalty event (parents angry, grades drop, allowance cut)
+
+### 5.3 — School as locked schedule
+- Origin's `schedule` injects locked activities into the week grid
+- Locked cells are greyed out and show "School" (or the specific school name)
+- Player can't override locked slots
+- School attendance tracked as quest: "Attend school 5/5 days"
+
+---
+
+## Phase 6 — Color Revamp & Polish
 
 ### 5.1 — Theme
 - Dark background, accent colors for each section
@@ -189,28 +226,32 @@ One dedicated training activity per attribute, each with 3 possible events.
 ## Execution Order (Incremental & Testable)
 
 ```
-1.1 Module select  ← testable: pick module, see creation
-1.2 Language toggle ← testable: switch PT/EN on home
-1.3 Injectable cutscene ← testable: cutscene loads from Things
+1.1 Module select       ✅
+1.2 Language toggle      ✅
+1.3 Injectable cutscene  ✅
 
-2.1 Week grid UI   ← testable: drag activities into 7x4 grid
-2.2 Slot synergy   ← testable: see modifier preview on hover
-2.3 Vital collapse  ← testable: plan bad week, see overrides
-2.4 Next Week      ← testable: resolve full week, see log
-2.5 Weekly quests   ← testable: see objectives, complete them
+2.1 Week grid UI         ✅ (7x4 grid, per-day play, color coding)
+2.2 Slot synergy         ← testable: see modifier preview on hover
+2.3 Vital collapse       ← testable: plan bad week, see overrides
+2.4 Next Week            ✅ (merged into 2.1)
+2.5 Weekly quests        ← testable: see objectives, complete them
 
 3.1 Attribute activities ← testable: new activities in palette
 3.2 Life activities      ← testable: homework, chores in grid
 3.3 Event resolution     ← testable: random events fire during week
 
-4.1 Play card data  ← testable: see card definitions
-4.2 Minigame scene  ← testable: play the card game standalone
-4.3 Tryout event    ← testable: go to tryout, play minigame
-4.4 Training        ← testable: team training uses minigame
-4.5 Field viz       ← testable: see routes animate on field
+4.1 Play card data       ← testable: see card definitions
+4.2 Minigame scene       ← testable: play the card game standalone
+4.3 Tryout event         ← testable: go to tryout, play minigame
+4.4 Training             ← testable: team training uses minigame
+4.5 Field viz            ← testable: see routes animate on field
 
-5.1 Theme          ← visual: color revamp
-5.2 Top bar        ← visual: time of day, week progress
+5.1 Calendar year        ← testable: real dates in top bar
+5.2 Origin system        ← testable: pick origin at creation, see locked school slots
+5.3 School schedule      ← testable: locked cells in grid, attendance quest
+
+6.1 Theme                ← visual: color revamp
+6.2 Top bar              ← visual: time of day, week progress
 ```
 
 Each step produces a testable increment. Feedback after each step can redirect the next.
