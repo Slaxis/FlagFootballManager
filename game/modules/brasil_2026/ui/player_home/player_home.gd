@@ -42,6 +42,12 @@ const T_COMPUTER: Dictionary = {"pt": "Computador", "en": "Computer"}
 const T_FRIDGE: Dictionary = {"pt": "Geladeira", "en": "Fridge"}
 const T_WARDROBE: Dictionary = {"pt": "Armario", "en": "Wardrobe"}
 const T_NOT_IMPL: Dictionary = {"pt": " -- nao implementado", "en": " -- not yet implemented"}
+const T_SUMMARY: Dictionary = {"pt": "RESUMO DA SEMANA", "en": "WEEK SUMMARY"}
+const T_CLOSE: Dictionary = {"pt": "FECHAR", "en": "CLOSE"}
+const T_COLLAPSES: Dictionary = {"pt": "Colapsos", "en": "Collapses"}
+const T_SYNERGIES: Dictionary = {"pt": "Sinergias", "en": "Synergies"}
+const T_MONEY_CHANGE: Dictionary = {"pt": "Saldo", "en": "Balance"}
+const T_ACTIVITIES: Dictionary = {"pt": "Atividades", "en": "Activities"}
 
 const VITAL_NAMES: Dictionary = {
 	"energy":  {"pt": "Energia", "en": "Energy"},
@@ -70,6 +76,12 @@ var _day_resolved: Dictionary = {}      # "day" -> bool
 var _day_slot_index: Dictionary = {}    # "day" -> int (next slot to resolve)
 var _updating_column: bool = false
 var _vital_bars: Dictionary = {}
+# Week tracking
+var _week_collapses: int = 0
+var _week_synergies: int = 0
+var _week_money_start: int = 0
+var _week_vitals_start: Dictionary = {}
+var _week_activities: Dictionary = {}  # activity_id -> count
 var _vital_labels: Dictionary = {}
 var _vital_value_labels: Dictionary = {}
 var _effects: Array[Dictionary] = []
@@ -105,6 +117,7 @@ func _ready() -> void:
 	_update_vitals()
 	btn_next_week.pressed.connect(_on_next_week)
 	btn_clear.pressed.connect(_on_clear)
+	_reset_week_tracking()
 	_log(I18n.text(T_WELCOME), COLOR_DEFAULT)
 
 # --- Text ---
@@ -505,13 +518,15 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 	money += money_delta
 
 	# Determine color: green=synergy, yellow=normal, red=collapse
+	var is_synergy: bool = not collapsed and modifier > 1.01
 	var outcome_color: Color
 	if collapsed:
 		outcome_color = COLOR_COLLAPSE
-	elif modifier > 1.01:
+	elif is_synergy:
 		outcome_color = COLOR_SYNERGY
 	else:
 		outcome_color = COLOR_NORMAL
+	_track_slot(act, collapsed, is_synergy)
 
 	# Update state
 	The.session["vitals"] = vitals
@@ -570,6 +585,9 @@ func _finalize_week() -> void:
 	_update_effects()
 	_log("--- " + I18n.text(T_WEEK) + " " + str(The.session["week"]) + " ---", COLOR_DEFAULT)
 
+	_show_week_summary()
+	_reset_week_tracking()
+
 	# Reset grid for next week
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
@@ -607,6 +625,85 @@ func _update_effects() -> void:
 		label.add_theme_color_override("font_color", COLOR_DEBUFF if is_debuff else COLOR_BUFF)
 		label.add_theme_font_size_override("font_size", 12)
 		effects_bar.add_child(label)
+
+# --- Week tracking ---
+
+func _reset_week_tracking() -> void:
+	_week_collapses = 0
+	_week_synergies = 0
+	_week_money_start = int(The.session.get("money", 0))
+	_week_vitals_start = The.session.get("vitals", {}).duplicate()
+	_week_activities.clear()
+
+func _track_slot(act: Dictionary, collapsed: bool, synergy: bool) -> void:
+	if collapsed:
+		_week_collapses += 1
+	if synergy:
+		_week_synergies += 1
+	var act_id: String = String(act.get("id", "?"))
+	_week_activities[act_id] = int(_week_activities.get(act_id, 0)) + 1
+
+func _show_week_summary() -> void:
+	var vitals_now: Dictionary = The.session.get("vitals", {})
+	var money_now: int = int(The.session.get("money", 0))
+	var money_delta: int = money_now - _week_money_start
+	var week_num: int = int(The.session.get("week", 1)) - 1  # just finished this week
+
+	# Build summary text
+	var lines: Array[String] = []
+	lines.append("[b]" + I18n.text(T_SUMMARY) + " " + str(week_num) + "[/b]")
+	lines.append("")
+
+	# Vitals comparison
+	for vid: String in vitals_now:
+		var before: int = int(_week_vitals_start.get(vid, 0))
+		var after: int = int(vitals_now[vid])
+		var diff: int = after - before
+		var prefix: String = "+" if diff > 0 else ""
+		var vname: String = I18n.text(VITAL_NAMES.get(vid, vid))
+		lines.append(vname + ": " + str(before) + " -> " + str(after) + " (" + prefix + str(diff) + ")")
+
+	lines.append("")
+
+	# Money
+	var m_prefix: String = "+" if money_delta >= 0 else ""
+	lines.append(I18n.text(T_MONEY_CHANGE) + ": R$" + str(_week_money_start) + " -> R$" + str(money_now) + " (" + m_prefix + "R$" + str(money_delta) + ")")
+
+	lines.append("")
+
+	# Stats
+	lines.append(I18n.text(T_SYNERGIES) + ": " + str(_week_synergies) + "  |  " + I18n.text(T_COLLAPSES) + ": " + str(_week_collapses))
+
+	# Top activities
+	if not _week_activities.is_empty():
+		lines.append("")
+		lines.append("[b]" + I18n.text(T_ACTIVITIES) + "[/b]")
+		var sorted_acts: Array[Dictionary] = []
+		for act_id: String in _week_activities:
+			sorted_acts.append({"id": act_id, "count": _week_activities[act_id]})
+		sorted_acts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return int(a["count"]) > int(b["count"]))
+		for entry: Dictionary in sorted_acts:
+			var act_data: Dictionary = _activity_def.get_activity(entry["id"])
+			var act_name: String = I18n.text(act_data.get("name", entry["id"]))
+			lines.append("  " + act_name + " x" + str(entry["count"]))
+
+	# Create popup
+	var popup: AcceptDialog = AcceptDialog.new()
+	popup.title = I18n.text(T_SUMMARY)
+	popup.ok_button_text = I18n.text(T_CLOSE)
+	popup.min_size = Vector2(400, 300)
+
+	var rtl: RichTextLabel = RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	rtl.custom_minimum_size = Vector2(380, 250)
+	rtl.text = "\n".join(lines)
+	popup.add_child(rtl)
+
+	add_child(popup)
+	popup.popup_centered()
+	popup.confirmed.connect(popup.queue_free)
+	popup.canceled.connect(popup.queue_free)
 
 # --- Log ---
 
