@@ -1,0 +1,38 @@
+{
+  "id": "quests_week_3",
+  "group": "quest",
+  "week": 3,
+  "quests": [
+    {
+      "id": "homework_w3",
+      "name": {"pt": "Estudar 3x", "en": "Study 3x"},
+      "desc": {"pt": "As provas estao chegando. Continue estudando.", "en": "Exams are coming. Keep studying."},
+      "type": "activity_count",
+      "activity_id": "study",
+      "target": 3
+    },
+    {
+      "id": "survive_w3",
+      "name": {"pt": "Sem colapsos", "en": "No collapses"},
+      "desc": {"pt": "Equilibre tudo. Nenhum colapso.", "en": "Balance everything. No collapses."},
+      "type": "max_collapses",
+      "target": 0
+    },
+    {
+      "id": "train_w3",
+      "name": {"pt": "Treinar 5x", "en": "Train 5x"},
+      "desc": {"pt": "O tryout esta proximo. Treine forte.", "en": "Tryout is close. Train hard."},
+      "type": "activity_count",
+      "activity_id": "train_solo",
+      "target": 5
+    },
+    {
+      "id": "film_w3",
+      "name": {"pt": "Assistir film 2x", "en": "Watch film 2x"},
+      "desc": {"pt": "Estude as jogadas. Assista pelo menos 2 vezes.", "en": "Study the plays. Watch film at least twice."},
+      "type": "activity_count",
+      "activity_id": "watch_game",
+      "target": 2
+    }
+  ]
+}

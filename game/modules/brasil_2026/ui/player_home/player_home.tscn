@@ -107,6 +107,18 @@ layout_mode = 2
 custom_minimum_size = Vector2(200, 0)
 theme_override_constants/separation = 6
 
+[node name="QuestHeader" type="Label" parent="Margin/VBox/Content/RightPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "QUESTS"
+
+[node name="QuestList" type="VBoxContainer" parent="Margin/VBox/Content/RightPanel"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="QuestSep" type="HSeparator" parent="Margin/VBox/Content/RightPanel"]
+layout_mode = 2
+
 [node name="RoomHeader" type="Label" parent="Margin/VBox/Content/RightPanel"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14

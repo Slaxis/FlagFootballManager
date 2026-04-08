@@ -1,0 +1,38 @@
+{
+  "id": "quests_week_1",
+  "group": "quest",
+  "week": 1,
+  "quests": [
+    {
+      "id": "homework_w1",
+      "name": {"pt": "Estudar 3x", "en": "Study 3x"},
+      "desc": {"pt": "Mantenha as notas em dia. Estude pelo menos 3 vezes esta semana.", "en": "Keep your grades up. Study at least 3 times this week."},
+      "type": "activity_count",
+      "activity_id": "study",
+      "target": 3
+    },
+    {
+      "id": "survive_w1",
+      "name": {"pt": "Sem colapsos", "en": "No collapses"},
+      "desc": {"pt": "Termine a semana sem nenhum colapso de vital.", "en": "Finish the week without any vital collapse."},
+      "type": "max_collapses",
+      "target": 0
+    },
+    {
+      "id": "train_w1",
+      "name": {"pt": "Treinar 2x", "en": "Train 2x"},
+      "desc": {"pt": "Comece a se preparar. Treine pelo menos 2 vezes.", "en": "Start getting ready. Train at least 2 times."},
+      "type": "activity_count",
+      "activity_id": "train_solo",
+      "target": 2
+    },
+    {
+      "id": "eat_w1",
+      "name": {"pt": "Comer bem 3x", "en": "Eat well 3x"},
+      "desc": {"pt": "Cuide da alimentacao. Cozinhe pelo menos 3 vezes.", "en": "Take care of your nutrition. Cook at least 3 times."},
+      "type": "activity_count",
+      "activity_id": "eat_well",
+      "target": 3
+    }
+  ]
+}

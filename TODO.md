@@ -269,7 +269,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 2.2 Slot synergy         ✅
 2.3 Vital collapse       ✅
 2.4 Next Week            ✅ (merged into 2.1)
-2.5 Weekly quests        · see objectives, complete them
+2.5 Weekly quests        ⚙ see objectives, complete them
 
 3.1 Attribute activities · new activities in palette
 3.2 Life activities      · homework, chores in grid

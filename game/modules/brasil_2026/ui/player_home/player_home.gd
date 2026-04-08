@@ -48,6 +48,9 @@ const T_COLLAPSES: Dictionary = {"pt": "Colapsos", "en": "Collapses"}
 const T_SYNERGIES: Dictionary = {"pt": "Sinergias", "en": "Synergies"}
 const T_MONEY_CHANGE: Dictionary = {"pt": "Saldo", "en": "Balance"}
 const T_ACTIVITIES: Dictionary = {"pt": "Atividades", "en": "Activities"}
+const T_QUESTS: Dictionary = {"pt": "TAREFAS", "en": "QUESTS"}
+const COLOR_QUEST_DONE := Color(0.2, 0.75, 0.2)
+const COLOR_QUEST_PENDING := Color(0.6, 0.6, 0.6)
 
 const VITAL_NAMES: Dictionary = {
 	"energy":  {"pt": "Energia", "en": "Energy"},
@@ -76,6 +79,10 @@ var _day_resolved: Dictionary = {}      # "day" -> bool
 var _day_slot_index: Dictionary = {}    # "day" -> int (next slot to resolve)
 var _updating_column: bool = false
 var _vital_bars: Dictionary = {}
+# Quests
+var _current_quests: Array[Dictionary] = []
+var _quest_labels: Array[Label] = []
+var _quest_activity_counts: Dictionary = {}  # activity_id -> int
 # Week tracking
 var _week_collapses: int = 0
 var _week_synergies: int = 0
@@ -97,6 +104,8 @@ var _resolving: bool = false
 @onready var btn_next_week: Button = $Margin/VBox/Content/LeftPanel/ToolRow/BtnNextWeek
 @onready var btn_clear: Button = $Margin/VBox/Content/LeftPanel/ToolRow/BtnClear
 
+@onready var quest_header: Label = $Margin/VBox/Content/RightPanel/QuestHeader
+@onready var quest_list: VBoxContainer = $Margin/VBox/Content/RightPanel/QuestList
 @onready var room_header: Label = $Margin/VBox/Content/RightPanel/RoomHeader
 @onready var room_panel: VBoxContainer = $Margin/VBox/Content/RightPanel/Room
 @onready var vitals_header: Label = $Margin/VBox/Content/RightPanel/VitalsHeader
@@ -118,6 +127,7 @@ func _ready() -> void:
 	btn_next_week.pressed.connect(_on_next_week)
 	btn_clear.pressed.connect(_on_clear)
 	_reset_week_tracking()
+	_load_quests()
 	_log(I18n.text(T_WELCOME), COLOR_DEFAULT)
 
 # --- Text ---
@@ -128,6 +138,7 @@ func _update_text() -> void:
 	btn_next_week.tooltip_text = I18n.text(T_TIP_WEEK)
 	btn_clear.text = "X"
 	btn_clear.tooltip_text = I18n.text(T_TIP_CLEAR)
+	quest_header.text = I18n.text(T_QUESTS)
 	room_header.text = I18n.text(T_ROOM)
 	vitals_header.text = I18n.text(T_VITALS)
 	for vid: String in _vital_labels:
@@ -587,6 +598,7 @@ func _finalize_week() -> void:
 
 	_show_week_summary()
 	_reset_week_tracking()
+	_load_quests()
 
 	# Reset grid for next week
 	for day_id: String in DAYS:
@@ -626,6 +638,67 @@ func _update_effects() -> void:
 		label.add_theme_font_size_override("font_size", 12)
 		effects_bar.add_child(label)
 
+# --- Quests ---
+
+func _load_quests() -> void:
+	_current_quests.clear()
+	_quest_labels.clear()
+	_quest_activity_counts.clear()
+	for child: Node in quest_list.get_children():
+		child.queue_free()
+	var week: int = int(The.session.get("week", 1))
+	var all_quest_jsons: Array[Dictionary] = Drive.list_json_by_group("quest")
+	for raw: Dictionary in all_quest_jsons:
+		if int(raw.get("week", 0)) == week:
+			var quests: Variant = raw.get("quests", [])
+			if quests is Array:
+				for q: Variant in (quests as Array):
+					if q is Dictionary:
+						_current_quests.append(q as Dictionary)
+			break
+	for quest: Dictionary in _current_quests:
+		var label: Label = Label.new()
+		label.add_theme_font_size_override("font_size", 11)
+		label.add_theme_color_override("font_color", COLOR_QUEST_PENDING)
+		label.tooltip_text = I18n.text(quest.get("desc", ""))
+		label.text = "[ ] " + I18n.text(quest.get("name", "?"))
+		quest_list.add_child(label)
+		_quest_labels.append(label)
+
+func _update_quests() -> void:
+	for i: int in _current_quests.size():
+		if i >= _quest_labels.size():
+			break
+		var quest: Dictionary = _current_quests[i]
+		var done: bool = _is_quest_done(quest)
+		var label: Label = _quest_labels[i]
+		var mark: String = "[x] " if done else "[ ] "
+		label.text = mark + I18n.text(quest.get("name", "?"))
+		label.add_theme_color_override("font_color", COLOR_QUEST_DONE if done else COLOR_QUEST_PENDING)
+
+func _is_quest_done(quest: Dictionary) -> bool:
+	var qtype: String = String(quest.get("type", ""))
+	var target: int = int(quest.get("target", 0))
+	match qtype:
+		"activity_count":
+			var act_id: String = String(quest.get("activity_id", ""))
+			var count: int = int(_quest_activity_counts.get(act_id, 0))
+			return count >= target
+		"max_collapses":
+			return _week_collapses <= target
+	return false
+
+func _track_quest_activity(act_id: String) -> void:
+	_quest_activity_counts[act_id] = int(_quest_activity_counts.get(act_id, 0)) + 1
+	_update_quests()
+
+func _quests_completed() -> int:
+	var count: int = 0
+	for quest: Dictionary in _current_quests:
+		if _is_quest_done(quest):
+			count += 1
+	return count
+
 # --- Week tracking ---
 
 func _reset_week_tracking() -> void:
@@ -634,6 +707,7 @@ func _reset_week_tracking() -> void:
 	_week_money_start = int(The.session.get("money", 0))
 	_week_vitals_start = The.session.get("vitals", {}).duplicate()
 	_week_activities.clear()
+	_quest_activity_counts.clear()
 
 func _track_slot(act: Dictionary, collapsed: bool, synergy: bool) -> void:
 	if collapsed:
@@ -646,6 +720,7 @@ func _track_slot(act: Dictionary, collapsed: bool, synergy: bool) -> void:
 	if not _week_activities.has(key):
 		_week_activities[key] = {"id": act_id, "count": 0, "color_rank": color_rank}
 	_week_activities[key]["count"] = int(_week_activities[key]["count"]) + 1
+	_track_quest_activity(act_id)
 
 func _show_week_summary() -> void:
 	var vitals_now: Dictionary = The.session.get("vitals", {})
@@ -669,6 +744,18 @@ func _show_week_summary() -> void:
 	# Money
 	var m_prefix: String = "+" if money_delta >= 0 else ""
 	lines.append(I18n.text(T_MONEY_CHANGE) + ": R$" + str(_week_money_start) + " -> R$" + str(money_now) + " (" + m_prefix + "R$" + str(money_delta) + ")")
+
+	# Quest results
+	if not _current_quests.is_empty():
+		lines.append("")
+		lines.append("[b]" + I18n.text(T_QUESTS) + "[/b]")
+		for quest: Dictionary in _current_quests:
+			var done: bool = _is_quest_done(quest)
+			var qname: String = I18n.text(quest.get("name", "?"))
+			var mark: String = "[x]" if done else "[ ]"
+			var hex: String = COLOR_QUEST_DONE.to_html(false) if done else COLOR_COLLAPSE.to_html(false)
+			lines.append("  [color=#" + hex + "]" + mark + " " + qname + "[/color]")
+		lines.append("  " + str(_quests_completed()) + "/" + str(_current_quests.size()))
 
 	# Activities sorted by color (green, yellow, red) then by count desc
 	if not _week_activities.is_empty():
