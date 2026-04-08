@@ -850,9 +850,17 @@ func _is_quest_done(quest: Dictionary) -> bool:
 	var target: int = int(quest.get("target", 0))
 	match qtype:
 		"activity_count":
-			var act_id: String = String(quest.get("activity_id", ""))
-			var count: int = int(_quest_activity_counts.get(act_id, 0))
+			var q_act_id: String = String(quest.get("activity_id", ""))
+			var count: int = int(_quest_activity_counts.get(q_act_id, 0))
 			return count >= target
+		"activity_category_count":
+			var cat_id: String = String(quest.get("category", ""))
+			var total: int = 0
+			for q_act_id: String in _quest_activity_counts:
+				var act_data: Dictionary = _activity_def.get_activity(q_act_id)
+				if String(act_data.get("category", "")) == cat_id:
+					total += int(_quest_activity_counts[q_act_id])
+			return total >= target
 		"max_collapses":
 			return _week_collapses <= target
 	return false

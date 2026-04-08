@@ -4,12 +4,28 @@
   "week": 3,
   "quests": [
     {
-      "id": "homework_w3",
+      "id": "study_w3",
       "name": {"pt": "Estudar 3x", "en": "Study 3x"},
-      "desc": {"pt": "As provas estao chegando. Continue estudando.", "en": "Exams are coming. Keep studying."},
+      "desc": {"pt": "Provas chegando. Continue estudando.", "en": "Exams coming. Keep studying."},
       "type": "activity_count",
       "activity_id": "study",
       "target": 3
+    },
+    {
+      "id": "brut_w3",
+      "name": {"pt": "Treino fisico 5x", "en": "Physical training 5x"},
+      "desc": {"pt": "Tryout se aproxima. Treine pesado.", "en": "Tryout is close. Train hard."},
+      "type": "activity_category_count",
+      "category": "brutality",
+      "target": 5
+    },
+    {
+      "id": "film_w3",
+      "name": {"pt": "Assistir flag 2x", "en": "Watch flag 2x"},
+      "desc": {"pt": "Estude as jogadas. Assista pelo menos 2 vezes.", "en": "Study the plays. Watch at least twice."},
+      "type": "activity_count",
+      "activity_id": "train_perception",
+      "target": 2
     },
     {
       "id": "survive_w3",
@@ -17,22 +33,6 @@
       "desc": {"pt": "Equilibre tudo. Nenhum colapso.", "en": "Balance everything. No collapses."},
       "type": "max_collapses",
       "target": 0
-    },
-    {
-      "id": "train_w3",
-      "name": {"pt": "Treinar 5x", "en": "Train 5x"},
-      "desc": {"pt": "O tryout esta proximo. Treine forte.", "en": "Tryout is close. Train hard."},
-      "type": "activity_count",
-      "activity_id": "train_solo",
-      "target": 5
-    },
-    {
-      "id": "film_w3",
-      "name": {"pt": "Assistir film 2x", "en": "Watch film 2x"},
-      "desc": {"pt": "Estude as jogadas. Assista pelo menos 2 vezes.", "en": "Study the plays. Watch film at least twice."},
-      "type": "activity_count",
-      "activity_id": "watch_game",
-      "target": 2
     }
   ]
 }

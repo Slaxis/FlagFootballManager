@@ -4,7 +4,7 @@
   "week": 2,
   "quests": [
     {
-      "id": "homework_w2",
+      "id": "study_w2",
       "name": {"pt": "Estudar 3x", "en": "Study 3x"},
       "desc": {"pt": "Continue estudando. Pelo menos 3 vezes.", "en": "Keep studying. At least 3 times."},
       "type": "activity_count",
@@ -12,27 +12,27 @@
       "target": 3
     },
     {
+      "id": "brut_w2",
+      "name": {"pt": "Treino fisico 4x", "en": "Physical training 4x"},
+      "desc": {"pt": "Intensifique. 4 sessoes de treino fisico.", "en": "Step it up. 4 physical training sessions."},
+      "type": "activity_category_count",
+      "category": "brutality",
+      "target": 4
+    },
+    {
+      "id": "finesse_w2",
+      "name": {"pt": "Treino finesse 2x", "en": "Finesse training 2x"},
+      "desc": {"pt": "Trabalhe a coordenacao. Parkour, malabarismo ou alongamento.", "en": "Work on coordination. Parkour, juggling, or stretching."},
+      "type": "activity_category_count",
+      "category": "finesse",
+      "target": 2
+    },
+    {
       "id": "survive_w2",
       "name": {"pt": "Max 1 colapso", "en": "Max 1 collapse"},
       "desc": {"pt": "Gerencie melhor seus vitais. No maximo 1 colapso.", "en": "Manage your vitals better. At most 1 collapse."},
       "type": "max_collapses",
       "target": 1
-    },
-    {
-      "id": "train_w2",
-      "name": {"pt": "Treinar 4x", "en": "Train 4x"},
-      "desc": {"pt": "Intensifique os treinos. 4 sessoes esta semana.", "en": "Step it up. 4 training sessions this week."},
-      "type": "activity_count",
-      "activity_id": "train_solo",
-      "target": 4
-    },
-    {
-      "id": "social_w2",
-      "name": {"pt": "Sair com amigos 2x", "en": "Hang out 2x"},
-      "desc": {"pt": "Nao se isole. Saia com amigos pelo menos 2 vezes.", "en": "Don't isolate. Hang out with friends at least twice."},
-      "type": "activity_count",
-      "activity_id": "socialize",
-      "target": 2
     }
   ]
 }
