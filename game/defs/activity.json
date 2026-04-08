@@ -189,16 +189,7 @@
       "category": "family",
       "slots": ["morning", "afternoon", "night", "late_night"],
       "effects": {"energy": 40, "hp": 5, "hunger": -5},
-      "slot_modifiers": {"morning": 0.5, "afternoon": 0.5, "night": 1.0, "late_night": 1.5}
-    },
-    {
-      "id": "sleep_in",
-      "name": {"pt": "Dormir ate tarde", "en": "Sleep In"},
-      "desc": {"pt": "Ficar na cama, recuperar energia", "en": "Stay in bed, recover energy"},
-      "category": "family",
-      "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"energy": 30, "hp": 5, "hunger": -5},
-      "slot_modifiers": {"morning": 1.0, "afternoon": 0.7, "night": 0.5, "late_night": 0.5}
+      "slot_modifiers": {"morning": 0.8, "afternoon": 0.5, "night": 1.0, "late_night": 1.5}
     },
     {
       "id": "pickup_football",
