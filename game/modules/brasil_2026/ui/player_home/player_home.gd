@@ -87,6 +87,8 @@ var _vital_bars: Dictionary = {}
 var _fridge_window: Window = null
 var _fridge_label: Label = null
 var _last_week_selections: Dictionary = {}  # key -> activity_id
+# Active effects: Array of {name, desc, duration, category_bonus, icon, color_rank}
+var _active_effects: Array[Dictionary] = []
 # Quests
 var _current_quests: Array[Dictionary] = []
 var _quest_labels: Array[Label] = []
@@ -629,6 +631,14 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 	var modifiers: Dictionary = act.get("slot_modifiers", {})
 	var modifier: float = float(modifiers.get(slot_id, 1.0))
 
+	# Active effects modifier: multiply by category bonuses
+	var act_category: String = String(act.get("category", ""))
+	if act_category != "" and not collapsed:
+		for eff: Dictionary in _active_effects:
+			var cat_bonus: Dictionary = eff.get("category_bonus", {})
+			if cat_bonus.has(act_category):
+				modifier *= float(cat_bonus[act_category])
+
 	# Apply effects scaled by modifier, track deltas
 	var effects: Dictionary = act.get("effects", {})
 	var deltas: Dictionary = {}
@@ -679,6 +689,13 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 				var bonus: int = int(vital_bonus[vid])
 				vitals[vid] = clampi(current + bonus, 0, 100)
 				deltas[vid] = int(deltas.get(vid, 0)) + bonus
+			# Create timed effect if event defines one
+			var effect_def: Variant = event_rolled.get("effect", null)
+			if effect_def is Dictionary:
+				_add_effect(effect_def as Dictionary)
+
+	# Tick down active effects
+	_tick_effects()
 
 	# Determine color: green=synergy, yellow=normal, red=collapse
 	var is_synergy: bool = not collapsed and modifier > 1.01
@@ -789,21 +806,29 @@ func _finalize_week() -> void:
 		_column_selects[slot_id].selected = 0
 
 func _update_effects_check() -> void:
-	var vitals: Dictionary = The.session.get("vitals", {})
-	_effects.clear()
-	for vid: String in vitals:
-		if int(vitals[vid]) <= 20:
-			_effects.append({"name": I18n.text(VITAL_NAMES.get(vid, vid)) + " LOW", "type": "debuff"})
 	_update_effects()
 
 func _update_effects() -> void:
 	for child: Node in effects_bar.get_children():
 		child.queue_free()
-	for effect: Dictionary in _effects:
+	# Vital warnings
+	var vitals: Dictionary = The.session.get("vitals", {})
+	for vid: String in vitals:
+		if int(vitals[vid]) <= 20:
+			var label: Label = Label.new()
+			label.text = " " + I18n.text(VITAL_NAMES.get(vid, vid)) + " LOW "
+			label.add_theme_color_override("font_color", COLOR_COLLAPSE)
+			label.add_theme_font_size_override("font_size", 12)
+			effects_bar.add_child(label)
+	# Timed effects
+	for eff: Dictionary in _active_effects:
+		var eff_name: String = I18n.text(eff.get("name", "?"))
+		var dur: int = int(eff.get("duration", 0))
+		var icon: String = String(eff.get("icon", "?"))
+		var is_buff: bool = icon == "^"
 		var label: Label = Label.new()
-		label.text = " " + String(effect.get("name", "?")) + " "
-		var is_debuff: bool = String(effect.get("type", "")) == "debuff"
-		label.add_theme_color_override("font_color", COLOR_DEBUFF if is_debuff else COLOR_BUFF)
+		label.text = " " + icon + " " + eff_name + " (" + str(dur) + ") "
+		label.add_theme_color_override("font_color", COLOR_SYNERGY if is_buff else COLOR_COLLAPSE)
 		label.add_theme_font_size_override("font_size", 12)
 		effects_bar.add_child(label)
 
@@ -875,6 +900,27 @@ func _quests_completed() -> int:
 		if _is_quest_done(quest):
 			count += 1
 	return count
+
+# --- Timed effects ---
+
+func _add_effect(effect_def: Dictionary) -> void:
+	var eff: Dictionary = {
+		"name": effect_def.get("name", ""),
+		"duration": int(effect_def.get("duration", 1)),
+		"category_bonus": effect_def.get("category_bonus", {}),
+		"icon": String(effect_def.get("icon", "?")),
+	}
+	_active_effects.append(eff)
+	_update_effects()
+
+func _tick_effects() -> void:
+	var remaining: Array[Dictionary] = []
+	for eff: Dictionary in _active_effects:
+		eff["duration"] = int(eff["duration"]) - 1
+		if int(eff["duration"]) > 0:
+			remaining.append(eff)
+	_active_effects = remaining
+	_update_effects()
 
 # --- Event rolling ---
 

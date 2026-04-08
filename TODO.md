@@ -174,7 +174,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 2.5 Weekly quests        ✅
 
 3.1 Attribute activities ✅ (includes 3.1b, 3.2)
-3.3 Effect system        · timed effects from events
+3.3 Effect system        ⚙ timed effects from events
 3.4 Activity unlock/lock · requires system
 3.5 Hunger cascade       · fridge → money → collapse
 3.6 Social from phone    · phone-initiated social events

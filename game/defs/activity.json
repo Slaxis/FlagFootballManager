@@ -17,9 +17,9 @@
       "effects": {"energy": -20, "hunger": -10},
       "slot_modifiers": {"morning": 1.3, "afternoon": 1.0, "night": 0.7, "late_night": 0.3},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Runner's high! Bateu recorde pessoal.", "en": "Runner's high! Beat your personal record."}, "stat_bonus": {"speed": 2, "stamina": 1}, "vital_bonus": {"energy": -5}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Runner's high! Bateu recorde pessoal.", "en": "Runner's high! Beat your personal record."}, "stat_bonus": {"speed": 2, "stamina": 1}, "vital_bonus": {"energy": -5}, "effect": {"name": {"pt": "Runner's High", "en": "Runner's High"}, "duration": 4, "category_bonus": {"brutality": 1.15}, "icon": "^"}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Boa subida. Progresso constante.", "en": "Good climb. Steady progress."}, "stat_bonus": {"speed": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Escorregou na descida. Ralou o joelho.", "en": "Slipped downhill. Scraped your knee."}, "stat_bonus": {}, "vital_bonus": {"hp": -10, "energy": -10}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Escorregou na descida. Ralou o joelho.", "en": "Slipped downhill. Scraped your knee."}, "stat_bonus": {}, "vital_bonus": {"hp": -10, "energy": -10}, "effect": {"name": {"pt": "Joelho ralado", "en": "Scraped Knee"}, "duration": 6, "category_bonus": {"brutality": 0.7, "finesse": 0.8}, "icon": "v"}}
       ]
     },
     {
@@ -31,9 +31,9 @@
       "effects": {"energy": -18, "hunger": -12},
       "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.8, "late_night": 0.4},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Bateu recorde de flexoes!", "en": "Push-up record!"}, "stat_bonus": {"strength": 2, "stamina": 1}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Bateu recorde de flexoes!", "en": "Push-up record!"}, "stat_bonus": {"strength": 2, "stamina": 1}, "effect": {"name": {"pt": "Bombeado", "en": "Pumped"}, "duration": 3, "category_bonus": {"brutality": 1.1}, "icon": "^"}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Treino feito. Musculos doloridos no bom sentido.", "en": "Workout done. Good kind of sore."}, "stat_bonus": {"strength": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Forcou demais. Dor nas costas.", "en": "Overdid it. Back pain."}, "stat_bonus": {}, "vital_bonus": {"hp": -5, "energy": -10}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Forcou demais. Dor nas costas.", "en": "Overdid it. Back pain."}, "stat_bonus": {}, "vital_bonus": {"hp": -5, "energy": -10}, "effect": {"name": {"pt": "Dor nas costas", "en": "Back Pain"}, "duration": 5, "category_bonus": {"brutality": 0.7}, "icon": "v"}}
       ]
     },
     {
@@ -59,9 +59,9 @@
       "effects": {"energy": -20, "hunger": -10},
       "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.6, "late_night": 0.3},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Flow perfeito! Cada salto mais preciso.", "en": "Perfect flow! Every jump more precise."}, "stat_bonus": {"agility": 2, "balance": 1}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Flow perfeito! Cada salto mais preciso.", "en": "Perfect flow! Every jump more precise."}, "stat_bonus": {"agility": 2, "balance": 1}, "effect": {"name": {"pt": "Flow", "en": "Flow State"}, "duration": 4, "category_bonus": {"finesse": 1.15}, "icon": "^"}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Sessao boa. Corpo mais agil.", "en": "Good session. Body feels agile."}, "stat_bonus": {"agility": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Errou o salto. Caiu feio.", "en": "Missed the jump. Fell hard."}, "stat_bonus": {}, "vital_bonus": {"hp": -12, "energy": -10}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Errou o salto. Caiu feio.", "en": "Missed the jump. Fell hard."}, "stat_bonus": {}, "vital_bonus": {"hp": -12, "energy": -10}, "effect": {"name": {"pt": "Contusao", "en": "Bruised"}, "duration": 8, "category_bonus": {"brutality": 0.6, "finesse": 0.7}, "icon": "v"}}
       ]
     },
     {
@@ -87,7 +87,7 @@
       "effects": {"energy": -8, "hunger": -3, "hp": 3},
       "slot_modifiers": {"morning": 1.3, "afternoon": 1.0, "night": 1.0, "late_night": 0.7},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Foco profundo. Sessao meditativa.", "en": "Deep focus. Meditative session."}, "stat_bonus": {"balance": 2, "perception": 1}, "vital_bonus": {"leisure": 10}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Foco profundo. Sessao meditativa.", "en": "Deep focus. Meditative session."}, "stat_bonus": {"balance": 2, "perception": 1}, "vital_bonus": {"leisure": 10}, "effect": {"name": {"pt": "Zen", "en": "Zen"}, "duration": 4, "category_bonus": {"cognition": 1.2, "finesse": 1.1}, "icon": "^"}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Bom alongamento. Corpo mais solto.", "en": "Good stretch. Body feels loose."}, "stat_bonus": {"balance": 1}},
         {"type": "negative", "chance": 0.2, "text": {"pt": "Forcou demais. Doeu.", "en": "Overstretched. Ouch."}, "stat_bonus": {}, "vital_bonus": {"hp": -5}}
       ]
@@ -101,9 +101,9 @@
       "effects": {"energy": -8, "leisure": -3},
       "slot_modifiers": {"morning": 0.8, "afternoon": 1.0, "night": 1.2, "late_night": 0.5},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Eureka! Entendeu um padrao que ninguem ve.", "en": "Eureka! Spotted a pattern nobody sees."}, "stat_bonus": {"perception": 2, "intelligence": 1}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Eureka! Entendeu um padrao que ninguem ve.", "en": "Eureka! Spotted a pattern nobody sees."}, "stat_bonus": {"perception": 2, "intelligence": 1}, "effect": {"name": {"pt": "Mente afiada", "en": "Sharp Mind"}, "duration": 4, "category_bonus": {"cognition": 1.2}, "icon": "^"}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Sessao produtiva. Absorveu bastante.", "en": "Productive session. Absorbed a lot."}, "stat_bonus": {"perception": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Caiu no buraco negro do YouTube. Perdeu horas.", "en": "YouTube rabbit hole. Lost hours."}, "stat_bonus": {}, "vital_bonus": {"energy": -10, "leisure": 10}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Caiu no buraco negro do YouTube. Perdeu horas.", "en": "YouTube rabbit hole. Lost hours."}, "stat_bonus": {}, "vital_bonus": {"energy": -10, "leisure": 10}, "effect": {"name": {"pt": "Dopamina frita", "en": "Dopamine Fried"}, "duration": 3, "category_bonus": {"cognition": 0.7, "school": 0.7}, "icon": "v"}}
       ]
     },
     {
@@ -223,9 +223,9 @@
       "effects": {"energy": -5, "leisure": 25, "social": -5},
       "slot_modifiers": {"morning": 0.8, "afternoon": 1.0, "night": 1.2, "late_night": 1.0},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Clutch! Vitoria epica no ranked.", "en": "Clutch! Epic ranked victory."}, "stat_bonus": {"perception": 1, "dexterity": 1}, "vital_bonus": {"leisure": 10}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Clutch! Vitoria epica no ranked.", "en": "Clutch! Epic ranked victory."}, "stat_bonus": {"perception": 1, "dexterity": 1}, "vital_bonus": {"leisure": 10}, "effect": {"name": {"pt": "Clutch", "en": "Clutch"}, "duration": 3, "category_bonus": {"cognition": 1.1, "finesse": 1.1}, "icon": "^"}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Umas partidas de boa. Relaxou.", "en": "Some chill matches. Relaxed."}, "stat_bonus": {}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Rage quit. Ficou irritado.", "en": "Rage quit. Got frustrated."}, "stat_bonus": {}, "vital_bonus": {"leisure": -10, "social": -5}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Rage quit. Ficou irritado.", "en": "Rage quit. Got frustrated."}, "stat_bonus": {}, "vital_bonus": {"leisure": -10, "social": -5}, "effect": {"name": {"pt": "Tilted", "en": "Tilted"}, "duration": 3, "category_bonus": {"social": 0.7, "cognition": 0.8}, "icon": "v"}}
       ]
     },
     {
