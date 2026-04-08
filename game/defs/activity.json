@@ -2,96 +2,109 @@
   "activities": [
     {
       "id": "sleep_in",
-      "name": {"pt": "Dormir até tarde", "en": "Sleep In"},
+      "name": {"pt": "Dormir ate tarde", "en": "Sleep In"},
       "desc": {"pt": "Ficar na cama, recuperar energia", "en": "Stay in bed, recover energy"},
       "slots": ["morning"],
-      "effects": {"energy": 30, "hunger": -5}
+      "effects": {"energy": 30, "hunger": -5},
+      "slot_modifiers": {"morning": 1.0}
     },
     {
       "id": "study",
       "name": {"pt": "Estudar", "en": "Study"},
-      "desc": {"pt": "Fazer lição — manter as notas em dia", "en": "Hit the books — keep your grades up"},
+      "desc": {"pt": "Fazer licao -- manter as notas em dia", "en": "Hit the books -- keep your grades up"},
       "slots": ["morning", "afternoon"],
-      "effects": {"energy": -10, "hunger": -5, "leisure": -5}
+      "effects": {"energy": -10, "hunger": -5, "leisure": -5},
+      "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "late_night": 0.5}
     },
     {
       "id": "work_parttime",
-      "name": {"pt": "Trabalho meio-período", "en": "Part-time Job"},
+      "name": {"pt": "Trabalho meio-periodo", "en": "Part-time Job"},
       "desc": {"pt": "Ganhar uma grana. Cansa mas paga as contas", "en": "Earn some cash. Tiring but pays the bills"},
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -20, "hunger": -10, "social": 5},
-      "money": 50
+      "money": 50,
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 0.8}
     },
     {
       "id": "train_solo",
       "name": {"pt": "Treino solo", "en": "Train Solo"},
       "desc": {"pt": "Ir pro parque, treinar sozinho", "en": "Hit the park, work on your game alone"},
       "slots": ["morning", "afternoon"],
-      "effects": {"energy": -25, "hunger": -15}
+      "effects": {"energy": -25, "hunger": -15},
+      "slot_modifiers": {"morning": 1.3, "afternoon": 1.0}
     },
     {
       "id": "gym",
       "name": {"pt": "Academia", "en": "Gym"},
-      "desc": {"pt": "Musculação, ganhar força e resistência", "en": "Lift weights, build strength and stamina"},
+      "desc": {"pt": "Musculacao, ganhar forca e resistencia", "en": "Lift weights, build strength and stamina"},
       "slots": ["morning", "afternoon", "night"],
-      "effects": {"energy": -20, "hunger": -15}
+      "effects": {"energy": -20, "hunger": -15},
+      "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.8}
     },
     {
       "id": "socialize",
       "name": {"pt": "Sair com amigos", "en": "Hang Out"},
       "desc": {"pt": "Encontrar amigos, conversar, se divertir", "en": "Meet friends, talk, have a good time"},
       "slots": ["afternoon", "night", "late_night"],
-      "effects": {"energy": -5, "social": 25, "leisure": 15, "hunger": -10}
+      "effects": {"energy": -5, "social": 25, "leisure": 15, "hunger": -10},
+      "slot_modifiers": {"afternoon": 0.8, "night": 1.3, "late_night": 1.5}
     },
     {
       "id": "watch_tv",
       "name": {"pt": "Assistir TV", "en": "Watch TV"},
-      "desc": {"pt": "Relaxar no sofá, recarregar", "en": "Relax on the couch, recharge"},
+      "desc": {"pt": "Relaxar no sofa, recarregar", "en": "Relax on the couch, recharge"},
       "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"energy": 5, "leisure": 20, "social": -5}
+      "effects": {"energy": 5, "leisure": 20, "social": -5},
+      "slot_modifiers": {"morning": 0.7, "afternoon": 1.0, "night": 1.2, "late_night": 1.0}
     },
     {
       "id": "watch_game",
       "name": {"pt": "Assistir jogo / filme", "en": "Watch Game Film"},
-      "desc": {"pt": "Estudar jogadas, formações e tendências", "en": "Study plays, formations, and opponent tendencies"},
+      "desc": {"pt": "Estudar jogadas, formacoes e tendencias", "en": "Study plays, formations, and opponent tendencies"},
       "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"energy": -10, "leisure": -5}
+      "effects": {"energy": -10, "leisure": -5},
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.2, "late_night": 0.6}
     },
     {
       "id": "browse_phone",
       "name": {"pt": "Mexer no celular", "en": "Browse Phone"},
       "desc": {"pt": "Ver times, comprar, conversar", "en": "Check teams, shop, chat with friends"},
       "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"energy": -5, "leisure": 10}
+      "effects": {"energy": -5, "leisure": 10},
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0, "late_night": 1.0}
     },
     {
       "id": "eat_well",
       "name": {"pt": "Cozinhar e comer", "en": "Cook & Eat"},
-      "desc": {"pt": "Preparar uma refeição decente", "en": "Prepare a proper meal, recover hunger"},
+      "desc": {"pt": "Preparar uma refeicao decente", "en": "Prepare a proper meal, recover hunger"},
       "slots": ["morning", "afternoon", "night"],
       "effects": {"hunger": 35, "energy": -5},
-      "money": -15
+      "money": -15,
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0}
     },
     {
       "id": "rest",
       "name": {"pt": "Descansar", "en": "Rest"},
       "desc": {"pt": "Pegar leve, recuperar energia", "en": "Take it easy, recover energy"},
       "slots": ["morning", "afternoon"],
-      "effects": {"energy": 20, "leisure": 5}
+      "effects": {"energy": 20, "leisure": 5},
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.2}
     },
     {
       "id": "sleep",
       "name": {"pt": "Dormir", "en": "Sleep"},
-      "desc": {"pt": "Ir pra cama — essencial pra recuperação", "en": "Go to bed — essential for recovery"},
+      "desc": {"pt": "Ir pra cama -- essencial pra recuperacao", "en": "Go to bed -- essential for recovery"},
       "slots": ["night", "late_night"],
-      "effects": {"energy": 40, "hunger": -5}
+      "effects": {"energy": 40, "hunger": -5},
+      "slot_modifiers": {"night": 1.0, "late_night": 1.5}
     },
     {
       "id": "stay_up_late",
       "name": {"pt": "Virar a noite", "en": "Stay Up Late"},
-      "desc": {"pt": "Ficar acordado de madrugada — ruim pra energia", "en": "Pull a late night — bad for energy"},
+      "desc": {"pt": "Ficar acordado de madrugada -- ruim pra energia", "en": "Pull a late night -- bad for energy"},
       "slots": ["late_night"],
-      "effects": {"energy": -20, "leisure": 15}
+      "effects": {"energy": -20, "leisure": 15},
+      "slot_modifiers": {"late_night": 1.0}
     }
   ]
 }

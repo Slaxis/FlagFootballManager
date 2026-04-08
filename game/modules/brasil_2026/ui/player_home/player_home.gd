@@ -165,11 +165,13 @@ func _build_grid() -> void:
 			_grid_activities[key] = available
 			for act: Dictionary in available:
 				select.add_item(I18n.text(act.get("name", "?")))
+			select.item_selected.connect(_on_grid_select_changed.bind(key, slot_id))
 			if slot_id == "late_night":
 				for i: int in available.size():
 					if available[i].get("id", "") == "sleep":
 						select.selected = i
 						break
+			_update_select_tooltip(select, key, slot_id)
 			_grid_selects[key] = select
 			grid_container.add_child(select)
 
@@ -180,6 +182,28 @@ func _build_grid() -> void:
 		btn_play.pressed.connect(_on_play_day.bind(day_id))
 		_day_buttons[day_id] = btn_play
 		grid_container.add_child(btn_play)
+
+func _on_grid_select_changed(_index: int, key: String, slot_id: String) -> void:
+	var select: OptionButton = _grid_selects.get(key, null)
+	if select:
+		_update_select_tooltip(select, key, slot_id)
+
+func _update_select_tooltip(select: OptionButton, key: String, slot_id: String) -> void:
+	var acts: Array[Dictionary] = _grid_activities.get(key, [])
+	var index: int = select.selected
+	if index < 0 or index >= acts.size():
+		select.tooltip_text = ""
+		return
+	var act: Dictionary = acts[index]
+	var desc: String = I18n.text(act.get("desc", ""))
+	var modifiers: Dictionary = act.get("slot_modifiers", {})
+	var mod: float = float(modifiers.get(slot_id, 1.0))
+	var mod_text: String = ""
+	if mod > 1.01:
+		mod_text = "\n^ " + str(int(mod * 100)) + "% synergy"
+	elif mod < 0.99:
+		mod_text = "\nv " + str(int(mod * 100)) + "% penalty"
+	select.tooltip_text = desc + mod_text
 
 func _on_clear() -> void:
 	if _resolving:
@@ -343,13 +367,19 @@ func _resolve_day(day_id: String) -> void:
 		_set_select_color(select, COLOR_RUNNING)
 		await get_tree().create_timer(SLOT_DELAY * 0.3).timeout
 
-		# Apply effects
+		# Resolve slot modifier
+		var modifiers: Dictionary = act.get("slot_modifiers", {})
+		var modifier: float = float(modifiers.get(slot_id, 1.0))
+
+		# Apply effects scaled by modifier
 		var effects: Dictionary = act.get("effects", {})
 		for vid: String in effects.keys():
+			var base_effect: float = float(effects[vid])
+			var scaled: int = int(base_effect * modifier)
 			var current: int = int(vitals.get(vid, 0))
-			vitals[vid] = clampi(current + int(effects[vid]), 0, 100)
+			vitals[vid] = clampi(current + scaled, 0, 100)
 
-		var money_delta: int = int(act.get("money", 0))
+		var money_delta: int = int(int(act.get("money", 0)) * modifier)
 		money += money_delta
 
 		# Determine outcome (placeholder: random for now)
@@ -373,7 +403,13 @@ func _resolve_day(day_id: String) -> void:
 		elif money_delta < 0:
 			money_str = " (-R$" + str(absi(money_delta)) + ")"
 
-		_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + money_str, outcome_color)
+		var mod_str: String = ""
+		if modifier > 1.01:
+			mod_str = " ^"
+		elif modifier < 0.99:
+			mod_str = " v"
+
+		_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + money_str + mod_str, outcome_color)
 		_set_select_color(select, outcome_color)
 
 		await get_tree().create_timer(SLOT_DELAY * 0.7).timeout
