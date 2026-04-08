@@ -45,10 +45,10 @@ const VITAL_NAMES: Dictionary = {
 	"leisure": {"pt": "Lazer",   "en": "Leisure"},
 }
 
+const COLOR_SYNERGY := Color(0.2, 0.75, 0.2)
+const COLOR_NORMAL := Color(0.85, 0.75, 0.2)
+const COLOR_COLLAPSE := Color(0.8, 0.2, 0.2)
 const COLOR_RUNNING := Color(0.3, 0.5, 0.9)
-const COLOR_GOOD := Color(0.2, 0.75, 0.2)
-const COLOR_NEUTRAL := Color(0.85, 0.75, 0.2)
-const COLOR_BAD := Color(0.8, 0.2, 0.2)
 const COLOR_DEBUFF := Color(0.8, 0.3, 0.3)
 const COLOR_BUFF := Color(0.3, 0.7, 0.9)
 const COLOR_DEFAULT := Color(1, 1, 1)
@@ -57,10 +57,13 @@ const SLOT_DELAY: float = 0.5
 var _activity_def: Def
 var _grid_selects: Dictionary = {}      # "day_slot" -> OptionButton
 var _grid_activities: Dictionary = {}   # "day_slot" -> Array[Dictionary]
-var _day_buttons: Dictionary = {}       # "day" -> Button
+var _day_play_buttons: Dictionary = {}  # "day" -> Button (single slot >)
+var _day_fast_buttons: Dictionary = {}  # "day" -> Button (full day >>)
 var _day_resolved: Dictionary = {}      # "day" -> bool
+var _day_slot_index: Dictionary = {}    # "day" -> int (next slot to resolve)
 var _vital_bars: Dictionary = {}
 var _vital_labels: Dictionary = {}
+var _vital_value_labels: Dictionary = {}
 var _effects: Array[Dictionary] = []
 var _resolving: bool = false
 
@@ -122,8 +125,8 @@ func _update_header() -> void:
 # --- Week Grid ---
 
 func _build_grid() -> void:
-	# Columns: slots + day label + play button = SLOTS.size() + 2
-	grid_container.columns = SLOTS.size() + 2
+	# Columns: day label + slots + play + fast = SLOTS.size() + 3
+	grid_container.columns = SLOTS.size() + 3
 
 	# Corner cell
 	var corner: Label = Label.new()
@@ -139,15 +142,20 @@ func _build_grid() -> void:
 		header.add_theme_font_size_override("font_size", 11)
 		grid_container.add_child(header)
 
-	# Play column header
+	# Play columns header (spans 2 cells visually)
 	var play_header: Label = Label.new()
 	play_header.text = ""
-	play_header.custom_minimum_size = Vector2(32, 0)
+	play_header.custom_minimum_size = Vector2(28, 0)
 	grid_container.add_child(play_header)
+	var fast_header: Label = Label.new()
+	fast_header.text = ""
+	fast_header.custom_minimum_size = Vector2(28, 0)
+	grid_container.add_child(fast_header)
 
 	# Day rows
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
+		_day_slot_index[day_id] = 0
 
 		var row_label: Label = Label.new()
 		row_label.text = I18n.text(DAY_LABELS[day_id])
@@ -175,13 +183,21 @@ func _build_grid() -> void:
 			_grid_selects[key] = select
 			grid_container.add_child(select)
 
-		# Play button for this day
+		# Single slot play button
 		var btn_play: Button = Button.new()
 		btn_play.text = ">"
-		btn_play.custom_minimum_size = Vector2(32, 28)
-		btn_play.pressed.connect(_on_play_day.bind(day_id))
-		_day_buttons[day_id] = btn_play
+		btn_play.custom_minimum_size = Vector2(28, 28)
+		btn_play.pressed.connect(_on_play_slot.bind(day_id))
+		_day_play_buttons[day_id] = btn_play
 		grid_container.add_child(btn_play)
+
+		# Full day fast-forward button
+		var btn_fast: Button = Button.new()
+		btn_fast.text = ">>"
+		btn_fast.custom_minimum_size = Vector2(28, 28)
+		btn_fast.pressed.connect(_on_play_day.bind(day_id))
+		_day_fast_buttons[day_id] = btn_fast
+		grid_container.add_child(btn_fast)
 
 func _on_grid_select_changed(_index: int, key: String, slot_id: String) -> void:
 	var select: OptionButton = _grid_selects.get(key, null)
@@ -212,7 +228,6 @@ func _on_clear() -> void:
 		var select: OptionButton = _grid_selects[key]
 		select.selected = 0
 		_reset_select_color(select)
-	# Re-apply late_night defaults to sleep
 	for day_id: String in DAYS:
 		var key: String = day_id + "_late_night"
 		var select: OptionButton = _grid_selects.get(key, null)
@@ -223,11 +238,13 @@ func _on_clear() -> void:
 			if acts[i].get("id", "") == "sleep":
 				select.selected = i
 				break
-	# Reset day buttons
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
-		_day_buttons[day_id].text = ">"
-		_day_buttons[day_id].disabled = false
+		_day_slot_index[day_id] = 0
+		_day_play_buttons[day_id].text = ">"
+		_day_play_buttons[day_id].disabled = false
+		_day_fast_buttons[day_id].text = ">>"
+		_day_fast_buttons[day_id].disabled = false
 
 func _set_select_color(select: OptionButton, color: Color) -> void:
 	select.add_theme_color_override("font_color", color)
@@ -271,32 +288,42 @@ func _build_vitals() -> void:
 	var vital_ids: Array[String] = ["energy", "hunger", "social", "leisure"]
 	for vid: String in vital_ids:
 		var row: HBoxContainer = HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
+		row.add_theme_constant_override("separation", 4)
 
 		var label: Label = Label.new()
 		label.text = I18n.text(VITAL_NAMES.get(vid, vid))
 		label.add_theme_font_size_override("font_size", 12)
-		label.custom_minimum_size = Vector2(55, 0)
+		label.custom_minimum_size = Vector2(50, 0)
 		row.add_child(label)
 		_vital_labels[vid] = label
 
 		var bar: ProgressBar = ProgressBar.new()
 		bar.min_value = 0
 		bar.max_value = 100
-		bar.custom_minimum_size = Vector2(80, 12)
+		bar.custom_minimum_size = Vector2(60, 12)
 		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		bar.show_percentage = false
 		row.add_child(bar)
 		_vital_bars[vid] = bar
+
+		var val_label: Label = Label.new()
+		val_label.text = "0/100"
+		val_label.add_theme_font_size_override("font_size", 11)
+		val_label.custom_minimum_size = Vector2(45, 0)
+		val_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		row.add_child(val_label)
+		_vital_value_labels[vid] = val_label
 
 		vitals_panel.add_child(row)
 
 func _update_vitals() -> void:
 	var vitals: Dictionary = The.session.get("vitals", {})
 	for vid: String in _vital_bars:
-		(_vital_bars[vid] as ProgressBar).value = int(vitals.get(vid, 0))
+		var val: int = int(vitals.get(vid, 0))
+		(_vital_bars[vid] as ProgressBar).value = val
+		_vital_value_labels[vid].text = str(val) + "/100"
 
-# --- Resolve single day ---
+# --- Resolve single slot ---
 
 func _next_unresolved_day() -> String:
 	for d: String in DAYS:
@@ -304,22 +331,47 @@ func _next_unresolved_day() -> String:
 			return d
 	return ""
 
-func _on_play_day(day_id: String) -> void:
-	if _resolving or _day_resolved.get(day_id, false):
-		return
-	# Must resolve days in order
+func _can_play_day(day_id: String) -> bool:
+	if _day_resolved.get(day_id, false):
+		return false
 	var next: String = _next_unresolved_day()
-	if next != "" and next != day_id:
+	return next == "" or next == day_id
+
+func _on_play_slot(day_id: String) -> void:
+	if _resolving or not _can_play_day(day_id):
+		return
+	var slot_idx: int = _day_slot_index.get(day_id, 0)
+	if slot_idx >= SLOTS.size():
 		return
 	_resolving = true
 	_set_buttons_enabled(false)
-	await _resolve_day(day_id)
-	_day_resolved[day_id] = true
-	_day_buttons[day_id].text = "ok"
-	_day_buttons[day_id].disabled = true
-	_finalize_if_week_done()
+	await _resolve_slot(day_id, SLOTS[slot_idx])
+	_day_slot_index[day_id] = slot_idx + 1
+	if _day_slot_index[day_id] >= SLOTS.size():
+		_mark_day_done(day_id)
 	_resolving = false
 	_set_buttons_enabled(true)
+
+func _on_play_day(day_id: String) -> void:
+	if _resolving or not _can_play_day(day_id):
+		return
+	_resolving = true
+	_set_buttons_enabled(false)
+	var start_idx: int = _day_slot_index.get(day_id, 0)
+	for i: int in range(start_idx, SLOTS.size()):
+		await _resolve_slot(day_id, SLOTS[i])
+		_day_slot_index[day_id] = i + 1
+	_mark_day_done(day_id)
+	_resolving = false
+	_set_buttons_enabled(true)
+
+func _mark_day_done(day_id: String) -> void:
+	_day_resolved[day_id] = true
+	_day_play_buttons[day_id].text = "ok"
+	_day_play_buttons[day_id].disabled = true
+	_day_fast_buttons[day_id].text = "ok"
+	_day_fast_buttons[day_id].disabled = true
+	_finalize_if_week_done()
 
 # --- Resolve full week ---
 
@@ -331,10 +383,15 @@ func _on_next_week() -> void:
 	for day_id: String in DAYS:
 		if _day_resolved.get(day_id, false):
 			continue
-		await _resolve_day(day_id)
+		var start_idx: int = _day_slot_index.get(day_id, 0)
+		for i: int in range(start_idx, SLOTS.size()):
+			await _resolve_slot(day_id, SLOTS[i])
+			_day_slot_index[day_id] = i + 1
 		_day_resolved[day_id] = true
-		_day_buttons[day_id].text = "ok"
-		_day_buttons[day_id].disabled = true
+		_day_play_buttons[day_id].text = "ok"
+		_day_play_buttons[day_id].disabled = true
+		_day_fast_buttons[day_id].text = "ok"
+		_day_fast_buttons[day_id].disabled = true
 	_finalize_week()
 	_resolving = false
 	_set_buttons_enabled(true)
@@ -342,92 +399,104 @@ func _on_next_week() -> void:
 func _set_buttons_enabled(enabled: bool) -> void:
 	btn_next_week.disabled = not enabled
 	btn_clear.disabled = not enabled
-	for day_id: String in _day_buttons:
+	for day_id: String in _day_play_buttons:
 		if not _day_resolved.get(day_id, false):
-			(_day_buttons[day_id] as Button).disabled = not enabled
+			(_day_play_buttons[day_id] as Button).disabled = not enabled
+			(_day_fast_buttons[day_id] as Button).disabled = not enabled
 
-func _resolve_day(day_id: String) -> void:
+# --- Core slot resolution ---
+
+func _resolve_slot(day_id: String, slot_id: String) -> void:
 	var vitals: Dictionary = The.session.get("vitals", {}).duplicate()
 	var money: int = int(The.session.get("money", 0))
 	var day_text: String = I18n.text(DAY_LABELS[day_id])
 
-	for slot_id: String in SLOTS:
-		var key: String = day_id + "_" + slot_id
-		var select: OptionButton = _grid_selects.get(key, null)
-		if select == null:
-			continue
-		var index: int = select.selected
-		var acts: Array[Dictionary] = _grid_activities.get(key, [])
-		if index < 0 or index >= acts.size():
-			continue
-		var act: Dictionary = acts[index]
-		var collapsed: bool = false
+	var key: String = day_id + "_" + slot_id
+	var select: OptionButton = _grid_selects.get(key, null)
+	if select == null:
+		return
+	var index: int = select.selected
+	var acts: Array[Dictionary] = _grid_activities.get(key, [])
+	if index < 0 or index >= acts.size():
+		return
+	var act: Dictionary = acts[index]
+	var collapsed: bool = false
 
-		# Check vital collapse — override planned activity
-		for vid: String in vitals:
-			if int(vitals[vid]) <= 0:
-				var recovery: Dictionary = _activity_def.get_recovery_for(vid)
-				if not recovery.is_empty():
-					act = recovery
-					collapsed = true
-					break
+	# Check vital collapse
+	for vid: String in vitals:
+		if int(vitals[vid]) <= 0:
+			var recovery: Dictionary = _activity_def.get_recovery_for(vid)
+			if not recovery.is_empty():
+				act = recovery
+				collapsed = true
+				break
 
-		var act_name: String = I18n.text(act.get("name", "?"))
+	var act_name: String = I18n.text(act.get("name", "?"))
 
-		# Mark as running
-		_set_select_color(select, COLOR_RUNNING)
-		await get_tree().create_timer(SLOT_DELAY * 0.3).timeout
+	# Mark as running
+	_set_select_color(select, COLOR_RUNNING)
+	await get_tree().create_timer(SLOT_DELAY * 0.3).timeout
 
-		# Resolve slot modifier (recovery activities have no modifiers)
-		var modifiers: Dictionary = act.get("slot_modifiers", {})
-		var modifier: float = float(modifiers.get(slot_id, 1.0))
+	# Slot modifier
+	var modifiers: Dictionary = act.get("slot_modifiers", {})
+	var modifier: float = float(modifiers.get(slot_id, 1.0))
 
-		# Apply effects scaled by modifier
-		var effects: Dictionary = act.get("effects", {})
-		for vid: String in effects.keys():
-			var base_effect: float = float(effects[vid])
-			var scaled: int = int(base_effect * modifier)
-			var current: int = int(vitals.get(vid, 0))
-			vitals[vid] = clampi(current + scaled, 0, 100)
+	# Apply effects scaled by modifier, track deltas
+	var effects: Dictionary = act.get("effects", {})
+	var deltas: Dictionary = {}
+	for vid: String in effects.keys():
+		var base_effect: float = float(effects[vid])
+		var scaled: int = int(base_effect * modifier)
+		var current: int = int(vitals.get(vid, 0))
+		var new_val: int = clampi(current + scaled, 0, 100)
+		deltas[vid] = new_val - current
+		vitals[vid] = new_val
 
-		var money_delta: int = int(int(act.get("money", 0)) * modifier)
-		money += money_delta
+	var money_delta: int = int(int(act.get("money", 0)) * modifier)
+	money += money_delta
 
-		# Determine outcome
-		var outcome_color: Color
-		if collapsed:
-			outcome_color = COLOR_BAD
-		else:
-			var roll: float = randf()
-			if roll < 0.25:
-				outcome_color = COLOR_GOOD
-			elif roll < 0.75:
-				outcome_color = COLOR_NEUTRAL
-			else:
-				outcome_color = COLOR_BAD
+	# Determine color: green=synergy, yellow=normal, red=collapse
+	var outcome_color: Color
+	if collapsed:
+		outcome_color = COLOR_COLLAPSE
+	elif modifier > 1.01:
+		outcome_color = COLOR_SYNERGY
+	else:
+		outcome_color = COLOR_NORMAL
 
-		# Update state
-		The.session["vitals"] = vitals
-		The.session["money"] = money
-		_update_vitals()
+	# Update state
+	The.session["vitals"] = vitals
+	The.session["money"] = money
+	_update_vitals()
+	_update_header()
 
-		var money_str: String = ""
-		if money_delta > 0:
-			money_str = " (+R$" + str(money_delta) + ")"
-		elif money_delta < 0:
-			money_str = " (-R$" + str(absi(money_delta)) + ")"
+	# Build log line
+	var money_str: String = ""
+	if money_delta > 0:
+		money_str = " (+R$" + str(money_delta) + ")"
+	elif money_delta < 0:
+		money_str = " (-R$" + str(absi(money_delta)) + ")"
 
-		var mod_str: String = ""
-		if not collapsed:
-			if modifier > 1.01:
-				mod_str = " ^"
-			elif modifier < 0.99:
-				mod_str = " v"
+	var delta_parts: Array[String] = []
+	for vid: String in deltas:
+		var d: int = deltas[vid]
+		if d != 0:
+			var prefix: String = "+" if d > 0 else ""
+			delta_parts.append(vid.substr(0, 3) + prefix + str(d))
+	var delta_str: String = ""
+	if not delta_parts.is_empty():
+		delta_str = " (" + ", ".join(delta_parts) + ")"
 
-		_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + money_str + mod_str, outcome_color)
-		_set_select_color(select, outcome_color)
+	_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + money_str + delta_str, outcome_color)
 
-		await get_tree().create_timer(SLOT_DELAY * 0.7).timeout
+	# Color the dropdown + update text if collapsed
+	_set_select_color(select, outcome_color)
+	if collapsed:
+		# Show collapse activity name in the dropdown
+		select.add_item(act_name)
+		select.selected = select.item_count - 1
+
+	await get_tree().create_timer(SLOT_DELAY * 0.7).timeout
 
 func _finalize_if_week_done() -> void:
 	for day_id: String in DAYS:
@@ -455,8 +524,11 @@ func _finalize_week() -> void:
 	# Reset grid for next week
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
-		_day_buttons[day_id].text = ">"
-		_day_buttons[day_id].disabled = false
+		_day_slot_index[day_id] = 0
+		_day_play_buttons[day_id].text = ">"
+		_day_play_buttons[day_id].disabled = false
+		_day_fast_buttons[day_id].text = ">>"
+		_day_fast_buttons[day_id].disabled = false
 	for key: String in _grid_selects:
 		_reset_select_color(_grid_selects[key])
 
