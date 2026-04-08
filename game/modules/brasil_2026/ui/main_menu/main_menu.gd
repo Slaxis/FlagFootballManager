@@ -2,7 +2,7 @@ extends Control
 
 @onready var btn_start: Button = $Center/VBox/BtnStart
 @onready var btn_quit: Button = $Center/VBox/BtnQuit
-@onready var btn_lang: Button = $Center/VBox/BtnLang
+@onready var btn_lang: Button = $BtnLang
 
 func _ready() -> void:
 	btn_start.pressed.connect(_on_start_pressed)
