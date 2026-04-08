@@ -1,29 +1,36 @@
 extends Control
 
-const SLOTS: Array[String] = ["morning", "afternoon", "night"]
+const DAYS: Array[String] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+const SLOTS: Array[String] = ["morning", "afternoon", "night", "late_night"]
+
+const DAY_LABELS: Dictionary = {
+	"mon": {"pt": "SEG", "en": "MON"},
+	"tue": {"pt": "TER", "en": "TUE"},
+	"wed": {"pt": "QUA", "en": "WED"},
+	"thu": {"pt": "QUI", "en": "THU"},
+	"fri": {"pt": "SEX", "en": "FRI"},
+	"sat": {"pt": "SÁB", "en": "SAT"},
+	"sun": {"pt": "DOM", "en": "SUN"},
+}
 const SLOT_LABELS: Dictionary = {
-	"morning":   {"pt": "MANHÃ",  "en": "MORNING"},
-	"afternoon": {"pt": "TARDE",  "en": "AFTERNOON"},
-	"night":     {"pt": "NOITE",  "en": "NIGHT"},
+	"morning":    {"pt": "MANHÃ",      "en": "MORN"},
+	"afternoon":  {"pt": "TARDE",      "en": "AFT"},
+	"night":      {"pt": "NOITE",      "en": "NITE"},
+	"late_night": {"pt": "MADRUGADA",  "en": "LATE"},
 }
-const DAY_NAMES_I18N: Dictionary = {
-	"pt": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
-	"en": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-}
-const T_PLAN: Dictionary = {"pt": "PLANEJE SEU DIA", "en": "PLAN YOUR DAY"}
-const T_NEXT: Dictionary = {"pt": "PRÓXIMO DIA", "en": "NEXT DAY"}
-const T_ROOM: Dictionary = {"pt": "SEU QUARTO", "en": "YOUR ROOM"}
-const T_LOG: Dictionary = {"pt": "LOG", "en": "LOG"}
-const T_VITALS: Dictionary = {"pt": "SINAIS VITAIS", "en": "VITALS"}
 const T_WEEK: Dictionary = {"pt": "Semana", "en": "Week"}
 const T_DAY: Dictionary = {"pt": "Dia", "en": "Day"}
-const T_WELCOME: Dictionary = {"pt": "Bem-vindo! Planeje seu dia.", "en": "Welcome home. Plan your day."}
+const T_PLAN: Dictionary = {"pt": "PLANEJE SUA SEMANA", "en": "PLAN YOUR WEEK"}
+const T_NEXT_WEEK: Dictionary = {"pt": "PRÓXIMA SEMANA", "en": "NEXT WEEK"}
+const T_CLEAR: Dictionary = {"pt": "LIMPAR", "en": "CLEAR"}
+const T_ROOM: Dictionary = {"pt": "SEU QUARTO", "en": "YOUR ROOM"}
+const T_VITALS: Dictionary = {"pt": "SINAIS VITAIS", "en": "VITALS"}
+const T_WELCOME: Dictionary = {"pt": "Bem-vindo! Planeje sua semana.", "en": "Welcome home. Plan your week."}
 const T_PHONE: Dictionary = {"pt": "Celular", "en": "Phone"}
 const T_TV: Dictionary = {"pt": "TV", "en": "TV"}
 const T_FRIDGE: Dictionary = {"pt": "Geladeira", "en": "Fridge"}
 const T_WARDROBE: Dictionary = {"pt": "Armário", "en": "Wardrobe"}
 const T_NOT_IMPL: Dictionary = {"pt": " — ainda não implementado", "en": " — not yet implemented"}
-const T_EXHAUSTED: Dictionary = {"pt": "Exausto demais para treinar. Dormiu.", "en": "Too exhausted to train. Slept instead."}
 
 const VITAL_NAMES: Dictionary = {
 	"energy":  {"pt": "Energia", "en": "Energy"},
@@ -32,35 +39,31 @@ const VITAL_NAMES: Dictionary = {
 	"leisure": {"pt": "Lazer",   "en": "Leisure"},
 }
 
-const COLOR_VITAL_OK := Color(0.3, 0.8, 0.3)
-const COLOR_VITAL_WARN := Color(0.9, 0.7, 0.2)
-const COLOR_VITAL_LOW := Color(0.8, 0.2, 0.2)
-const COLOR_BUFF := Color(0.3, 0.7, 0.9)
 const COLOR_DEBUFF := Color(0.8, 0.3, 0.3)
+const COLOR_BUFF := Color(0.3, 0.7, 0.9)
 
-var _activity_def: Def  # ActivityDef
-var _slot_selects: Dictionary = {}
-var _slot_activities: Dictionary = {}
+var _activity_def: Def
+var _grid_selects: Dictionary = {}  # "day_slot" -> OptionButton
+var _grid_activities: Dictionary = {}  # "day_slot" -> Array[Dictionary]
 var _vital_bars: Dictionary = {}
 var _vital_labels: Dictionary = {}
-var _slot_labels: Dictionary = {}  # slot -> Label
 var _effects: Array[Dictionary] = []
 
 @onready var money_label: Label = $Margin/VBox/TopBar/MoneyLabel
 @onready var day_label: Label = $Margin/VBox/TopBar/DayLabel
 @onready var week_label: Label = $Margin/VBox/TopBar/WeekLabel
 @onready var player_label: Label = $Margin/VBox/TopBar/PlayerLabel
+
 @onready var plan_header: Label = $Margin/VBox/Content/LeftPanel/PlanHeader
-@onready var slots_panel: VBoxContainer = $Margin/VBox/Content/LeftPanel/Slots
-@onready var btn_next: Button = $Margin/VBox/Content/LeftPanel/BtnNextDay
+@onready var grid_container: GridContainer = $Margin/VBox/Content/LeftPanel/GridScroll/WeekGrid
+@onready var btn_next_week: Button = $Margin/VBox/Content/LeftPanel/ButtonRow/BtnNextWeek
+@onready var btn_clear: Button = $Margin/VBox/Content/LeftPanel/ButtonRow/BtnClear
 
-@onready var room_header: Label = $Margin/VBox/Content/CenterPanel/RoomHeader
-@onready var room_panel: VBoxContainer = $Margin/VBox/Content/CenterPanel/Room
-@onready var log_header: Label = $Margin/VBox/Content/CenterPanel/LogHeader
-@onready var log_text: RichTextLabel = $Margin/VBox/Content/CenterPanel/LogText
-
+@onready var room_header: Label = $Margin/VBox/Content/RightPanel/RoomHeader
+@onready var room_panel: VBoxContainer = $Margin/VBox/Content/RightPanel/Room
 @onready var vitals_header: Label = $Margin/VBox/Content/RightPanel/VitalsHeader
 @onready var vitals_panel: VBoxContainer = $Margin/VBox/Content/RightPanel/Vitals
+@onready var log_text: RichTextLabel = $Margin/VBox/Content/RightPanel/LogText
 @onready var effects_bar: HBoxContainer = $Margin/VBox/EffectsBar
 
 func _ready() -> void:
@@ -68,36 +71,27 @@ func _ready() -> void:
 	if _activity_def == null:
 		Log.log(self, "error", "PlayerHome: missing activity Def.")
 		return
-	_build_slots()
+	_build_grid()
 	_build_room()
 	_build_vitals()
-	_update_all_text()
+	_update_text()
 	_update_header()
 	_update_vitals()
-	btn_next.pressed.connect(_on_next_day)
+	btn_next_week.pressed.connect(_on_next_week)
+	btn_clear.pressed.connect(_on_clear)
 	_log(I18n.text(T_WELCOME))
 
-func _update_all_text() -> void:
+# --- Text ---
+
+func _update_text() -> void:
 	plan_header.text = I18n.text(T_PLAN)
-	btn_next.text = I18n.text(T_NEXT)
+	btn_next_week.text = I18n.text(T_NEXT_WEEK)
+	btn_clear.text = I18n.text(T_CLEAR)
 	room_header.text = I18n.text(T_ROOM)
-	log_header.text = I18n.text(T_LOG)
 	vitals_header.text = I18n.text(T_VITALS)
-	# Update slot labels
-	for slot: String in _slot_labels:
-		_slot_labels[slot].text = I18n.text(SLOT_LABELS[slot])
-	# Update slot dropdowns
-	for slot: String in _slot_selects:
-		var select: OptionButton = _slot_selects[slot]
-		var acts: Array[Dictionary] = _slot_activities.get(slot, [])
-		for i: int in acts.size():
-			select.set_item_text(i, I18n.text(acts[i].get("name", acts[i].get("id", "?"))))
-	# Update vital labels
 	for vid: String in _vital_labels:
 		_vital_labels[vid].text = I18n.text(VITAL_NAMES.get(vid, vid))
-	# Update room buttons
 	_rebuild_room()
-	_update_header()
 
 # --- Header ---
 
@@ -105,51 +99,61 @@ func _update_header() -> void:
 	var money: int = int(The.session.get("money", 0))
 	var week: int = int(The.session.get("week", 1))
 	var day: int = int(The.session.get("day", 1))
-	var day_names: Array = DAY_NAMES_I18N.get(I18n.lang, DAY_NAMES_I18N["en"])
-	var day_name: String = day_names[(day - 1) % 7]
-	var player_name: String = String(The.session.get("player_name", ""))
-
+	player_label.text = String(The.session.get("player_name", ""))
 	money_label.text = "R$ " + str(money)
-	day_label.text = day_name + ", " + I18n.text(T_DAY) + " " + str(day)
+	day_label.text = I18n.text(T_DAY) + " " + str(day)
 	week_label.text = I18n.text(T_WEEK) + " " + str(week)
-	player_label.text = player_name
 
-# --- Slots ---
+# --- Week Grid ---
 
-func _build_slots() -> void:
-	for slot: String in SLOTS:
-		var row: VBoxContainer = VBoxContainer.new()
-		row.add_theme_constant_override("separation", 2)
+func _build_grid() -> void:
+	grid_container.columns = DAYS.size() + 1
 
-		var label: Label = Label.new()
-		label.text = I18n.text(SLOT_LABELS[slot])
-		label.add_theme_font_size_override("font_size", 13)
-		label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-		row.add_child(label)
-		_slot_labels[slot] = label
+	# Corner cell
+	var corner: Label = Label.new()
+	corner.text = ""
+	corner.custom_minimum_size = Vector2(50, 0)
+	grid_container.add_child(corner)
 
-		var select: OptionButton = OptionButton.new()
-		select.custom_minimum_size = Vector2(200, 32)
-		var available: Array[Dictionary] = _activity_def.list_for_slot(slot)
-		_slot_activities[slot] = available
-		for act: Dictionary in available:
-			select.add_item(I18n.text(act.get("name", act.get("id", "?"))))
-		select.tooltip_text = _get_activity_desc(slot, 0)
-		select.item_selected.connect(_on_slot_changed.bind(slot))
-		row.add_child(select)
-		_slot_selects[slot] = select
+	# Day headers
+	for day_id: String in DAYS:
+		var header: Label = Label.new()
+		header.text = I18n.text(DAY_LABELS[day_id])
+		header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		header.custom_minimum_size = Vector2(80, 0)
+		header.add_theme_font_size_override("font_size", 12)
+		grid_container.add_child(header)
 
-		slots_panel.add_child(row)
+	# Slot rows
+	for slot_id: String in SLOTS:
+		var row_label: Label = Label.new()
+		row_label.text = I18n.text(SLOT_LABELS[slot_id])
+		row_label.add_theme_font_size_override("font_size", 11)
+		row_label.custom_minimum_size = Vector2(50, 0)
+		grid_container.add_child(row_label)
 
-func _get_activity_desc(slot: String, index: int) -> String:
-	var acts: Array[Dictionary] = _slot_activities.get(slot, [])
-	if index >= 0 and index < acts.size():
-		return I18n.text(acts[index].get("desc", ""))
-	return ""
+		var available: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
 
-func _on_slot_changed(index: int, slot: String) -> void:
-	var select: OptionButton = _slot_selects[slot]
-	select.tooltip_text = _get_activity_desc(slot, index)
+		for day_id: String in DAYS:
+			var key: String = day_id + "_" + slot_id
+			var select: OptionButton = OptionButton.new()
+			select.custom_minimum_size = Vector2(80, 28)
+			select.add_theme_font_size_override("font_size", 10)
+			_grid_activities[key] = available
+			for act: Dictionary in available:
+				select.add_item(I18n.text(act.get("name", "?")))
+			# Default late_night to sleep
+			if slot_id == "late_night":
+				for i: int in available.size():
+					if available[i].get("id", "") == "sleep":
+						select.selected = i
+						break
+			_grid_selects[key] = select
+			grid_container.add_child(select)
+
+func _on_clear() -> void:
+	for key: String in _grid_selects:
+		(_grid_selects[key] as OptionButton).selected = 0
 
 # --- Room ---
 
@@ -160,18 +164,18 @@ func _rebuild_room() -> void:
 	for child: Node in room_panel.get_children():
 		child.queue_free()
 	var items: Array[Dictionary] = [
-		{"label": T_PHONE,    "id": "phone"},
-		{"label": T_TV,       "id": "tv"},
-		{"label": T_FRIDGE,   "id": "fridge"},
+		{"label": T_PHONE, "id": "phone"},
+		{"label": T_TV, "id": "tv"},
+		{"label": T_FRIDGE, "id": "fridge"},
 		{"label": T_WARDROBE, "id": "wardrobe"},
 	]
 	var hbox: HBoxContainer = HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 16)
+	hbox.add_theme_constant_override("separation", 8)
 	for item: Dictionary in items:
 		var btn: Button = Button.new()
 		btn.text = I18n.text(item["label"])
-		btn.custom_minimum_size = Vector2(110, 50)
+		btn.custom_minimum_size = Vector2(90, 40)
 		btn.pressed.connect(_on_room_item.bind(item["id"]))
 		hbox.add_child(btn)
 	room_panel.add_child(hbox)
@@ -184,19 +188,21 @@ func _on_room_item(item_id: String) -> void:
 func _build_vitals() -> void:
 	var vital_ids: Array[String] = ["energy", "hunger", "social", "leisure"]
 	for vid: String in vital_ids:
-		var row: VBoxContainer = VBoxContainer.new()
-		row.add_theme_constant_override("separation", 1)
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
 
 		var label: Label = Label.new()
 		label.text = I18n.text(VITAL_NAMES.get(vid, vid))
 		label.add_theme_font_size_override("font_size", 12)
+		label.custom_minimum_size = Vector2(55, 0)
 		row.add_child(label)
 		_vital_labels[vid] = label
 
 		var bar: ProgressBar = ProgressBar.new()
 		bar.min_value = 0
 		bar.max_value = 100
-		bar.custom_minimum_size = Vector2(0, 14)
+		bar.custom_minimum_size = Vector2(80, 12)
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		bar.show_percentage = false
 		row.add_child(bar)
 		_vital_bars[vid] = bar
@@ -206,50 +212,53 @@ func _build_vitals() -> void:
 func _update_vitals() -> void:
 	var vitals: Dictionary = The.session.get("vitals", {})
 	for vid: String in _vital_bars:
-		var bar: ProgressBar = _vital_bars[vid]
-		var val: int = int(vitals.get(vid, 0))
-		bar.value = val
+		(_vital_bars[vid] as ProgressBar).value = int(vitals.get(vid, 0))
 
-# --- Day progression ---
+# --- Week resolution ---
 
-func _on_next_day() -> void:
+func _on_next_week() -> void:
 	var vitals: Dictionary = The.session.get("vitals", {}).duplicate()
 	var money: int = int(The.session.get("money", 0))
 
-	for slot: String in SLOTS:
-		var select: OptionButton = _slot_selects[slot]
-		var index: int = select.selected
-		var acts: Array[Dictionary] = _slot_activities.get(slot, [])
-		if index < 0 or index >= acts.size():
-			continue
-		var act: Dictionary = acts[index]
-		var act_name: String = I18n.text(act.get("name", "?"))
+	for day_id: String in DAYS:
+		var day_text: String = I18n.text(DAY_LABELS[day_id])
+		for slot_id: String in SLOTS:
+			var key: String = day_id + "_" + slot_id
+			var select: OptionButton = _grid_selects.get(key, null)
+			if select == null:
+				continue
+			var index: int = select.selected
+			var acts: Array[Dictionary] = _grid_activities.get(key, [])
+			if index < 0 or index >= acts.size():
+				continue
+			var act: Dictionary = acts[index]
+			var act_name: String = I18n.text(act.get("name", "?"))
 
-		var effects: Dictionary = act.get("effects", {})
-		for key: String in effects.keys():
-			var current: int = int(vitals.get(key, 0))
-			vitals[key] = clampi(current + int(effects[key]), 0, 100)
+			var effects: Dictionary = act.get("effects", {})
+			for vid: String in effects.keys():
+				var current: int = int(vitals.get(vid, 0))
+				vitals[vid] = clampi(current + int(effects[vid]), 0, 100)
 
-		var money_delta: int = int(act.get("money", 0))
-		money += money_delta
+			var money_delta: int = int(act.get("money", 0))
+			money += money_delta
 
-		var money_str: String = ""
-		if money_delta > 0:
-			money_str = " (+R$" + str(money_delta) + ")"
-		elif money_delta < 0:
-			money_str = " (-R$" + str(absi(money_delta)) + ")"
+			var money_str: String = ""
+			if money_delta > 0:
+				money_str = " (+R$" + str(money_delta) + ")"
+			elif money_delta < 0:
+				money_str = " (-R$" + str(absi(money_delta)) + ")"
 
-		_log(I18n.text(SLOT_LABELS[slot]) + ": " + act_name + money_str)
+			_log(day_text + " " + I18n.text(SLOT_LABELS[slot_id]) + ": " + act_name + money_str)
 
+	# Debuffs
 	_effects.clear()
 	for vid: String in vitals:
-		var val: int = int(vitals[vid])
-		if val <= 20:
+		if int(vitals[vid]) <= 20:
 			_effects.append({"name": I18n.text(VITAL_NAMES.get(vid, vid)) + " LOW", "type": "debuff"})
 
 	The.session["vitals"] = vitals
 	The.session["money"] = money
-	var day: int = int(The.session.get("day", 1)) + 1
+	var day: int = int(The.session.get("day", 1)) + 7
 	The.session["day"] = day
 	@warning_ignore("integer_division")
 	The.session["week"] = ((day - 1) / 7) + 1
@@ -257,7 +266,7 @@ func _on_next_day() -> void:
 	_update_header()
 	_update_vitals()
 	_update_effects()
-	_log("--- " + I18n.text(T_DAY) + " " + str(day) + " ---")
+	_log("--- " + I18n.text(T_WEEK) + " " + str(The.session["week"]) + " ---")
 
 func _update_effects() -> void:
 	for child: Node in effects_bar.get_children():
@@ -269,6 +278,8 @@ func _update_effects() -> void:
 		label.add_theme_color_override("font_color", COLOR_DEBUFF if is_debuff else COLOR_BUFF)
 		label.add_theme_font_size_override("font_size", 12)
 		effects_bar.add_child(label)
+
+# --- Log ---
 
 func _log(text: String) -> void:
 	log_text.append_text(text + "\n")

@@ -10,6 +10,14 @@
 - Language toggle (PT/EN) button on home screen top bar
 - All UI strings converted to i18n dicts: activities, stats, skills, vitals, day names, room items, all menu buttons, cutscene pages bilingual PT/EN
 - Cutscene pages now loaded from injectable Thing JSON (`group: "cutscene"`) with i18n text + image field
+- Weekly planner: 7x4 grid (Mon-Sun x Morning/Afternoon/Night/Late Night) replaces daily slots
+- Late Night time slot added to activities, "Stay Up Late" activity added
+- NEXT WEEK button resolves all 28 slots, CLEAR resets grid
+
+### Changed
+- Home screen layout: grid takes ~75% width (left), room + vitals + log on right
+- "Plan your day" → "Plan your week", "Next day" ��� "Next week"
+- Day advances by 7 per week instead of 1
 
 ### Changed
 - Main menu START → module select → character creation (was: START → creation)

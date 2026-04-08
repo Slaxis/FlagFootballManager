@@ -40,28 +40,28 @@
       "id": "socialize",
       "name": {"pt": "Sair com amigos", "en": "Hang Out"},
       "desc": {"pt": "Encontrar amigos, conversar, se divertir", "en": "Meet friends, talk, have a good time"},
-      "slots": ["afternoon", "night"],
+      "slots": ["afternoon", "night", "late_night"],
       "effects": {"energy": -5, "social": 25, "leisure": 15, "hunger": -10}
     },
     {
       "id": "watch_tv",
       "name": {"pt": "Assistir TV", "en": "Watch TV"},
       "desc": {"pt": "Relaxar no sofá, recarregar", "en": "Relax on the couch, recharge"},
-      "slots": ["morning", "afternoon", "night"],
+      "slots": ["morning", "afternoon", "night", "late_night"],
       "effects": {"energy": 5, "leisure": 20, "social": -5}
     },
     {
       "id": "watch_game",
       "name": {"pt": "Assistir jogo / filme", "en": "Watch Game Film"},
       "desc": {"pt": "Estudar jogadas, formações e tendências", "en": "Study plays, formations, and opponent tendencies"},
-      "slots": ["morning", "afternoon", "night"],
+      "slots": ["morning", "afternoon", "night", "late_night"],
       "effects": {"energy": -10, "leisure": -5}
     },
     {
       "id": "browse_phone",
       "name": {"pt": "Mexer no celular", "en": "Browse Phone"},
       "desc": {"pt": "Ver times, comprar, conversar", "en": "Check teams, shop, chat with friends"},
-      "slots": ["morning", "afternoon", "night"],
+      "slots": ["morning", "afternoon", "night", "late_night"],
       "effects": {"energy": -5, "leisure": 10}
     },
     {
@@ -83,8 +83,15 @@
       "id": "sleep",
       "name": {"pt": "Dormir", "en": "Sleep"},
       "desc": {"pt": "Ir pra cama — essencial pra recuperação", "en": "Go to bed — essential for recovery"},
-      "slots": ["night"],
+      "slots": ["night", "late_night"],
       "effects": {"energy": 40, "hunger": -5}
+    },
+    {
+      "id": "stay_up_late",
+      "name": {"pt": "Virar a noite", "en": "Stay Up Late"},
+      "desc": {"pt": "Ficar acordado de madrugada — ruim pra energia", "en": "Pull a late night — bad for energy"},
+      "slots": ["late_night"],
+      "effects": {"energy": -20, "leisure": 15}
     }
   ]
 }

@@ -33,12 +33,13 @@ Everything before character creation.
 
 Replace day-by-day with week-at-a-glance.
 
-### 2.1 — Week grid UI
+### 2.1 — Week grid UI ✅
 - 7 columns (Mon-Sun) x 4 rows (Morning, Afternoon, Night, Late Night)
-- 28 cells, each is a droppable slot
-- Player drags activities from a palette on the left into cells
-- Or clicks a cell → dropdown of available activities for that slot
-- "Clear Week" and "Copy Last Week" buttons
+- 28 OptionButton cells, each filtered by slot availability
+- Late Night defaults to Sleep
+- CLEAR button resets all to first option
+- NEXT WEEK resolves all 28 slots sequentially
+- Layout: grid left (3/4 width), room + vitals + log right (1/4)
 
 ### 2.2 — Activity slot synergy/penalty matrix
 - New field in activity.json: `"slot_modifiers": {"morning": 1.2, "late_night": 0.5}`
