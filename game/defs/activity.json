@@ -2,87 +2,87 @@
   "activities": [
     {
       "id": "sleep_in",
-      "name": "Sleep In",
-      "desc": "Stay in bed, recover energy",
+      "name": {"pt": "Dormir até tarde", "en": "Sleep In"},
+      "desc": {"pt": "Ficar na cama, recuperar energia", "en": "Stay in bed, recover energy"},
       "slots": ["morning"],
       "effects": {"energy": 30, "hunger": -5}
     },
     {
       "id": "study",
-      "name": "Study",
-      "desc": "Hit the books — keep your grades up",
+      "name": {"pt": "Estudar", "en": "Study"},
+      "desc": {"pt": "Fazer lição — manter as notas em dia", "en": "Hit the books — keep your grades up"},
       "slots": ["morning", "afternoon"],
       "effects": {"energy": -10, "hunger": -5, "leisure": -5}
     },
     {
       "id": "work_parttime",
-      "name": "Part-time Job",
-      "desc": "Earn some cash. Tiring but pays the bills",
+      "name": {"pt": "Trabalho meio-período", "en": "Part-time Job"},
+      "desc": {"pt": "Ganhar uma grana. Cansa mas paga as contas", "en": "Earn some cash. Tiring but pays the bills"},
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -20, "hunger": -10, "social": 5},
       "money": 50
     },
     {
       "id": "train_solo",
-      "name": "Train Solo",
-      "desc": "Hit the park, work on your game alone",
+      "name": {"pt": "Treino solo", "en": "Train Solo"},
+      "desc": {"pt": "Ir pro parque, treinar sozinho", "en": "Hit the park, work on your game alone"},
       "slots": ["morning", "afternoon"],
       "effects": {"energy": -25, "hunger": -15}
     },
     {
       "id": "gym",
-      "name": "Gym",
-      "desc": "Lift weights, build strength and stamina",
+      "name": {"pt": "Academia", "en": "Gym"},
+      "desc": {"pt": "Musculação, ganhar força e resistência", "en": "Lift weights, build strength and stamina"},
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -20, "hunger": -15}
     },
     {
       "id": "socialize",
-      "name": "Hang Out",
-      "desc": "Meet friends, talk, have a good time",
+      "name": {"pt": "Sair com amigos", "en": "Hang Out"},
+      "desc": {"pt": "Encontrar amigos, conversar, se divertir", "en": "Meet friends, talk, have a good time"},
       "slots": ["afternoon", "night"],
       "effects": {"energy": -5, "social": 25, "leisure": 15, "hunger": -10}
     },
     {
       "id": "watch_tv",
-      "name": "Watch TV",
-      "desc": "Relax on the couch, recharge",
+      "name": {"pt": "Assistir TV", "en": "Watch TV"},
+      "desc": {"pt": "Relaxar no sofá, recarregar", "en": "Relax on the couch, recharge"},
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": 5, "leisure": 20, "social": -5}
     },
     {
       "id": "watch_game",
-      "name": "Watch Game Film",
-      "desc": "Study plays, formations, and opponent tendencies",
+      "name": {"pt": "Assistir jogo / filme", "en": "Watch Game Film"},
+      "desc": {"pt": "Estudar jogadas, formações e tendências", "en": "Study plays, formations, and opponent tendencies"},
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -10, "leisure": -5}
     },
     {
       "id": "browse_phone",
-      "name": "Browse Phone",
-      "desc": "Check teams, shop, chat with friends",
+      "name": {"pt": "Mexer no celular", "en": "Browse Phone"},
+      "desc": {"pt": "Ver times, comprar, conversar", "en": "Check teams, shop, chat with friends"},
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -5, "leisure": 10}
     },
     {
       "id": "eat_well",
-      "name": "Cook & Eat",
-      "desc": "Prepare a proper meal, recover hunger",
+      "name": {"pt": "Cozinhar e comer", "en": "Cook & Eat"},
+      "desc": {"pt": "Preparar uma refeição decente", "en": "Prepare a proper meal, recover hunger"},
       "slots": ["morning", "afternoon", "night"],
       "effects": {"hunger": 35, "energy": -5},
       "money": -15
     },
     {
       "id": "rest",
-      "name": "Rest",
-      "desc": "Take it easy, recover energy",
+      "name": {"pt": "Descansar", "en": "Rest"},
+      "desc": {"pt": "Pegar leve, recuperar energia", "en": "Take it easy, recover energy"},
       "slots": ["morning", "afternoon"],
       "effects": {"energy": 20, "leisure": 5}
     },
     {
       "id": "sleep",
-      "name": "Sleep",
-      "desc": "Go to bed — essential for recovery",
+      "name": {"pt": "Dormir", "en": "Sleep"},
+      "desc": {"pt": "Ir pra cama — essencial pra recuperação", "en": "Go to bed — essential for recovery"},
       "slots": ["night"],
       "effects": {"energy": 40, "hunger": -5}
     }

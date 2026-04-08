@@ -6,10 +6,15 @@
 - Module select screen: choose campaign module before character creation
 - Module manifest now supports i18n fields (name, description) and version
 - Player age set to 15 (was 16)
+- Gender toggle (M/F) on character creation header
+- Language toggle (PT/EN) button on home screen top bar
+- All UI strings converted to i18n dicts: activities, stats, skills, vitals, day names, room items
 
 ### Changed
 - Main menu START → module select → character creation (was: START → creation)
 - Character creation BACK → module select (was: BACK → main menu)
+- activity.json, stat.json, skill.json now use `{"pt": ..., "en": ...}` format
+- Home screen fully i18n-aware: labels, dropdowns, log messages update on language switch
 
 ## [0.0.1] — 2026-04-07
 

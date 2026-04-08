@@ -15,11 +15,12 @@ Everything before character creation.
 - Player selects a module → `Drive.set_module()` → proceeds to creation
 - Module manifest updated with `description`, `version` fields (i18n dicts)
 
-### 1.2 — Language toggle
-- Button on home screen top bar: PT / EN
-- Calls `I18n.set_lang()`
-- All UI text that changes at runtime uses `I18n.text()` with `{"pt": "...", "en": "..."}` dicts
-- Activity names/descs, vital names, cutscene text, quest text — all become i18n dicts
+### 1.2 — Language toggle ✅
+- PT/EN button on home screen top bar
+- All runtime UI text uses `I18n.text()` with i18n dicts
+- activity.json, stat.json, skill.json converted to `{"pt": ..., "en": ...}` format
+- Home screen labels, slot names, day names, vital names, room items all i18n
+- Character creation resolves stat/skill names and descs via I18n
 
 ### 1.3 — Cutscene as injectable Things
 - Cutscene pages become Things with `group: "cutscene"`

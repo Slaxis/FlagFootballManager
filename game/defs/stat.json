@@ -5,9 +5,9 @@
       "label": "BRUTALITY",
       "base": 5,
       "stats": [
-        {"id": "speed",    "name": "Speed",    "desc": "Top speed in the open field"},
-        {"id": "strength", "name": "Strength", "desc": "Contact resistance, blocking push, flag pulls"},
-        {"id": "stamina",  "name": "Stamina",  "desc": "Gas tank — endurance through the whole game"}
+        {"id": "speed",    "name": {"pt": "Velocidade",  "en": "Speed"},    "desc": {"pt": "Velocidade máxima em campo aberto", "en": "Top speed in the open field"}},
+        {"id": "strength", "name": {"pt": "Força",       "en": "Strength"}, "desc": {"pt": "Resistência ao contato, puxar flag", "en": "Contact resistance, blocking push, flag pulls"}},
+        {"id": "stamina",  "name": {"pt": "Resistência", "en": "Stamina"},  "desc": {"pt": "Fôlego pro jogo todo", "en": "Gas tank — endurance through the whole game"}}
       ]
     },
     {
@@ -15,9 +15,9 @@
       "label": "FINESSE",
       "base": 5,
       "stats": [
-        {"id": "agility",   "name": "Agility",   "desc": "Acceleration, deceleration, direction changes"},
-        {"id": "dexterity", "name": "Dexterity", "desc": "Ball handling, hand-eye coordination, one-handers"},
-        {"id": "balance",   "name": "Balance",   "desc": "Body control, stability through cuts and contact"}
+        {"id": "agility",   "name": {"pt": "Agilidade",  "en": "Agility"},   "desc": {"pt": "Aceleração, desaceleração, mudança de direção", "en": "Acceleration, deceleration, direction changes"}},
+        {"id": "dexterity", "name": {"pt": "Destreza",   "en": "Dexterity"}, "desc": {"pt": "Manuseio de bola, coordenação", "en": "Ball handling, hand-eye coordination, one-handers"}},
+        {"id": "balance",   "name": {"pt": "Equilíbrio", "en": "Balance"},   "desc": {"pt": "Controle corporal, estabilidade nos cortes", "en": "Body control, stability through cuts and contact"}}
       ]
     },
     {
@@ -25,9 +25,9 @@
       "label": "COGNITION",
       "base": 5,
       "stats": [
-        {"id": "perception",   "name": "Perception",   "desc": "Field awareness — find the open man, read zone coverage"},
-        {"id": "intelligence", "name": "Intelligence", "desc": "Learning speed, XP gain, perk unlocks"},
-        {"id": "charisma",     "name": "Charisma",     "desc": "Crowd energy, taunting opponents, leadership"}
+        {"id": "perception",   "name": {"pt": "Percepção",    "en": "Perception"},   "desc": {"pt": "Visão de campo — achar o receiver aberto, ler cobertura", "en": "Field awareness — find the open man, read zone coverage"}},
+        {"id": "intelligence", "name": {"pt": "Inteligência", "en": "Intelligence"}, "desc": {"pt": "Velocidade de aprendizado, ganho de XP", "en": "Learning speed, XP gain, perk unlocks"}},
+        {"id": "charisma",     "name": {"pt": "Carisma",      "en": "Charisma"},     "desc": {"pt": "Energia da torcida, provocação, liderança", "en": "Crowd energy, taunting opponents, leadership"}}
       ]
     }
   ]

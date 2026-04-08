@@ -154,15 +154,15 @@ func _build_attr_row(parent: VBoxContainer, entry: Dictionary) -> void:
 	btn_mark.text = MARK_LABELS[Mark.NONE]
 	btn_mark.custom_minimum_size = Vector2(32, 28)
 	btn_mark.pressed.connect(_on_mark_pressed.bind(stat_id))
-	btn_mark.tooltip_text = String(entry.get("desc", ""))
+	btn_mark.tooltip_text = I18n.text(entry.get("desc", ""))
 	row.add_child(btn_mark)
 	_mark_buttons[stat_id] = btn_mark
 
 	var label_name: Label = Label.new()
-	label_name.text = String(entry.get("name", stat_id))
+	label_name.text = I18n.text(entry.get("name", stat_id))
 	label_name.custom_minimum_size = Vector2(100, 0)
 	label_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label_name.tooltip_text = String(entry.get("desc", ""))
+	label_name.tooltip_text = I18n.text(entry.get("desc", ""))
 	row.add_child(label_name)
 	_stat_name_labels[stat_id] = label_name
 
@@ -214,10 +214,10 @@ func _build_skill_row(parent: VBoxContainer, entry: Dictionary) -> void:
 	row.add_theme_constant_override("separation", 4)
 
 	var label_name: Label = Label.new()
-	label_name.text = String(entry.get("name", entry.get("id", "")))
+	label_name.text = I18n.text(entry.get("name", entry.get("id", "")))
 	label_name.custom_minimum_size = Vector2(110, 0)
 	label_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label_name.tooltip_text = String(entry.get("desc", ""))
+	label_name.tooltip_text = I18n.text(entry.get("desc", ""))
 	label_name.add_theme_color_override("font_color", COLOR_SKILL)
 	row.add_child(label_name)
 
