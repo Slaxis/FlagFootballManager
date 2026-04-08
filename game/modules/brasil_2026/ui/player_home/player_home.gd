@@ -216,7 +216,7 @@ func _update_vitals() -> void:
 
 # --- Week resolution ---
 
-const SLOT_DELAY: float = 0.07
+const SLOT_DELAY: float = 0.5
 
 var _resolving: bool = false
 
