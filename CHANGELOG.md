@@ -19,6 +19,7 @@
 - Log text colored to match outcomes via BBCode
 - Progressive resolution with 500ms delay per slot, vitals update live
 - TV renamed to Computer
+- Slot synergy/penalty matrix: activities have slot_modifiers (e.g., train morning=1.3x, socialize night=1.3x). Effects scaled by modifier, log shows ^/v, tooltip shows percentage
 
 ### Changed
 - Home screen layout: grid takes ~75% width (left), room + vitals + log on right
