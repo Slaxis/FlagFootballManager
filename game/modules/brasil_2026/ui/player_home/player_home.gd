@@ -185,15 +185,25 @@ func _on_clear() -> void:
 	if _resolving:
 		return
 	for key: String in _grid_selects:
-		(_grid_selects[key] as OptionButton).selected = 0
+		var select: OptionButton = _grid_selects[key]
+		select.selected = 0
+		_reset_select_color(select)
+	# Re-apply late_night defaults to sleep
+	for day_id: String in DAYS:
+		var key: String = day_id + "_late_night"
+		var select: OptionButton = _grid_selects.get(key, null)
+		if select == null:
+			continue
+		var acts: Array[Dictionary] = _grid_activities.get(key, [])
+		for i: int in acts.size():
+			if acts[i].get("id", "") == "sleep":
+				select.selected = i
+				break
 	# Reset day buttons
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
 		_day_buttons[day_id].text = ">"
 		_day_buttons[day_id].disabled = false
-	# Reset dropdown colors
-	for key: String in _grid_selects:
-		_reset_select_color(_grid_selects[key])
 
 func _set_select_color(select: OptionButton, color: Color) -> void:
 	select.add_theme_color_override("font_color", color)
