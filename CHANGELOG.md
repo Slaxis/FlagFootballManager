@@ -19,7 +19,14 @@
 - Log text colored to match outcomes via BBCode
 - Progressive resolution with 500ms delay per slot, vitals update live
 - TV renamed to Computer
-- Slot synergy/penalty matrix: activities have slot_modifiers (e.g., train morning=1.3x, socialize night=1.3x). Effects scaled by modifier, log shows ^/v, tooltip shows percentage
+- Slot synergy/penalty matrix: activities have slot_modifiers, effects scaled by modifier
+- Vital collapse: when vital hits 0, planned activity replaced by binge (APAGAO, COMILANCA, CARENCIA, MARATONA DE CELULAR)
+- Per-day play buttons: > (single slot), >> (full day), >> WEEK (all remaining)
+- Color-coded calendar and log: green=synergy, yellow=normal, red=collapse
+- Progressive resolution with 500ms delay, vitals update live
+- Column header dropdowns: set all 7 days in a slot at once
+- Week summary popup: vitals before/after, money delta, activities by color
+- Cutscene: BACK/NEXT/SKIP buttons
 
 ### Changed
 - Home screen layout: grid takes ~75% width (left), room + vitals + log on right
