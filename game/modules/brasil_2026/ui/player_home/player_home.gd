@@ -53,6 +53,7 @@ const COLOR_QUEST_DONE := Color(0.2, 0.75, 0.2)
 const COLOR_QUEST_PENDING := Color(0.6, 0.6, 0.6)
 
 const VITAL_NAMES: Dictionary = {
+	"hp":      {"pt": "HP",      "en": "HP"},
 	"energy":  {"pt": "Energia", "en": "Energy"},
 	"hunger":  {"pt": "Fome",    "en": "Hunger"},
 	"social":  {"pt": "Social",  "en": "Social"},
@@ -178,14 +179,13 @@ func _build_grid() -> void:
 		label.add_theme_font_size_override("font_size", 11)
 		col_box.add_child(label)
 
+		var available: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
+		_column_activities[slot_id] = available
 		var col_select: OptionButton = OptionButton.new()
 		col_select.add_theme_font_size_override("font_size", 9)
 		col_select.custom_minimum_size = Vector2(0, 22)
-		var available: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
-		_column_activities[slot_id] = available
 		col_select.add_item("---")
-		for act: Dictionary in available:
-			col_select.add_item(I18n.text(act.get("name", "?")))
+		_populate_grouped_select(col_select, slot_id)
 		col_select.selected = 0
 		col_select.item_selected.connect(_on_column_changed.bind(slot_id))
 		_column_selects[slot_id] = col_select
@@ -222,14 +222,11 @@ func _build_grid() -> void:
 			select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			select.add_theme_font_size_override("font_size", 10)
 			_grid_activities[key] = avail
-			for act: Dictionary in avail:
-				select.add_item(I18n.text(act.get("name", "?")))
+			_populate_grouped_select(select, slot_id)
 			select.item_selected.connect(_on_grid_select_changed.bind(key, slot_id))
+			# Default late_night to sleep
 			if slot_id == "late_night":
-				for i: int in avail.size():
-					if avail[i].get("id", "") == "sleep":
-						select.selected = i
-						break
+				_select_activity_by_id(select, key, "sleep")
 			_update_select_tooltip(select, key, slot_id)
 			_grid_selects[key] = select
 			grid_container.add_child(select)
@@ -250,18 +247,78 @@ func _build_grid() -> void:
 		_day_fast_buttons[day_id] = btn_fast
 		grid_container.add_child(btn_fast)
 
+func _populate_grouped_select(select: OptionButton, slot_id: String) -> void:
+	var grouped: Array[Dictionary] = _activity_def.list_for_slot_grouped(slot_id)
+	for entry: Dictionary in grouped:
+		if entry["type"] == "header":
+			var cat: Dictionary = entry["category"]
+			var icon: String = String(cat.get("icon", ""))
+			var label_text: String = icon + " " + I18n.text(cat.get("label", ""))
+			select.add_separator(label_text)
+		else:
+			var act: Dictionary = entry["activity"]
+			var cat: Dictionary = _activity_def.get_category(String(act.get("category", "")))
+			var icon: String = String(cat.get("icon", " "))
+			select.add_item(icon + " " + I18n.text(act.get("name", "?")))
+
+func _select_index_to_activity(key: String, display_index: int) -> Dictionary:
+	# Map OptionButton index (which includes separators) to activity
+	var acts: Array[Dictionary] = _grid_activities.get(key, [])
+	var select: OptionButton = _grid_selects.get(key, null)
+	if select == null or display_index < 0:
+		return {}
+	# Count non-separator items up to display_index
+	var act_idx: int = -1
+	for i: int in range(display_index + 1):
+		if not select.is_item_separator(i):
+			act_idx += 1
+	if act_idx >= 0 and act_idx < acts.size():
+		return acts[act_idx]
+	return {}
+
+func _select_activity_by_id(select: OptionButton, key: String, act_id: String) -> void:
+	if select == null:
+		return
+	var acts: Array[Dictionary] = _grid_activities.get(key, [])
+	var act_idx: int = -1
+	for i: int in acts.size():
+		if acts[i].get("id", "") == act_id:
+			act_idx = i
+			break
+	if act_idx < 0:
+		return
+	# Find the display index that maps to this activity index
+	var count: int = -1
+	for i: int in select.item_count:
+		if not select.is_item_separator(i):
+			count += 1
+			if count == act_idx:
+				select.selected = i
+				return
+
 func _on_column_changed(index: int, slot_id: String) -> void:
 	if index == 0 or _updating_column:
-		return  # header label selected, ignore
+		return
 	_updating_column = true
-	var act_index: int = index - 1  # offset by the header item
+	# The column select has "---" at 0, then grouped items with separators
+	# Map to the activity the same way as day cells
+	var col_select: OptionButton = _column_selects[slot_id]
+	var col_acts: Array[Dictionary] = _column_activities.get(slot_id, [])
+	# Count non-separator items (excluding the "---" at 0)
+	var act_idx: int = -1
+	for i: int in range(1, index + 1):
+		if not col_select.is_item_separator(i):
+			act_idx += 1
+	if act_idx < 0 or act_idx >= col_acts.size():
+		_updating_column = false
+		return
+	var target_id: String = String(col_acts[act_idx].get("id", ""))
 	for day_id: String in DAYS:
 		var key: String = day_id + "_" + slot_id
-		var select: OptionButton = _grid_selects.get(key, null)
-		if select and not _day_resolved.get(day_id, false):
-			var acts: Array[Dictionary] = _grid_activities.get(key, [])
-			if act_index >= 0 and act_index < acts.size():
-				select.selected = act_index
+		if not _day_resolved.get(day_id, false):
+			var select: OptionButton = _grid_selects.get(key, null)
+			if select:
+				_select_activity_by_id(select, key, target_id)
 				_update_select_tooltip(select, key, slot_id)
 	_updating_column = false
 
@@ -274,12 +331,10 @@ func _on_grid_select_changed(_index: int, key: String, slot_id: String) -> void:
 		_column_selects[slot_id].selected = 0
 
 func _update_select_tooltip(select: OptionButton, key: String, slot_id: String) -> void:
-	var acts: Array[Dictionary] = _grid_activities.get(key, [])
-	var index: int = select.selected
-	if index < 0 or index >= acts.size():
+	var act: Dictionary = _select_index_to_activity(key, select.selected)
+	if act.is_empty():
 		select.tooltip_text = ""
 		return
-	var act: Dictionary = acts[index]
 	var desc: String = I18n.text(act.get("desc", ""))
 	var modifiers: Dictionary = act.get("slot_modifiers", {})
 	var mod: float = float(modifiers.get(slot_id, 1.0))
@@ -290,23 +345,22 @@ func _update_select_tooltip(select: OptionButton, key: String, slot_id: String) 
 		mod_text = "\nv " + str(int(mod * 100)) + "% penalty"
 	select.tooltip_text = desc + mod_text
 
+func _select_first_item(select: OptionButton) -> void:
+	for i: int in select.item_count:
+		if not select.is_item_separator(i):
+			select.selected = i
+			return
+
 func _on_clear() -> void:
 	if _resolving:
 		return
 	for key: String in _grid_selects:
 		var select: OptionButton = _grid_selects[key]
-		select.selected = 0
+		_select_first_item(select)
 		_reset_select_color(select)
 	for day_id: String in DAYS:
 		var key: String = day_id + "_late_night"
-		var select: OptionButton = _grid_selects.get(key, null)
-		if select == null:
-			continue
-		var acts: Array[Dictionary] = _grid_activities.get(key, [])
-		for i: int in acts.size():
-			if acts[i].get("id", "") == "sleep":
-				select.selected = i
-				break
+		_select_activity_by_id(_grid_selects.get(key, null), key, "sleep")
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
 		_day_slot_index[day_id] = 0
@@ -354,7 +408,7 @@ func _on_room_item(item_id: String) -> void:
 # --- Vitals ---
 
 func _build_vitals() -> void:
-	var vital_ids: Array[String] = ["energy", "hunger", "social", "leisure"]
+	var vital_ids: Array[String] = ["hp", "energy", "hunger", "social", "leisure"]
 	for vid: String in vital_ids:
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_theme_constant_override("separation", 4)
@@ -498,11 +552,9 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 
 	# If no collapse, use the planned activity
 	if not collapsed:
-		var index: int = select.selected
-		var acts: Array[Dictionary] = _grid_activities.get(key, [])
-		if index < 0 or index >= acts.size():
+		act = _select_index_to_activity(key, select.selected)
+		if act.is_empty():
 			return
-		act = acts[index]
 
 	var act_name: String = I18n.text(act.get("name", "?"))
 
@@ -635,13 +687,18 @@ func _finalize_week() -> void:
 		_day_fast_buttons[day_id].text = ">>"
 		_day_fast_buttons[day_id].disabled = false
 	for key: String in _grid_selects:
-		_reset_select_color(_grid_selects[key])
-		# Restore original item text if it was overwritten by collapse
 		var select: OptionButton = _grid_selects[key]
-		var acts: Array[Dictionary] = _grid_activities.get(key, [])
-		if not acts.is_empty():
-			for i: int in acts.size():
-				select.set_item_text(i, I18n.text(acts[i].get("name", "?")))
+		_reset_select_color(select)
+		# Rebuild items to restore any collapse-overwritten text
+		var slot_id: String = key.substr(key.find("_") + 1) if "_" in key else ""
+		select.clear()
+		if slot_id != "":
+			_populate_grouped_select(select, slot_id)
+		_select_first_item(select)
+	# Re-apply late_night defaults
+	for day_id: String in DAYS:
+		var late_key: String = day_id + "_late_night"
+		_select_activity_by_id(_grid_selects.get(late_key, null), late_key, "sleep")
 	for slot_id: String in _column_selects:
 		_column_selects[slot_id].selected = 0
 

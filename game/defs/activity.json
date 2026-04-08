@@ -1,149 +1,54 @@
 {
+  "categories": [
+    {"id": "brutality", "label": {"pt": "BRUTALIDADE", "en": "BRUTALITY"}, "icon": "!"},
+    {"id": "finesse",   "label": {"pt": "FINESSE",     "en": "FINESSE"},   "icon": "~"},
+    {"id": "cognition", "label": {"pt": "COGNICAO",    "en": "COGNITION"}, "icon": "?"},
+    {"id": "school",    "label": {"pt": "ESCOLA",      "en": "SCHOOL"},    "icon": "#"},
+    {"id": "family",    "label": {"pt": "FAMILIA",     "en": "FAMILY"},    "icon": "="},
+    {"id": "social",    "label": {"pt": "AMIGOS",      "en": "FRIENDS"},   "icon": "@"}
+  ],
   "activities": [
-    {
-      "id": "sleep_in",
-      "name": {"pt": "Dormir ate tarde", "en": "Sleep In"},
-      "desc": {"pt": "Ficar na cama, recuperar energia", "en": "Stay in bed, recover energy"},
-      "slots": ["morning"],
-      "effects": {"energy": 30, "hunger": -5},
-      "slot_modifiers": {"morning": 1.0}
-    },
-    {
-      "id": "study",
-      "name": {"pt": "Estudar", "en": "Study"},
-      "desc": {"pt": "Fazer licao -- manter as notas em dia", "en": "Hit the books -- keep your grades up"},
-      "slots": ["morning", "afternoon"],
-      "effects": {"energy": -10, "hunger": -5, "leisure": -5},
-      "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "late_night": 0.5}
-    },
-    {
-      "id": "work_parttime",
-      "name": {"pt": "Trabalho meio-periodo", "en": "Part-time Job"},
-      "desc": {"pt": "Ganhar uma grana. Cansa mas paga as contas", "en": "Earn some cash. Tiring but pays the bills"},
-      "slots": ["morning", "afternoon", "night"],
-      "effects": {"energy": -20, "hunger": -10, "social": 5},
-      "money": 50,
-      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 0.8}
-    },
-    {
-      "id": "train_solo",
-      "name": {"pt": "Treino solo", "en": "Train Solo"},
-      "desc": {"pt": "Ir pro parque, treinar sozinho", "en": "Hit the park, work on your game alone"},
-      "slots": ["morning", "afternoon"],
-      "effects": {"energy": -25, "hunger": -15},
-      "slot_modifiers": {"morning": 1.3, "afternoon": 1.0}
-    },
-    {
-      "id": "gym",
-      "name": {"pt": "Academia", "en": "Gym"},
-      "desc": {"pt": "Musculacao, ganhar forca e resistencia", "en": "Lift weights, build strength and stamina"},
-      "slots": ["morning", "afternoon", "night"],
-      "effects": {"energy": -20, "hunger": -15},
-      "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.8}
-    },
-    {
-      "id": "socialize",
-      "name": {"pt": "Sair com amigos", "en": "Hang Out"},
-      "desc": {"pt": "Encontrar amigos, conversar, se divertir", "en": "Meet friends, talk, have a good time"},
-      "slots": ["afternoon", "night", "late_night"],
-      "effects": {"energy": -5, "social": 25, "leisure": 15, "hunger": -10},
-      "slot_modifiers": {"afternoon": 0.8, "night": 1.3, "late_night": 1.5}
-    },
-    {
-      "id": "watch_tv",
-      "name": {"pt": "Assistir TV", "en": "Watch TV"},
-      "desc": {"pt": "Relaxar no sofa, recarregar", "en": "Relax on the couch, recharge"},
-      "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"energy": 5, "leisure": 20, "social": -5},
-      "slot_modifiers": {"morning": 0.7, "afternoon": 1.0, "night": 1.2, "late_night": 1.0}
-    },
-    {
-      "id": "watch_game",
-      "name": {"pt": "Assistir jogo / filme", "en": "Watch Game Film"},
-      "desc": {"pt": "Estudar jogadas, formacoes e tendencias", "en": "Study plays, formations, and opponent tendencies"},
-      "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"energy": -10, "leisure": -5},
-      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.2, "late_night": 0.6}
-    },
-    {
-      "id": "browse_phone",
-      "name": {"pt": "Mexer no celular", "en": "Browse Phone"},
-      "desc": {"pt": "Ver times, comprar, conversar", "en": "Check teams, shop, chat with friends"},
-      "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"energy": -5, "leisure": 10},
-      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0, "late_night": 1.0}
-    },
-    {
-      "id": "eat_well",
-      "name": {"pt": "Cozinhar e comer", "en": "Cook & Eat"},
-      "desc": {"pt": "Preparar uma refeicao decente", "en": "Prepare a proper meal, recover hunger"},
-      "slots": ["morning", "afternoon", "night"],
-      "effects": {"hunger": 35, "energy": -5},
-      "money": -15,
-      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0}
-    },
-    {
-      "id": "rest",
-      "name": {"pt": "Descansar", "en": "Rest"},
-      "desc": {"pt": "Pegar leve, recuperar energia", "en": "Take it easy, recover energy"},
-      "slots": ["morning", "afternoon"],
-      "effects": {"energy": 20, "leisure": 5},
-      "slot_modifiers": {"morning": 1.0, "afternoon": 1.2}
-    },
-    {
-      "id": "sleep",
-      "name": {"pt": "Dormir", "en": "Sleep"},
-      "desc": {"pt": "Ir pra cama -- essencial pra recuperacao", "en": "Go to bed -- essential for recovery"},
-      "slots": ["night", "late_night"],
-      "effects": {"energy": 40, "hunger": -5},
-      "slot_modifiers": {"night": 1.0, "late_night": 1.5}
-    },
-    {
-      "id": "stay_up_late",
-      "name": {"pt": "Virar a noite", "en": "Stay Up Late"},
-      "desc": {"pt": "Ficar acordado de madrugada -- ruim pra energia", "en": "Pull a late night -- bad for energy"},
-      "slots": ["late_night"],
-      "effects": {"energy": -20, "leisure": 15},
-      "slot_modifiers": {"late_night": 1.0}
-    },
     {
       "id": "train_speed",
       "name": {"pt": "Sprint", "en": "Sprint Training"},
       "desc": {"pt": "Treino de tiros curtos pra velocidade maxima", "en": "Short burst drills for top speed"},
+      "category": "brutality",
       "attribute": "speed",
       "slots": ["morning", "afternoon"],
       "effects": {"energy": -20, "hunger": -10},
       "slot_modifiers": {"morning": 1.3, "afternoon": 1.0},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Runner's high! Sessao incrivel, bateu recorde pessoal.", "en": "Runner's high! Incredible session, beat your personal record."}, "stat_bonus": {"speed": 2, "stamina": 1}, "vital_bonus": {"energy": -5}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Runner's high! Bateu recorde pessoal.", "en": "Runner's high! Beat your personal record."}, "stat_bonus": {"speed": 2, "stamina": 1}, "vital_bonus": {"energy": -5}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Treino solido. Progresso constante.", "en": "Solid session. Steady progress."}, "stat_bonus": {"speed": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Puxou o musculo da coxa. Precisa descansar.", "en": "Pulled your hamstring. Need to rest."}, "stat_bonus": {}, "vital_bonus": {"energy": -15}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Puxou o musculo da coxa.", "en": "Pulled your hamstring."}, "stat_bonus": {}, "vital_bonus": {"hp": -10, "energy": -15}}
       ]
     },
     {
       "id": "train_strength",
       "name": {"pt": "Musculacao", "en": "Weight Training"},
       "desc": {"pt": "Levantamento de peso, construir forca", "en": "Lift heavy, build raw strength"},
+      "category": "brutality",
       "attribute": "strength",
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -20, "hunger": -15},
       "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.8},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "PR novo! Levantou mais do que nunca.", "en": "New PR! Lifted more than ever."}, "stat_bonus": {"strength": 2, "balance": 1}, "vital_bonus": {}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "PR novo! Levantou mais do que nunca.", "en": "New PR! Lifted more than ever."}, "stat_bonus": {"strength": 2, "balance": 1}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Treino padrao. Musculos trabalhados.", "en": "Standard workout. Muscles worked."}, "stat_bonus": {"strength": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Errou a forma e quase se machucou.", "en": "Bad form, nearly hurt yourself."}, "stat_bonus": {}, "vital_bonus": {"energy": -10}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Errou a forma. Dor nas costas.", "en": "Bad form. Back pain."}, "stat_bonus": {}, "vital_bonus": {"hp": -5, "energy": -10}}
       ]
     },
     {
       "id": "train_stamina",
       "name": {"pt": "Corrida longa", "en": "Endurance Run"},
       "desc": {"pt": "Corrida de resistencia, folego", "en": "Long distance run, build your gas tank"},
+      "category": "brutality",
       "attribute": "stamina",
       "slots": ["morning", "afternoon"],
       "effects": {"energy": -25, "hunger": -15},
       "slot_modifiers": {"morning": 1.3, "afternoon": 1.0},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Segundo folego! Correu mais do que planejado.", "en": "Second wind! Ran further than planned."}, "stat_bonus": {"stamina": 2, "speed": 1}, "vital_bonus": {}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Segundo folego! Correu mais do que planejado.", "en": "Second wind! Ran further than planned."}, "stat_bonus": {"stamina": 2, "speed": 1}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Completou a corrida. Bom ritmo.", "en": "Completed the run. Good pace."}, "stat_bonus": {"stamina": 1}},
         {"type": "negative", "chance": 0.2, "text": {"pt": "Dor lateral forte, teve que parar.", "en": "Bad side stitch, had to stop."}, "stat_bonus": {}, "vital_bonus": {"energy": -10}}
       ]
@@ -152,34 +57,37 @@
       "id": "train_agility",
       "name": {"pt": "Drills de agilidade", "en": "Agility Drills"},
       "desc": {"pt": "Cones, escada, mudanca de direcao", "en": "Cones, ladder, direction changes"},
+      "category": "finesse",
       "attribute": "agility",
       "slots": ["morning", "afternoon"],
       "effects": {"energy": -20, "hunger": -10},
       "slot_modifiers": {"morning": 1.2, "afternoon": 1.0},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Na zona! Cada corte perfeito.", "en": "In the zone! Every cut was perfect."}, "stat_bonus": {"agility": 2, "balance": 1}, "vital_bonus": {}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Na zona! Cada corte perfeito.", "en": "In the zone! Every cut was perfect."}, "stat_bonus": {"agility": 2, "balance": 1}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Drills completos. Boa sessao.", "en": "Drills complete. Good session."}, "stat_bonus": {"agility": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Torceu o tornozelo no cone.", "en": "Rolled your ankle on a cone."}, "stat_bonus": {}, "vital_bonus": {"energy": -15}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Torceu o tornozelo no cone.", "en": "Rolled your ankle on a cone."}, "stat_bonus": {}, "vital_bonus": {"hp": -10, "energy": -15}}
       ]
     },
     {
       "id": "train_dexterity",
       "name": {"pt": "Manuseio de bola", "en": "Ball Handling"},
       "desc": {"pt": "Drills de mao, coordenacao, one-handers", "en": "Hand drills, coordination, one-handers"},
+      "category": "finesse",
       "attribute": "dexterity",
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -15, "hunger": -5},
       "slot_modifiers": {"morning": 1.0, "afternoon": 1.2, "night": 0.8},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Maos de cola! Pegou tudo hoje.", "en": "Hands of glue! Caught everything today."}, "stat_bonus": {"dexterity": 2, "catching": 1}, "vital_bonus": {}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Maos de cola! Pegou tudo hoje.", "en": "Hands of glue! Caught everything today."}, "stat_bonus": {"dexterity": 2}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Sessao normal. Maos trabalhadas.", "en": "Normal session. Hands worked."}, "stat_bonus": {"dexterity": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Travou o dedo na bola.", "en": "Jammed your finger on the ball."}, "stat_bonus": {}, "vital_bonus": {"energy": -10}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Travou o dedo na bola.", "en": "Jammed your finger."}, "stat_bonus": {}, "vital_bonus": {"hp": -5, "energy": -10}}
       ]
     },
     {
       "id": "train_balance",
       "name": {"pt": "Yoga / Core", "en": "Yoga / Core Work"},
       "desc": {"pt": "Equilibrio, estabilidade, core forte", "en": "Balance, stability, strong core"},
+      "category": "finesse",
       "attribute": "balance",
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -10, "hunger": -5},
@@ -194,12 +102,13 @@
       "id": "train_perception",
       "name": {"pt": "Estudo tatico", "en": "Film Study"},
       "desc": {"pt": "Analisar jogadas, ler defesas, padroes", "en": "Analyze plays, read defenses, spot patterns"},
+      "category": "cognition",
       "attribute": "perception",
       "slots": ["morning", "afternoon", "night", "late_night"],
       "effects": {"energy": -10, "leisure": -5},
       "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.2, "late_night": 0.5},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Eureka! Entendeu um padrao que ninguem ve.", "en": "Eureka! Spotted a pattern nobody else sees."}, "stat_bonus": {"perception": 2, "intelligence": 1}, "vital_bonus": {}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Eureka! Entendeu um padrao que ninguem ve.", "en": "Eureka! Spotted a pattern nobody sees."}, "stat_bonus": {"perception": 2, "intelligence": 1}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Sessao produtiva. Absorveu bastante.", "en": "Productive session. Absorbed a lot."}, "stat_bonus": {"perception": 1}},
         {"type": "negative", "chance": 0.2, "text": {"pt": "Sobrecarga de informacao. Cerebro fritou.", "en": "Information overload. Brain fried."}, "stat_bonus": {}, "vital_bonus": {"energy": -10, "leisure": -10}}
       ]
@@ -208,34 +117,164 @@
       "id": "train_intelligence",
       "name": {"pt": "Leitura / Estudo", "en": "Book Study"},
       "desc": {"pt": "Ler, estudar, expandir a mente", "en": "Read, study, expand your mind"},
+      "category": "cognition",
       "attribute": "intelligence",
       "slots": ["morning", "afternoon", "night"],
       "effects": {"energy": -10, "hunger": -5, "leisure": -5},
       "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.8},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Clicou! Entendeu um conceito dificil.", "en": "It clicked! Understood a hard concept."}, "stat_bonus": {"intelligence": 2, "perception": 1}, "vital_bonus": {}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Clicou! Entendeu um conceito dificil.", "en": "It clicked! Understood a hard concept."}, "stat_bonus": {"intelligence": 2, "perception": 1}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Estudou bem. Progresso gradual.", "en": "Good study. Gradual progress."}, "stat_bonus": {"intelligence": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Burnout. Nao conseguiu se concentrar.", "en": "Burnout. Couldn't focus at all."}, "stat_bonus": {}, "vital_bonus": {"leisure": -15}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Burnout. Nao conseguiu se concentrar.", "en": "Burnout. Couldn't focus."}, "stat_bonus": {}, "vital_bonus": {"leisure": -15}}
       ]
     },
     {
       "id": "train_charisma",
       "name": {"pt": "Networking", "en": "Social Networking"},
       "desc": {"pt": "Conhecer gente, fazer contatos, se mostrar", "en": "Meet people, make contacts, put yourself out there"},
+      "category": "cognition",
       "attribute": "charisma",
       "slots": ["afternoon", "night", "late_night"],
       "effects": {"energy": -10, "social": 15, "hunger": -10},
       "slot_modifiers": {"afternoon": 0.8, "night": 1.3, "late_night": 1.2},
       "events": [
-        {"type": "positive", "chance": 0.2, "text": {"pt": "Conexao feita! Conheceu alguem importante.", "en": "Connection made! Met someone important."}, "stat_bonus": {"charisma": 2, "social": 10}, "vital_bonus": {}},
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Conexao feita! Conheceu alguem importante.", "en": "Connection made! Met someone important."}, "stat_bonus": {"charisma": 2}, "vital_bonus": {"social": 10}},
         {"type": "neutral", "chance": 0.6, "text": {"pt": "Boa conversa. Expandiu o circulo.", "en": "Good chat. Expanded your circle."}, "stat_bonus": {"charisma": 1}},
-        {"type": "negative", "chance": 0.2, "text": {"pt": "Situacao constrangedora. Que mico.", "en": "Awkward encounter. Cringe moment."}, "stat_bonus": {}, "vital_bonus": {"social": -15}}
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Situacao constrangedora. Que mico.", "en": "Awkward encounter. Cringe."}, "stat_bonus": {}, "vital_bonus": {"social": -15}}
       ]
+    },
+    {
+      "id": "study",
+      "name": {"pt": "Estudar", "en": "Study"},
+      "desc": {"pt": "Fazer licao -- manter as notas em dia", "en": "Hit the books -- keep your grades up"},
+      "category": "school",
+      "slots": ["morning", "afternoon"],
+      "effects": {"energy": -10, "hunger": -5, "leisure": -5},
+      "slot_modifiers": {"morning": 1.2, "afternoon": 1.0}
+    },
+    {
+      "id": "work_parttime",
+      "name": {"pt": "Trabalho", "en": "Part-time Job"},
+      "desc": {"pt": "Ganhar uma grana. Cansa mas paga as contas", "en": "Earn some cash. Tiring but pays the bills"},
+      "category": "school",
+      "slots": ["morning", "afternoon", "night"],
+      "effects": {"energy": -20, "hunger": -10, "social": 5},
+      "money": 50,
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 0.8}
+    },
+    {
+      "id": "eat_well",
+      "name": {"pt": "Cozinhar e comer", "en": "Cook & Eat"},
+      "desc": {"pt": "Preparar uma refeicao decente", "en": "Prepare a proper meal"},
+      "category": "family",
+      "slots": ["morning", "afternoon", "night"],
+      "effects": {"hunger": 35, "energy": -5},
+      "money": -15,
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0}
+    },
+    {
+      "id": "rest",
+      "name": {"pt": "Descansar", "en": "Rest"},
+      "desc": {"pt": "Pegar leve, recuperar energia e HP", "en": "Take it easy, recover energy and HP"},
+      "category": "family",
+      "slots": ["morning", "afternoon"],
+      "effects": {"energy": 20, "hp": 10, "leisure": 5},
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.2}
+    },
+    {
+      "id": "sleep",
+      "name": {"pt": "Dormir", "en": "Sleep"},
+      "desc": {"pt": "Ir pra cama -- essencial pra recuperacao", "en": "Go to bed -- essential for recovery"},
+      "category": "family",
+      "slots": ["night", "late_night"],
+      "effects": {"energy": 40, "hp": 5, "hunger": -5},
+      "slot_modifiers": {"night": 1.0, "late_night": 1.5}
+    },
+    {
+      "id": "sleep_in",
+      "name": {"pt": "Dormir ate tarde", "en": "Sleep In"},
+      "desc": {"pt": "Ficar na cama, recuperar energia", "en": "Stay in bed, recover energy"},
+      "category": "family",
+      "slots": ["morning"],
+      "effects": {"energy": 30, "hp": 5, "hunger": -5},
+      "slot_modifiers": {"morning": 1.0}
+    },
+    {
+      "id": "socialize",
+      "name": {"pt": "Sair com amigos", "en": "Hang Out"},
+      "desc": {"pt": "Encontrar amigos, conversar, se divertir", "en": "Meet friends, talk, have a good time"},
+      "category": "social",
+      "slots": ["afternoon", "night", "late_night"],
+      "effects": {"energy": -5, "social": 25, "leisure": 15, "hunger": -10},
+      "slot_modifiers": {"afternoon": 0.8, "night": 1.3, "late_night": 1.5}
+    },
+    {
+      "id": "watch_tv",
+      "name": {"pt": "Assistir TV", "en": "Watch TV"},
+      "desc": {"pt": "Relaxar no sofa, recarregar", "en": "Relax on the couch, recharge"},
+      "category": "social",
+      "slots": ["morning", "afternoon", "night", "late_night"],
+      "effects": {"energy": 5, "leisure": 20, "social": -5},
+      "slot_modifiers": {"morning": 0.7, "afternoon": 1.0, "night": 1.2, "late_night": 1.0}
+    },
+    {
+      "id": "browse_phone",
+      "name": {"pt": "Mexer no celular", "en": "Browse Phone"},
+      "desc": {"pt": "Ver times, comprar, conversar", "en": "Check teams, shop, chat with friends"},
+      "category": "social",
+      "slots": ["morning", "afternoon", "night", "late_night"],
+      "effects": {"energy": -5, "leisure": 10},
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0, "late_night": 1.0}
+    },
+    {
+      "id": "train_solo",
+      "name": {"pt": "Treino solo", "en": "Train Solo"},
+      "desc": {"pt": "Ir pro parque, treinar sozinho", "en": "Hit the park, work on your game alone"},
+      "category": "brutality",
+      "slots": ["morning", "afternoon"],
+      "effects": {"energy": -25, "hunger": -15},
+      "slot_modifiers": {"morning": 1.3, "afternoon": 1.0}
+    },
+    {
+      "id": "gym",
+      "name": {"pt": "Academia", "en": "Gym"},
+      "desc": {"pt": "Musculacao geral, forca e resistencia", "en": "General lifting, strength and stamina"},
+      "category": "brutality",
+      "slots": ["morning", "afternoon", "night"],
+      "effects": {"energy": -20, "hunger": -15},
+      "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.8}
+    },
+    {
+      "id": "watch_game",
+      "name": {"pt": "Assistir jogo", "en": "Watch Game Film"},
+      "desc": {"pt": "Estudar jogadas, formacoes e tendencias", "en": "Study plays, formations, opponent tendencies"},
+      "category": "cognition",
+      "slots": ["morning", "afternoon", "night", "late_night"],
+      "effects": {"energy": -10, "leisure": -5},
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.2, "late_night": 0.6}
+    },
+    {
+      "id": "stay_up_late",
+      "name": {"pt": "Virar a noite", "en": "Stay Up Late"},
+      "desc": {"pt": "Ficar acordado de madrugada", "en": "Pull a late night"},
+      "category": "social",
+      "slots": ["late_night"],
+      "effects": {"energy": -20, "leisure": 15},
+      "slot_modifiers": {"late_night": 1.0}
+    },
+    {
+      "id": "_recover_hp",
+      "name": {"pt": "LESAO", "en": "INJURY"},
+      "desc": {"pt": "Seu corpo nao aguentou. Precisou parar de tudo.", "en": "Your body broke down. Had to stop everything."},
+      "recovery_for": "hp",
+      "slots": [],
+      "effects": {"hp": 20, "energy": -10},
+      "slot_modifiers": {}
     },
     {
       "id": "_recover_energy",
       "name": {"pt": "APAGAO", "en": "BLACKOUT"},
-      "desc": {"pt": "Seu corpo nao aguentou. Voce apagou onde estava e so acordou horas depois.", "en": "Your body gave up. You passed out wherever you were and woke up hours later."},
+      "desc": {"pt": "Seu corpo nao aguentou. Apagou onde estava.", "en": "Your body gave up. Passed out wherever you were."},
       "recovery_for": "energy",
       "slots": [],
       "effects": {"energy": 30},
@@ -244,7 +283,7 @@
     {
       "id": "_recover_hunger",
       "name": {"pt": "COMILANCA", "en": "FOOD BINGE"},
-      "desc": {"pt": "A fome venceu. Voce atacou a geladeira e comeu tudo que encontrou pela frente.", "en": "Hunger won. You raided the fridge and ate everything in sight."},
+      "desc": {"pt": "A fome venceu. Atacou a geladeira.", "en": "Hunger won. Raided the fridge."},
       "recovery_for": "hunger",
       "slots": [],
       "effects": {"hunger": 25},
@@ -253,7 +292,7 @@
     {
       "id": "_recover_social",
       "name": {"pt": "CARENCIA", "en": "LONELINESS SPIRAL"},
-      "desc": {"pt": "A solidao bateu forte. Voce ficou ligando pra todo mundo ate alguem atender.", "en": "Loneliness hit hard. You called everyone you know until someone picked up."},
+      "desc": {"pt": "A solidao bateu. Ficou ligando pra todo mundo.", "en": "Loneliness hit. Called everyone you know."},
       "recovery_for": "social",
       "slots": [],
       "effects": {"social": 20},
@@ -262,7 +301,7 @@
     {
       "id": "_recover_leisure",
       "name": {"pt": "MARATONA DE CELULAR", "en": "PHONE BINGE"},
-      "desc": {"pt": "O tedio venceu. Voce passou horas grudado no celular sem perceber.", "en": "Boredom won. You spent hours glued to your phone without realizing."},
+      "desc": {"pt": "O tedio venceu. Horas grudado no celular.", "en": "Boredom won. Hours glued to your phone."},
       "recovery_for": "leisure",
       "slots": [],
       "effects": {"leisure": 20, "energy": -5},

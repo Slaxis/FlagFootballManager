@@ -272,8 +272,10 @@ Legend: ✅ merged | ⚙ in progress | · pending
 2.5 Weekly quests        ✅
 
 3.1 Attribute activities ⚙ new activities in palette
-3.2 Life activities      · homework, chores in grid
-3.3 Event resolution     · random events fire during week
+3.1b HP vital + activity categories · organize dropdowns by group
+3.2 Life activities      · homework, chores, family, friends
+3.3 Effect system        · events produce timed effects that modify next slots
+3.4 Activity unlock/lock · requires: age, school, team, day, one_time
 
 4.1 Play card data       · see card definitions
 4.2 Minigame scene       · play the card game standalone
