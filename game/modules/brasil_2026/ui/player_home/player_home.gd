@@ -116,7 +116,7 @@ var _resolving: bool = false
 @onready var player_label: Label = $Margin/VBox/TopBar/PlayerLabel
 
 @onready var plan_header: Label = $Margin/VBox/Content/LeftPanel/ToolRow/PlanHeader
-@onready var grid_container: GridContainer = $Margin/VBox/Content/LeftPanel/WeekGrid
+@onready var grid_container: GridContainer = $Margin/VBox/Content/LeftPanel/GridScroll/WeekGrid
 @onready var btn_next_week: Button = $Margin/VBox/Content/LeftPanel/ToolRow/BtnNextWeek
 @onready var btn_clear: Button = $Margin/VBox/Content/LeftPanel/ToolRow/BtnClear
 
@@ -144,6 +144,7 @@ func _ready() -> void:
 	btn_clear.pressed.connect(_on_clear)
 	_reset_week_tracking()
 	_load_quests()
+	_apply_default_week()
 	set_process_unhandled_key_input(true)
 	_log(I18n.text(T_WELCOME), COLOR_DEFAULT)
 
@@ -401,6 +402,41 @@ func _select_first_item(select: OptionButton) -> void:
 			select.selected = i
 			return
 
+func _apply_default_week() -> void:
+	# Realistic 15yo student schedule
+	# Weekdays: study morning, varied afternoon, rest/social night, sleep late_night
+	# Weekend: free morning, active afternoon, social night, sleep late_night
+	var weekday_plan: Dictionary = {
+		"morning":    ["study", "train_speed", "study", "train_strength", "study"],
+		"afternoon":  ["train_agility", "train_perception", "train_balance", "cook", "pickup_football"],
+		"night":      ["browse_phone", "train_intelligence", "watch_tv", "train_charisma", "play_games"],
+		"late_night": ["sleep", "sleep", "sleep", "sleep", "sleep"],
+	}
+	var weekend_plan: Dictionary = {
+		"morning":    ["rest", "train_stamina"],
+		"afternoon":  ["pickup_football", "train_dexterity"],
+		"night":      ["play_games", "browse_phone"],
+		"late_night": ["sleep", "sleep"],
+	}
+	for slot_id: String in SLOTS:
+		var day_idx: int = 0
+		for day_id: String in DAYS:
+			var key: String = day_id + "_" + slot_id
+			var act_id: String = ""
+			if day_idx < 5:  # weekday
+				var options: Array = weekday_plan.get(slot_id, [])
+				if not options.is_empty():
+					act_id = options[day_idx % options.size()]
+			else:  # weekend
+				var options: Array = weekend_plan.get(slot_id, [])
+				if not options.is_empty():
+					act_id = options[(day_idx - 5) % options.size()]
+			if act_id != "":
+				var select: OptionButton = _grid_selects.get(key, null)
+				if select:
+					_select_activity_by_id(select, key, act_id)
+			day_idx += 1
+
 func _on_clear() -> void:
 	if _resolving:
 		return
@@ -436,19 +472,21 @@ func _rebuild_room() -> void:
 	for child: Node in room_panel.get_children():
 		child.queue_free()
 	var items: Array[Dictionary] = [
-		{"label": T_MIRROR, "id": "mirror"},
-		{"label": T_PHONE, "id": "phone"},
-		{"label": T_COMPUTER, "id": "computer"},
-		{"label": T_FRIDGE, "id": "fridge"},
-		{"label": T_WARDROBE, "id": "wardrobe"},
+		{"label": T_MIRROR, "id": "mirror", "key": "M"},
+		{"label": T_PHONE, "id": "phone", "key": ""},
+		{"label": T_COMPUTER, "id": "computer", "key": ""},
+		{"label": T_FRIDGE, "id": "fridge", "key": "F"},
+		{"label": T_WARDROBE, "id": "wardrobe", "key": ""},
 	]
 	var hbox: HBoxContainer = HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 8)
+	hbox.add_theme_constant_override("separation", 4)
 	for item: Dictionary in items:
 		var btn: Button = Button.new()
-		btn.text = I18n.text(item["label"])
-		btn.custom_minimum_size = Vector2(90, 40)
+		var key_hint: String = " [" + item["key"] + "]" if item["key"] != "" else ""
+		btn.text = I18n.text(item["label"]) + key_hint
+		btn.custom_minimum_size = Vector2(0, 32)
+		btn.add_theme_font_size_override("font_size", 11)
 		btn.pressed.connect(_on_room_item.bind(item["id"]))
 		hbox.add_child(btn)
 	room_panel.add_child(hbox)

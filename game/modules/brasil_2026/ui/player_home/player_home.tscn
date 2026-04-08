@@ -93,9 +93,15 @@ layout_mode = 2
 custom_minimum_size = Vector2(28, 28)
 text = "X"
 
-[node name="WeekGrid" type="GridContainer" parent="Margin/VBox/Content/LeftPanel"]
+[node name="GridScroll" type="ScrollContainer" parent="Margin/VBox/Content/LeftPanel"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="WeekGrid" type="GridContainer" parent="Margin/VBox/Content/LeftPanel/GridScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/h_separation = 2
 theme_override_constants/v_separation = 2
 
