@@ -107,16 +107,16 @@ layout_mode = 2
 custom_minimum_size = Vector2(200, 0)
 theme_override_constants/separation = 6
 
-[node name="QuestHeader" type="Label" parent="Margin/VBox/Content/RightPanel"]
+[node name="VitalsHeader" type="Label" parent="Margin/VBox/Content/RightPanel"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
-text = "QUESTS"
+text = "VITALS"
 
-[node name="QuestList" type="VBoxContainer" parent="Margin/VBox/Content/RightPanel"]
+[node name="Vitals" type="VBoxContainer" parent="Margin/VBox/Content/RightPanel"]
 layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 
-[node name="QuestSep" type="HSeparator" parent="Margin/VBox/Content/RightPanel"]
+[node name="VitalsSep" type="HSeparator" parent="Margin/VBox/Content/RightPanel"]
 layout_mode = 2
 
 [node name="RoomHeader" type="Label" parent="Margin/VBox/Content/RightPanel"]
@@ -128,14 +128,20 @@ text = "YOUR ROOM"
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="VitalsHeader" type="Label" parent="Margin/VBox/Content/RightPanel"]
+[node name="RoomSep" type="HSeparator" parent="Margin/VBox/Content/RightPanel"]
+layout_mode = 2
+
+[node name="QuestHeader" type="Label" parent="Margin/VBox/Content/RightPanel"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
-text = "VITALS"
+text = "QUESTS"
 
-[node name="Vitals" type="VBoxContainer" parent="Margin/VBox/Content/RightPanel"]
+[node name="QuestList" type="VBoxContainer" parent="Margin/VBox/Content/RightPanel"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 2
+
+[node name="QuestSep" type="HSeparator" parent="Margin/VBox/Content/RightPanel"]
+layout_mode = 2
 
 [node name="LogText" type="RichTextLabel" parent="Margin/VBox/Content/RightPanel"]
 layout_mode = 2
