@@ -216,7 +216,19 @@ func _update_vitals() -> void:
 
 # --- Week resolution ---
 
+const SLOT_DELAY: float = 0.07
+
+var _resolving: bool = false
+
 func _on_next_week() -> void:
+	if _resolving:
+		return
+	_resolving = true
+	btn_next_week.disabled = true
+	btn_clear.disabled = true
+	_resolve_week()
+
+func _resolve_week() -> void:
 	var vitals: Dictionary = The.session.get("vitals", {}).duplicate()
 	var money: int = int(The.session.get("money", 0))
 
@@ -250,6 +262,13 @@ func _on_next_week() -> void:
 
 			_log(day_text + " " + I18n.text(SLOT_LABELS[slot_id]) + ": " + act_name + money_str)
 
+			# Update vitals progressively
+			The.session["vitals"] = vitals
+			The.session["money"] = money
+			_update_vitals()
+
+			await get_tree().create_timer(SLOT_DELAY).timeout
+
 	# Debuffs
 	_effects.clear()
 	for vid: String in vitals:
@@ -267,6 +286,10 @@ func _on_next_week() -> void:
 	_update_vitals()
 	_update_effects()
 	_log("--- " + I18n.text(T_WEEK) + " " + str(The.session["week"]) + " ---")
+
+	_resolving = false
+	btn_next_week.disabled = false
+	btn_clear.disabled = false
 
 func _update_effects() -> void:
 	for child: Node in effects_bar.get_children():
