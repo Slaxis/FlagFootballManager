@@ -27,6 +27,7 @@
 - Column header dropdowns: set all 7 days in a slot at once
 - Week summary popup: vitals before/after, money delta, activities by color
 - Cutscene: BACK/NEXT/SKIP buttons
+- Weekly quests sidebar: injectable per week via Things, live tracking, summary results
 
 ### Changed
 - Home screen layout: grid takes ~75% width (left), room + vitals + log on right
