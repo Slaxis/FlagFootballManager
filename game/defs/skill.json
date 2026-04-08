@@ -2,7 +2,7 @@
   "groups": [
     {
       "id": "offense",
-      "label": "OFFENSE",
+      "label": {"pt": "ATAQUE", "en": "OFFENSE"},
       "stats": [
         {"id": "snap",          "name": {"pt": "Snap",           "en": "Snap"},          "desc": {"pt": "Precisão e velocidade do snap, depois entra na rota", "en": "Center snap accuracy and speed, then get into the route"}},
         {"id": "release",       "name": {"pt": "Release",        "en": "Release"},       "desc": {"pt": "Sair limpo da linha driblando a marcação", "en": "Beat press coverage off the line, get into the route clean"}},
@@ -13,7 +13,7 @@
     },
     {
       "id": "defense",
-      "label": "DEFENSE",
+      "label": {"pt": "DEFESA", "en": "DEFENSE"},
       "stats": [
         {"id": "pass_rush",    "name": {"pt": "Pass Rush",    "en": "Pass Rush"},    "desc": {"pt": "Movimentos de rush, timing, contenção", "en": "Rush moves, timing the count, contain"}},
         {"id": "coverage",     "name": {"pt": "Cobertura",    "en": "Coverage"},     "desc": {"pt": "Técnica man-to-man, drops em zona", "en": "Man technique, zone drops, hip turns"}},
@@ -23,7 +23,7 @@
     },
     {
       "id": "general",
-      "label": "GENERAL",
+      "label": {"pt": "GERAL", "en": "GENERAL"},
       "stats": [
         {"id": "play_reading", "name": {"pt": "Leitura de Jogo", "en": "Play Reading"},  "desc": {"pt": "Leitura pré-snap, reconhecer formações", "en": "Pre-snap reads, recognize formations and audibles"}},
         {"id": "game_rules",   "name": {"pt": "Regras do Jogo",  "en": "Game Rules"},    "desc": {"pt": "Conhecer o regulamento, argumentar com árbitros", "en": "Know the rulebook, argue calls, work the refs"}},

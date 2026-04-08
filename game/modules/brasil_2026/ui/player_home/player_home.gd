@@ -80,10 +80,10 @@ var _resolving: bool = false
 @onready var week_label: Label = $Margin/VBox/TopBar/WeekLabel
 @onready var player_label: Label = $Margin/VBox/TopBar/PlayerLabel
 
-@onready var plan_header: Label = $Margin/VBox/Content/LeftPanel/PlanHeader
-@onready var grid_container: GridContainer = $Margin/VBox/Content/LeftPanel/GridScroll/WeekGrid
-@onready var btn_next_week: Button = $Margin/VBox/Content/LeftPanel/ButtonRow/BtnNextWeek
-@onready var btn_clear: Button = $Margin/VBox/Content/LeftPanel/ButtonRow/BtnClear
+@onready var plan_header: Label = $Margin/VBox/Content/LeftPanel/ToolRow/PlanHeader
+@onready var grid_container: GridContainer = $Margin/VBox/Content/LeftPanel/WeekGrid
+@onready var btn_next_week: Button = $Margin/VBox/Content/LeftPanel/ToolRow/BtnNextWeek
+@onready var btn_clear: Button = $Margin/VBox/Content/LeftPanel/ToolRow/BtnClear
 
 @onready var room_header: Label = $Margin/VBox/Content/RightPanel/RoomHeader
 @onready var room_panel: VBoxContainer = $Margin/VBox/Content/RightPanel/Room
@@ -111,9 +111,9 @@ func _ready() -> void:
 
 func _update_text() -> void:
 	plan_header.text = I18n.text(T_PLAN)
-	btn_next_week.text = I18n.text(T_NEXT_WEEK)
+	btn_next_week.text = ">>"
 	btn_next_week.tooltip_text = I18n.text(T_TIP_WEEK)
-	btn_clear.text = I18n.text(T_CLEAR)
+	btn_clear.text = "X"
 	btn_clear.tooltip_text = I18n.text(T_TIP_CLEAR)
 	room_header.text = I18n.text(T_ROOM)
 	vitals_header.text = I18n.text(T_VITALS)
@@ -143,23 +143,33 @@ func _build_grid() -> void:
 	corner.custom_minimum_size = Vector2(36, 0)
 	grid_container.add_child(corner)
 
-	# Column header dropdowns (one per slot)
+	# Column headers: Label on top, OptionButton below for "fill all"
 	for slot_id: String in SLOTS:
+		var col_box: VBoxContainer = VBoxContainer.new()
+		col_box.add_theme_constant_override("separation", 1)
+
+		var label: Label = Label.new()
+		label.text = I18n.text(SLOT_LABELS[slot_id])
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.add_theme_font_size_override("font_size", 11)
+		col_box.add_child(label)
+
 		var col_select: OptionButton = OptionButton.new()
-		col_select.add_theme_font_size_override("font_size", 10)
-		col_select.custom_minimum_size = Vector2(0, 24)
-		col_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col_select.add_theme_font_size_override("font_size", 9)
+		col_select.custom_minimum_size = Vector2(0, 22)
 		var available: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
 		_column_activities[slot_id] = available
-		col_select.add_item(I18n.text(SLOT_LABELS[slot_id]))  # index 0 = label/empty
+		col_select.add_item("---")
 		for act: Dictionary in available:
 			col_select.add_item(I18n.text(act.get("name", "?")))
 		col_select.selected = 0
 		col_select.item_selected.connect(_on_column_changed.bind(slot_id))
 		_column_selects[slot_id] = col_select
-		grid_container.add_child(col_select)
+		col_box.add_child(col_select)
 
-	# Play columns header
+		grid_container.add_child(col_box)
+
+	# Play columns header (empty spacers)
 	var ph: Label = Label.new()
 	ph.text = ""
 	ph.custom_minimum_size = Vector2(28, 0)

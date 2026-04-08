@@ -2,7 +2,7 @@
   "groups": [
     {
       "id": "brutality",
-      "label": "BRUTALITY",
+      "label": {"pt": "BRUTALIDADE", "en": "BRUTALITY"},
       "base": 5,
       "stats": [
         {"id": "speed",    "name": {"pt": "Velocidade",  "en": "Speed"},    "desc": {"pt": "Velocidade máxima em campo aberto", "en": "Top speed in the open field"}},
@@ -12,7 +12,7 @@
     },
     {
       "id": "finesse",
-      "label": "FINESSE",
+      "label": {"pt": "FINESSE", "en": "FINESSE"},
       "base": 5,
       "stats": [
         {"id": "agility",   "name": {"pt": "Agilidade",  "en": "Agility"},   "desc": {"pt": "Aceleração, desaceleração, mudança de direção", "en": "Acceleration, deceleration, direction changes"}},
@@ -22,7 +22,7 @@
     },
     {
       "id": "cognition",
-      "label": "COGNITION",
+      "label": {"pt": "COGNICAO", "en": "COGNITION"},
       "base": 5,
       "stats": [
         {"id": "perception",   "name": {"pt": "Percepção",    "en": "Perception"},   "desc": {"pt": "Visão de campo — achar o receiver aberto, ler cobertura", "en": "Field awareness — find the open man, read zone coverage"}},

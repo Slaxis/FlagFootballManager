@@ -68,37 +68,36 @@ theme_override_constants/separation = 8
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 3.0
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
-[node name="PlanHeader" type="Label" parent="Margin/VBox/Content/LeftPanel"]
+[node name="ToolRow" type="HBoxContainer" parent="Margin/VBox/Content/LeftPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlanHeader" type="Label" parent="Margin/VBox/Content/LeftPanel/ToolRow"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "PLAN YOUR WEEK"
 
-[node name="GridScroll" type="ScrollContainer" parent="Margin/VBox/Content/LeftPanel"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 2
-
-[node name="WeekGrid" type="GridContainer" parent="Margin/VBox/Content/LeftPanel/GridScroll"]
-layout_mode = 2
-theme_override_constants/h_separation = 2
-theme_override_constants/v_separation = 2
-
-[node name="ButtonRow" type="HBoxContainer" parent="Margin/VBox/Content/LeftPanel"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="BtnNextWeek" type="Button" parent="Margin/VBox/Content/LeftPanel/ButtonRow"]
+[node name="ToolSpacer" type="Control" parent="Margin/VBox/Content/LeftPanel/ToolRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 36)
-text = "NEXT WEEK"
 
-[node name="BtnClear" type="Button" parent="Margin/VBox/Content/LeftPanel/ButtonRow"]
+[node name="BtnNextWeek" type="Button" parent="Margin/VBox/Content/LeftPanel/ToolRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(80, 36)
-text = "CLEAR"
+custom_minimum_size = Vector2(28, 28)
+text = ">>"
+
+[node name="BtnClear" type="Button" parent="Margin/VBox/Content/LeftPanel/ToolRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(28, 28)
+text = "X"
+
+[node name="WeekGrid" type="GridContainer" parent="Margin/VBox/Content/LeftPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
 
 [node name="Sep" type="VSeparator" parent="Margin/VBox/Content"]
 layout_mode = 2
