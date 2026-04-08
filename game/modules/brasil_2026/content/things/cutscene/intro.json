@@ -1,0 +1,41 @@
+{
+  "id": "cutscene_intro",
+  "group": "cutscene",
+  "pages": [
+    {
+      "order": 1,
+      "text": {"pt": "Você tem 15 anos. Escola, amigos, peladas no parque no fim de semana.\nA vida é simples.", "en": "You're 15. School, friends, weekend pickup games at the park.\nLife is simple enough."},
+      "image": ""
+    },
+    {
+      "order": 2,
+      "text": {"pt": "Então num sábado você vê — um time de flag football treinando no campo ao lado.\nCortes rápidos, espirais perfeitas, trash talk entre as jogadas. Você não consegue parar de olhar.", "en": "Then one Saturday you see them — a flag football team practicing on the field next door.\nFast cuts, tight spirals, trash talk between plays. You can't look away."},
+      "image": ""
+    },
+    {
+      "order": 3,
+      "text": {"pt": "Você se aproxima. Alguém te joga uma bola.\n\"Quer correr uma rota?\"\nVocê nem sabe o que é uma rota. Mas aceita mesmo assim.", "en": "You walk over. Someone tosses you a ball.\n\"Wanna run a route?\"\nYou don't even know what a route is. You say yes anyway."},
+      "image": ""
+    },
+    {
+      "order": 4,
+      "text": {"pt": "Aquela tarde muda tudo.\nVocê não é bom — ainda não — mas algo clica.\nA velocidade, a estratégia, a adrenalina de puxar uma flag no último segundo.", "en": "That afternoon changes everything.\nYou're not great — not yet — but something clicks.\nThe speed, the strategy, the rush of pulling a flag at the last second."},
+      "image": ""
+    },
+    {
+      "order": 5,
+      "text": {"pt": "Você chega em casa naquela noite e toma uma decisão:\nvocê vai ser um jogador de flag football.\nDe verdade.", "en": "You go home that night and make a decision:\nyou're going to be a flag football player.\nA real one."},
+      "image": ""
+    },
+    {
+      "order": 6,
+      "text": {"pt": "Não vai ser fácil. Vai ter que conciliar escola, talvez um trampo,\ntreinar pesado, conquistar uma vaga num time e sobreviver temporada após temporada.", "en": "It won't be easy. You'll need to balance school, maybe a job,\ntrain hard, earn a spot on a team, and survive season after season."},
+      "image": ""
+    },
+    {
+      "order": 7,
+      "text": {"pt": "Mas agora, nada disso importa.\nAgora, você só quer voltar pra aquele campo.", "en": "But right now, none of that matters.\nRight now, you just want to get back on that field."},
+      "image": ""
+    }
+  ]
+}

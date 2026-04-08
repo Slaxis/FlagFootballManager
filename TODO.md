@@ -22,11 +22,10 @@ Everything before character creation.
 - Home screen labels, slot names, day names, vital names, room items all i18n
 - Character creation resolves stat/skill names and descs via I18n
 
-### 1.3 — Cutscene as injectable Things
-- Cutscene pages become Things with `group: "cutscene"`
-- Each Thing: `{"id": "cutscene_01", "group": "cutscene", "order": 1, "text": {"pt": "...", "en": "..."}, "image": "cutscene_01"}`
-- Cutscene screen loads all cutscene Things, sorts by order, displays text + image
-- Modules can inject/override cutscene content
+### 1.3 — Cutscene as injectable Things ✅
+- Cutscene pages loaded from Thing JSON with `group: "cutscene"`
+- Pages sorted by `order`, text resolved via I18n, image field ready for PNGs
+- Modules can inject/override cutscene content via JSON
 
 ---
 

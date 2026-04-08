@@ -9,6 +9,7 @@
 - Gender toggle (M/F) on character creation header
 - Language toggle (PT/EN) button on home screen top bar
 - All UI strings converted to i18n dicts: activities, stats, skills, vitals, day names, room items, all menu buttons, cutscene pages bilingual PT/EN
+- Cutscene pages now loaded from injectable Thing JSON (`group: "cutscene"`) with i18n text + image field
 
 ### Changed
 - Main menu START → module select → character creation (was: START → creation)
