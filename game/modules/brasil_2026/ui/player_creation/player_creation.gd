@@ -1,5 +1,19 @@
 extends Control
 
+const T_TITLE: Dictionary = {"pt": "NOVA CARREIRA", "en": "NEW CAREER"}
+const T_PLAYER: Dictionary = {"pt": "JOGADOR", "en": "PLAYER"}
+const T_COACH: Dictionary = {"pt": "TREINADOR", "en": "COACH"}
+const T_NAME: Dictionary = {"pt": "Nome:", "en": "Name:"}
+const T_NAME_HINT: Dictionary = {"pt": "Seu nome de jogador", "en": "Your player name"}
+const T_AGE: Dictionary = {"pt": "Idade: 15", "en": "Age: 15"}
+const T_ATTRS: Dictionary = {"pt": "ATRIBUTOS", "en": "ATTRIBUTES"}
+const T_SKILLS: Dictionary = {"pt": "HABILIDADES", "en": "SKILLS"}
+const T_HINT: Dictionary = {"pt": "Clique · para marcar: * talento | ** excepcional | x fraqueza", "en": "Click · to mark:  * talent  |  ** exceptional  |  x weakness"}
+const T_POINTS: Dictionary = {"pt": "Pontos restantes: ", "en": "Points remaining: "}
+const T_TALENTS: Dictionary = {"pt": "Talentos: ", "en": "Talents: "}
+const T_START: Dictionary = {"pt": "INICIAR", "en": "START"}
+const T_BACK: Dictionary = {"pt": "VOLTAR", "en": "BACK"}
+
 enum Mark { NONE, STAR, DOUBLE, DUMMY }
 
 const MARK_LABELS: Dictionary = {
@@ -30,10 +44,18 @@ var _stat_name_labels: Dictionary = {}
 var _stat_value_labels: Dictionary = {}
 var _mark_buttons: Dictionary = {}
 
+@onready var title_label: Label = $Margin/VBox/Header/Title
+@onready var btn_player: Button = $Margin/VBox/Header/ModeRow/BtnPlayer
+@onready var btn_coach: Button = $Margin/VBox/Header/ModeRow/BtnCoach
+@onready var age_label: Label = $Margin/VBox/Header/AgeLabel
+@onready var name_label: Label = $Margin/VBox/Header/NameLabel
 @onready var name_input: LineEdit = $Margin/VBox/Header/NameInput
 @onready var btn_male: Button = $Margin/VBox/Header/GenderRow/BtnMale
 @onready var btn_female: Button = $Margin/VBox/Header/GenderRow/BtnFemale
+@onready var attr_label: Label = $Margin/VBox/AttrLabel
+@onready var stats_hint: Label = $Margin/VBox/StatsHint
 @onready var stats_columns: HBoxContainer = $Margin/VBox/StatsColumns
+@onready var skill_label: Label = $Margin/VBox/SkillLabel
 @onready var skills_columns: HBoxContainer = $Margin/VBox/SkillsColumns
 @onready var points_label: Label = $Margin/VBox/InfoRow/PointsLabel
 @onready var marks_label: Label = $Margin/VBox/InfoRow/MarksLabel
@@ -51,6 +73,7 @@ func _ready() -> void:
 	_init_stats()
 	_build_attr_columns()
 	_build_skill_columns()
+	_update_text()
 	_update_labels()
 	btn_back.pressed.connect(_on_back_pressed)
 	btn_start.pressed.connect(_on_start_pressed)
@@ -243,6 +266,19 @@ func _on_mark_pressed(stat_id: String) -> void:
 	_update_labels()
 	_validate()
 
+func _update_text() -> void:
+	title_label.text = I18n.text(T_TITLE)
+	btn_player.text = I18n.text(T_PLAYER)
+	btn_coach.text = I18n.text(T_COACH)
+	age_label.text = I18n.text(T_AGE)
+	name_label.text = I18n.text(T_NAME)
+	name_input.placeholder_text = I18n.text(T_NAME_HINT)
+	attr_label.text = I18n.text(T_ATTRS)
+	stats_hint.text = I18n.text(T_HINT)
+	skill_label.text = I18n.text(T_SKILLS)
+	btn_start.text = I18n.text(T_START)
+	btn_back.text = I18n.text(T_BACK)
+
 func _on_stat_change(stat_id: String, delta: int) -> void:
 	var current: int = stat_values[stat_id]
 	var new_val: int = current + delta
@@ -259,10 +295,10 @@ func _on_stat_change(stat_id: String, delta: int) -> void:
 	_validate()
 
 func _update_labels() -> void:
-	points_label.text = "Points remaining: " + str(points_remaining)
+	points_label.text = I18n.text(T_POINTS) + str(points_remaining)
 	var available: int = _star_points_available()
 	var spent: int = _star_points_spent()
-	marks_label.text = "Talents: " + str(spent) + "/" + str(available)
+	marks_label.text = I18n.text(T_TALENTS) + str(spent) + "/" + str(available)
 
 func _validate() -> void:
 	var has_name: bool = name_input.text.strip_edges().length() >= 2

@@ -1,5 +1,10 @@
 extends Control
 
+const T_TITLE: Dictionary = {"pt": "SELECIONAR MÓDULO", "en": "SELECT MODULE"}
+const T_HINT: Dictionary = {"pt": "Escolha um módulo de campanha", "en": "Choose a campaign module to play"}
+const T_OK: Dictionary = {"pt": "OK", "en": "OK"}
+const T_BACK: Dictionary = {"pt": "VOLTAR", "en": "BACK"}
+
 const COLOR_CARD_BG := Color(0.15, 0.15, 0.15)
 const COLOR_CARD_SELECTED := Color(0.12, 0.25, 0.12)
 const COLOR_DESC := Color(0.6, 0.6, 0.6)
@@ -8,6 +13,7 @@ const COLOR_VERSION := Color(0.45, 0.45, 0.45)
 var _selected_module_id: String = ""
 var _card_panels: Dictionary = {}  # module_id -> PanelContainer
 
+@onready var title_label: Label = $Margin/VBox/Title
 @onready var cards_container: HBoxContainer = $Margin/VBox/Cards
 @onready var info_label: Label = $Margin/VBox/InfoLabel
 @onready var btn_ok: Button = $Margin/VBox/Buttons/BtnOk
@@ -17,7 +23,14 @@ func _ready() -> void:
 	btn_ok.disabled = true
 	btn_ok.pressed.connect(_on_ok)
 	btn_back.pressed.connect(_on_back)
+	_update_text()
 	_build_cards()
+
+func _update_text() -> void:
+	title_label.text = I18n.text(T_TITLE)
+	info_label.text = I18n.text(T_HINT)
+	btn_ok.text = I18n.text(T_OK)
+	btn_back.text = I18n.text(T_BACK)
 
 func _build_cards() -> void:
 	var modules: Array[ModuleInfo] = Drive.list_modules()
