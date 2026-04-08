@@ -63,6 +63,10 @@ const VITAL_NAMES: Dictionary = {
 
 const T_FRIDGE_TITLE: Dictionary = {"pt": "Geladeira", "en": "Fridge"}
 const T_FRIDGE_MEALS: Dictionary = {"pt": "Refeicoes: ", "en": "Meals: "}
+const T_MIRROR: Dictionary = {"pt": "Espelho", "en": "Mirror"}
+const T_MIRROR_TITLE: Dictionary = {"pt": "Ficha do Jogador", "en": "Player Sheet"}
+const T_PAUSED: Dictionary = {"pt": "|| PAUSADO", "en": "|| PAUSED"}
+const T_EFFECTS: Dictionary = {"pt": "EFEITOS", "en": "EFFECTS"}
 
 const COLOR_SYNERGY := Color(0.2, 0.75, 0.2)
 const COLOR_NORMAL := Color(0.85, 0.75, 0.2)
@@ -86,6 +90,8 @@ var _updating_column: bool = false
 var _vital_bars: Dictionary = {}
 var _fridge_window: Window = null
 var _fridge_label: Label = null
+var _mirror_window: Window = null
+var _paused: bool = false
 var _last_week_selections: Dictionary = {}  # key -> activity_id
 # Active effects: Array of {name, desc, duration, category_bonus, icon, color_rank}
 var _active_effects: Array[Dictionary] = []
@@ -138,7 +144,38 @@ func _ready() -> void:
 	btn_clear.pressed.connect(_on_clear)
 	_reset_week_tracking()
 	_load_quests()
+	set_process_unhandled_key_input(true)
 	_log(I18n.text(T_WELCOME), COLOR_DEFAULT)
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not (event as InputEventKey).pressed:
+		return
+	var key: InputEventKey = event as InputEventKey
+	match key.keycode:
+		KEY_SPACE:
+			_paused = not _paused
+			if _paused:
+				_log(I18n.text(T_PAUSED), COLOR_RUNNING)
+		KEY_1:
+			_on_play_next_slot()
+		KEY_2:
+			_on_play_next_day()
+		KEY_3:
+			_on_next_week()
+		KEY_F:
+			_toggle_fridge_window()
+		KEY_M:
+			_toggle_mirror_window()
+
+func _on_play_next_slot() -> void:
+	var day_id: String = _next_unresolved_day()
+	if day_id != "":
+		_on_play_slot(day_id)
+
+func _on_play_next_day() -> void:
+	var day_id: String = _next_unresolved_day()
+	if day_id != "":
+		_on_play_day(day_id)
 
 # --- Text ---
 
@@ -399,6 +436,7 @@ func _rebuild_room() -> void:
 	for child: Node in room_panel.get_children():
 		child.queue_free()
 	var items: Array[Dictionary] = [
+		{"label": T_MIRROR, "id": "mirror"},
 		{"label": T_PHONE, "id": "phone"},
 		{"label": T_COMPUTER, "id": "computer"},
 		{"label": T_FRIDGE, "id": "fridge"},
@@ -419,6 +457,8 @@ func _on_room_item(item_id: String) -> void:
 	match item_id:
 		"fridge":
 			_toggle_fridge_window()
+		"mirror":
+			_toggle_mirror_window()
 		_:
 			_log("[" + item_id.capitalize() + I18n.text(T_NOT_IMPL) + "]", COLOR_DEFAULT)
 
@@ -454,6 +494,155 @@ func _close_fridge_window() -> void:
 	if _fridge_window != null and is_instance_valid(_fridge_window):
 		_fridge_window.queue_free()
 		_fridge_window = null
+
+# --- Mirror window (character sheet) ---
+
+func _toggle_mirror_window() -> void:
+	if _mirror_window != null and is_instance_valid(_mirror_window):
+		_mirror_window.queue_free()
+		_mirror_window = null
+		return
+	_mirror_window = Window.new()
+	_mirror_window.title = I18n.text(T_MIRROR_TITLE)
+	_mirror_window.size = Vector2i(380, 500)
+	_mirror_window.position = Vector2i(500, 100)
+	_mirror_window.close_requested.connect(_close_mirror_window)
+
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var margin: MarginContainer = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_bottom", 12)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+
+	var player_name: String = String(The.session.get("player_name", ""))
+	var player_age: int = int(The.session.get("player_age", 15))
+	var gender: String = String(The.session.get("player_gender", "male"))
+	var gender_str: String = "M" if gender == "male" else "F"
+
+	var header: Label = Label.new()
+	header.text = player_name + "  |  " + str(player_age) + "  |  " + gender_str
+	header.add_theme_font_size_override("font_size", 18)
+	vbox.add_child(header)
+	vbox.add_child(HSeparator.new())
+
+	# Stats with active effect modifiers
+	var stat_def: Def = Drive.def("stat")
+	if stat_def:
+		for group: Dictionary in stat_def.list_groups():
+			var group_label: Label = Label.new()
+			group_label.text = I18n.text(group["label"])
+			group_label.add_theme_font_size_override("font_size", 13)
+			group_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+			vbox.add_child(group_label)
+			for s: Dictionary in group["stats"]:
+				var sid: String = s["id"]
+				var base_val: int = int(The.session.get("player_stats", {}).get(sid, stat_def.base_for(sid)))
+				var row: HBoxContainer = HBoxContainer.new()
+				row.add_theme_constant_override("separation", 8)
+				var name_label: Label = Label.new()
+				name_label.text = I18n.text(s.get("name", sid))
+				name_label.custom_minimum_size = Vector2(120, 0)
+				name_label.add_theme_font_size_override("font_size", 13)
+				row.add_child(name_label)
+				var val_label: Label = Label.new()
+				val_label.text = str(base_val)
+				val_label.add_theme_font_size_override("font_size", 13)
+				val_label.custom_minimum_size = Vector2(30, 0)
+				val_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				row.add_child(val_label)
+				# Show effect modifier if any active effect touches this stat's category
+				var cat_id: String = String(group.get("id", ""))
+				var total_mod: float = 1.0
+				for eff: Dictionary in _active_effects:
+					var cb: Dictionary = eff.get("category_bonus", {})
+					if cb.has(cat_id):
+						total_mod *= float(cb[cat_id])
+				if total_mod > 1.01 or total_mod < 0.99:
+					var mod_label: Label = Label.new()
+					var pct: int = int(total_mod * 100)
+					mod_label.text = " (" + str(pct) + "%)"
+					mod_label.add_theme_font_size_override("font_size", 12)
+					mod_label.add_theme_color_override("font_color", COLOR_SYNERGY if total_mod > 1.0 else COLOR_COLLAPSE)
+					row.add_child(mod_label)
+				vbox.add_child(row)
+
+	vbox.add_child(HSeparator.new())
+
+	# Skills
+	var skill_def: Def = Drive.def("skill")
+	if skill_def:
+		for group: Dictionary in skill_def.list_groups():
+			var group_label: Label = Label.new()
+			group_label.text = I18n.text(group["label"])
+			group_label.add_theme_font_size_override("font_size", 13)
+			group_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+			vbox.add_child(group_label)
+			for s: Dictionary in group["stats"]:
+				var sid: String = s["id"]
+				var val: int = int(The.session.get("player_stats", {}).get(sid, 0))
+				var row: HBoxContainer = HBoxContainer.new()
+				row.add_theme_constant_override("separation", 8)
+				var name_label: Label = Label.new()
+				name_label.text = I18n.text(s.get("name", sid))
+				name_label.custom_minimum_size = Vector2(120, 0)
+				name_label.add_theme_font_size_override("font_size", 13)
+				name_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+				row.add_child(name_label)
+				var val_label: Label = Label.new()
+				val_label.text = str(val)
+				val_label.add_theme_font_size_override("font_size", 13)
+				val_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+				val_label.custom_minimum_size = Vector2(30, 0)
+				val_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				row.add_child(val_label)
+				vbox.add_child(row)
+
+	# Active effects section
+	if not _active_effects.is_empty():
+		vbox.add_child(HSeparator.new())
+		var eff_header: Label = Label.new()
+		eff_header.text = I18n.text(T_EFFECTS)
+		eff_header.add_theme_font_size_override("font_size", 13)
+		eff_header.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		vbox.add_child(eff_header)
+		for eff: Dictionary in _active_effects:
+			var eff_row: HBoxContainer = HBoxContainer.new()
+			eff_row.add_theme_constant_override("separation", 8)
+			var icon: String = String(eff.get("icon", "?"))
+			var is_buff: bool = icon == "^"
+			var eff_label: Label = Label.new()
+			eff_label.text = icon + " " + I18n.text(eff.get("name", "?")) + " (" + str(int(eff.get("duration", 0))) + ")"
+			eff_label.add_theme_font_size_override("font_size", 13)
+			eff_label.add_theme_color_override("font_color", COLOR_SYNERGY if is_buff else COLOR_COLLAPSE)
+			eff_row.add_child(eff_label)
+			# Show what categories it affects
+			var cats: PackedStringArray = PackedStringArray()
+			for cat_key: String in eff.get("category_bonus", {}):
+				var mod_val: float = float(eff["category_bonus"][cat_key])
+				cats.append(cat_key + " " + str(int(mod_val * 100)) + "%")
+			if not cats.is_empty():
+				var cat_label: Label = Label.new()
+				cat_label.text = "  [" + ", ".join(cats) + "]"
+				cat_label.add_theme_font_size_override("font_size", 11)
+				cat_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+				eff_row.add_child(cat_label)
+			vbox.add_child(eff_row)
+
+	margin.add_child(vbox)
+	scroll.add_child(margin)
+	_mirror_window.add_child(scroll)
+	add_child(_mirror_window)
+
+func _close_mirror_window() -> void:
+	if _mirror_window != null and is_instance_valid(_mirror_window):
+		_mirror_window.queue_free()
+		_mirror_window = null
 
 func _update_fridge_display() -> void:
 	if _fridge_label == null or not is_instance_valid(_fridge_label):
@@ -745,6 +934,9 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 			select.set_item_text(sel_idx, act_name)
 
 	await get_tree().create_timer(SLOT_DELAY * 0.7).timeout
+	# Pause check
+	while _paused:
+		await get_tree().create_timer(0.1).timeout
 
 func _finalize_if_week_done() -> void:
 	for day_id: String in DAYS:
@@ -808,29 +1000,54 @@ func _finalize_week() -> void:
 func _update_effects_check() -> void:
 	_update_effects()
 
+func _make_effect_card(text: String, color: Color, bg_color: Color) -> PanelContainer:
+	var panel: PanelContainer = PanelContainer.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = bg_color
+	style.corner_radius_top_left = 3
+	style.corner_radius_top_right = 3
+	style.corner_radius_bottom_left = 3
+	style.corner_radius_bottom_right = 3
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 3
+	style.content_margin_bottom = 3
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = color
+	panel.add_theme_stylebox_override("panel", style)
+	var label: Label = Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_font_size_override("font_size", 11)
+	panel.add_child(label)
+	return panel
+
 func _update_effects() -> void:
 	for child: Node in effects_bar.get_children():
 		child.queue_free()
-	# Vital warnings
+	# Vital warnings as cards
 	var vitals: Dictionary = The.session.get("vitals", {})
 	for vid: String in vitals:
 		if int(vitals[vid]) <= 20:
-			var label: Label = Label.new()
-			label.text = " " + I18n.text(VITAL_NAMES.get(vid, vid)) + " LOW "
-			label.add_theme_color_override("font_color", COLOR_COLLAPSE)
-			label.add_theme_font_size_override("font_size", 12)
-			effects_bar.add_child(label)
-	# Timed effects
+			var card: PanelContainer = _make_effect_card(
+				I18n.text(VITAL_NAMES.get(vid, vid)) + " LOW",
+				COLOR_COLLAPSE, Color(0.15, 0.05, 0.05))
+			effects_bar.add_child(card)
+	# Timed effects as cards
 	for eff: Dictionary in _active_effects:
 		var eff_name: String = I18n.text(eff.get("name", "?"))
 		var dur: int = int(eff.get("duration", 0))
 		var icon: String = String(eff.get("icon", "?"))
 		var is_buff: bool = icon == "^"
-		var label: Label = Label.new()
-		label.text = " " + icon + " " + eff_name + " (" + str(dur) + ") "
-		label.add_theme_color_override("font_color", COLOR_SYNERGY if is_buff else COLOR_COLLAPSE)
-		label.add_theme_font_size_override("font_size", 12)
-		effects_bar.add_child(label)
+		var color: Color = COLOR_SYNERGY if is_buff else COLOR_COLLAPSE
+		var bg: Color = Color(0.05, 0.12, 0.05) if is_buff else Color(0.15, 0.05, 0.05)
+		var card: PanelContainer = _make_effect_card(
+			icon + " " + eff_name + " (" + str(dur) + ")",
+			color, bg)
+		effects_bar.add_child(card)
 
 # --- Quests ---
 
