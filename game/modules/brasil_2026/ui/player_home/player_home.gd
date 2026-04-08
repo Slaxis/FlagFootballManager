@@ -61,6 +61,9 @@ const VITAL_NAMES: Dictionary = {
 	"room":    {"pt": "Quarto",   "en": "Room"},
 }
 
+const T_FRIDGE_TITLE: Dictionary = {"pt": "Geladeira", "en": "Fridge"}
+const T_FRIDGE_MEALS: Dictionary = {"pt": "Refeicoes: ", "en": "Meals: "}
+
 const COLOR_SYNERGY := Color(0.2, 0.75, 0.2)
 const COLOR_NORMAL := Color(0.85, 0.75, 0.2)
 const COLOR_COLLAPSE := Color(0.8, 0.2, 0.2)
@@ -81,6 +84,9 @@ var _day_resolved: Dictionary = {}      # "day" -> bool
 var _day_slot_index: Dictionary = {}    # "day" -> int (next slot to resolve)
 var _updating_column: bool = false
 var _vital_bars: Dictionary = {}
+var _fridge_window: Window = null
+var _fridge_label: Label = null
+var _last_week_selections: Dictionary = {}  # key -> activity_id
 # Quests
 var _current_quests: Array[Dictionary] = []
 var _quest_labels: Array[Label] = []
@@ -277,6 +283,10 @@ func _select_index_to_activity(key: String, display_index: int) -> Dictionary:
 		return acts[act_idx]
 	return {}
 
+func _get_selected_activity_id(key: String) -> String:
+	var act: Dictionary = _select_index_to_activity(key, _grid_selects.get(key, null).selected if _grid_selects.has(key) else -1)
+	return String(act.get("id", ""))
+
 func _select_activity_by_id(select: OptionButton, key: String, act_id: String) -> void:
 	if select == null:
 		return
@@ -404,7 +414,50 @@ func _rebuild_room() -> void:
 	room_panel.add_child(hbox)
 
 func _on_room_item(item_id: String) -> void:
-	_log("[" + item_id.capitalize() + I18n.text(T_NOT_IMPL) + "]", COLOR_DEFAULT)
+	match item_id:
+		"fridge":
+			_toggle_fridge_window()
+		_:
+			_log("[" + item_id.capitalize() + I18n.text(T_NOT_IMPL) + "]", COLOR_DEFAULT)
+
+# --- Fridge window ---
+
+func _toggle_fridge_window() -> void:
+	if _fridge_window != null and is_instance_valid(_fridge_window):
+		_fridge_window.queue_free()
+		_fridge_window = null
+		return
+	_fridge_window = Window.new()
+	_fridge_window.title = I18n.text(T_FRIDGE_TITLE)
+	_fridge_window.size = Vector2i(250, 120)
+	_fridge_window.position = Vector2i(600, 300)
+	_fridge_window.unresizable = true
+	_fridge_window.close_requested.connect(_close_fridge_window)
+
+	var margin: MarginContainer = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_bottom", 8)
+
+	_fridge_label = Label.new()
+	_fridge_label.add_theme_font_size_override("font_size", 18)
+	_update_fridge_display()
+	margin.add_child(_fridge_label)
+
+	_fridge_window.add_child(margin)
+	add_child(_fridge_window)
+
+func _close_fridge_window() -> void:
+	if _fridge_window != null and is_instance_valid(_fridge_window):
+		_fridge_window.queue_free()
+		_fridge_window = null
+
+func _update_fridge_display() -> void:
+	if _fridge_label == null or not is_instance_valid(_fridge_label):
+		return
+	var meals: int = int(The.session.get("fridge_meals", 0))
+	_fridge_label.text = I18n.text(T_FRIDGE_MEALS) + str(meals)
 
 # --- Vitals ---
 
@@ -541,10 +594,19 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 		return
 	var act: Dictionary = {}
 	var collapsed: bool = false
+	var fridge_meals: int = int(The.session.get("fridge_meals", 0))
 
-	# Check vital collapse first
+	# Check vital collapse — hunger uses fridge first
 	for vid: String in vitals:
 		if int(vitals[vid]) <= 0:
+			if vid == "hunger" and fridge_meals > 0:
+				# Eat from fridge silently — no collapse
+				fridge_meals -= 1
+				The.session["fridge_meals"] = fridge_meals
+				vitals["hunger"] = clampi(int(vitals["hunger"]) + 25, 0, 100)
+				_log(day_text + " " + SLOT_ICONS[slot_id] + " [=] " + I18n.text({"pt": "Comeu uma refeicao da geladeira", "en": "Ate a meal from the fridge"}) + " (" + str(fridge_meals) + ")", COLOR_NORMAL)
+				_update_fridge_display()
+				continue
 			var recovery: Dictionary = _activity_def.get_recovery_for(vid)
 			if not recovery.is_empty():
 				act = recovery
@@ -580,6 +642,13 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 
 	var money_delta: int = int(int(act.get("money", 0)) * modifier)
 	money += money_delta
+
+	# Fridge: cooking adds meals
+	var fridge_add: int = int(act.get("fridge_add", 0))
+	if fridge_add > 0:
+		fridge_meals += fridge_add
+		The.session["fridge_meals"] = fridge_meals
+		_update_fridge_display()
 
 	# Roll event if activity has events
 	var event_text: String = ""
@@ -679,6 +748,11 @@ func _finalize_week() -> void:
 	_reset_week_tracking()
 	_load_quests()
 
+	# Save current selections for carryover
+	_last_week_selections.clear()
+	for key: String in _grid_selects:
+		_last_week_selections[key] = _get_selected_activity_id(key)
+
 	# Reset grid for next week
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
@@ -690,16 +764,19 @@ func _finalize_week() -> void:
 	for key: String in _grid_selects:
 		var select: OptionButton = _grid_selects[key]
 		_reset_select_color(select)
-		# Rebuild items to restore any collapse-overwritten text
 		var slot_id: String = key.substr(key.find("_") + 1) if "_" in key else ""
 		select.clear()
 		if slot_id != "":
 			_populate_grouped_select(select, slot_id)
 		_select_first_item(select)
-	# Re-apply late_night defaults
-	for day_id: String in DAYS:
-		var late_key: String = day_id + "_late_night"
-		_select_activity_by_id(_grid_selects.get(late_key, null), late_key, "sleep")
+
+	# Restore previous week's selections
+	for key: String in _last_week_selections:
+		var prev_id: String = _last_week_selections[key]
+		if prev_id != "":
+			var select: OptionButton = _grid_selects.get(key, null)
+			if select:
+				_select_activity_by_id(select, key, prev_id)
 	for slot_id: String in _column_selects:
 		_column_selects[slot_id].selected = 0
 

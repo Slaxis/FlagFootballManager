@@ -165,10 +165,11 @@
     {
       "id": "cook",
       "name": {"pt": "Preparar refeicoes", "en": "Prepare Meals"},
-      "desc": {"pt": "Cozinhar algo decente pra comer", "en": "Cook something decent to eat"},
+      "desc": {"pt": "Cozinhar e guardar refeicoes na geladeira (+3 refeicoes)", "en": "Cook and store meals in the fridge (+3 meals)"},
       "category": "family",
       "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"hunger": 35, "energy": -5, "room": -5},
+      "effects": {"energy": -8, "room": -5},
+      "fridge_add": 3,
       "money": -15,
       "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0, "late_night": 0.7}
     },
