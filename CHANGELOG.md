@@ -8,7 +8,7 @@
 - Player age set to 15 (was 16)
 - Gender toggle (M/F) on character creation header
 - Language toggle (PT/EN) button on home screen top bar
-- All UI strings converted to i18n dicts: activities, stats, skills, vitals, day names, room items
+- All UI strings converted to i18n dicts: activities, stats, skills, vitals, day names, room items, all menu buttons, cutscene pages bilingual PT/EN
 
 ### Changed
 - Main menu START → module select → character creation (was: START → creation)
