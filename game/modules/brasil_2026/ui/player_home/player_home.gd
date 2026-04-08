@@ -647,12 +647,9 @@ func _show_week_summary() -> void:
 	var vitals_now: Dictionary = The.session.get("vitals", {})
 	var money_now: int = int(The.session.get("money", 0))
 	var money_delta: int = money_now - _week_money_start
-	var week_num: int = int(The.session.get("week", 1)) - 1  # just finished this week
 
 	# Build summary text
 	var lines: Array[String] = []
-	lines.append("[b]" + I18n.text(T_SUMMARY) + " " + str(week_num) + "[/b]")
-	lines.append("")
 
 	# Vitals comparison
 	for vid: String in vitals_now:
@@ -689,14 +686,15 @@ func _show_week_summary() -> void:
 			lines.append("  " + act_name + " x" + str(entry["count"]))
 
 	# Create popup
+	var week_num: int = int(The.session.get("week", 1)) - 1
 	var popup: AcceptDialog = AcceptDialog.new()
-	popup.title = I18n.text(T_SUMMARY)
+	popup.title = I18n.text(T_SUMMARY) + " " + str(week_num)
 	popup.ok_button_text = I18n.text(T_CLOSE)
-	popup.min_size = Vector2(400, 300)
+	popup.min_size = Vector2(420, 460)
 
 	var rtl: RichTextLabel = RichTextLabel.new()
 	rtl.bbcode_enabled = true
-	rtl.custom_minimum_size = Vector2(380, 250)
+	rtl.custom_minimum_size = Vector2(400, 400)
 	rtl.text = "\n".join(lines)
 	popup.add_child(rtl)
 
