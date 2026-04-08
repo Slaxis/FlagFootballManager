@@ -39,3 +39,10 @@ func list_for_slot(slot: String) -> Array[Dictionary]:
 
 func get_activity(act_id: String) -> Dictionary:
 	return _index.get(act_id.strip_edges().to_lower(), {})
+
+func get_recovery_for(vital_id: String) -> Dictionary:
+	var key: String = vital_id.strip_edges().to_lower()
+	for act: Dictionary in activities:
+		if String(act.get("recovery_for", "")).strip_edges().to_lower() == key:
+			return act
+	return {}

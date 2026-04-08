@@ -105,6 +105,42 @@
       "slots": ["late_night"],
       "effects": {"energy": -20, "leisure": 15},
       "slot_modifiers": {"late_night": 1.0}
+    },
+    {
+      "id": "_recover_energy",
+      "name": {"pt": "** Desmaiou de cansaco **", "en": "** Passed out from exhaustion **"},
+      "desc": {"pt": "Sem energia, seu corpo apagou", "en": "No energy left, your body shut down"},
+      "recovery_for": "energy",
+      "slots": [],
+      "effects": {"energy": 30},
+      "slot_modifiers": {}
+    },
+    {
+      "id": "_recover_hunger",
+      "name": {"pt": "** Comeu qualquer coisa **", "en": "** Grabbed whatever food was around **"},
+      "desc": {"pt": "Fome demais, precisou parar pra comer", "en": "Too hungry, had to stop and eat"},
+      "recovery_for": "hunger",
+      "slots": [],
+      "effects": {"hunger": 25},
+      "slot_modifiers": {}
+    },
+    {
+      "id": "_recover_social",
+      "name": {"pt": "** Ligou pra alguem **", "en": "** Called someone just to talk **"},
+      "desc": {"pt": "Solidao bateu, precisou falar com alguem", "en": "Loneliness hit, needed to hear a voice"},
+      "recovery_for": "social",
+      "slots": [],
+      "effects": {"social": 20},
+      "slot_modifiers": {}
+    },
+    {
+      "id": "_recover_leisure",
+      "name": {"pt": "** Nao aguentou, mexeu no celular **", "en": "** Couldn't take it, scrolled phone **"},
+      "desc": {"pt": "Tedio demais, precisou de uma distração", "en": "Too bored, needed a distraction"},
+      "recovery_for": "leisure",
+      "slots": [],
+      "effects": {"leisure": 20, "energy": -5},
+      "slot_modifiers": {}
     }
   ]
 }

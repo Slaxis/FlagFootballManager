@@ -361,13 +361,24 @@ func _resolve_day(day_id: String) -> void:
 		if index < 0 or index >= acts.size():
 			continue
 		var act: Dictionary = acts[index]
+		var collapsed: bool = false
+
+		# Check vital collapse — override planned activity
+		for vid: String in vitals:
+			if int(vitals[vid]) <= 0:
+				var recovery: Dictionary = _activity_def.get_recovery_for(vid)
+				if not recovery.is_empty():
+					act = recovery
+					collapsed = true
+					break
+
 		var act_name: String = I18n.text(act.get("name", "?"))
 
 		# Mark as running
 		_set_select_color(select, COLOR_RUNNING)
 		await get_tree().create_timer(SLOT_DELAY * 0.3).timeout
 
-		# Resolve slot modifier
+		# Resolve slot modifier (recovery activities have no modifiers)
 		var modifiers: Dictionary = act.get("slot_modifiers", {})
 		var modifier: float = float(modifiers.get(slot_id, 1.0))
 
@@ -382,15 +393,18 @@ func _resolve_day(day_id: String) -> void:
 		var money_delta: int = int(int(act.get("money", 0)) * modifier)
 		money += money_delta
 
-		# Determine outcome (placeholder: random for now)
-		var roll: float = randf()
+		# Determine outcome
 		var outcome_color: Color
-		if roll < 0.25:
-			outcome_color = COLOR_GOOD
-		elif roll < 0.75:
-			outcome_color = COLOR_NEUTRAL
-		else:
+		if collapsed:
 			outcome_color = COLOR_BAD
+		else:
+			var roll: float = randf()
+			if roll < 0.25:
+				outcome_color = COLOR_GOOD
+			elif roll < 0.75:
+				outcome_color = COLOR_NEUTRAL
+			else:
+				outcome_color = COLOR_BAD
 
 		# Update state
 		The.session["vitals"] = vitals
@@ -404,10 +418,11 @@ func _resolve_day(day_id: String) -> void:
 			money_str = " (-R$" + str(absi(money_delta)) + ")"
 
 		var mod_str: String = ""
-		if modifier > 1.01:
-			mod_str = " ^"
-		elif modifier < 0.99:
-			mod_str = " v"
+		if not collapsed:
+			if modifier > 1.01:
+				mod_str = " ^"
+			elif modifier < 0.99:
+				mod_str = " v"
 
 		_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + money_str + mod_str, outcome_color)
 		_set_select_color(select, outcome_color)

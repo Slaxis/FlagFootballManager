@@ -267,7 +267,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 
 2.1 Week grid UI         ✅ (7x4 grid, per-day play, color coding)
 2.2 Slot synergy         ✅
-2.3 Vital collapse       · plan bad week, see overrides
+2.3 Vital collapse       ⚙ plan bad week, see overrides
 2.4 Next Week            ✅ (merged into 2.1)
 2.5 Weekly quests        · see objectives, complete them
 
