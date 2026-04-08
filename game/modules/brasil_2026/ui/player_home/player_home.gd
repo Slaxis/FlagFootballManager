@@ -107,37 +107,37 @@ func _update_header() -> void:
 # --- Week Grid ---
 
 func _build_grid() -> void:
-	grid_container.columns = DAYS.size() + 1
+	# Transposed: columns = slots, rows = days
+	grid_container.columns = SLOTS.size() + 1
 
 	# Corner cell
 	var corner: Label = Label.new()
 	corner.text = ""
-	corner.custom_minimum_size = Vector2(50, 0)
+	corner.custom_minimum_size = Vector2(36, 0)
 	grid_container.add_child(corner)
 
-	# Day headers
-	for day_id: String in DAYS:
+	# Slot headers (columns)
+	for slot_id: String in SLOTS:
 		var header: Label = Label.new()
-		header.text = I18n.text(DAY_LABELS[day_id])
+		header.text = I18n.text(SLOT_LABELS[slot_id])
 		header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		header.custom_minimum_size = Vector2(80, 0)
-		header.add_theme_font_size_override("font_size", 12)
+		header.add_theme_font_size_override("font_size", 11)
 		grid_container.add_child(header)
 
-	# Slot rows
-	for slot_id: String in SLOTS:
+	# Day rows
+	for day_id: String in DAYS:
 		var row_label: Label = Label.new()
-		row_label.text = I18n.text(SLOT_LABELS[slot_id])
-		row_label.add_theme_font_size_override("font_size", 11)
-		row_label.custom_minimum_size = Vector2(50, 0)
+		row_label.text = I18n.text(DAY_LABELS[day_id])
+		row_label.add_theme_font_size_override("font_size", 12)
+		row_label.custom_minimum_size = Vector2(36, 0)
 		grid_container.add_child(row_label)
 
-		var available: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
-
-		for day_id: String in DAYS:
+		for slot_id: String in SLOTS:
+			var available: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
 			var key: String = day_id + "_" + slot_id
 			var select: OptionButton = OptionButton.new()
-			select.custom_minimum_size = Vector2(80, 28)
+			select.custom_minimum_size = Vector2(0, 28)
+			select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			select.add_theme_font_size_override("font_size", 10)
 			_grid_activities[key] = available
 			for act: Dictionary in available:
