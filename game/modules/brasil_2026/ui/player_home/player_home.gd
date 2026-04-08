@@ -154,9 +154,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var key: InputEventKey = event as InputEventKey
 	match key.keycode:
 		KEY_SPACE:
+			get_viewport().set_input_as_handled()
 			_paused = not _paused
-			if _paused:
-				_log(I18n.text(T_PAUSED), COLOR_RUNNING)
+			_update_pause_indicator()
 		KEY_1:
 			_on_play_next_slot()
 		KEY_2:
@@ -167,6 +167,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_toggle_fridge_window()
 		KEY_M:
 			_toggle_mirror_window()
+
+func _update_pause_indicator() -> void:
+	if _paused:
+		plan_header.text = I18n.text(T_PLAN) + "  " + I18n.text(T_PAUSED)
+		plan_header.add_theme_color_override("font_color", COLOR_RUNNING)
+	else:
+		plan_header.text = I18n.text(T_PLAN)
+		plan_header.remove_theme_color_override("font_color")
 
 func _on_play_next_slot() -> void:
 	var day_id: String = _next_unresolved_day()
