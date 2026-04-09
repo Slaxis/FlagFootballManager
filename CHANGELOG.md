@@ -49,6 +49,8 @@
 - Keyboard shortcuts: SPACE pause, 1/2/3 slot/day/week, F fridge, M mirror
 - Realistic default week schedule for 15yo student
 - Removed Sleep In (merged into Sleep with morning 0.8x soft margin)
+- Activity lock/unlock system: requires field (min_age, has_item, has_team, week_range). Locked activities hidden from dropdowns, appear when unlocked.
+- Locked activities added: Part-time Job (age 16+), Gym (membership), Team Practice (has team)
 
 ### Changed
 - Home screen layout: grid takes ~75% width (left), room + vitals + log on right

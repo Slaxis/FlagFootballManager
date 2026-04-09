@@ -175,7 +175,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 
 3.1 Attribute activities ✅ (includes 3.1b, 3.2)
 3.3 Effect system        ✅
-3.4 Activity unlock/lock ⚙ requires system
+3.4 Activity unlock/lock ✅
 3.5 Hunger cascade       · fridge → money → collapse
 3.6 Social from phone    · phone-initiated social events
 3.7 Fridge inventory     · full item-based fridge
