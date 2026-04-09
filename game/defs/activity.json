@@ -238,6 +238,42 @@
       "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 1.0, "late_night": 1.0}
     },
     {
+      "id": "work_parttime",
+      "name": {"pt": "Trabalho meio-periodo", "en": "Part-time Job"},
+      "desc": {"pt": "Ganhar uma grana. Cansa mas paga as contas", "en": "Earn some cash. Tiring but pays the bills"},
+      "category": "school",
+      "requires": {"min_age": 16},
+      "slots": ["morning", "afternoon", "night", "late_night"],
+      "effects": {"energy": -20, "hunger": -10, "social": 5},
+      "money": 50,
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.0, "night": 0.8, "late_night": 0.3}
+    },
+    {
+      "id": "gym",
+      "name": {"pt": "Academia", "en": "Gym"},
+      "desc": {"pt": "Musculacao pesada, equipamentos profissionais", "en": "Heavy lifting, professional equipment"},
+      "category": "brutality",
+      "requires": {"has_item": "gym_membership"},
+      "slots": ["morning", "afternoon", "night", "late_night"],
+      "effects": {"energy": -22, "hunger": -15},
+      "slot_modifiers": {"morning": 1.2, "afternoon": 1.0, "night": 0.8, "late_night": 0.3},
+      "events": [
+        {"type": "positive", "chance": 0.2, "text": {"pt": "PR novo! Levantou mais do que nunca.", "en": "New PR! Lifted more than ever."}, "stat_bonus": {"strength": 3, "stamina": 1}, "effect": {"name": {"pt": "Bombeado+", "en": "Pumped+"}, "duration": 4, "category_bonus": {"brutality": 1.2}, "icon": "^"}},
+        {"type": "neutral", "chance": 0.6, "text": {"pt": "Treino completo. Musculos trabalhados.", "en": "Full workout. Muscles worked."}, "stat_bonus": {"strength": 2}},
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Errou a forma com peso pesado.", "en": "Bad form with heavy weight."}, "stat_bonus": {}, "vital_bonus": {"hp": -10, "energy": -10}}
+      ]
+    },
+    {
+      "id": "team_practice",
+      "name": {"pt": "Treino do time", "en": "Team Practice"},
+      "desc": {"pt": "Treino oficial com o time", "en": "Official team practice"},
+      "category": "brutality",
+      "requires": {"has_team": true},
+      "slots": ["morning", "afternoon", "night", "late_night"],
+      "effects": {"energy": -25, "hunger": -15, "social": 10},
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.2, "night": 0.8, "late_night": 0.3}
+    },
+    {
       "id": "_recover_hp",
       "name": {"pt": "LESAO", "en": "INJURY"},
       "desc": {"pt": "Seu corpo nao aguentou. Precisou parar.", "en": "Your body broke down. Had to stop."},

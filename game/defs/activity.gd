@@ -86,3 +86,33 @@ func get_recovery_for(vital_id: String) -> Dictionary:
 
 func get_category(cat_id: String) -> Dictionary:
 	return _cat_index.get(cat_id.strip_edges().to_lower(), {})
+
+# Check if player meets activity requirements. Returns "" if ok, or reason string if locked.
+static func check_requires(act: Dictionary, session: Dictionary) -> String:
+	var req: Variant = act.get("requires", null)
+	if req == null or not req is Dictionary:
+		return ""
+	var r: Dictionary = req as Dictionary
+	if r.has("min_age"):
+		var age: int = int(session.get("player_age", 0))
+		if age < int(r["min_age"]):
+			return I18n.text({"pt": "Idade minima: " + str(r["min_age"]), "en": "Min age: " + str(r["min_age"])})
+	if r.has("max_age"):
+		var age: int = int(session.get("player_age", 99))
+		if age > int(r["max_age"]):
+			return I18n.text({"pt": "Idade maxima: " + str(r["max_age"]), "en": "Max age: " + str(r["max_age"])})
+	if r.has("has_item"):
+		var items: Array = session.get("inventory", [])
+		var needed: String = String(r["has_item"])
+		if not items.has(needed):
+			return I18n.text({"pt": "Requer: " + needed, "en": "Requires: " + needed})
+	if r.has("has_team"):
+		var team_id: String = String(session.get("team_id", ""))
+		if team_id == "":
+			return I18n.text({"pt": "Requer time", "en": "Requires a team"})
+	if r.has("week_range"):
+		var week: int = int(session.get("week", 1))
+		var wr: Array = r["week_range"]
+		if wr.size() >= 2 and (week < int(wr[0]) or week > int(wr[1])):
+			return I18n.text({"pt": "Semanas " + str(wr[0]) + "-" + str(wr[1]), "en": "Weeks " + str(wr[0]) + "-" + str(wr[1])})
+	return ""

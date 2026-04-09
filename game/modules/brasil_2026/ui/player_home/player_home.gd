@@ -314,7 +314,15 @@ func _populate_grouped_select(select: OptionButton, slot_id: String) -> void:
 			var act: Dictionary = entry["activity"]
 			var cat: Dictionary = _activity_def.get_category(String(act.get("category", "")))
 			var icon: String = String(cat.get("icon", " "))
-			select.add_item(icon + " " + I18n.text(act.get("name", "?")))
+			var lock_reason: String = ActivityDef.check_requires(act, The.session)
+			var item_text: String = icon + " " + I18n.text(act.get("name", "?"))
+			if lock_reason != "":
+				item_text += " [X]"
+			select.add_item(item_text)
+			if lock_reason != "":
+				var idx: int = select.item_count - 1
+				select.set_item_disabled(idx, true)
+				select.set_item_tooltip(idx, lock_reason)
 
 func _select_index_to_activity(key: String, display_index: int) -> Dictionary:
 	# Map OptionButton index (which includes separators) to activity
