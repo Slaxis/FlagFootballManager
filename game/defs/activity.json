@@ -5,7 +5,8 @@
     {"id": "cognition", "label": {"pt": "COGNICAO",    "en": "COGNITION"}, "icon": "?"},
     {"id": "school",    "label": {"pt": "ESCOLA",      "en": "SCHOOL"},    "icon": "#"},
     {"id": "family",    "label": {"pt": "FAMILIA",     "en": "FAMILY"},    "icon": "="},
-    {"id": "social",    "label": {"pt": "AMIGOS",      "en": "FRIENDS"},   "icon": "@"}
+    {"id": "social",    "label": {"pt": "AMIGOS",      "en": "FRIENDS"},   "icon": "@"},
+    {"id": "team",      "label": {"pt": "TIME",        "en": "TEAM"},      "icon": "F"}
   ],
   "activities": [
     {
@@ -266,15 +267,21 @@
     {
       "id": "tryout",
       "name": {"pt": "Tryout", "en": "Tryout"},
-      "desc": {"pt": "Teste pra entrar no time! Semanas 1-4", "en": "Team tryout! Weeks 1-4"},
-      "category": "brutality",
-      "requires": {"week_range": [1, 4]},
-      "slots": ["morning", "afternoon", "night", "late_night"],
-      "effects": {"energy": -15, "hunger": -10},
-      "slot_modifiers": {"morning": 1.0, "afternoon": 0.8, "night": 0.5, "late_night": 0.3},
+      "desc": {"pt": "Teste completo pra entrar no time!", "en": "Full team tryout!"},
+      "category": "team",
+      "requires": {"week_range": [1, 4], "no_team": true},
+      "slots": ["morning", "afternoon"],
+      "effects": {"energy": -25, "hunger": -15},
+      "slot_modifiers": {"morning": 1.0, "afternoon": 0.8},
       "is_minigame": true,
-      "minigame_id": "play_minigame",
-      "minigame_config": {"rounds": 5, "timer": 10.0, "max_difficulty": 1, "pass_score": 3}
+      "minigame_id": "tryout",
+      "minigame_config": {
+        "drill_rounds": 3,
+        "drill_timer": 8.0,
+        "position_rounds": 5,
+        "position_timer": 10.0,
+        "pass_threshold": 0.6
+      }
     },
     {
       "id": "team_practice",

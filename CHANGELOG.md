@@ -39,6 +39,19 @@
 - Beach Football and Video Games activities
 - Quest type: activity_category_count (tracks any activity from a category)
 
+- Play card minigame: route drawings on cards (Line2D) instead of text names
+- Generalized card minigame (card_minigame.gd): supports path, label, and play_ref card types
+- Tryout system overhaul: position selection (QB/WR/Center/DB/Rusher) → 3 physical drills (40-yard dash, three-cone, pro agility) → 1 position-specific drill → results
+- New "TEAM" activity category with tryout moved from brutality
+- Physical drill minigames: sprint reaction (GO/HOLD), cone path matching, shuttle direction calls
+- Position drill minigames: QB defensive reads, WR/Center route recognition, DB coverage calls, Rusher rush reads
+- Tryout pass/fail: 60% combined threshold (9/14 points)
+- WIN screen on tryout pass with position display
+- GAME OVER screen when week 4 ends without team (returns to main menu)
+- Tryout results breakdown in weekly summary popup
+- Activity requires: no_team check (hides tryout after joining team)
+- Fixed activity dropdown index mapping: _grid_activities now uses grouped order matching dropdown display
+
 ### Changed
 - Removed gym/academia, train_solo, socialize, stay_up_late activities
 - Renamed activities for 15yo context: Hill Sprints, Calisthenics, Parkour, etc.

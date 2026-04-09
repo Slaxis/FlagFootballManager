@@ -110,6 +110,10 @@ static func check_requires(act: Dictionary, session: Dictionary) -> String:
 		var team_id: String = String(session.get("team_id", ""))
 		if team_id == "":
 			return I18n.text({"pt": "Requer time", "en": "Requires a team"})
+	if r.has("no_team"):
+		var team_id: String = String(session.get("team_id", ""))
+		if team_id != "":
+			return I18n.text({"pt": "Ja tem time", "en": "Already on a team"})
 	if r.has("week_range"):
 		var week: int = int(session.get("week", 1))
 		var wr: Array = r["week_range"]

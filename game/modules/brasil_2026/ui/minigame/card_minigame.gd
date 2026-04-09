@@ -1,18 +1,15 @@
-# Play recognition minigame: identify the correct play card under time pressure.
-# Used for tryouts, training, and matches.
+# Generalized card minigame: prompt + clickable cards under time pressure.
+# Supports label cards, path-drawing cards, and play-reference cards.
 extends Control
 
 signal minigame_finished(score: int, total: int)
 
-const T_CALL: Dictionary = {"pt": "Corra uma rota:", "en": "Run a route:"}
 const T_CORRECT: Dictionary = {"pt": "CORRETO!", "en": "CORRECT!"}
 const T_WRONG: Dictionary = {"pt": "ERRADO!", "en": "WRONG!"}
 const T_SCORE: Dictionary = {"pt": "Pontos: ", "en": "Score: "}
 const T_ROUND: Dictionary = {"pt": "Rodada: ", "en": "Round: "}
-const T_TIME: Dictionary = {"pt": "Tempo", "en": "Time"}
 
 const FIELD_COLOR := Color(0.15, 0.35, 0.15)
-const LINE_COLOR := Color(1, 1, 1, 0.3)
 const PLAYER_COLOR := Color(0.2, 0.6, 1.0)
 const ROUTE_CORRECT := Color(0.2, 0.85, 0.2)
 const ROUTE_WRONG := Color(0.85, 0.2, 0.2)
@@ -22,42 +19,44 @@ const CARD_HOVER := Color(0.2, 0.2, 0.3)
 const CARD_CORRECT_BG := Color(0.1, 0.25, 0.1)
 const CARD_WRONG_BG := Color(0.25, 0.1, 0.1)
 
-var _play_def: Def
-var _rounds_total: int = 5
-var _rounds_done: int = 0
+var _rounds: Array[Dictionary] = []
+var _round_index: int = 0
 var _score: int = 0
-var _timer_seconds: float = 10.0
+var _timer_seconds: float = 8.0
 var _timer_remaining: float = 0.0
 var _timer_active: bool = false
-var _max_difficulty: int = 1
-var _current_correct: Dictionary = {}
-var _cards: Array[Dictionary] = []
-var _card_buttons: Array[Button] = []
 var _waiting: bool = false
+var _drill_name: Dictionary = {}
+var _current_round: Dictionary = {}
+var _card_options: Array[Dictionary] = []
+var _card_buttons: Array[Button] = []
+var _play_def: Def
 
-# Field drawing
-var _field_panel: Panel
-var _player_dot: ColorRect
-var _route_line: Line2D
 var _call_label: Label
 var _result_label: Label
 var _score_label: Label
 var _round_label: Label
 var _timer_bar: ProgressBar
 var _cards_container: HBoxContainer
+var _field_panel: Panel
+var _route_line: Line2D
+var _player_dot: ColorRect
+var _drill_label: Label
 
-func setup(rounds: int = 5, timer_sec: float = 10.0, max_diff: int = 1) -> void:
-	_rounds_total = rounds
-	_timer_seconds = timer_sec
-	_max_difficulty = max_diff
+func setup(config: Dictionary) -> void:
+	var raw_rounds: Variant = config.get("rounds", [])
+	if raw_rounds is Array:
+		for r: Variant in (raw_rounds as Array):
+			if r is Dictionary:
+				_rounds.append(r as Dictionary)
+	_timer_seconds = float(config.get("timer_sec", 8.0))
+	_drill_name = config.get("drill_name", {})
 
 func _ready() -> void:
 	_play_def = Drive.def("play")
-	if _play_def == null:
-		Log.log(self, "error", "PlayMinigame: missing play Def.")
-		return
 	_build_ui()
-	_start_round()
+	if not _rounds.is_empty():
+		_start_round()
 
 func _process(delta: float) -> void:
 	if _timer_active:
@@ -72,28 +71,31 @@ func _process(delta: float) -> void:
 func _build_ui() -> void:
 	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 6)
 	add_child(vbox)
 
-	# Top row: score + round
-	var top_row: HBoxContainer = HBoxContainer.new()
-	top_row.add_theme_constant_override("separation", 24)
-	_score_label = Label.new()
-	_score_label.add_theme_font_size_override("font_size", 16)
-	top_row.add_child(_score_label)
-	var spacer: Control = Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top_row.add_child(spacer)
-	_round_label = Label.new()
-	_round_label.add_theme_font_size_override("font_size", 16)
-	top_row.add_child(_round_label)
-	vbox.add_child(top_row)
+	# Top bar: drill name + score + round
+	var top_bar: HBoxContainer = HBoxContainer.new()
+	top_bar.add_theme_constant_override("separation", 12)
+	vbox.add_child(top_bar)
 
-	# Timer bar
+	_drill_label = Label.new()
+	_drill_label.add_theme_font_size_override("font_size", 14)
+	_drill_label.text = I18n.text(_drill_name) if not _drill_name.is_empty() else ""
+	_drill_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_bar.add_child(_drill_label)
+
+	_score_label = Label.new()
+	_score_label.add_theme_font_size_override("font_size", 14)
+	top_bar.add_child(_score_label)
+
+	_round_label = Label.new()
+	_round_label.add_theme_font_size_override("font_size", 14)
+	top_bar.add_child(_round_label)
+
+	# Timer
 	_timer_bar = ProgressBar.new()
-	_timer_bar.min_value = 0
-	_timer_bar.max_value = _timer_seconds
-	_timer_bar.custom_minimum_size = Vector2(0, 12)
+	_timer_bar.custom_minimum_size = Vector2(0, 14)
 	_timer_bar.show_percentage = false
 	vbox.add_child(_timer_bar)
 
@@ -101,11 +103,12 @@ func _build_ui() -> void:
 	_call_label = Label.new()
 	_call_label.add_theme_font_size_override("font_size", 20)
 	_call_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_call_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_call_label)
 
-	# Field
+	# Field panel (for path display)
 	_field_panel = Panel.new()
-	_field_panel.custom_minimum_size = Vector2(0, 200)
+	_field_panel.custom_minimum_size = Vector2(0, 140)
 	_field_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var field_style: StyleBoxFlat = StyleBoxFlat.new()
 	field_style.bg_color = FIELD_COLOR
@@ -128,14 +131,14 @@ func _build_ui() -> void:
 	_player_dot.visible = false
 	_field_panel.add_child(_player_dot)
 
-	# Result label
+	# Result
 	_result_label = Label.new()
 	_result_label.add_theme_font_size_override("font_size", 18)
 	_result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_label.text = ""
 	vbox.add_child(_result_label)
 
-	# Cards row
+	# Cards
 	_cards_container = HBoxContainer.new()
 	_cards_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	_cards_container.add_theme_constant_override("separation", 16)
@@ -144,49 +147,77 @@ func _build_ui() -> void:
 # --- Round logic ---
 
 func _start_round() -> void:
-	_rounds_done += 1
+	if _round_index >= _rounds.size():
+		minigame_finished.emit(_score, _rounds.size())
+		return
+	_current_round = _rounds[_round_index]
+	_round_index += 1
 	_update_labels()
 	_result_label.text = ""
 	_route_line.clear_points()
 	_player_dot.visible = false
 	_waiting = false
 
-	# Pick a correct play and distractors
-	var routes: Array[Dictionary] = _play_def.list_routes(_max_difficulty)
-	if routes.is_empty():
-		return
-	routes.shuffle()
-	_current_correct = routes[0]
-	var distractors: Array[Dictionary] = _play_def.get_random_distractors(_current_correct, 2, routes)
+	# Show prompt
+	_call_label.text = I18n.text(_current_round.get("prompt", {"pt": "?", "en": "?"}))
 
-	_cards.clear()
-	_cards.append(_current_correct)
-	for d: Dictionary in distractors:
-		_cards.append(d)
-	_cards.shuffle()
+	# Show display_path on field if present
+	var display_path: Variant = _current_round.get("display_path", null)
+	var card_type: String = String(_current_round.get("card_type", "label"))
+	if display_path is Array and (display_path as Array).size() >= 2:
+		_field_panel.visible = true
+		_draw_path_on_field(display_path as Array, PLAYER_COLOR)
+	elif card_type == "play_ref":
+		_field_panel.visible = false
+	else:
+		_field_panel.visible = false
 
-	# Build card buttons
-	for child: Node in _cards_container.get_children():
-		child.queue_free()
-	_card_buttons.clear()
+	# Build option cards
+	_build_cards()
 
-	for card: Dictionary in _cards:
-		var btn: Button = _make_card_button(card)
-		btn.pressed.connect(_on_card_picked.bind(card))
-		_cards_container.add_child(btn)
-		_card_buttons.append(btn)
-
-	_call_label.text = I18n.text(T_CALL) + " " + I18n.text(_current_correct.get("name", "?"))
-
-	# Start timer
+	# Timer
 	_timer_remaining = _timer_seconds
+	_timer_bar.max_value = _timer_seconds
 	_timer_bar.value = _timer_remaining
 	_timer_active = true
 
-func _make_card_button(card: Dictionary) -> Button:
+func _build_cards() -> void:
+	for child: Node in _cards_container.get_children():
+		child.queue_free()
+	_card_buttons.clear()
+	_card_options.clear()
+
+	var card_type: String = String(_current_round.get("card_type", "label"))
+	var options_raw: Variant = _current_round.get("options", [])
+	if not options_raw is Array:
+		return
+
+	for opt: Variant in (options_raw as Array):
+		var option: Dictionary = {}
+		if opt is Dictionary:
+			option = opt as Dictionary
+		elif opt is String and _play_def != null:
+			# play_ref: resolve play id to play dict
+			var play: Dictionary = (_play_def as PlayDef).get_play(opt as String)
+			if not play.is_empty():
+				option = {"id": String(opt), "play": play}
+			else:
+				option = {"id": String(opt), "label": {"pt": String(opt), "en": String(opt)}}
+		else:
+			continue
+		_card_options.append(option)
+
+	# Shuffle card order
+	_card_options.shuffle()
+
+	for opt: Dictionary in _card_options:
+		var btn: Button = _make_card(opt, card_type)
+		btn.pressed.connect(_on_card_picked.bind(opt))
+		_cards_container.add_child(btn)
+		_card_buttons.append(btn)
+
+func _make_card(opt: Dictionary, card_type: String) -> Button:
 	var btn: Button = Button.new()
-	btn.custom_minimum_size = Vector2(140, 120)
-	btn.text = ""
 	var style_normal: StyleBoxFlat = StyleBoxFlat.new()
 	style_normal.bg_color = CARD_BG
 	style_normal.border_width_left = 2
@@ -206,22 +237,39 @@ func _make_card_button(card: Dictionary) -> Button:
 	var style_hover: StyleBoxFlat = style_normal.duplicate()
 	style_hover.bg_color = CARD_HOVER
 	btn.add_theme_stylebox_override("hover", style_hover)
-	_draw_route_on_card(btn, card, Vector2(140, 120))
+
+	match card_type:
+		"path":
+			btn.custom_minimum_size = Vector2(140, 120)
+			btn.text = ""
+			var path_data: Variant = opt.get("path", [])
+			if path_data is Array and (path_data as Array).size() >= 2:
+				_draw_route_on_card(btn, path_data as Array, Vector2(140, 120))
+			else:
+				btn.text = "?"
+		"play_ref":
+			btn.custom_minimum_size = Vector2(140, 120)
+			btn.text = ""
+			var play: Dictionary = opt.get("play", {})
+			var path_data: Variant = play.get("path", [])
+			if path_data is Array and (path_data as Array).size() >= 2:
+				_draw_route_on_card(btn, path_data as Array, Vector2(140, 120))
+			else:
+				btn.text = I18n.text(play.get("name", {"pt": "?", "en": "?"}))
+		_: # "label"
+			btn.custom_minimum_size = Vector2(180, 100)
+			btn.add_theme_font_size_override("font_size", 18)
+			btn.text = I18n.text(opt.get("label", {"pt": "?", "en": "?"}))
 	return btn
 
-func _draw_route_on_card(btn: Button, card: Dictionary, card_size: Vector2) -> void:
-	var path_raw: Variant = card.get("path", [])
-	if not path_raw is Array or (path_raw as Array).size() < 2:
-		btn.text = "?"
-		return
+func _draw_route_on_card(btn: Button, path_raw: Array, card_size: Vector2) -> void:
 	var raw_pts: Array[Vector2] = []
-	for p: Variant in (path_raw as Array):
+	for p: Variant in path_raw:
 		if p is Array and (p as Array).size() >= 2:
 			raw_pts.append(Vector2(float((p as Array)[0]), float((p as Array)[1])))
 	if raw_pts.size() < 2:
 		btn.text = "?"
 		return
-	# Bounding box
 	var min_x: float = raw_pts[0].x
 	var max_x: float = raw_pts[0].x
 	var min_y: float = raw_pts[0].y
@@ -251,7 +299,6 @@ func _draw_route_on_card(btn: Button, card: Dictionary, card_size: Vector2) -> v
 		if i == 0:
 			first_screen = screen_pt
 	btn.add_child(line)
-	# Start dot
 	var dot: ColorRect = ColorRect.new()
 	dot.custom_minimum_size = Vector2(8, 8)
 	dot.size = Vector2(8, 8)
@@ -259,21 +306,47 @@ func _draw_route_on_card(btn: Button, card: Dictionary, card_size: Vector2) -> v
 	dot.position = first_screen - Vector2(4, 4)
 	btn.add_child(dot)
 
-func _on_card_picked(card: Dictionary) -> void:
+func _draw_path_on_field(path_raw: Array, color: Color) -> void:
+	_route_line.clear_points()
+	_route_line.default_color = color
+	var field_size: Vector2 = _field_panel.size
+	if field_size.x < 10:
+		field_size = _field_panel.custom_minimum_size
+	var center_x: float = field_size.x * 0.5
+	var start_y: float = field_size.y * 0.75
+	var scale_factor: float = field_size.y / 100.0
+	var points: Array[Vector2] = []
+	for p: Variant in path_raw:
+		if p is Array and (p as Array).size() >= 2:
+			var px: float = center_x + float((p as Array)[0]) * scale_factor
+			var py: float = start_y + float((p as Array)[1]) * scale_factor
+			points.append(Vector2(px, py))
+	if points.is_empty():
+		return
+	_player_dot.visible = true
+	_player_dot.position = points[0] - Vector2(6, 6)
+	for pt: Vector2 in points:
+		_route_line.add_point(pt)
+
+# --- Pick / Timeout ---
+
+func _on_card_picked(option: Dictionary) -> void:
 	if _waiting:
 		return
 	_timer_active = false
 	_waiting = true
-	var correct: bool = card.get("id", "") == _current_correct.get("id", "")
+	var picked_id: String = String(option.get("id", ""))
+	var correct_id: String = String(_current_round.get("correct", ""))
+	var correct: bool = picked_id == correct_id
 
-	# Color the cards
-	for i: int in _cards.size():
-		var is_this_correct: bool = _cards[i].get("id", "") == _current_correct.get("id", "")
+	# Color cards
+	for i: int in _card_options.size():
+		var opt_id: String = String(_card_options[i].get("id", ""))
 		var style: StyleBoxFlat = _card_buttons[i].get_theme_stylebox("normal").duplicate()
-		if is_this_correct:
+		if opt_id == correct_id:
 			style.bg_color = CARD_CORRECT_BG
 			style.border_color = ROUTE_CORRECT
-		elif _cards[i].get("id", "") == card.get("id", ""):
+		elif opt_id == picked_id:
 			style.bg_color = CARD_WRONG_BG
 			style.border_color = ROUTE_WRONG
 		_card_buttons[i].add_theme_stylebox_override("normal", style)
@@ -284,74 +357,37 @@ func _on_card_picked(card: Dictionary) -> void:
 		_result_label.text = I18n.text(T_CORRECT)
 		_result_label.add_theme_color_override("font_color", ROUTE_CORRECT)
 	else:
-		_result_label.text = I18n.text(T_WRONG) + " -> " + I18n.text(_current_correct.get("name", ""))
+		_result_label.text = I18n.text(T_WRONG)
 		_result_label.add_theme_color_override("font_color", ROUTE_WRONG)
 
 	_update_labels()
-	_animate_route(_current_correct, correct)
-
-	await get_tree().create_timer(1.5).timeout
+	await get_tree().create_timer(1.2).timeout
 	_next_or_finish()
 
 func _on_timeout() -> void:
 	if _waiting:
 		return
 	_waiting = true
-	_result_label.text = I18n.text(T_WRONG) + " (timeout) -> " + I18n.text(_current_correct.get("name", ""))
+	_result_label.text = I18n.text(T_WRONG) + " (timeout)"
 	_result_label.add_theme_color_override("font_color", ROUTE_WRONG)
 
-	# Highlight correct card
-	for i: int in _cards.size():
-		if _cards[i].get("id", "") == _current_correct.get("id", ""):
+	var correct_id: String = String(_current_round.get("correct", ""))
+	for i: int in _card_options.size():
+		if String(_card_options[i].get("id", "")) == correct_id:
 			var style: StyleBoxFlat = _card_buttons[i].get_theme_stylebox("normal").duplicate()
 			style.bg_color = CARD_CORRECT_BG
 			style.border_color = ROUTE_CORRECT
 			_card_buttons[i].add_theme_stylebox_override("normal", style)
 
-	_animate_route(_current_correct, false)
-
-	await get_tree().create_timer(1.5).timeout
+	await get_tree().create_timer(1.2).timeout
 	_next_or_finish()
 
 func _next_or_finish() -> void:
-	if _rounds_done >= _rounds_total:
-		minigame_finished.emit(_score, _rounds_total)
+	if _round_index >= _rounds.size():
+		minigame_finished.emit(_score, _rounds.size())
 	else:
 		_start_round()
 
-# --- Route animation ---
-
-func _animate_route(play: Dictionary, correct: bool) -> void:
-	_route_line.clear_points()
-	_route_line.default_color = ROUTE_CORRECT if correct else ROUTE_WRONG
-	var path_raw: Variant = play.get("path", [])
-	if not path_raw is Array or (path_raw as Array).is_empty():
-		return
-	var field_size: Vector2 = _field_panel.size
-	var center_x: float = field_size.x * 0.5
-	var start_y: float = field_size.y * 0.75
-	var scale_factor: float = field_size.y / 100.0
-
-	var points: Array[Vector2] = []
-	for p: Variant in (path_raw as Array):
-		if p is Array and (p as Array).size() >= 2:
-			var px: float = center_x + float((p as Array)[0]) * scale_factor
-			var py: float = start_y + float((p as Array)[1]) * scale_factor
-			points.append(Vector2(px, py))
-
-	if points.is_empty():
-		return
-
-	_player_dot.visible = true
-	_player_dot.position = points[0] - Vector2(6, 6)
-
-	for i: int in range(1, points.size()):
-		_route_line.add_point(points[i - 1])
-		_route_line.add_point(points[i])
-		var tween: Tween = create_tween()
-		tween.tween_property(_player_dot, "position", points[i] - Vector2(6, 6), 0.3)
-		await tween.finished
-
 func _update_labels() -> void:
 	_score_label.text = I18n.text(T_SCORE) + str(_score)
-	_round_label.text = I18n.text(T_ROUND) + str(_rounds_done) + "/" + str(_rounds_total)
+	_round_label.text = I18n.text(T_ROUND) + str(_round_index) + "/" + str(_rounds.size())

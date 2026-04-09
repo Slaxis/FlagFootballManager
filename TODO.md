@@ -66,21 +66,28 @@ Player is 15, has 4 weeks to prepare for a flag football tryout while keeping up
 
 ## Phase 4 — Card Minigame (Core Mechanic)
 
-### 4.1 — Play card data
+### 4.1 — Play card data ✅
 - Def: `game/defs/play.gd` + `play.json`
 - Routes: Post, Go, Slant, Out, In, Corner, Curl, Flat, Screen
-- Each play has card image (placeholder or generated)
+- Cards show route drawings (Line2D) instead of text names
 
-### 4.2 — Minigame scene
-- Top: 2D top-down field
-- Center: play call text ("Run a POST route!")
-- Bottom: 3 cards, one correct + 2 distractors
-- Timer bar (10s for tryout, decreases with difficulty)
+### 4.2 — Minigame scene ✅
+- Route recognition minigame: call label + 3 card buttons with route drawings + timer
+- Generalized card_minigame.gd supports 3 card types: path, label, play_ref
+- Field panel with route animation after answer
 
-### 4.3 — Tryout event
-- Sunday morning, weeks 1-4
-- 5 rounds of play recognition, need 3/5 to pass
-- Fail week 4 → game over
+### 4.3 — Tryout system ✅
+- New "TEAM" activity category, tryout moved from brutality
+- Position selection: QB, WR, Center, DB, Rusher
+- 3 physical drills (40-yard dash, three-cone, pro agility) + 1 position drill
+- Tryout orchestrator: position select → drills → results screen
+- Physical drills: reaction (sprint/hold), path matching, direction calls
+- Position drills: QB reads defense, WR/Center route recognition, DB coverage, Rusher rush read
+- Pass threshold: 60% combined score (9/14)
+- WIN screen on pass (team_id set, position stored)
+- GAME OVER screen if week 4 ends without team → main menu
+- Tryout results shown in week summary
+- Tryout hidden from dropdown after joining team (no_team requires check)
 
 ### 4.4 — Training integration
 - Team training uses same minigame, more rounds, XP scaling
@@ -180,9 +187,9 @@ Legend: ✅ merged | ⚙ in progress | · pending
 3.6 Social from phone    · phone-initiated social events
 3.7 Fridge inventory     · full item-based fridge
 
-4.1 Play card data       ⚙ card definitions
-4.2 Minigame scene       ⚙ play the card game
-4.3 Tryout event         ⚙ tryout minigame
+4.1 Play card data       ✅ card definitions + route drawings
+4.2 Minigame scene       ✅ play the card game + generalized card types
+4.3 Tryout event         ✅ tryout system (data, integration, win/lose)
 4.4 Training             · team training minigame
 4.5 Field viz            · route animation
 
