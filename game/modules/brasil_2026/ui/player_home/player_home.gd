@@ -274,17 +274,12 @@ func _build_grid() -> void:
 		grid_container.add_child(row_label)
 
 		for slot_id: String in SLOTS:
-			var all_avail: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
-			var avail: Array[Dictionary] = []
-			for a: Dictionary in all_avail:
-				if ActivityDef.check_requires(a, The.session) == "":
-					avail.append(a)
 			var key: String = day_id + "_" + slot_id
 			var select: OptionButton = OptionButton.new()
 			select.custom_minimum_size = Vector2(0, 28)
 			select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			select.add_theme_font_size_override("font_size", 10)
-			_grid_activities[key] = avail
+			_grid_activities[key] = _build_activity_list(slot_id)
 			_populate_grouped_select(select, slot_id)
 			select.item_selected.connect(_on_grid_select_changed.bind(key, slot_id))
 			# Default late_night to sleep
@@ -326,6 +321,17 @@ func _populate_grouped_select(select: OptionButton, slot_id: String) -> void:
 			var cat: Dictionary = _activity_def.get_category(String(act.get("category", "")))
 			var icon: String = String(cat.get("icon", " "))
 			select.add_item(icon + " " + I18n.text(act.get("name", "?")))
+
+func _build_activity_list(slot_id: String) -> Array[Dictionary]:
+	# Build activity list in grouped order (matching dropdown display order)
+	var grouped: Array[Dictionary] = _activity_def.list_for_slot_grouped(slot_id)
+	var result: Array[Dictionary] = []
+	for entry: Dictionary in grouped:
+		if entry["type"] == "activity":
+			var act: Dictionary = entry["activity"]
+			if ActivityDef.check_requires(act, The.session) == "":
+				result.append(act)
+	return result
 
 func _select_index_to_activity(key: String, display_index: int) -> Dictionary:
 	# Map OptionButton index (which includes separators) to activity
@@ -869,6 +875,18 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 
 	var act_name: String = I18n.text(act.get("name", "?"))
 
+	# Check if this is a minigame activity
+	if not collapsed and act.get("is_minigame", false):
+		_set_select_color(select, COLOR_RUNNING)
+		_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + " ...", COLOR_RUNNING)
+		await _run_minigame(act)
+		The.session["vitals"] = vitals
+		The.session["money"] = money
+		_update_vitals()
+		_update_header()
+		_set_select_color(select, COLOR_SYNERGY)
+		return
+
 	# Mark as running
 	_set_select_color(select, COLOR_RUNNING)
 	await get_tree().create_timer(SLOT_DELAY * 0.3).timeout
@@ -1022,6 +1040,15 @@ func _finalize_week() -> void:
 	_reset_week_tracking()
 	_load_quests()
 
+	# Check win/lose conditions
+	var current_week: int = int(The.session.get("week", 1))
+	var team_id: String = String(The.session.get("team_id", ""))
+	if team_id != "":
+		_show_tryout_win()
+	elif current_week > 4:
+		_show_game_over()
+		return
+
 	# Save current selections for carryover
 	_last_week_selections.clear()
 	for key: String in _grid_selects:
@@ -1041,6 +1068,7 @@ func _finalize_week() -> void:
 		var slot_id: String = key.substr(key.find("_") + 1) if "_" in key else ""
 		select.clear()
 		if slot_id != "":
+			_grid_activities[key] = _build_activity_list(slot_id)
 			_populate_grouped_select(select, slot_id)
 		_select_first_item(select)
 
@@ -1175,6 +1203,107 @@ func _quests_completed() -> int:
 			count += 1
 	return count
 
+# --- Minigame ---
+
+func _run_minigame(act: Dictionary) -> void:
+	var minigame_id: String = String(act.get("minigame_id", "play_minigame"))
+	match minigame_id:
+		"tryout":
+			await _run_tryout(act)
+		_:
+			await _run_play_minigame(act)
+
+func _run_play_minigame(act: Dictionary) -> void:
+	var config: Dictionary = act.get("minigame_config", {})
+	var rounds: int = int(config.get("rounds", 5))
+	var timer_sec: float = float(config.get("timer", 10.0))
+	var max_diff: int = int(config.get("max_difficulty", 1))
+	var pass_score: int = int(config.get("pass_score", 3))
+
+	var scene: PackedScene = load("res://game/modules/brasil_2026/ui/minigame/play_minigame.tscn")
+	if scene == null:
+		_log("  [minigame scene not found]", COLOR_COLLAPSE)
+		return
+
+	var popup: Window = Window.new()
+	popup.title = I18n.text(act.get("name", "Minigame"))
+	popup.size = Vector2i(600, 500)
+	popup.unresizable = false
+	popup.close_requested.connect(func() -> void: popup.queue_free())
+
+	var minigame: Control = scene.instantiate()
+	minigame.setup(rounds, timer_sec, max_diff)
+
+	var result: Dictionary = {"done": false, "score": 0, "total": 0}
+	minigame.minigame_finished.connect(func(score: int, total: int) -> void:
+		result["done"] = true
+		result["score"] = score
+		result["total"] = total
+	)
+
+	popup.add_child(minigame)
+	add_child(popup)
+	popup.popup_centered()
+
+	while not result["done"] and is_instance_valid(popup):
+		await get_tree().process_frame
+
+	if is_instance_valid(popup):
+		popup.queue_free()
+
+	var final_score: int = int(result["score"])
+	var final_total: int = int(result["total"])
+	var passed: bool = final_score >= pass_score
+	if passed:
+		_log("  " + I18n.text(act.get("name", "?")) + ": " + str(final_score) + "/" + str(final_total) + " " + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}), COLOR_SYNERGY)
+	else:
+		_log("  " + I18n.text(act.get("name", "?")) + ": " + str(final_score) + "/" + str(final_total) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
+
+func _run_tryout(act: Dictionary) -> void:
+	var config: Dictionary = act.get("minigame_config", {})
+	var scene: PackedScene = load("res://game/modules/brasil_2026/ui/tryout/tryout_manager.tscn")
+	if scene == null:
+		_log("  [tryout scene not found]", COLOR_COLLAPSE)
+		return
+
+	var popup: Window = Window.new()
+	popup.title = I18n.text(act.get("name", "Tryout"))
+	popup.size = Vector2i(650, 550)
+	popup.unresizable = false
+	popup.close_requested.connect(func() -> void: popup.queue_free())
+
+	var tryout: Control = scene.instantiate()
+	tryout.setup(config)
+
+	var result: Dictionary = {"done": false, "passed": false, "data": {}}
+	tryout.tryout_finished.connect(func(passed: bool, data: Dictionary) -> void:
+		result["done"] = true
+		result["passed"] = passed
+		result["data"] = data
+	)
+
+	popup.add_child(tryout)
+	add_child(popup)
+	popup.popup_centered()
+
+	while not result["done"] and is_instance_valid(popup):
+		await get_tree().process_frame
+
+	if is_instance_valid(popup):
+		popup.queue_free()
+
+	# Process tryout results
+	var data: Dictionary = result["data"]
+	if result["passed"]:
+		The.session["team_id"] = "pending_selection"
+		The.session["player_position"] = data.get("position", "")
+		The.session["tryout_results"] = data
+		_log("  Tryout: " + str(data.get("total_score", 0)) + "/" + str(data.get("total_possible", 0)) + " " + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}), COLOR_SYNERGY)
+	else:
+		The.session["tryout_failed_count"] = int(The.session.get("tryout_failed_count", 0)) + 1
+		_log("  Tryout: " + str(data.get("total_score", 0)) + "/" + str(data.get("total_possible", 0)) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
+	The.session["last_tryout_result"] = data
+
 # --- Timed effects ---
 
 func _add_effect(effect_def: Dictionary) -> void:
@@ -1293,6 +1422,25 @@ func _show_week_summary() -> void:
 			var hex: String = rank_colors[int(entry["color_rank"])].to_html(false)
 			lines.append("  [color=#" + hex + "]" + act_name + " x" + str(entry["count"]) + "[/color]")
 
+	# Tryout results
+	var last_tryout: Dictionary = The.session.get("last_tryout_result", {})
+	if not last_tryout.is_empty():
+		lines.append("")
+		lines.append("[b]TRYOUT[/b]")
+		var pos_id: String = String(last_tryout.get("position", ""))
+		lines.append("  " + I18n.text({"pt": "Posicao", "en": "Position"}) + ": " + pos_id.to_upper())
+		var drills: Dictionary = last_tryout.get("drills", {})
+		var drill_labels: Dictionary = {"forty": "40-Yard", "three_cone": "3-Cone", "shuttle": "Shuttle", "position": pos_id.to_upper()}
+		for drill_id: String in drills:
+			var d: Dictionary = drills[drill_id]
+			var d_label: String = drill_labels.get(drill_id, drill_id)
+			lines.append("  " + d_label + ": " + str(d.get("score", 0)) + "/" + str(d.get("total", 0)))
+		var tryout_passed: bool = last_tryout.get("passed", false)
+		var t_hex: String = COLOR_SYNERGY.to_html(false) if tryout_passed else COLOR_COLLAPSE.to_html(false)
+		var t_status: String = "PASSED!" if tryout_passed else "FAILED"
+		lines.append("  [color=#" + t_hex + "]" + t_status + "[/color]")
+		The.session.erase("last_tryout_result")
+
 	# Create popup
 	var week_num: int = int(The.session.get("week", 1)) - 1
 	var popup: AcceptDialog = AcceptDialog.new()
@@ -1310,6 +1458,48 @@ func _show_week_summary() -> void:
 	popup.popup_centered()
 	popup.confirmed.connect(popup.queue_free)
 	popup.canceled.connect(popup.queue_free)
+
+# --- Win / Game Over ---
+
+func _show_tryout_win() -> void:
+	var pos: String = String(The.session.get("player_position", "")).to_upper()
+	var popup: AcceptDialog = AcceptDialog.new()
+	popup.title = "TRYOUT"
+	popup.ok_button_text = I18n.text(T_CLOSE)
+	popup.min_size = Vector2(400, 250)
+	var rtl: RichTextLabel = RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	rtl.custom_minimum_size = Vector2(380, 200)
+	rtl.text = "[center][font_size=28][color=#" + COLOR_SYNERGY.to_html(false) + "]" + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}) + "[/color][/font_size]\n\n"
+	rtl.text += I18n.text({"pt": "Voce entrou pro time!", "en": "You made the team!"}) + "\n"
+	rtl.text += I18n.text({"pt": "Posicao: ", "en": "Position: "}) + pos + "\n\n"
+	rtl.text += I18n.text({"pt": "Sua carreira no flag football comeca agora.", "en": "Your flag football career starts now."}) + "[/center]"
+	popup.add_child(rtl)
+	add_child(popup)
+	popup.popup_centered()
+	popup.confirmed.connect(popup.queue_free)
+
+func _show_game_over() -> void:
+	var popup: AcceptDialog = AcceptDialog.new()
+	popup.title = "GAME OVER"
+	popup.ok_button_text = I18n.text(T_CLOSE)
+	popup.min_size = Vector2(400, 250)
+	var rtl: RichTextLabel = RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	rtl.custom_minimum_size = Vector2(380, 200)
+	rtl.text = "[center][font_size=28][color=#" + COLOR_COLLAPSE.to_html(false) + "]GAME OVER[/color][/font_size]\n\n"
+	rtl.text += I18n.text({"pt": "Voce nao conseguiu entrar em nenhum time.", "en": "You didn't make any team."}) + "\n"
+	rtl.text += I18n.text({"pt": "A janela de tryouts se fechou.", "en": "The tryout window has closed."}) + "\n\n"
+	rtl.text += I18n.text({"pt": "Quem sabe na proxima temporada...", "en": "Maybe next season..."}) + "[/center]"
+	popup.add_child(rtl)
+	add_child(popup)
+	popup.popup_centered()
+	popup.confirmed.connect(func() -> void:
+		popup.queue_free()
+		var menu_scene: PackedScene = The.ui("main_menu")
+		if menu_scene:
+			The.next_scene(menu_scene)
+	)
 
 # --- Log ---
 
