@@ -234,7 +234,11 @@ func _build_grid() -> void:
 		label.add_theme_font_size_override("font_size", 11)
 		col_box.add_child(label)
 
-		var available: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
+		var all_col_avail: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
+		var available: Array[Dictionary] = []
+		for a: Dictionary in all_col_avail:
+			if ActivityDef.check_requires(a, The.session) == "":
+				available.append(a)
 		_column_activities[slot_id] = available
 		var col_select: OptionButton = OptionButton.new()
 		col_select.add_theme_font_size_override("font_size", 9)
@@ -270,7 +274,11 @@ func _build_grid() -> void:
 		grid_container.add_child(row_label)
 
 		for slot_id: String in SLOTS:
-			var avail: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
+			var all_avail: Array[Dictionary] = _activity_def.list_for_slot(slot_id)
+			var avail: Array[Dictionary] = []
+			for a: Dictionary in all_avail:
+				if ActivityDef.check_requires(a, The.session) == "":
+					avail.append(a)
 			var key: String = day_id + "_" + slot_id
 			var select: OptionButton = OptionButton.new()
 			select.custom_minimum_size = Vector2(0, 28)
@@ -312,17 +320,12 @@ func _populate_grouped_select(select: OptionButton, slot_id: String) -> void:
 			select.add_separator(label_text)
 		else:
 			var act: Dictionary = entry["activity"]
+			var lock_reason: String = ActivityDef.check_requires(act, The.session)
+			if lock_reason != "":
+				continue
 			var cat: Dictionary = _activity_def.get_category(String(act.get("category", "")))
 			var icon: String = String(cat.get("icon", " "))
-			var lock_reason: String = ActivityDef.check_requires(act, The.session)
-			var item_text: String = icon + " " + I18n.text(act.get("name", "?"))
-			if lock_reason != "":
-				item_text += " [X]"
-			select.add_item(item_text)
-			if lock_reason != "":
-				var idx: int = select.item_count - 1
-				select.set_item_disabled(idx, true)
-				select.set_item_tooltip(idx, lock_reason)
+			select.add_item(icon + " " + I18n.text(act.get("name", "?")))
 
 func _select_index_to_activity(key: String, display_index: int) -> Dictionary:
 	# Map OptionButton index (which includes separators) to activity
