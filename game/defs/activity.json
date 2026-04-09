@@ -264,6 +264,19 @@
       ]
     },
     {
+      "id": "tryout",
+      "name": {"pt": "Tryout", "en": "Tryout"},
+      "desc": {"pt": "Teste pra entrar no time! Semanas 1-4", "en": "Team tryout! Weeks 1-4"},
+      "category": "brutality",
+      "requires": {"week_range": [1, 4]},
+      "slots": ["morning", "afternoon", "night", "late_night"],
+      "effects": {"energy": -15, "hunger": -10},
+      "slot_modifiers": {"morning": 1.0, "afternoon": 0.8, "night": 0.5, "late_night": 0.3},
+      "is_minigame": true,
+      "minigame_id": "play_minigame",
+      "minigame_config": {"rounds": 5, "timer": 10.0, "max_difficulty": 1, "pass_score": 3}
+    },
+    {
       "id": "team_practice",
       "name": {"pt": "Treino do time", "en": "Team Practice"},
       "desc": {"pt": "Treino oficial com o time", "en": "Official team practice"},

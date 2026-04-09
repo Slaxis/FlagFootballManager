@@ -1,0 +1,121 @@
+{
+  "categories": [
+    {"id": "route",    "label": {"pt": "ROTAS",     "en": "ROUTES"},    "icon": "->"},
+    {"id": "coverage", "label": {"pt": "COBERTURA", "en": "COVERAGE"},  "icon": "<>"},
+    {"id": "rush",     "label": {"pt": "RUSH",      "en": "RUSH"},      "icon": ">>"}
+  ],
+  "plays": [
+    {
+      "id": "go",
+      "name": {"pt": "Go (Fly)", "en": "Go (Fly)"},
+      "desc": {"pt": "Rota reta pra frente, velocidade maxima", "en": "Straight route downfield, full speed"},
+      "category": "route",
+      "difficulty": 1,
+      "path": [[0,0],[0,-80]]
+    },
+    {
+      "id": "slant",
+      "name": {"pt": "Slant", "en": "Slant"},
+      "desc": {"pt": "Diagonal curta pra dentro", "en": "Short diagonal cut inside"},
+      "category": "route",
+      "difficulty": 1,
+      "path": [[0,0],[0,-15],[-30,-40]]
+    },
+    {
+      "id": "out",
+      "name": {"pt": "Out", "en": "Out"},
+      "desc": {"pt": "Corte de 90 graus pra fora", "en": "90-degree cut to the sideline"},
+      "category": "route",
+      "difficulty": 1,
+      "path": [[0,0],[0,-30],[40,-30]]
+    },
+    {
+      "id": "in",
+      "name": {"pt": "In (Dig)", "en": "In (Dig)"},
+      "desc": {"pt": "Corte de 90 graus pra dentro", "en": "90-degree cut inside"},
+      "category": "route",
+      "difficulty": 2,
+      "path": [[0,0],[0,-30],[-40,-30]]
+    },
+    {
+      "id": "curl",
+      "name": {"pt": "Curl", "en": "Curl"},
+      "desc": {"pt": "Corre reto e volta pro QB", "en": "Run straight then turn back to QB"},
+      "category": "route",
+      "difficulty": 2,
+      "path": [[0,0],[0,-35],[0,-25]]
+    },
+    {
+      "id": "post",
+      "name": {"pt": "Post", "en": "Post"},
+      "desc": {"pt": "Diagonal longa pra dentro, rota profunda", "en": "Deep diagonal cut inside, big play route"},
+      "category": "route",
+      "difficulty": 2,
+      "path": [[0,0],[0,-30],[-20,-70]]
+    },
+    {
+      "id": "corner",
+      "name": {"pt": "Corner", "en": "Corner"},
+      "desc": {"pt": "Diagonal longa pra fora, fundo do campo", "en": "Deep diagonal cut to the corner"},
+      "category": "route",
+      "difficulty": 3,
+      "path": [[0,0],[0,-30],[30,-70]]
+    },
+    {
+      "id": "flat",
+      "name": {"pt": "Flat", "en": "Flat"},
+      "desc": {"pt": "Rota curta lateral, passe rapido", "en": "Short lateral route, quick pass"},
+      "category": "route",
+      "difficulty": 1,
+      "path": [[0,0],[30,-5]]
+    },
+    {
+      "id": "screen",
+      "name": {"pt": "Screen", "en": "Screen"},
+      "desc": {"pt": "Finge ir e volta pra pegar passe atras da linha", "en": "Fake route then catch behind the line"},
+      "category": "route",
+      "difficulty": 2,
+      "path": [[0,0],[0,-10],[5,5]]
+    },
+    {
+      "id": "man_coverage",
+      "name": {"pt": "Man-to-Man", "en": "Man-to-Man"},
+      "desc": {"pt": "Seguir o receiver de perto", "en": "Follow the receiver closely"},
+      "category": "coverage",
+      "difficulty": 1,
+      "path": []
+    },
+    {
+      "id": "zone_flat",
+      "name": {"pt": "Zona Flat", "en": "Flat Zone"},
+      "desc": {"pt": "Cobrir area curta lateral", "en": "Cover the short lateral area"},
+      "category": "coverage",
+      "difficulty": 1,
+      "path": []
+    },
+    {
+      "id": "zone_deep",
+      "name": {"pt": "Zona Profunda", "en": "Deep Zone"},
+      "desc": {"pt": "Cobrir area funda do campo", "en": "Cover the deep area"},
+      "category": "coverage",
+      "difficulty": 2,
+      "path": []
+    },
+    {
+      "id": "contain_rush",
+      "name": {"pt": "Contenção", "en": "Contain"},
+      "desc": {"pt": "Pressionar o QB sem deixar ele escapar", "en": "Pressure the QB without letting them escape"},
+      "category": "rush",
+      "difficulty": 1,
+      "path": []
+    },
+    {
+      "id": "speed_rush",
+      "name": {"pt": "Rush de velocidade", "en": "Speed Rush"},
+      "desc": {"pt": "Correr direto pro QB o mais rapido possivel", "en": "Sprint straight at the QB as fast as possible"},
+      "category": "rush",
+      "difficulty": 2,
+      "path": []
+    }
+  ]
+}

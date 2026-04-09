@@ -869,6 +869,18 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 
 	var act_name: String = I18n.text(act.get("name", "?"))
 
+	# Check if this is a minigame activity
+	if not collapsed and act.get("is_minigame", false):
+		_set_select_color(select, COLOR_RUNNING)
+		_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + " ...", COLOR_RUNNING)
+		await _run_minigame(act)
+		The.session["vitals"] = vitals
+		The.session["money"] = money
+		_update_vitals()
+		_update_header()
+		_set_select_color(select, COLOR_SYNERGY)
+		return
+
 	# Mark as running
 	_set_select_color(select, COLOR_RUNNING)
 	await get_tree().create_timer(SLOT_DELAY * 0.3).timeout
@@ -1174,6 +1186,58 @@ func _quests_completed() -> int:
 		if _is_quest_done(quest):
 			count += 1
 	return count
+
+# --- Minigame ---
+
+func _run_minigame(act: Dictionary) -> void:
+	var config: Dictionary = act.get("minigame_config", {})
+	var rounds: int = int(config.get("rounds", 5))
+	var timer_sec: float = float(config.get("timer", 10.0))
+	var max_diff: int = int(config.get("max_difficulty", 1))
+	var pass_score: int = int(config.get("pass_score", 3))
+
+	var scene: PackedScene = load("res://game/modules/brasil_2026/ui/minigame/play_minigame.tscn")
+	if scene == null:
+		_log("  [minigame scene not found]", COLOR_COLLAPSE)
+		return
+
+	var popup: Window = Window.new()
+	popup.title = I18n.text(act.get("name", "Minigame"))
+	popup.size = Vector2i(600, 500)
+	popup.unresizable = false
+	popup.close_requested.connect(func() -> void: popup.queue_free())
+
+	var minigame: Control = scene.instantiate()
+	minigame.setup(rounds, timer_sec, max_diff)
+
+	var result: Dictionary = {"done": false, "score": 0, "total": 0}
+	minigame.minigame_finished.connect(func(score: int, total: int) -> void:
+		result["done"] = true
+		result["score"] = score
+		result["total"] = total
+	)
+
+	popup.add_child(minigame)
+	add_child(popup)
+	popup.popup_centered()
+
+	# Wait for minigame to finish
+	while not result["done"] and is_instance_valid(popup):
+		await get_tree().process_frame
+
+	if is_instance_valid(popup):
+		popup.queue_free()
+
+	var final_score: int = int(result["score"])
+	var final_total: int = int(result["total"])
+
+	# Log result
+	var passed: bool = final_score >= pass_score
+	if passed:
+		_log("  Tryout: " + str(final_score) + "/" + str(final_total) + " " + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}), COLOR_SYNERGY)
+		The.session["team_id"] = "pending_selection"
+	else:
+		_log("  Tryout: " + str(final_score) + "/" + str(final_total) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
 
 # --- Timed effects ---
 

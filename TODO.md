@@ -180,9 +180,9 @@ Legend: ✅ merged | ⚙ in progress | · pending
 3.6 Social from phone    · phone-initiated social events
 3.7 Fridge inventory     · full item-based fridge
 
-4.1 Play card data       · card definitions
-4.2 Minigame scene       · play the card game
-4.3 Tryout event         · tryout minigame
+4.1 Play card data       ⚙ card definitions
+4.2 Minigame scene       ⚙ play the card game
+4.3 Tryout event         ⚙ tryout minigame
 4.4 Training             · team training minigame
 4.5 Field viz            · route animation
 
