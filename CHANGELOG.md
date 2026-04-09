@@ -43,6 +43,12 @@
 - Removed gym/academia, train_solo, socialize, stay_up_late activities
 - Renamed activities for 15yo context: Hill Sprints, Calisthenics, Parkour, etc.
 - Cooking now stocks fridge (+3 meals) instead of direct hunger restore
+- Timed effect system: events produce buffs/debuffs lasting N slots (Runner's High, Zen, Contusão, etc.)
+- Effect cards in bottom bar with styled panels (green/red border)
+- Mirror/character sheet window (M key): stats with effect modifiers, skills, active effects
+- Keyboard shortcuts: SPACE pause, 1/2/3 slot/day/week, F fridge, M mirror
+- Realistic default week schedule for 15yo student
+- Removed Sleep In (merged into Sleep with morning 0.8x soft margin)
 
 ### Changed
 - Home screen layout: grid takes ~75% width (left), room + vitals + log on right
