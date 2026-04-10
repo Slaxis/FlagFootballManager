@@ -39,7 +39,10 @@
 - Beach Football and Video Games activities
 - Quest type: activity_category_count (tracks any activity from a category)
 
-- Home screen: 3-column layout (sidebar vitals/room/effects | center grid | right quests/log)
+- Home screen redesign: sidebar (casa/vitals/quests/diary/effects) + main panel (grid + embedded viewport)
+- Minigames now embedded in SubViewport instead of Window popups (play_minigame, tryout)
+- Room placeholder shown in viewport when no minigame is active
+- Log replaced with Diary (narrative text in sidebar, scrollable)
 - Origin system: 3 origins (quebrada/condomínio/mansão) with distinct starting money, fridge, vitals, stat modifiers
 - School system: 3 schools (público/bairro/elite) with stat modifiers, turno selection (1=manhã, 2=tarde, 3=noite)
 - Body system: height (150-200cm) and weight (45-110kg) sliders with threshold-based stat bonuses
