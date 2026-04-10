@@ -221,31 +221,23 @@ func _draw_route_on_card(btn: Button, card: Dictionary, card_size: Vector2) -> v
 	if raw_pts.size() < 2:
 		btn.text = "?"
 		return
-	# Bounding box
-	var min_x: float = raw_pts[0].x
-	var max_x: float = raw_pts[0].x
-	var min_y: float = raw_pts[0].y
-	var max_y: float = raw_pts[0].y
-	for pt: Vector2 in raw_pts:
-		min_x = minf(min_x, pt.x)
-		max_x = maxf(max_x, pt.x)
-		min_y = minf(min_y, pt.y)
-		max_y = maxf(max_y, pt.y)
-	var range_x: float = maxf(max_x - min_x, 1.0)
-	var range_y: float = maxf(max_y - min_y, 1.0)
+	# Fixed scale: all routes use the same reference frame (100 units = full card height)
+	# so short routes look short and long routes look long
 	var padding: float = 16.0
 	var draw_w: float = card_size.x - padding * 2
 	var draw_h: float = card_size.y - padding * 2
-	var scale_f: float = minf(draw_w / range_x, draw_h / range_y)
-	var offset_x: float = padding + (draw_w - range_x * scale_f) * 0.5
-	var offset_y: float = padding + (draw_h - range_y * scale_f) * 0.5
+	var ref_extent: float = 100.0
+	var scale_f: float = minf(draw_w / ref_extent, draw_h / ref_extent)
+	# Center the route: start point (0,0) at bottom-center of card
+	var center_x: float = card_size.x * 0.5
+	var start_y: float = card_size.y - padding
 	var line: Line2D = Line2D.new()
 	line.width = 3.0
 	line.default_color = Color(1, 1, 1, 0.8)
 	var first_screen: Vector2 = Vector2.ZERO
 	for i: int in raw_pts.size():
-		var sx: float = offset_x + (raw_pts[i].x - min_x) * scale_f
-		var sy: float = offset_y + (raw_pts[i].y - min_y) * scale_f
+		var sx: float = center_x + raw_pts[i].x * scale_f
+		var sy: float = start_y + raw_pts[i].y * scale_f
 		var screen_pt: Vector2 = Vector2(sx, sy)
 		line.add_point(screen_pt)
 		if i == 0:

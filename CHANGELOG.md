@@ -39,6 +39,13 @@
 - Beach Football and Video Games activities
 - Quest type: activity_category_count (tracks any activity from a category)
 
+- Hunger system: auto-meals at breakfast (morning) and dinner (night) when hunger < 80
+- Meal source cascade: fridge (free, +35) → delivery (R$15, +30) → lanche (up to R$30, scaled)
+- Emergency cascade at hunger=0: same sources, fridge gives +25 (smaller emergency portion)
+- Collapse only triggers when broke and no fridge — cooking is now strategic
+- Route card drawings now use fixed scale (100-unit reference), preserving relative route sizes
+- Hotkey labels on play buttons: [1]> slot, [2]>> day, [3]>> week
+- Fridge and mirror windows now unfocusable — keyboard shortcuts toggle them properly
 - Team practice uses play_minigame (5 rounds, diff 2, 12s timer) with events (Foco Tático buff, Coach's Scolding debuff)
 - Minigame activities now continue to effects/events after minigame (no early return)
 - Play card minigame: route drawings on cards (Line2D) instead of text names
