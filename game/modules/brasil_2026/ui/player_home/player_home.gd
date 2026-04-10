@@ -117,24 +117,26 @@ var _vital_value_labels: Dictionary = {}
 var _effects: Array[Dictionary] = []
 var _resolving: bool = false
 
-@onready var money_label: Label = $Margin/VBox/TopBar/MoneyLabel
-@onready var day_label: Label = $Margin/VBox/TopBar/DayLabel
-@onready var week_label: Label = $Margin/VBox/TopBar/WeekLabel
-@onready var player_label: Label = $Margin/VBox/TopBar/PlayerLabel
+# SidePanel (left)
+@onready var player_label: Label = $Margin/Content/SidePanel/PlayerLabel
+@onready var money_label: Label = $Margin/Content/SidePanel/InfoRow/MoneyLabel
+@onready var week_label: Label = $Margin/Content/SidePanel/InfoRow/WeekLabel
+@onready var vitals_header: Label = $Margin/Content/SidePanel/VitalsHeader
+@onready var vitals_panel: VBoxContainer = $Margin/Content/SidePanel/Vitals
+@onready var room_header: Label = $Margin/Content/SidePanel/RoomHeader
+@onready var room_panel: VBoxContainer = $Margin/Content/SidePanel/Room
+@onready var effects_bar: HBoxContainer = $Margin/Content/SidePanel/EffectsBar
 
-@onready var plan_header: Label = $Margin/VBox/Content/LeftPanel/ToolRow/PlanHeader
-@onready var grid_container: GridContainer = $Margin/VBox/Content/LeftPanel/GridScroll/WeekGrid
-@onready var btn_next_week: Button = $Margin/VBox/Content/LeftPanel/ToolRow/BtnNextWeek
-@onready var btn_clear: Button = $Margin/VBox/Content/LeftPanel/ToolRow/BtnClear
+# CenterPanel
+@onready var plan_header: Label = $Margin/Content/CenterPanel/ToolRow/PlanHeader
+@onready var grid_container: GridContainer = $Margin/Content/CenterPanel/GridScroll/WeekGrid
+@onready var btn_next_week: Button = $Margin/Content/CenterPanel/ToolRow/BtnNextWeek
+@onready var btn_clear: Button = $Margin/Content/CenterPanel/ToolRow/BtnClear
 
-@onready var quest_header: Label = $Margin/VBox/Content/RightPanel/QuestHeader
-@onready var quest_list: VBoxContainer = $Margin/VBox/Content/RightPanel/QuestList
-@onready var room_header: Label = $Margin/VBox/Content/RightPanel/RoomHeader
-@onready var room_panel: VBoxContainer = $Margin/VBox/Content/RightPanel/Room
-@onready var vitals_header: Label = $Margin/VBox/Content/RightPanel/VitalsHeader
-@onready var vitals_panel: VBoxContainer = $Margin/VBox/Content/RightPanel/Vitals
-@onready var log_text: RichTextLabel = $Margin/VBox/Content/RightPanel/LogText
-@onready var effects_bar: HBoxContainer = $Margin/VBox/EffectsBar
+# InfoPanel (right)
+@onready var quest_header: Label = $Margin/Content/InfoPanel/QuestHeader
+@onready var quest_list: VBoxContainer = $Margin/Content/InfoPanel/QuestList
+@onready var log_text: RichTextLabel = $Margin/Content/InfoPanel/LogText
 
 func _ready() -> void:
 	_activity_def = Drive.def("activity")
@@ -216,8 +218,7 @@ func _update_header() -> void:
 	var day: int = int(The.session.get("day", 1))
 	player_label.text = String(The.session.get("player_name", ""))
 	money_label.text = "R$ " + str(money)
-	day_label.text = I18n.text(T_DAY) + " " + str(day)
-	week_label.text = I18n.text(T_WEEK) + " " + str(week)
+	week_label.text = I18n.text(T_WEEK) + " " + str(week) + " | " + I18n.text(T_DAY) + " " + str(day)
 
 # --- Week Grid ---
 
@@ -283,9 +284,9 @@ func _build_grid() -> void:
 		for slot_id: String in SLOTS:
 			var key: String = day_id + "_" + slot_id
 			var select: OptionButton = OptionButton.new()
-			select.custom_minimum_size = Vector2(0, 28)
+			select.custom_minimum_size = Vector2(0, 32)
 			select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			select.add_theme_font_size_override("font_size", 10)
+			select.add_theme_font_size_override("font_size", 11)
 			_grid_activities[key] = _build_activity_list(slot_id)
 			_populate_grouped_select(select, slot_id)
 			select.item_selected.connect(_on_grid_select_changed.bind(key, slot_id))
