@@ -36,17 +36,17 @@ Player is 15, has 4 weeks to prepare for a flag football tryout while keeping up
 ### 3.2 — Life activities ✅ (merged into 3.1)
 - Study, Chores, Cook, Clean Room, Rest, Sleep, Beach Football, Games, etc.
 
-### 3.3 — Effect system
+### 3.3 — Effect system ✅
 - Events produce timed Effects that persist across slots
 - Effect has: name, duration_slots, modifiers (activity bonuses/penalties)
-- E.g., "Runner's High" lasts 4 slots, +10% to physical training
-- E.g., "Pulled Muscle" lasts 8 slots, -20% to physical, +negative event chance
+- E.g., "Runner's High" lasts 4 slots, +15% to brutality
+- E.g., "Scraped Knee" lasts 6 slots, -30% brutality, -20% finesse
 - Effects shown as cards in the bottom effects bar
 - Effects applied during slot resolution as multiplier on top of slot_modifiers
 
-### 3.4 — Activity unlock/lock
-- `requires` field per activity: `age`, `school`, `team`, `day`, `one_time`, `requires_item`
-- Locked activities greyed out in dropdown with lock icon and tooltip explaining why
+### 3.4 — Activity unlock/lock ✅
+- `requires` field per activity: `min_age`, `has_item`, `has_team`, `no_team`, `week_range`
+- Locked activities hidden from dropdown (not shown, not greyed)
 - Unlocks happen through gameplay progression (join team, buy item, reach age)
 
 ### 3.5 — Hunger cascade
@@ -105,12 +105,21 @@ Player is 15, has 4 weeks to prepare for a flag football tryout while keeping up
 ### 5.1 — Calendar year from module
 - `start_date` in module manifest, real dates in top bar
 
-### 5.2 — Origin system (Arcanum-style)
-- Backgrounds chosen at creation with stat modifiers, school assignment, schedule
-- Origins: Estudante Municipal Noturno, Classe Média Manhã, Técnico Tarde, Bully, Atleta Escolar, Nerd Quieto
+### 5.2 — Origin system
+- **Origem**: quebrada, condomínio, mansão
+  - Affects starting money, available activities, daily routines, quest flavor
+  - Distinct gameplay per origin for replayability
+- **Colégio**: público, de bairro, de elite + turno (1, 2, 3)
+  - Turno defines locked time slots (school schedule)
+  - School type affects quest lines and activity synergies
+- **Corpo**: slides de peso e altura
+  - Weight/height affect stat modifiers
+- Each combo (origin × school × body) creates a distinct playthrough
+- New Def: `origin.gd` + `origin.json`
 
 ### 5.3 — School as locked schedule
-- Origin injects locked slots, attendance tracked as quest
+- Turno do colégio injeta slots trancados (turno 1 = manhã, turno 2 = tarde, turno 3 = noite)
+- Attendance tracked as quest, skipping has consequences
 
 ---
 
