@@ -89,8 +89,11 @@ Player is 15, has 4 weeks to prepare for a flag football tryout while keeping up
 - Tryout results shown in week summary
 - Tryout hidden from dropdown after joining team (no_team requires check)
 
-### 4.4 — Training integration
-- Team training uses same minigame, more rounds, XP scaling
+### 4.4 — Training integration ✅
+- Team practice uses play_minigame (5 rounds, 12s timer, difficulty 2)
+- Moved team_practice to "team" category
+- Minigame + events coexist: minigame runs first, then effects/events process normally
+- Events: Foco Tático (buff), Coach's Scolding (debuff), play_reading skill gains
 
 ### 4.5 — Field visualization
 - Node2D with yard lines, player token runs route path via tween
@@ -190,7 +193,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 4.1 Play card data       ✅ card definitions + route drawings
 4.2 Minigame scene       ✅ play the card game + generalized card types
 4.3 Tryout event         ✅ tryout system (data, integration, win/lose)
-4.4 Training             · team training minigame
+4.4 Training             ✅ team training minigame
 4.5 Field viz            · route animation
 
 5.1 Calendar year        · real dates
