@@ -76,6 +76,13 @@ const COLOR_DEBUFF := Color(0.8, 0.3, 0.3)
 const COLOR_BUFF := Color(0.3, 0.7, 0.9)
 const COLOR_DEFAULT := Color(1, 1, 1)
 const SLOT_DELAY: float = 0.5
+const MEAL_SLOTS: Array[String] = ["morning", "night"]
+const MEAL_THRESHOLD: int = 80
+const MEAL_FRIDGE_RESTORE: int = 35
+const MEAL_DELIVERY_COST: int = 15
+const MEAL_DELIVERY_RESTORE: int = 30
+const MEAL_SNACK_MAX_COST: int = 30
+const MEAL_EMERGENCY_FRIDGE_RESTORE: int = 25
 
 var _activity_def: Def
 var _grid_selects: Dictionary = {}      # "day_slot" -> OptionButton
@@ -190,7 +197,7 @@ func _on_play_next_day() -> void:
 
 func _update_text() -> void:
 	plan_header.text = I18n.text(T_PLAN)
-	btn_next_week.text = ">>"
+	btn_next_week.text = "[3] >>"
 	btn_next_week.tooltip_text = I18n.text(T_TIP_WEEK)
 	btn_clear.text = "X"
 	btn_clear.tooltip_text = I18n.text(T_TIP_CLEAR)
@@ -290,7 +297,7 @@ func _build_grid() -> void:
 			grid_container.add_child(select)
 
 		var btn_play: Button = Button.new()
-		btn_play.text = ">"
+		btn_play.text = "[1]>"
 		btn_play.custom_minimum_size = Vector2(28, 28)
 		btn_play.tooltip_text = I18n.text(T_TIP_SLOT)
 		btn_play.pressed.connect(_on_play_slot.bind(day_id))
@@ -298,7 +305,7 @@ func _build_grid() -> void:
 		grid_container.add_child(btn_play)
 
 		var btn_fast: Button = Button.new()
-		btn_fast.text = ">>"
+		btn_fast.text = "[2]>>"
 		btn_fast.custom_minimum_size = Vector2(28, 28)
 		btn_fast.tooltip_text = I18n.text(T_TIP_DAY)
 		btn_fast.pressed.connect(_on_play_day.bind(day_id))
@@ -475,9 +482,9 @@ func _on_clear() -> void:
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
 		_day_slot_index[day_id] = 0
-		_day_play_buttons[day_id].text = ">"
+		_day_play_buttons[day_id].text = "[1]>"
 		_day_play_buttons[day_id].disabled = false
-		_day_fast_buttons[day_id].text = ">>"
+		_day_fast_buttons[day_id].text = "[2]>>"
 		_day_fast_buttons[day_id].disabled = false
 
 func _set_select_color(select: OptionButton, color: Color) -> void:
@@ -537,6 +544,7 @@ func _toggle_fridge_window() -> void:
 	_fridge_window.size = Vector2i(250, 120)
 	_fridge_window.position = Vector2i(600, 300)
 	_fridge_window.unresizable = true
+	_fridge_window.unfocusable = true
 	_fridge_window.close_requested.connect(_close_fridge_window)
 
 	var margin: MarginContainer = MarginContainer.new()
@@ -569,6 +577,7 @@ func _toggle_mirror_window() -> void:
 	_mirror_window.title = I18n.text(T_MIRROR_TITLE)
 	_mirror_window.size = Vector2i(380, 500)
 	_mirror_window.position = Vector2i(500, 100)
+	_mirror_window.unfocusable = true
 	_mirror_window.close_requested.connect(_close_mirror_window)
 
 	var scroll: ScrollContainer = ScrollContainer.new()
@@ -850,17 +859,25 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 	var collapsed: bool = false
 	var fridge_meals: int = int(The.session.get("fridge_meals", 0))
 
-	# Check vital collapse — hunger uses fridge first
+	# Auto-meal: breakfast (morning) and dinner (night)
+	if slot_id in MEAL_SLOTS and int(vitals.get("hunger", 100)) < MEAL_THRESHOLD:
+		var meal: Dictionary = _try_eat(vitals, money, fridge_meals, day_text, slot_id, false)
+		if meal["ate"]:
+			vitals = meal["vitals"]
+			money = meal["money"]
+			fridge_meals = meal["fridge"]
+
+	# Check vital collapse — hunger emergency uses cascade as last resort
 	for vid: String in vitals:
 		if int(vitals[vid]) <= 0:
-			if vid == "hunger" and fridge_meals > 0:
-				# Eat from fridge silently — no collapse
-				fridge_meals -= 1
-				The.session["fridge_meals"] = fridge_meals
-				vitals["hunger"] = clampi(int(vitals["hunger"]) + 25, 0, 100)
-				_log(day_text + " " + SLOT_ICONS[slot_id] + " [=] " + I18n.text({"pt": "Comeu uma refeicao da geladeira", "en": "Ate a meal from the fridge"}) + " (" + str(fridge_meals) + ")", COLOR_NORMAL)
-				_update_fridge_display()
-				continue
+			if vid == "hunger":
+				var meal: Dictionary = _try_eat(vitals, money, fridge_meals, day_text, slot_id, true)
+				if meal["ate"]:
+					vitals = meal["vitals"]
+					money = meal["money"]
+					fridge_meals = meal["fridge"]
+					continue
+			# No fallback available — collapse
 			var recovery: Dictionary = _activity_def.get_recovery_for(vid)
 			if not recovery.is_empty():
 				act = recovery
@@ -1052,9 +1069,9 @@ func _finalize_week() -> void:
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
 		_day_slot_index[day_id] = 0
-		_day_play_buttons[day_id].text = ">"
+		_day_play_buttons[day_id].text = "[1]>"
 		_day_play_buttons[day_id].disabled = false
-		_day_fast_buttons[day_id].text = ">>"
+		_day_fast_buttons[day_id].text = "[2]>>"
 		_day_fast_buttons[day_id].disabled = false
 	for key: String in _grid_selects:
 		var select: OptionButton = _grid_selects[key]
@@ -1297,6 +1314,40 @@ func _run_tryout(act: Dictionary) -> void:
 		The.session["tryout_failed_count"] = int(The.session.get("tryout_failed_count", 0)) + 1
 		_log("  Tryout: " + str(data.get("total_score", 0)) + "/" + str(data.get("total_possible", 0)) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
 	The.session["last_tryout_result"] = data
+
+# --- Meals ---
+
+## Try to eat a meal from available sources. Returns {ate: bool, vitals: Dict, money: int, fridge: int}.
+func _try_eat(vitals: Dictionary, money: int, fridge_meals: int, day_text: String, slot_id: String, is_emergency: bool) -> Dictionary:
+	var result: Dictionary = {"ate": false, "vitals": vitals, "money": money, "fridge": fridge_meals}
+	var prefix: String = day_text + " " + SLOT_ICONS[slot_id] + " "
+	# 1) Fridge (free)
+	if fridge_meals > 0:
+		fridge_meals -= 1
+		var r: int = MEAL_EMERGENCY_FRIDGE_RESTORE if is_emergency else MEAL_FRIDGE_RESTORE
+		vitals["hunger"] = clampi(int(vitals["hunger"]) + r, 0, 100)
+		var meal_label: String = I18n.text({"pt": "Comeu da geladeira", "en": "Ate from the fridge"})
+		_log(prefix + "[=] " + meal_label + " (" + str(fridge_meals) + ")", COLOR_NORMAL)
+		The.session["fridge_meals"] = fridge_meals
+		_update_fridge_display()
+		result = {"ate": true, "vitals": vitals, "money": money, "fridge": fridge_meals}
+	# 2) Delivery (R$15)
+	elif money >= MEAL_DELIVERY_COST:
+		money -= MEAL_DELIVERY_COST
+		vitals["hunger"] = clampi(int(vitals["hunger"]) + MEAL_DELIVERY_RESTORE, 0, 100)
+		var del_label: String = I18n.text({"pt": "Pediu comida (-R$" + str(MEAL_DELIVERY_COST) + ")", "en": "Ordered delivery (-R$" + str(MEAL_DELIVERY_COST) + ")"})
+		_log(prefix + "[$] " + del_label, COLOR_NORMAL)
+		result = {"ate": true, "vitals": vitals, "money": money, "fridge": fridge_meals}
+	# 3) Lanche (spend what you have, up to R$30)
+	elif money >= 5:
+		var cost: int = mini(money, MEAL_SNACK_MAX_COST)
+		money -= cost
+		var snack_restore: int = 15 + int(cost * 1.2)
+		vitals["hunger"] = clampi(int(vitals["hunger"]) + snack_restore, 0, 100)
+		var snack_label: String = I18n.text({"pt": "Comprou lanche (-R$" + str(cost) + ")", "en": "Bought snack (-R$" + str(cost) + ")"})
+		_log(prefix + "[$] " + snack_label, COLOR_COLLAPSE)
+		result = {"ate": true, "vitals": vitals, "money": money, "fridge": fridge_meals}
+	return result
 
 # --- Timed effects ---
 

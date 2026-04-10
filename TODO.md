@@ -49,9 +49,12 @@ Player is 15, has 4 weeks to prepare for a flag football tryout while keeping up
 - Locked activities hidden from dropdown (not shown, not greyed)
 - Unlocks happen through gameplay progression (join team, buy item, reach age)
 
-### 3.5 — Hunger cascade
-- hunger=0: eat from fridge (free, no slot) → pedir comida (costs $, no slot) → comer fora (costs $$, no slot) → collapse if broke
-- Fridge depletes first, then money, then collapse
+### 3.5 — Hunger cascade ✅
+- Auto-meals: breakfast (morning) and dinner (night) when hunger < 80
+- Source cascade: fridge (free, +35) → delivery (R$15, +30) → lanche (up to R$30, scaled) → nothing
+- Emergency cascade at hunger=0: same sources but fridge restores +25 (smaller emergency portion)
+- Cooking stocks the fridge — strategic resource for sustaining the week without spending money
+- Log shows source: [=] fridge, [$] money spent
 
 ### 3.6 — Social from phone
 - "Sair com amigos" becomes phone-initiated: pick friend, pick activity, schedule in calendar
@@ -195,7 +198,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 3.1 Attribute activities ✅ (includes 3.1b, 3.2)
 3.3 Effect system        ✅
 3.4 Activity unlock/lock ✅
-3.5 Hunger cascade       · fridge → money → collapse
+3.5 Hunger cascade       ✅ fridge → delivery → lanche → collapse
 3.6 Social from phone    · phone-initiated social events
 3.7 Fridge inventory     · full item-based fridge
 
