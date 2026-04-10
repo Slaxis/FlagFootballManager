@@ -101,6 +101,12 @@ Player is 15, has 4 weeks to prepare for a flag football tryout while keeping up
 ### 4.5 — Field visualization
 - Node2D with yard lines, player token runs route path via tween
 
+### 4.6 — Minigame review
+- Review all minigames for embedded viewport (new layout)
+- Improve visuals, pacing, difficulty scaling
+- Consider new minigame types or variations
+- Ensure all card types render correctly at viewport resolution
+
 ---
 
 ## Phase 5 — Calendar Year & Origins
@@ -205,6 +211,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 4.3 Tryout event         ✅ tryout system (data, integration, win/lose)
 4.4 Training             ✅ team training minigame
 4.5 Field viz            · route animation
+4.6 Minigame review      · review for embedded viewport
 
 5.1 Calendar year        · real dates
 5.2 Origin system        ✅ quebrada/condomínio/mansão + escola + corpo
