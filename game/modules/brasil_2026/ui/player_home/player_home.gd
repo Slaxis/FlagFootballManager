@@ -117,26 +117,25 @@ var _vital_value_labels: Dictionary = {}
 var _effects: Array[Dictionary] = []
 var _resolving: bool = false
 
-# SidePanel (left)
-@onready var player_label: Label = $Margin/Content/SidePanel/PlayerLabel
-@onready var money_label: Label = $Margin/Content/SidePanel/InfoRow/MoneyLabel
-@onready var week_label: Label = $Margin/Content/SidePanel/InfoRow/WeekLabel
-@onready var vitals_header: Label = $Margin/Content/SidePanel/VitalsHeader
-@onready var vitals_panel: VBoxContainer = $Margin/Content/SidePanel/Vitals
-@onready var room_header: Label = $Margin/Content/SidePanel/RoomHeader
-@onready var room_panel: VBoxContainer = $Margin/Content/SidePanel/Room
-@onready var effects_bar: HBoxContainer = $Margin/Content/SidePanel/EffectsBar
+# Sidebar
+@onready var player_label: Label = $Margin/Content/Sidebar/PlayerLabel
+@onready var money_label: Label = $Margin/Content/Sidebar/InfoRow/MoneyLabel
+@onready var week_label: Label = $Margin/Content/Sidebar/InfoRow/WeekLabel
+@onready var vitals_header: Label = $Margin/Content/Sidebar/VitalsHeader
+@onready var vitals_panel: VBoxContainer = $Margin/Content/Sidebar/Vitals
+@onready var room_header: Label = $Margin/Content/Sidebar/RoomHeader
+@onready var room_panel: VBoxContainer = $Margin/Content/Sidebar/Room
+@onready var quest_header: Label = $Margin/Content/Sidebar/QuestHeader
+@onready var quest_list: VBoxContainer = $Margin/Content/Sidebar/QuestList
+@onready var diary_text: RichTextLabel = $Margin/Content/Sidebar/DiaryScroll/DiaryText
+@onready var effects_bar: HBoxContainer = $Margin/Content/Sidebar/EffectsBar
 
-# CenterPanel
-@onready var plan_header: Label = $Margin/Content/CenterPanel/ToolRow/PlanHeader
-@onready var grid_container: GridContainer = $Margin/Content/CenterPanel/GridScroll/WeekGrid
-@onready var btn_next_week: Button = $Margin/Content/CenterPanel/ToolRow/BtnNextWeek
-@onready var btn_clear: Button = $Margin/Content/CenterPanel/ToolRow/BtnClear
-
-# InfoPanel (right)
-@onready var quest_header: Label = $Margin/Content/InfoPanel/QuestHeader
-@onready var quest_list: VBoxContainer = $Margin/Content/InfoPanel/QuestList
-@onready var log_text: RichTextLabel = $Margin/Content/InfoPanel/LogText
+# MainPanel
+@onready var plan_header: Label = $Margin/Content/MainPanel/ToolRow/PlanHeader
+@onready var grid_container: GridContainer = $Margin/Content/MainPanel/GridScroll/WeekGrid
+@onready var btn_next_week: Button = $Margin/Content/MainPanel/ToolRow/BtnNextWeek
+@onready var btn_clear: Button = $Margin/Content/MainPanel/ToolRow/BtnClear
+@onready var game_viewport: SubViewport = $Margin/Content/MainPanel/GameViewport/SubViewport
 
 func _ready() -> void:
 	_activity_def = Drive.def("activity")
@@ -155,7 +154,8 @@ func _ready() -> void:
 	_load_quests()
 	_apply_default_week()
 	set_process_unhandled_key_input(true)
-	_log(I18n.text(T_WELCOME), COLOR_DEFAULT)
+	_show_room()
+	_diary(I18n.text(T_WELCOME), COLOR_DEFAULT)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not (event as InputEventKey).pressed:
@@ -531,7 +531,7 @@ func _on_room_item(item_id: String) -> void:
 		"mirror":
 			_toggle_mirror_window()
 		_:
-			_log("[" + item_id.capitalize() + I18n.text(T_NOT_IMPL) + "]", COLOR_DEFAULT)
+			_diary("[" + item_id.capitalize() + I18n.text(T_NOT_IMPL) + "]", COLOR_DEFAULT)
 
 # --- Fridge window ---
 
@@ -898,7 +898,7 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 
 	# Run minigame if activity has one (then continue to effects/events)
 	if not collapsed and act.get("is_minigame", false):
-		_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + " ...", COLOR_RUNNING)
+		_diary(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + " ...", COLOR_RUNNING)
 		await _run_minigame(act)
 	else:
 		await get_tree().create_timer(SLOT_DELAY * 0.3).timeout
@@ -1007,11 +1007,11 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 	if not delta_parts.is_empty():
 		delta_str = " (" + ", ".join(delta_parts) + ")"
 
-	_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + money_str + delta_str, outcome_color)
+	_diary(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + money_str + delta_str, outcome_color)
 	if event_text != "":
 		var event_type: String = String(event_rolled.get("type", "neutral"))
 		var event_color: Color = COLOR_SYNERGY if event_type == "positive" else (COLOR_COLLAPSE if event_type == "negative" else COLOR_NORMAL)
-		_log("    " + event_text, event_color)
+		_diary("    " + event_text, event_color)
 
 	# Color the dropdown + update text if collapsed
 	_set_select_color(select, outcome_color)
@@ -1046,7 +1046,7 @@ func _finalize_week() -> void:
 
 	_update_header()
 	_update_effects()
-	_log("--- " + I18n.text(T_WEEK) + " " + str(The.session["week"]) + " ---", COLOR_DEFAULT)
+	_diary("--- " + I18n.text(T_WEEK) + " " + str(The.session["week"]) + " ---", COLOR_DEFAULT)
 
 	# Check win/lose after summary is dismissed
 	var check_week: int = int(The.session.get("week", 1))
@@ -1233,14 +1233,8 @@ func _run_play_minigame(act: Dictionary) -> void:
 
 	var scene: PackedScene = load("res://game/modules/brasil_2026/ui/minigame/play_minigame.tscn")
 	if scene == null:
-		_log("  [minigame scene not found]", COLOR_COLLAPSE)
+		_diary("  [minigame scene not found]", COLOR_COLLAPSE)
 		return
-
-	var popup: Window = Window.new()
-	popup.title = I18n.text(act.get("name", "Minigame"))
-	popup.size = Vector2i(600, 500)
-	popup.unresizable = false
-	popup.close_requested.connect(func() -> void: popup.queue_free())
 
 	var minigame: Control = scene.instantiate()
 	minigame.setup(rounds, timer_sec, max_diff)
@@ -1252,36 +1246,29 @@ func _run_play_minigame(act: Dictionary) -> void:
 		result["total"] = total
 	)
 
-	popup.add_child(minigame)
-	add_child(popup)
-	popup.popup_centered()
+	_clear_viewport()
+	game_viewport.add_child(minigame)
 
-	while not result["done"] and is_instance_valid(popup):
+	while not result["done"]:
 		await get_tree().process_frame
 
-	if is_instance_valid(popup):
-		popup.queue_free()
+	_clear_viewport()
+	_show_room()
 
 	var final_score: int = int(result["score"])
 	var final_total: int = int(result["total"])
 	var passed: bool = final_score >= pass_score
 	if passed:
-		_log("  " + I18n.text(act.get("name", "?")) + ": " + str(final_score) + "/" + str(final_total) + " " + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}), COLOR_SYNERGY)
+		_diary("  " + I18n.text(act.get("name", "?")) + ": " + str(final_score) + "/" + str(final_total) + " " + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}), COLOR_SYNERGY)
 	else:
-		_log("  " + I18n.text(act.get("name", "?")) + ": " + str(final_score) + "/" + str(final_total) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
+		_diary("  " + I18n.text(act.get("name", "?")) + ": " + str(final_score) + "/" + str(final_total) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
 
 func _run_tryout(act: Dictionary) -> void:
 	var config: Dictionary = act.get("minigame_config", {})
 	var scene: PackedScene = load("res://game/modules/brasil_2026/ui/tryout/tryout_manager.tscn")
 	if scene == null:
-		_log("  [tryout scene not found]", COLOR_COLLAPSE)
+		_diary("  [tryout scene not found]", COLOR_COLLAPSE)
 		return
-
-	var popup: Window = Window.new()
-	popup.title = I18n.text(act.get("name", "Tryout"))
-	popup.size = Vector2i(650, 550)
-	popup.unresizable = false
-	popup.close_requested.connect(func() -> void: popup.queue_free())
 
 	var tryout: Control = scene.instantiate()
 	tryout.setup(config)
@@ -1293,15 +1280,14 @@ func _run_tryout(act: Dictionary) -> void:
 		result["data"] = tryout_data
 	)
 
-	popup.add_child(tryout)
-	add_child(popup)
-	popup.popup_centered()
+	_clear_viewport()
+	game_viewport.add_child(tryout)
 
-	while not result["done"] and is_instance_valid(popup):
+	while not result["done"]:
 		await get_tree().process_frame
 
-	if is_instance_valid(popup):
-		popup.queue_free()
+	_clear_viewport()
+	_show_room()
 
 	# Process tryout results
 	var data: Dictionary = result["data"]
@@ -1309,10 +1295,10 @@ func _run_tryout(act: Dictionary) -> void:
 		The.session["team_id"] = "pending_selection"
 		The.session["player_position"] = data.get("position", "")
 		The.session["tryout_results"] = data
-		_log("  Tryout: " + str(data.get("total_score", 0)) + "/" + str(data.get("total_possible", 0)) + " " + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}), COLOR_SYNERGY)
+		_diary("  Tryout: " + str(data.get("total_score", 0)) + "/" + str(data.get("total_possible", 0)) + " " + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}), COLOR_SYNERGY)
 	else:
 		The.session["tryout_failed_count"] = int(The.session.get("tryout_failed_count", 0)) + 1
-		_log("  Tryout: " + str(data.get("total_score", 0)) + "/" + str(data.get("total_possible", 0)) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
+		_diary("  Tryout: " + str(data.get("total_score", 0)) + "/" + str(data.get("total_possible", 0)) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
 	The.session["last_tryout_result"] = data
 
 # --- Meals ---
@@ -1327,7 +1313,7 @@ func _try_eat(vitals: Dictionary, money: int, fridge_meals: int, day_text: Strin
 		var r: int = MEAL_EMERGENCY_FRIDGE_RESTORE if is_emergency else MEAL_FRIDGE_RESTORE
 		vitals["hunger"] = clampi(int(vitals["hunger"]) + r, 0, 100)
 		var meal_label: String = I18n.text({"pt": "Comeu da geladeira", "en": "Ate from the fridge"})
-		_log(prefix + "[=] " + meal_label + " (" + str(fridge_meals) + ")", COLOR_NORMAL)
+		_diary(prefix + "[=] " + meal_label + " (" + str(fridge_meals) + ")", COLOR_NORMAL)
 		The.session["fridge_meals"] = fridge_meals
 		_update_fridge_display()
 		result = {"ate": true, "vitals": vitals, "money": money, "fridge": fridge_meals}
@@ -1336,7 +1322,7 @@ func _try_eat(vitals: Dictionary, money: int, fridge_meals: int, day_text: Strin
 		money -= MEAL_DELIVERY_COST
 		vitals["hunger"] = clampi(int(vitals["hunger"]) + MEAL_DELIVERY_RESTORE, 0, 100)
 		var del_label: String = I18n.text({"pt": "Pediu comida (-R$" + str(MEAL_DELIVERY_COST) + ")", "en": "Ordered delivery (-R$" + str(MEAL_DELIVERY_COST) + ")"})
-		_log(prefix + "[$] " + del_label, COLOR_NORMAL)
+		_diary(prefix + "[$] " + del_label, COLOR_NORMAL)
 		result = {"ate": true, "vitals": vitals, "money": money, "fridge": fridge_meals}
 	# 3) Lanche (spend what you have, up to R$30)
 	elif money >= 5:
@@ -1345,7 +1331,7 @@ func _try_eat(vitals: Dictionary, money: int, fridge_meals: int, day_text: Strin
 		var snack_restore: int = 15 + int(cost * 1.2)
 		vitals["hunger"] = clampi(int(vitals["hunger"]) + snack_restore, 0, 100)
 		var snack_label: String = I18n.text({"pt": "Comprou lanche (-R$" + str(cost) + ")", "en": "Bought snack (-R$" + str(cost) + ")"})
-		_log(prefix + "[$] " + snack_label, COLOR_COLLAPSE)
+		_diary(prefix + "[$] " + snack_label, COLOR_COLLAPSE)
 		result = {"ate": true, "vitals": vitals, "money": money, "fridge": fridge_meals}
 	return result
 
@@ -1554,11 +1540,43 @@ func _show_game_over() -> void:
 			The.next_scene(menu_scene)
 	)
 
-# --- Log ---
+# --- Viewport ---
 
-func _log(text: String, color: Color = COLOR_DEFAULT) -> void:
+func _clear_viewport() -> void:
+	for child: Node in game_viewport.get_children():
+		child.queue_free()
+
+func _show_room() -> void:
+	_clear_viewport()
+	var room: PanelContainer = PanelContainer.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.12)
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
+	style.corner_radius_bottom_right = 4
+	room.add_theme_stylebox_override("panel", style)
+	room.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var lbl: Label = Label.new()
+	lbl.text = I18n.text({"pt": "Seu quarto", "en": "Your room"})
+	lbl.add_theme_font_size_override("font_size", 20)
+	lbl.add_theme_color_override("font_color", Color(0.3, 0.3, 0.4))
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	room.add_child(lbl)
+	game_viewport.add_child(room)
+
+# --- Diary ---
+
+func _diary(text: String, color: Color = COLOR_DEFAULT) -> void:
 	if color != COLOR_DEFAULT:
 		var hex: String = color.to_html(false)
-		log_text.append_text("[color=#" + hex + "]" + text + "[/color]\n")
+		diary_text.append_text("[color=#" + hex + "]" + text + "[/color]\n")
 	else:
-		log_text.append_text(text + "\n")
+		diary_text.append_text(text + "\n")
+	# Auto-scroll to bottom
+	var scroll: ScrollContainer = diary_text.get_parent() as ScrollContainer
+	if scroll:
+		await get_tree().process_frame
+		scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
