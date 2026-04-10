@@ -1047,18 +1047,17 @@ func _finalize_week() -> void:
 	_update_effects()
 	_log("--- " + I18n.text(T_WEEK) + " " + str(The.session["week"]) + " ---", COLOR_DEFAULT)
 
-	_show_week_summary()
+	# Check win/lose after summary is dismissed
+	var check_week: int = int(The.session.get("week", 1))
+	var check_team: String = String(The.session.get("team_id", ""))
+	var on_summary_closed: Callable = func() -> void:
+		if check_team != "":
+			_show_tryout_win()
+		elif check_week > 4:
+			_show_game_over()
+	_show_week_summary(on_summary_closed)
 	_reset_week_tracking()
 	_load_quests()
-
-	# Check win/lose conditions
-	var current_week: int = int(The.session.get("week", 1))
-	var team_id: String = String(The.session.get("team_id", ""))
-	if team_id != "":
-		_show_tryout_win()
-	elif current_week > 4:
-		_show_game_over()
-		return
 
 	# Save current selections for carryover
 	_last_week_selections.clear()
@@ -1287,10 +1286,10 @@ func _run_tryout(act: Dictionary) -> void:
 	tryout.setup(config)
 
 	var result: Dictionary = {"done": false, "passed": false, "data": {}}
-	tryout.tryout_finished.connect(func(passed: bool, data: Dictionary) -> void:
+	tryout.tryout_finished.connect(func(passed: bool, tryout_data: Dictionary) -> void:
 		result["done"] = true
 		result["passed"] = passed
-		result["data"] = data
+		result["data"] = tryout_data
 	)
 
 	popup.add_child(tryout)
@@ -1413,7 +1412,7 @@ func _track_slot(act: Dictionary, collapsed: bool, synergy: bool) -> void:
 	_week_activities[key]["count"] = int(_week_activities[key]["count"]) + 1
 	_track_quest_activity(act_id)
 
-func _show_week_summary() -> void:
+func _show_week_summary(on_closed: Callable = Callable()) -> void:
 	var vitals_now: Dictionary = The.session.get("vitals", {})
 	var money_now: int = int(The.session.get("money", 0))
 	var money_delta: int = money_now - _week_money_start
@@ -1501,8 +1500,16 @@ func _show_week_summary() -> void:
 
 	add_child(popup)
 	popup.popup_centered()
-	popup.confirmed.connect(popup.queue_free)
-	popup.canceled.connect(popup.queue_free)
+	popup.confirmed.connect(func() -> void:
+		popup.queue_free()
+		if on_closed.is_valid():
+			on_closed.call()
+	)
+	popup.canceled.connect(func() -> void:
+		popup.queue_free()
+		if on_closed.is_valid():
+			on_closed.call()
+	)
 
 # --- Win / Game Over ---
 

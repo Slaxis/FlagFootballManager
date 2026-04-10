@@ -1,0 +1,71 @@
+{
+  "origins": [
+    {
+      "id": "quebrada",
+      "name": {"pt": "Quebrada", "en": "Hood"},
+      "desc": {"pt": "Cresceu na periferia. Pouco dinheiro, muita garra.", "en": "Grew up in the hood. Little money, lots of grit."},
+      "stat_modifiers": {"speed": 2, "stamina": 1, "strength": 1, "charisma": -1},
+      "money_start": 200,
+      "fridge_start": 2,
+      "vitals_start": {"hp": 100, "energy": 100, "hunger": 60, "social": 60, "leisure": 40, "room": 50}
+    },
+    {
+      "id": "condominio",
+      "name": {"pt": "Condominio", "en": "Suburb"},
+      "desc": {"pt": "Classe media. Rotina estavel, recursos medios.", "en": "Middle class. Stable routine, average resources."},
+      "stat_modifiers": {},
+      "money_start": 500,
+      "fridge_start": 5,
+      "vitals_start": {"hp": 100, "energy": 100, "hunger": 80, "social": 50, "leisure": 50, "room": 80}
+    },
+    {
+      "id": "mansao",
+      "name": {"pt": "Mansao", "en": "Mansion"},
+      "desc": {"pt": "Familia rica. Dinheiro sobra, tempo falta.", "en": "Rich family. Money to spare, time is tight."},
+      "stat_modifiers": {"intelligence": 1, "charisma": 1, "stamina": -1, "strength": -1},
+      "money_start": 1200,
+      "fridge_start": 10,
+      "vitals_start": {"hp": 100, "energy": 100, "hunger": 90, "social": 40, "leisure": 60, "room": 95}
+    }
+  ],
+  "schools": [
+    {
+      "id": "publico",
+      "name": {"pt": "Escola Publica", "en": "Public School"},
+      "desc": {"pt": "Municipal, turmas cheias, professores dedicados.", "en": "Public school, crowded classes, dedicated teachers."},
+      "stat_modifiers": {"perception": 1},
+      "turnos": [1, 2, 3]
+    },
+    {
+      "id": "bairro",
+      "name": {"pt": "Colegio de Bairro", "en": "Neighborhood School"},
+      "desc": {"pt": "Particular pequena, ambiente familiar.", "en": "Small private school, family atmosphere."},
+      "stat_modifiers": {"intelligence": 1},
+      "turnos": [1, 2]
+    },
+    {
+      "id": "elite",
+      "name": {"pt": "Colegio de Elite", "en": "Elite School"},
+      "desc": {"pt": "Exigente, caro, abre portas.", "en": "Demanding, expensive, opens doors."},
+      "stat_modifiers": {"intelligence": 2, "charisma": 1, "stamina": -1},
+      "turnos": [1]
+    }
+  ],
+  "turnos": [
+    {"id": 1, "name": {"pt": "Manha",  "en": "Morning"},   "locked_slot": "morning"},
+    {"id": 2, "name": {"pt": "Tarde",  "en": "Afternoon"}, "locked_slot": "afternoon"},
+    {"id": 3, "name": {"pt": "Noite",  "en": "Night"},     "locked_slot": "night"}
+  ],
+  "body": {
+    "height": {"min": 150, "max": 200, "default": 170, "unit": "cm"},
+    "weight": {"min": 45, "max": 110, "default": 65, "unit": "kg"},
+    "tall_threshold": 185,
+    "short_threshold": 160,
+    "heavy_threshold": 85,
+    "light_threshold": 55,
+    "tall_bonus": {"dexterity": 1, "agility": -1},
+    "short_bonus": {"agility": 1, "speed": 1, "strength": -1},
+    "heavy_bonus": {"strength": 2, "speed": -1, "agility": -1},
+    "light_bonus": {"speed": 1, "agility": 1, "strength": -1}
+  }
+}

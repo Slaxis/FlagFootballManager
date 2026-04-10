@@ -39,6 +39,12 @@
 - Beach Football and Video Games activities
 - Quest type: activity_category_count (tracks any activity from a category)
 
+- Origin system: 3 origins (quebrada/condomínio/mansão) with distinct starting money, fridge, vitals, stat modifiers
+- School system: 3 schools (público/bairro/elite) with stat modifiers, turno selection (1=manhã, 2=tarde, 3=noite)
+- Body system: height (150-200cm) and weight (45-110kg) sliders with threshold-based stat bonuses
+- All origin/school/body modifiers stack and display live during character creation
+- New Def: OriginDef (origin.gd + origin.json) with compute_modifiers, turnos_for_school
+- Session stores origin, school, turno, height, weight for downstream use
 - Hunger system: auto-meals at breakfast (morning) and dinner (night) when hunger < 80
 - Meal source cascade: fridge (free, +35) → delivery (R$15, +30) → lanche (up to R$30, scaled)
 - Emergency cascade at hunger=0: same sources, fridge gives +25 (smaller emergency portion)

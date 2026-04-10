@@ -108,17 +108,15 @@ Player is 15, has 4 weeks to prepare for a flag football tryout while keeping up
 ### 5.1 — Calendar year from module
 - `start_date` in module manifest, real dates in top bar
 
-### 5.2 — Origin system
-- **Origem**: quebrada, condomínio, mansão
-  - Affects starting money, available activities, daily routines, quest flavor
-  - Distinct gameplay per origin for replayability
-- **Colégio**: público, de bairro, de elite + turno (1, 2, 3)
-  - Turno defines locked time slots (school schedule)
-  - School type affects quest lines and activity synergies
-- **Corpo**: slides de peso e altura
-  - Weight/height affect stat modifiers
-- Each combo (origin × school × body) creates a distinct playthrough
-- New Def: `origin.gd` + `origin.json`
+### 5.2 — Origin system ✅
+- **Origem**: quebrada (R$200, garra), condomínio (R$500, estável), mansão (R$1200, rico)
+  - Each origin sets starting money, fridge meals, vitals, and stat modifiers
+- **Colégio**: público (turnos 1-3), de bairro (turnos 1-2), de elite (turno 1 só)
+  - School adds stat modifiers, turno stored in session for 5.3 slot locking
+- **Corpo**: sliders de altura (150-200cm) e peso (45-110kg)
+  - Thresholds: tall/short, heavy/light → stat bonuses/penalties
+- All modifiers stack (origin + school + body) and show live in creation screen
+- New Def: `origin.gd` + `origin.json`, session stores origin/school/turno/height/weight
 
 ### 5.3 — School as locked schedule
 - Turno do colégio injeta slots trancados (turno 1 = manhã, turno 2 = tarde, turno 3 = noite)
@@ -209,7 +207,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 4.5 Field viz            · route animation
 
 5.1 Calendar year        · real dates
-5.2 Origin system        · character backgrounds
+5.2 Origin system        ✅ quebrada/condomínio/mansão + escola + corpo
 5.3 School schedule      · locked slots
 
 6.1 Quest providers      · quester system
