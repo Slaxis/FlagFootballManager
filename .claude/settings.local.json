@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+      "Agent",
+      "Bash(rm \"C:\\\\Users\\\\User\\\\Dropbox\\\\Gaming\\\\k3n\\\\FlagFootballManager\\\\flag-football-manager\\\\.claude\\\\settings.local.json\")",
+      "Bash(rmdir \"C:\\\\Users\\\\User\\\\Dropbox\\\\Gaming\\\\k3n\\\\FlagFootballManager\\\\flag-football-manager\\\\.claude\")",
+      "Bash(grep -E \"\\\\.\\(gd|json\\)$\")",
+      "Bash(git show:*)",
+      "Bash(python3 -m json.tool /c/Users/User/Dropbox/Gaming/k3n/FlagFootballManager/flag-football-manager/game/defs/play.json)",
+      "Bash(xargs grep:*)",
+      "Bash(find \"C:\\\\Users\\\\User\\\\Dropbox\\\\Gaming\\\\k3n\\\\FlagFootballManager\\\\flag-football-manager\" -type f -name \"*.gd\" -exec grep -l \"minigame_id\\\\|play_minigame\" {} \\\\;)"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Bash(rm -rf *)"
+    ]
+  }
+}
