@@ -875,21 +875,15 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 
 	var act_name: String = I18n.text(act.get("name", "?"))
 
-	# Check if this is a minigame activity
-	if not collapsed and act.get("is_minigame", false):
-		_set_select_color(select, COLOR_RUNNING)
-		_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + " ...", COLOR_RUNNING)
-		await _run_minigame(act)
-		The.session["vitals"] = vitals
-		The.session["money"] = money
-		_update_vitals()
-		_update_header()
-		_set_select_color(select, COLOR_SYNERGY)
-		return
-
 	# Mark as running
 	_set_select_color(select, COLOR_RUNNING)
-	await get_tree().create_timer(SLOT_DELAY * 0.3).timeout
+
+	# Run minigame if activity has one (then continue to effects/events)
+	if not collapsed and act.get("is_minigame", false):
+		_log(day_text + " " + SLOT_ICONS[slot_id] + " " + act_name + " ...", COLOR_RUNNING)
+		await _run_minigame(act)
+	else:
+		await get_tree().create_timer(SLOT_DELAY * 0.3).timeout
 
 	# Slot modifier
 	var modifiers: Dictionary = act.get("slot_modifiers", {})

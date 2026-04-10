@@ -287,11 +287,19 @@
       "id": "team_practice",
       "name": {"pt": "Treino do time", "en": "Team Practice"},
       "desc": {"pt": "Treino oficial com o time", "en": "Official team practice"},
-      "category": "brutality",
+      "category": "team",
       "requires": {"has_team": true},
       "slots": ["morning", "afternoon", "night", "late_night"],
       "effects": {"energy": -25, "hunger": -15, "social": 10},
-      "slot_modifiers": {"morning": 1.0, "afternoon": 1.2, "night": 0.8, "late_night": 0.3}
+      "slot_modifiers": {"morning": 1.0, "afternoon": 1.2, "night": 0.8, "late_night": 0.3},
+      "is_minigame": true,
+      "minigame_id": "play_minigame",
+      "minigame_config": {"rounds": 5, "timer": 12.0, "max_difficulty": 2, "pass_score": 3},
+      "events": [
+        {"type": "positive", "chance": 0.2, "text": {"pt": "Treino afiado! O coach elogiou sua leitura de jogada.", "en": "Sharp practice! Coach praised your play reading."}, "stat_bonus": {"play_reading": 2}, "effect": {"name": {"pt": "Foco Tatico", "en": "Tactical Focus"}, "duration": 4, "category_bonus": {"team": 1.2}, "icon": "!"}},
+        {"type": "neutral", "chance": 0.6, "text": {"pt": "Treino solido. Bom ritmo com o time.", "en": "Solid practice. Good rhythm with the team."}, "stat_bonus": {"play_reading": 1}},
+        {"type": "negative", "chance": 0.2, "text": {"pt": "Dia ruim. Errou varias jogadas e tomou bronca.", "en": "Bad day. Missed several plays and got scolded."}, "stat_bonus": {}, "vital_bonus": {"social": -10}, "effect": {"name": {"pt": "Bronca do Coach", "en": "Coach's Scolding"}, "duration": 3, "category_bonus": {"team": 0.8}, "icon": "v"}}
+      ]
     },
     {
       "id": "_recover_hp",

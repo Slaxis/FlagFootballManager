@@ -39,6 +39,8 @@
 - Beach Football and Video Games activities
 - Quest type: activity_category_count (tracks any activity from a category)
 
+- Team practice uses play_minigame (5 rounds, diff 2, 12s timer) with events (Foco Tático buff, Coach's Scolding debuff)
+- Minigame activities now continue to effects/events after minigame (no early return)
 - Play card minigame: route drawings on cards (Line2D) instead of text names
 - Generalized card minigame (card_minigame.gd): supports path, label, and play_ref card types
 - Tryout system overhaul: position selection (QB/WR/Center/DB/Rusher) → 3 physical drills (40-yard dash, three-cone, pro agility) → 1 position-specific drill → results
