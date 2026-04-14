@@ -136,6 +136,7 @@ var _resolving: bool = false
 @onready var btn_next_week: Button = $Margin/Content/MainPanel/ToolRow/BtnNextWeek
 @onready var btn_clear: Button = $Margin/Content/MainPanel/ToolRow/BtnClear
 @onready var game_viewport: SubViewport = $Margin/Content/MainPanel/GameViewport/SubViewport
+@onready var hand_panel: HBoxContainer = $Margin/Content/MainPanel/HandPanel
 
 func _ready() -> void:
 	_activity_def = Drive.def("activity")
@@ -166,11 +167,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_paused = not _paused
 			_update_pause_indicator()
-		KEY_1:
+		KEY_Q:
 			_on_play_next_slot()
-		KEY_2:
+		KEY_W:
 			_on_play_next_day()
-		KEY_3:
+		KEY_E:
 			_on_next_week()
 		KEY_F:
 			_toggle_fridge_window()
@@ -199,7 +200,7 @@ func _on_play_next_day() -> void:
 
 func _update_text() -> void:
 	plan_header.text = I18n.text(T_PLAN)
-	btn_next_week.text = "[3] >>"
+	btn_next_week.text = "[E] >>"
 	btn_next_week.tooltip_text = I18n.text(T_TIP_WEEK)
 	btn_clear.text = "X"
 	btn_clear.tooltip_text = I18n.text(T_TIP_CLEAR)
@@ -298,7 +299,7 @@ func _build_grid() -> void:
 			grid_container.add_child(select)
 
 		var btn_play: Button = Button.new()
-		btn_play.text = "[1]>"
+		btn_play.text = "[Q]>"
 		btn_play.custom_minimum_size = Vector2(28, 28)
 		btn_play.tooltip_text = I18n.text(T_TIP_SLOT)
 		btn_play.pressed.connect(_on_play_slot.bind(day_id))
@@ -306,7 +307,7 @@ func _build_grid() -> void:
 		grid_container.add_child(btn_play)
 
 		var btn_fast: Button = Button.new()
-		btn_fast.text = "[2]>>"
+		btn_fast.text = "[W]>>"
 		btn_fast.custom_minimum_size = Vector2(28, 28)
 		btn_fast.tooltip_text = I18n.text(T_TIP_DAY)
 		btn_fast.pressed.connect(_on_play_day.bind(day_id))
@@ -483,9 +484,9 @@ func _on_clear() -> void:
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
 		_day_slot_index[day_id] = 0
-		_day_play_buttons[day_id].text = "[1]>"
+		_day_play_buttons[day_id].text = "[Q]>"
 		_day_play_buttons[day_id].disabled = false
-		_day_fast_buttons[day_id].text = "[2]>>"
+		_day_fast_buttons[day_id].text = "[W]>>"
 		_day_fast_buttons[day_id].disabled = false
 
 func _set_select_color(select: OptionButton, color: Color) -> void:
@@ -1069,9 +1070,9 @@ func _finalize_week() -> void:
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
 		_day_slot_index[day_id] = 0
-		_day_play_buttons[day_id].text = "[1]>"
+		_day_play_buttons[day_id].text = "[Q]>"
 		_day_play_buttons[day_id].disabled = false
-		_day_fast_buttons[day_id].text = "[2]>>"
+		_day_fast_buttons[day_id].text = "[W]>>"
 		_day_fast_buttons[day_id].disabled = false
 	for key: String in _grid_selects:
 		var select: OptionButton = _grid_selects[key]

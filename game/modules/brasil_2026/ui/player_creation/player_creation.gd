@@ -31,6 +31,7 @@ const COLOR_ACCENT := Color(0.3, 0.6, 1.0)
 var _stat_def: Def
 var _creation: Def
 var _origin_def: Def
+var _tech_def: Def
 
 # Stat state
 var stat_values: Dictionary = {}
@@ -48,6 +49,8 @@ var _selected_turno: int = 0
 var _height: int = 170
 var _weight: int = 65
 var _current_mods: Dictionary = {}
+var _selected_personality: String = ""
+var _personality_buttons: Array[Button] = []
 var _origin_buttons: Array[Button] = []
 var _school_buttons: Array[Button] = []
 var _turno_buttons: Array[Button] = []
@@ -72,12 +75,14 @@ func _ready() -> void:
 	if _stat_def == null or _creation == null:
 		Log.log(self, "error", "PlayerCreation: missing stat or creation Def.")
 		return
+	_tech_def = Drive.def("technique")
 	points_remaining = _creation.point_pool
 	_init_stats()
 	_build_ui()
-	# Select default origin
+	# Select defaults
 	if _origin_def != null and _origin_def.origins.size() > 1:
 		_on_origin_selected(_origin_def.origins[1]["id"])
+	_on_personality_selected("intenso")
 
 func _init_stats() -> void:
 	for entry: Dictionary in _stat_def.list_stats():
@@ -281,6 +286,26 @@ func _build_right_column(parent: VBoxContainer) -> void:
 	if _origin_def == null:
 		return
 
+	# Personality ("Who are you at school?")
+	var pers_header: Dictionary = {"pt": "PERSONALIDADE", "en": "PERSONALITY"}
+	_build_section_header(parent, pers_header)
+	var pers_row: HBoxContainer = _make_button_row()
+	var pers_options: Array[Dictionary] = [
+		{"id": "intenso",     "label": {"pt": "Intenso",     "en": "Intense"},     "desc": {"pt": "Bully / Atleta — forca e velocidade",            "en": "Bully / Athlete — strength and speed"}},
+		{"id": "tecnico",     "label": {"pt": "Tecnico",     "en": "Technical"},   "desc": {"pt": "Artista / Acrobata — agilidade e tecnica",       "en": "Artist / Acrobat — agility and technique"}},
+		{"id": "estrategico", "label": {"pt": "Estrategico", "en": "Strategic"},   "desc": {"pt": "Nerd / Lider — percepcao e inteligencia",        "en": "Nerd / Leader — perception and intelligence"}},
+	]
+	for opt: Dictionary in pers_options:
+		var btn: Button = Button.new()
+		btn.text = I18n.text(opt.get("label", "?"))
+		btn.tooltip_text = I18n.text(opt.get("desc", ""))
+		btn.custom_minimum_size = Vector2(120, 36)
+		btn.toggle_mode = true
+		btn.pressed.connect(_on_personality_selected.bind(String(opt.get("id", ""))))
+		pers_row.add_child(btn)
+		_personality_buttons.append(btn)
+	parent.add_child(pers_row)
+
 	# Origin
 	_build_section_header(parent, T_ORIGIN)
 	var origin_row: HBoxContainer = _make_button_row()
@@ -457,6 +482,14 @@ func _total_dumped() -> int:
 
 # --- Origin callbacks ---
 
+func _on_personality_selected(pers_id: String) -> void:
+	_selected_personality = pers_id
+	for i: int in _personality_buttons.size():
+		var ids: Array[String] = ["intenso", "tecnico", "estrategico"]
+		_personality_buttons[i].button_pressed = ids[i] == pers_id if i < ids.size() else false
+	_update_profile()
+	_validate()
+
 func _on_origin_selected(origin_id: String) -> void:
 	_selected_origin = origin_id
 	for i: int in _origin_buttons.size():
@@ -614,7 +647,8 @@ func _validate() -> void:
 	var balanced: bool = _star_points_free() == 0
 	var points_ok: bool = points_remaining >= 0
 	var has_origin: bool = _selected_origin != ""
-	_btn_start.disabled = not (has_name and has_stars and balanced and points_ok and has_origin)
+	var has_pers: bool = _selected_personality != ""
+	_btn_start.disabled = not (has_name and has_stars and balanced and points_ok and has_origin and has_pers)
 
 # --- Navigation ---
 
@@ -677,8 +711,33 @@ func _on_start_pressed() -> void:
 	The.session["turno"] = _selected_turno
 	The.session["height"] = _height
 	The.session["weight"] = _weight
+	The.session["personality"] = _selected_personality
 
-	Log.log(self, "info", "Career: " + player_name + " [" + _selected_origin + "/" + _selected_school + "/T" + str(_selected_turno) + "] registered as Thing '" + spec["id"] + "'")
+	# Build starter deck: 1 personality base card + 1 origin bonus
+	var starter_deck: Array[String] = []
+	if _tech_def != null:
+		var base_card: String = _tech_def.get_starter_card(_selected_personality)
+		if base_card != "":
+			starter_deck.append(base_card)
+		var origin_bonus: Dictionary = _tech_def.get_origin_bonus(_selected_origin, _selected_school)
+		var bonus_type: String = String(origin_bonus.get("type", ""))
+		if bonus_type == "card":
+			var bonus_card: String = String(origin_bonus.get("card_id", ""))
+			if bonus_card != "":
+				starter_deck.append(bonus_card)
+		elif bonus_type == "money":
+			The.session["money"] = int(The.session.get("money", 0)) + int(origin_bonus.get("amount", 0))
+		elif bonus_type == "fridge":
+			The.session["fridge_meals"] = int(The.session.get("fridge_meals", 0)) + int(origin_bonus.get("amount", 0))
+		elif bonus_type == "random_advanced":
+			var advanced: Array[Dictionary] = _tech_def.list_advanced()
+			if not advanced.is_empty():
+				advanced.shuffle()
+				starter_deck.append(String(advanced[0].get("id", "")))
+	The.session["technique_deck"] = starter_deck
+	The.session["technique_collection"] = starter_deck.duplicate()
+
+	Log.log(self, "info", "Career: " + player_name + " [" + _selected_personality + "/" + _selected_origin + "/" + _selected_school + "/T" + str(_selected_turno) + "] deck=" + str(starter_deck))
 	var scene: PackedScene = The.ui("cutscene")
 	if scene:
 		The.next_scene(scene)

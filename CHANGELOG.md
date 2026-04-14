@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added (4.x cycle)
+- Technique card system (`technique.gd`/`technique.json`): rarities, tiers, personalities (intenso/tecnico/estrategico), coins, vital_cost, situation_tags
+- Drill system (`drill.gd`/`drill.json`): 8 drills (3 physical + 5 position: qb/wr/center/db/rusher)
+- Drill minigame in NEO Scavenger format: player | other sprites, narrative prompt, card hand (commons always available via tag match + memory cards from deck), d5* dice, yomi rock-paper-scissors between personalities
+- Tryout manager: position select → 3 physical drills → 1 position drill → results
+- Common cards auto-appear in hand when their tags match the situation's tags; memory cards (uncommon/rare) drawn from deck
+- Added `respirar_fundo` (recovery common) and `tentativa_honesta` (universal fallback)
+- Origin system, cutscene, fridge meals with delivery cascade, hunger auto-resolution, tryout failure counter
+
+### Changed (4.x cycle)
+- Tryout uses drill_minigame for all drills (removed old card_minigame path for position drill)
+- Position drills converted to NEO Scavenger format with situations + tags + check_stats
+- Replaced green field + animated dot viewport with player/other sprite panels
+
+
 ### Added
 - Module select screen: choose campaign module before character creation
 - Module manifest now supports i18n fields (name, description) and version
@@ -39,6 +54,13 @@
 - Beach Football and Video Games activities
 - Quest type: activity_category_count (tracks any activity from a category)
 
+- Technique card system: collectible cards with personality types (Intenso/Tecnico/Estrategico), yomi layer, d5* dice, vital costs
+- Drill minigame: situation sequences with technique card hand, multi-card play, synergy, viewport animation
+- New Defs: TechniqueDef (technique.gd/json), DrillDef (drill.gd/json) — 9 basic + 6 advanced + 4 casa + 6 meta + 6 origin cards
+- Personality selection in character creation with starter deck (1 base + 1 origin bonus)
+- Tryout physical drills now use drill_minigame with technique cards (40-yard, three-cone, shuttle)
+- Hand panel permanent on home screen, hotkeys changed: Q/W/E for slot/day/week, 1-5 for cards, S for skip
+- Mechanics reference document: game/docs/mechanics.md
 - Home screen redesign: sidebar (casa/vitals/quests/diary/effects) + main panel (grid + embedded viewport)
 - Minigames now embedded in SubViewport instead of Window popups (play_minigame, tryout)
 - Room placeholder shown in viewport when no minigame is active

@@ -101,11 +101,16 @@ Player is 15, has 4 weeks to prepare for a flag football tryout while keeping up
 ### 4.5 — Field visualization
 - Node2D with yard lines, player token runs route path via tween
 
-### 4.6 — Minigame review
-- Review all minigames for embedded viewport (new layout)
-- Improve visuals, pacing, difficulty scaling
-- Consider new minigame types or variations
-- Ensure all card types render correctly at viewport resolution
+### 4.6 — Technique card system ✅
+- Collectible technique cards with 3 personalities: Intenso (red), Técnico (blue), Estratégico (green)
+- Yomi layer: Intenso > Estratégico > Técnico > Intenso
+- d5* dice system (exploding 0/5), vital penalty on low vitals
+- Drill minigame: situation sequences with technique card hand, multi-card play
+- Hand permanent on home screen, filtered by context
+- Starter: personality choice + origin bonus card
+- Hotkeys: 1-5 cards, S skip, Q/W/E slot/day/week
+- Physical drills migrated from play.json to drill.json
+- Mechanics reference: game/docs/mechanics.md
 
 ---
 
@@ -211,7 +216,7 @@ Legend: ✅ merged | ⚙ in progress | · pending
 4.3 Tryout event         ✅ tryout system (data, integration, win/lose)
 4.4 Training             ✅ team training minigame
 4.5 Field viz            · route animation
-4.6 Minigame review      · review for embedded viewport
+4.6 Technique cards      ✅ collectible cards, d5*, yomi, drill minigame
 
 5.1 Calendar year        · real dates
 5.2 Origin system        ✅ quebrada/condomínio/mansão + escola + corpo

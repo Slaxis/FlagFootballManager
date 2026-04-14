@@ -5,6 +5,7 @@ extends Control
 signal tryout_finished(passed: bool, results: Dictionary)
 
 const CARD_MINIGAME_SCENE := "res://game/modules/brasil_2026/ui/minigame/card_minigame.tscn"
+const DRILL_MINIGAME_SCENE := "res://game/modules/brasil_2026/ui/minigame/drill_minigame.tscn"
 
 const T_SELECT: Dictionary = {"pt": "Escolha sua posicao:", "en": "Choose your position:"}
 const T_NEXT: Dictionary = {"pt": "Proximo >>", "en": "Next >>"}
@@ -29,9 +30,9 @@ const POSITIONS: Array[Dictionary] = [
 ]
 
 const PHYSICAL_DRILLS: Array[Dictionary] = [
-	{"drill_type": "forty",      "name": {"pt": "40-Yard Dash", "en": "40-Yard Dash"},     "timer": 4.0},
-	{"drill_type": "three_cone", "name": {"pt": "Three-Cone Drill", "en": "Three-Cone Drill"}, "timer": 8.0},
-	{"drill_type": "shuttle",    "name": {"pt": "Pro Agility (5-10-5)", "en": "Pro Agility (5-10-5)"}, "timer": 3.0}
+	{"drill_id": "forty_yard_dash", "name": {"pt": "40-Yard Dash", "en": "40-Yard Dash"}},
+	{"drill_id": "three_cone",      "name": {"pt": "Three-Cone Drill", "en": "Three-Cone Drill"}},
+	{"drill_id": "shuttle",         "name": {"pt": "Pro Agility (5-10-5)", "en": "Pro Agility (5-10-5)"}}
 ]
 
 var _config: Dictionary = {}
@@ -98,38 +99,17 @@ func _on_position_selected(pos: Dictionary) -> void:
 # --- Phase: Drill Sequence ---
 
 func _run_drill_sequence() -> void:
-	var drill_rounds: int = int(_config.get("drill_rounds", 3))
-
-	# Physical drills
+	# Physical drills (use drill_minigame with technique cards)
 	for drill: Dictionary in PHYSICAL_DRILLS:
-		var drill_type: String = String(drill["drill_type"])
-		var rounds: Array[Dictionary] = _play_def.get_drill_rounds(drill_type, drill_rounds)
-		if rounds.is_empty():
-			_drill_results[drill_type] = {"score": 0, "total": drill_rounds}
-			continue
-		var timer_sec: float = float(drill.get("timer", 8.0))
-		var result: Dictionary = await _run_single_drill(rounds, timer_sec, drill["name"])
-		_drill_results[drill_type] = result
+		var drill_id: String = String(drill["drill_id"])
+		var result: Dictionary = await _run_technique_drill(drill_id)
+		_drill_results[drill_id] = result
 
-	# Position-specific drill
-	var pos_drill_type: String = String(_selected_position.get("drill_type", ""))
-	var pos_rounds_count: int = int(_config.get("position_rounds", 5))
-	var pos_timer: float = float(_config.get("position_timer", 10.0))
-	var pos_rounds: Array[Dictionary] = []
-
-	if pos_drill_type == "route":
-		# WR / Center: use route recognition (build rounds from route plays)
-		var max_diff: int = 1 if _selected_position["id"] == "center" else 2
-		var routes: Array[Dictionary] = _play_def.list_routes(max_diff)
-		pos_rounds = _build_route_rounds(routes, pos_rounds_count)
-	else:
-		pos_rounds = _play_def.get_drill_rounds(pos_drill_type, pos_rounds_count)
-
-	if not pos_rounds.is_empty():
-		var result: Dictionary = await _run_single_drill(pos_rounds, pos_timer, _selected_position["drill_name"])
-		_drill_results["position"] = result
-	else:
-		_drill_results["position"] = {"score": 0, "total": pos_rounds_count}
+	# Position-specific drill (also uses drill_minigame with technique cards)
+	var pos_id: String = String(_selected_position.get("id", ""))
+	var pos_drill_id: String = pos_id + "_drill"
+	var pos_result: Dictionary = await _run_technique_drill(pos_drill_id)
+	_drill_results["position"] = pos_result
 
 	# Show results
 	_show_results()
@@ -154,6 +134,25 @@ func _build_route_rounds(routes: Array[Dictionary], count: int) -> Array[Diction
 			"options": options
 		})
 	return result
+
+func _run_technique_drill(drill_id: String) -> Dictionary:
+	_clear_content()
+	var scene: PackedScene = load(DRILL_MINIGAME_SCENE)
+	if scene == null:
+		return {"score": 0, "total": 4}
+	var minigame: Control = scene.instantiate()
+	minigame.setup({"drill_id": drill_id})
+	var result: Dictionary = {"done": false, "score": 0, "total": 0}
+	minigame.minigame_finished.connect(func(score: int, total: int) -> void:
+		result["done"] = true
+		result["score"] = score
+		result["total"] = total
+	)
+	_content = minigame
+	add_child(minigame)
+	while not result["done"]:
+		await get_tree().process_frame
+	return {"score": int(result["score"]), "total": int(result["total"])}
 
 func _run_single_drill(rounds: Array[Dictionary], timer_sec: float, drill_name: Dictionary) -> Dictionary:
 	_clear_content()
@@ -210,13 +209,13 @@ func _show_results() -> void:
 	var total_possible: int = 0
 
 	var drill_names: Dictionary = {
-		"forty": {"pt": "40-Yard Dash", "en": "40-Yard Dash"},
+		"forty_yard_dash": {"pt": "40-Yard Dash", "en": "40-Yard Dash"},
 		"three_cone": {"pt": "Three-Cone", "en": "Three-Cone"},
 		"shuttle": {"pt": "Pro Agility", "en": "Pro Agility"},
 		"position": _selected_position.get("drill_name", {"pt": "Posicao", "en": "Position"})
 	}
 
-	for drill_id: String in ["forty", "three_cone", "shuttle", "position"]:
+	for drill_id: String in ["forty_yard_dash", "three_cone", "shuttle", "position"]:
 		var dr: Dictionary = _drill_results.get(drill_id, {"score": 0, "total": 0})
 		var s: int = int(dr.get("score", 0))
 		var t: int = int(dr.get("total", 0))
