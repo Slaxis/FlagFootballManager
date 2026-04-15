@@ -53,8 +53,12 @@ text = "START"
 [node name="BtnOptions" type="Button" parent="Center/VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(280, 40)
-disabled = true
 text = "OPTIONS"
+
+[node name="BtnHall" type="Button" parent="Center/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 40)
+text = "HALL OF FAME"
 
 [node name="BtnQuit" type="Button" parent="Center/VBox"]
 layout_mode = 2
