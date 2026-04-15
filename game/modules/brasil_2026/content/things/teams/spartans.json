@@ -1,6 +1,7 @@
 {
   "id": "spartans",
   "group": "team",
+  "division": "1a_div",
   "name": "Spartans Football",
   "city": "São Paulo",
   "state": "SP",

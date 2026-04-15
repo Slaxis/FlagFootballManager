@@ -1,0 +1,25 @@
+{
+  "id": "colegio_bulldogs",
+  "group": "team",
+  "division": "4a_div",
+  "age_range": "teen",
+  "name": "Colégio Estadual Bulldogs",
+  "city": "São Paulo",
+  "state": "SP",
+  "colors": ["#7a0019", "#ffcc00"],
+  "budget": 800,
+  "monthly_fee": 10,
+  "description": {
+    "pt": "Time do colégio, coach é o professor de educação física. Treinos disciplinados, muita tática e leitura de jogo. Se você gosta de pensar antes de correr, é aqui.",
+    "en": "The public school team — the coach is the PE teacher. Disciplined drills, heavy on tactics and play-reading. If you like thinking before running, this is it."
+  },
+  "vibe": "disciplined",
+  "difficulty": "medium",
+  "drill_focus": ["intelligence", "play_reading", "game_rules", "route_running"],
+  "tryout_threshold": 0.55,
+  "roster": [
+    {"name": "Mateus Lima",     "speed": 5, "strength": 5, "stamina": 6, "agility": 5, "dexterity": 6, "balance": 6, "perception": 7, "intelligence": 8, "charisma": 5, "throwing": 5, "catching": 4, "route_running": 5, "snap": 4, "release": 4, "pass_rush": 3, "coverage": 5, "deflecting": 4, "flag_pulling": 4, "play_reading": 7, "game_rules": 7, "trash_talk": 2},
+    {"name": "Rafa Okamoto",    "speed": 5, "strength": 4, "stamina": 5, "agility": 6, "dexterity": 7, "balance": 6, "perception": 7, "intelligence": 7, "charisma": 5, "throwing": 6, "catching": 6, "route_running": 6, "snap": 3, "release": 5, "pass_rush": 2, "coverage": 5, "deflecting": 4, "flag_pulling": 3, "play_reading": 6, "game_rules": 6, "trash_talk": 2},
+    {"name": "Gustavo Mesquita","speed": 6, "strength": 6, "stamina": 7, "agility": 5, "dexterity": 5, "balance": 7, "perception": 6, "intelligence": 6, "charisma": 4, "throwing": 3, "catching": 4, "route_running": 4, "snap": 5, "release": 3, "pass_rush": 5, "coverage": 5, "deflecting": 5, "flag_pulling": 6, "play_reading": 6, "game_rules": 6, "trash_talk": 3}
+  ]
+}

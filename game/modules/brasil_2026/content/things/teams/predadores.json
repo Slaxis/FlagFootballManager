@@ -1,6 +1,7 @@
 {
   "id": "predadores",
   "group": "team",
+  "division": "1a_div",
   "name": "Predadores",
   "city": "Campo Grande",
   "state": "MS",

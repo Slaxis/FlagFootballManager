@@ -1,0 +1,25 @@
+{
+  "id": "pelada_quadra",
+  "group": "team",
+  "division": "4a_div",
+  "age_range": "teen",
+  "name": "Pelada da Quadra",
+  "city": "São Paulo",
+  "state": "SP",
+  "colors": ["#cccccc", "#333333"],
+  "budget": 200,
+  "monthly_fee": 0,
+  "description": {
+    "pt": "Galera do bairro que joga todo fim de semana na quadra da escola. Ninguém leva muito a sério, mas aceita qualquer um que apareça. Bom pra começar — só não espera muita estrutura.",
+    "en": "Neighborhood crew that plays every weekend on the school court. Nobody takes it too seriously, but they'll take anyone who shows up. Good to start — just don't expect structure."
+  },
+  "vibe": "amateur",
+  "difficulty": "easy",
+  "drill_focus": ["speed", "agility", "catching"],
+  "tryout_threshold": 0.45,
+  "roster": [
+    {"name": "Jeh",      "speed": 6, "strength": 4, "stamina": 5, "agility": 6, "dexterity": 5, "balance": 5, "perception": 4, "intelligence": 4, "charisma": 7, "throwing": 3, "catching": 4, "route_running": 3, "snap": 2, "release": 3, "pass_rush": 2, "coverage": 3, "deflecting": 2, "flag_pulling": 3, "play_reading": 3, "game_rules": 2, "trash_talk": 6},
+    {"name": "Wesley",   "speed": 7, "strength": 5, "stamina": 6, "agility": 7, "dexterity": 4, "balance": 5, "perception": 5, "intelligence": 3, "charisma": 5, "throwing": 2, "catching": 5, "route_running": 4, "snap": 1, "release": 4, "pass_rush": 2, "coverage": 2, "deflecting": 2, "flag_pulling": 3, "play_reading": 2, "game_rules": 2, "trash_talk": 4},
+    {"name": "Pedrinho", "speed": 5, "strength": 6, "stamina": 5, "agility": 5, "dexterity": 5, "balance": 6, "perception": 4, "intelligence": 4, "charisma": 5, "throwing": 4, "catching": 3, "route_running": 2, "snap": 3, "release": 2, "pass_rush": 4, "coverage": 3, "deflecting": 3, "flag_pulling": 4, "play_reading": 3, "game_rules": 3, "trash_talk": 3}
+  ]
+}
