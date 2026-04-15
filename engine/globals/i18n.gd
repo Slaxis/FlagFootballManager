@@ -77,8 +77,8 @@ func text(value: Variant, default_value: String = "") -> String:
 func format(template: String, vars: Dictionary) -> String:
 	var result: String = template
 	for key: Variant in vars.keys():
-		var placeholder: String = "{" + String(key) + "}"
-		result = result.replace(placeholder, String(vars[key]))
+		var placeholder: String = "{" + str(key) + "}"
+		result = result.replace(placeholder, str(vars[key]))
 	return result
 
 func plural(singular: Variant, plural_form: Variant, count: int, default_text: String = "") -> String:

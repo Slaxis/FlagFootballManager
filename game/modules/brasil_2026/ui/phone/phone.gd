@@ -89,9 +89,9 @@ func _render_apps() -> void:
 	content.add_child(margin)
 
 func _build_app_icon(id: String, label: String, glyph: String, color: Color) -> Control:
-	var wrap: VBoxContainer = VBoxContainer.new()
-	wrap.add_theme_constant_override("separation", 4)
-	wrap.alignment = BoxContainer.ALIGNMENT_CENTER
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	var btn: Button = Button.new()
 	btn.custom_minimum_size = Vector2(72, 72)
 	btn.text = glyph
@@ -106,13 +106,13 @@ func _build_app_icon(id: String, label: String, glyph: String, color: Color) -> 
 	btn.add_theme_stylebox_override("hover", style)
 	btn.add_theme_stylebox_override("pressed", style)
 	btn.pressed.connect(_on_app_pressed.bind(id))
-	wrap.add_child(btn)
+	box.add_child(btn)
 	var lbl: Label = Label.new()
 	lbl.text = label
 	lbl.add_theme_font_size_override("font_size", 11)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	wrap.add_child(lbl)
-	return wrap
+	box.add_child(lbl)
+	return box
 
 func _on_app_pressed(id: String) -> void:
 	Audio.play_sfx("menu_click")
@@ -267,7 +267,7 @@ func _render_profile() -> void:
 		date_label.add_theme_font_size_override("font_size", 12)
 		date_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.4))
 		var date_text: String = I18n.format(I18n.text(T_TRYOUT_DATE), {
-			"w": tryout_week,
+			"w": str(tryout_week),
 			"day": I18n.text(DAY_LABELS.get(tryout_day, tryout_day)),
 			"slot": I18n.text(SLOT_LABELS.get(tryout_slot, tryout_slot)),
 		})
