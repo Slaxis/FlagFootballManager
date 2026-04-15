@@ -492,6 +492,7 @@ func _on_card_toggled(idx: int) -> void:
 	if _hand_buttons[idx].button_pressed:
 		if not _selected_cards.has(card):
 			_selected_cards.append(card)
+			Audio.play_sfx("card_pick")
 	else:
 		_selected_cards.erase(card)
 
@@ -573,6 +574,7 @@ func _resolve(cards_played: Array) -> void:
 	var effective: int = best_stat + total_bonus + total_synergy + total_yomi + dice
 	var passed: bool = effective >= difficulty
 
+	Audio.play_sfx("pass" if passed else "fail")
 	if passed:
 		_score += 1
 

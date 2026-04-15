@@ -161,6 +161,8 @@ func _ready() -> void:
 	btn_week.pressed.connect(_on_next_week)
 	btn_clear.pressed.connect(_on_clear)
 	btn_menu.pressed.connect(_on_save_quit)
+	for btn: Button in [btn_pause, btn_slot, btn_day, btn_week, btn_clear, btn_menu]:
+		btn.pressed.connect(func() -> void: Audio.play_sfx("menu_click"))
 	_reset_week_tracking()
 	_load_quests()
 	_apply_default_week()
@@ -168,6 +170,7 @@ func _ready() -> void:
 	set_process_unhandled_key_input(true)
 	_show_room()
 	_diary(I18n.text(T_WELCOME), COLOR_DEFAULT)
+	Audio.play_music("home_ambient")
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not (event as InputEventKey).pressed:
@@ -542,9 +545,11 @@ func _on_room_item(item_id: String) -> void:
 
 func _toggle_fridge_window() -> void:
 	if _fridge_window != null and is_instance_valid(_fridge_window):
+		Audio.play_sfx("menu_close")
 		_fridge_window.queue_free()
 		_fridge_window = null
 		return
+	Audio.play_sfx("fridge_open")
 	_fridge_window = Window.new()
 	_fridge_window.title = I18n.text(T_FRIDGE_TITLE)
 	_fridge_window.size = Vector2i(250, 120)
@@ -576,9 +581,11 @@ func _close_fridge_window() -> void:
 
 func _toggle_mirror_window() -> void:
 	if _mirror_window != null and is_instance_valid(_mirror_window):
+		Audio.play_sfx("menu_close")
 		_mirror_window.queue_free()
 		_mirror_window = null
 		return
+	Audio.play_sfx("menu_open")
 	_mirror_window = Window.new()
 	_mirror_window.title = I18n.text(T_MIRROR_TITLE)
 	_mirror_window.size = Vector2i(380, 500)
@@ -879,6 +886,7 @@ func _resolve_slot(day_id: String, slot_id: String) -> void:
 			if not recovery.is_empty():
 				act = recovery
 				collapsed = true
+				Audio.play_sfx("collapse")
 				break
 
 	# If no collapse, use the planned activity
@@ -1029,6 +1037,7 @@ func _finalize_if_week_done() -> void:
 	_finalize_week()
 
 func _finalize_week() -> void:
+	Audio.play_sfx("week_advance")
 	var vitals: Dictionary = The.session.get("vitals", {})
 	_effects.clear()
 	for vid: String in vitals:

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added (Phase B — audio)
+- `AudioDef` (`game/defs/audio.gd` + `audio.json`) — mapping of music/sfx ids to file paths, buses, and loop flags
+- `Audio` autoload (`engine/globals/audio_manager.gd`) — `play_music(id)` with cross-fade between tracks, `play_sfx(id)` with pooled `AudioStreamPlayer`s, `stop_music()`; silently no-ops when the mapped file is missing so the game runs without audio assets
+- Music cues wired: `main_menu` → main menu, `home_ambient` → player home, `victory` → Ato 0 win, `game_over` → game over
+- SFX cues wired: `menu_click` on all menu buttons, `card_pick` on card select in drill, `pass`/`fail` on drill situation result, `week_advance` on week finalize, `collapse` on vital-triggered binge, `fridge_open`/`menu_open`/`menu_close` on room windows
+- `audio/README.md` documents the expected filenames so the user can drop `.ogg` files in and Godot auto-imports them
+
 ### Added (release 0.1.0 prep)
 - SaveManager autoload (single-slot save + Hall of Fame + settings) at `engine/globals/save_manager.gd`
 - Main menu Continue button + new-game overwrite confirmation

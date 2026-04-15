@@ -24,6 +24,7 @@ God="*res://engine/globals/god.gd"
 The="*res://engine/globals/the.gd"
 I18n="*res://engine/globals/i18n.gd"
 SaveManager="*res://engine/globals/save_manager.gd"
+Audio="*res://engine/globals/audio_manager.gd"
 
 [display]
 

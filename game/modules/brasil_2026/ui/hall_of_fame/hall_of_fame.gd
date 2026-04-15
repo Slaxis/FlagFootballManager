@@ -19,6 +19,7 @@ func _ready() -> void:
 	title_label.text = I18n.text(T_TITLE)
 	btn_back.text = I18n.text(T_BACK)
 	btn_back.pressed.connect(_on_back)
+	btn_back.pressed.connect(func() -> void: Audio.play_sfx("menu_click"))
 	_populate()
 
 func _populate() -> void:

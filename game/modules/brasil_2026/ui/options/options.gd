@@ -42,6 +42,8 @@ func _ready() -> void:
 	btn_lang_en.pressed.connect(func() -> void: _set_lang("en"))
 	btn_reset.pressed.connect(_on_reset)
 	btn_back.pressed.connect(_on_back)
+	for btn: Button in [btn_lang_pt, btn_lang_en, btn_reset, btn_back]:
+		btn.pressed.connect(func() -> void: Audio.play_sfx("menu_click"))
 	_refresh_lang_buttons()
 
 func _update_text() -> void:

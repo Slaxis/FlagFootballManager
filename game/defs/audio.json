@@ -1,0 +1,22 @@
+{
+  "music": {
+    "main_menu":      { "path": "res://audio/music/main_menu.ogg",      "loop": true,  "bus": "Music" },
+    "home_ambient":   { "path": "res://audio/music/home_ambient.ogg",   "loop": true,  "bus": "Music" },
+    "drill_tense":    { "path": "res://audio/music/drill_tense.ogg",    "loop": true,  "bus": "Music" },
+    "tryout_intense": { "path": "res://audio/music/tryout_intense.ogg", "loop": true,  "bus": "Music" },
+    "victory":        { "path": "res://audio/music/victory.ogg",        "loop": false, "bus": "Music" },
+    "game_over":      { "path": "res://audio/music/game_over.ogg",      "loop": false, "bus": "Music" }
+  },
+  "sfx": {
+    "menu_click":   { "path": "res://audio/sfx/menu_click.wav",   "bus": "SFX" },
+    "menu_open":    { "path": "res://audio/sfx/menu_open.wav",    "bus": "SFX" },
+    "menu_close":   { "path": "res://audio/sfx/menu_close.wav",   "bus": "SFX" },
+    "card_pick":    { "path": "res://audio/sfx/card_pick.wav",    "bus": "SFX" },
+    "pass":         { "path": "res://audio/sfx/pass.wav",         "bus": "SFX" },
+    "fail":         { "path": "res://audio/sfx/fail.wav",         "bus": "SFX" },
+    "week_advance": { "path": "res://audio/sfx/week_advance.wav", "bus": "SFX" },
+    "collapse":     { "path": "res://audio/sfx/collapse.wav",     "bus": "SFX" },
+    "fridge_open":  { "path": "res://audio/sfx/fridge_open.wav",  "bus": "SFX" },
+    "phone_open":   { "path": "res://audio/sfx/phone_open.wav",   "bus": "SFX" }
+  }
+}
