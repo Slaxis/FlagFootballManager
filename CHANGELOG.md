@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Added (release 0.1.0 prep)
+- SaveManager autoload (single-slot save + Hall of Fame + settings) at `engine/globals/save_manager.gd`
+- Main menu Continue button + new-game overwrite confirmation
+- Auto-save at end of each week in `player_home`
+- Game Over screen + Hall of Fame entry on 4 failed tryouts
+- Win screen (Ato 0) saved to Hall of Fame with act0_complete result
+- Hall of Fame screen listing past careers from main menu
+- Options menu: Master / Music / SFX volume sliders, language toggle (PT/EN), reset defaults, persisted to `user://settings.json`
+- 3-bus audio layout (Master / Music / SFX) in `default_bus_layout.tres`
+- Save & Quit button in player_home tool row (blocked while a week is resolving)
+- Unified action bar in player_home: `[SPACE] PAUSE | [Q] ATIVIDADE | [W] DIA | [E] SEMANA | X | [ESC] MENU` — replaces per-day `>`/`>>` columns for a cleaner grid
+- ESC hotkey opens Save & Quit; pause button toggles PAUSE/RESUME label inline
+
+### Fixed
+- Continue after clearing Ato 0 now returns to the win screen instead of dropping back into the weekly grid (Act 1 unavailable); session flag `ato0_complete` drives the routing
+- Save & Quit mid-week now persists per-day resolution progress (`day_resolved`, `day_slot_index`, `slot_colors`); previously resolved slots would reset to unplayed on reload, double-applying their vital/money effects when replayed
+- Starting a new career now wipes `The.session` before module select; prior-run grid selections, `ato0_complete`, and tryout counters no longer bleed into the fresh playthrough (both main-menu NEW GAME and game-over NEW GAME paths)
+- Replaced cryptic `X` clear-plan button with labeled `LIMPAR PLANO` / `CLEAR PLAN`
+
 ### Added (4.x cycle)
 - Technique card system (`technique.gd`/`technique.json`): rarities, tiers, personalities (intenso/tecnico/estrategico), coins, vital_cost, situation_tags
 - Drill system (`drill.gd`/`drill.json`): 8 drills (3 physical + 5 position: qb/wr/center/db/rusher)

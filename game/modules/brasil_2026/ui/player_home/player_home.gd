@@ -26,14 +26,19 @@ const SLOT_ICONS: Dictionary = {
 }
 const T_WEEK: Dictionary = {"pt": "Semana", "en": "Week"}
 const T_DAY: Dictionary = {"pt": "Dia", "en": "Day"}
-const T_PLAN: Dictionary = {"pt": "PLANEJE SUA SEMANA", "en": "PLAN YOUR WEEK"}
-const T_NEXT_WEEK: Dictionary = {"pt": ">> SEMANA", "en": ">> WEEK"}
+const T_PAUSE: Dictionary = {"pt": "PAUSAR", "en": "PAUSE"}
+const T_RESUME: Dictionary = {"pt": "CONTINUAR", "en": "RESUME"}
+const T_SLOT_ACTION: Dictionary = {"pt": "ATIVIDADE", "en": "ACTIVITY"}
+const T_DAY_ACTION: Dictionary = {"pt": "DIA", "en": "DAY"}
+const T_WEEK_ACTION: Dictionary = {"pt": "SEMANA", "en": "WEEK"}
+const T_MENU: Dictionary = {"pt": "MENU", "en": "MENU"}
 const T_TIP_SLOT: Dictionary = {"pt": "Resolver proximo horario", "en": "Resolve next time slot"}
 const T_TIP_DAY: Dictionary = {"pt": "Resolver dia inteiro", "en": "Resolve full day"}
 const T_TIP_WEEK: Dictionary = {"pt": "Resolver semana inteira", "en": "Resolve full week"}
 const T_TIP_CLEAR: Dictionary = {"pt": "Limpar planejamento", "en": "Clear all planned activities"}
+const T_TIP_PAUSE: Dictionary = {"pt": "Pausar/retomar resolucao", "en": "Pause/resume resolution"}
 const T_COLUMN_EMPTY: Dictionary = {"pt": "---", "en": "---"}
-const T_CLEAR: Dictionary = {"pt": "LIMPAR", "en": "CLEAR"}
+const T_CLEAR: Dictionary = {"pt": "LIMPAR PLANO", "en": "CLEAR PLAN"}
 const T_ROOM: Dictionary = {"pt": "SEU QUARTO", "en": "YOUR ROOM"}
 const T_VITALS: Dictionary = {"pt": "SINAIS VITAIS", "en": "VITALS"}
 const T_WELCOME: Dictionary = {"pt": "Bem-vindo! Planeje sua semana.", "en": "Welcome home. Plan your week."}
@@ -65,8 +70,8 @@ const T_FRIDGE_TITLE: Dictionary = {"pt": "Geladeira", "en": "Fridge"}
 const T_FRIDGE_MEALS: Dictionary = {"pt": "Refeicoes: ", "en": "Meals: "}
 const T_MIRROR: Dictionary = {"pt": "Espelho", "en": "Mirror"}
 const T_MIRROR_TITLE: Dictionary = {"pt": "Ficha do Jogador", "en": "Player Sheet"}
-const T_PAUSED: Dictionary = {"pt": "|| PAUSADO", "en": "|| PAUSED"}
 const T_EFFECTS: Dictionary = {"pt": "EFEITOS", "en": "EFFECTS"}
+const T_TIP_SAVE_QUIT: Dictionary = {"pt": "Salvar e voltar ao menu", "en": "Save and return to main menu"}
 
 const COLOR_SYNERGY := Color(0.2, 0.75, 0.2)
 const COLOR_NORMAL := Color(0.85, 0.75, 0.2)
@@ -89,8 +94,6 @@ var _grid_selects: Dictionary = {}      # "day_slot" -> OptionButton
 var _grid_activities: Dictionary = {}   # "day_slot" -> Array[Dictionary]
 var _column_selects: Dictionary = {}    # slot_id -> OptionButton (column header)
 var _column_activities: Dictionary = {} # slot_id -> Array[Dictionary]
-var _day_play_buttons: Dictionary = {}  # "day" -> Button (single slot >)
-var _day_fast_buttons: Dictionary = {}  # "day" -> Button (full day >>)
 var _day_resolved: Dictionary = {}      # "day" -> bool
 var _day_slot_index: Dictionary = {}    # "day" -> int (next slot to resolve)
 var _updating_column: bool = false
@@ -131,10 +134,13 @@ var _resolving: bool = false
 @onready var effects_bar: HBoxContainer = $Margin/Content/Sidebar/EffectsBar
 
 # MainPanel
-@onready var plan_header: Label = $Margin/Content/MainPanel/ToolRow/PlanHeader
 @onready var grid_container: GridContainer = $Margin/Content/MainPanel/GridScroll/WeekGrid
-@onready var btn_next_week: Button = $Margin/Content/MainPanel/ToolRow/BtnNextWeek
+@onready var btn_pause: Button = $Margin/Content/MainPanel/ToolRow/BtnPause
+@onready var btn_slot: Button = $Margin/Content/MainPanel/ToolRow/BtnSlot
+@onready var btn_day: Button = $Margin/Content/MainPanel/ToolRow/BtnDay
+@onready var btn_week: Button = $Margin/Content/MainPanel/ToolRow/BtnWeek
 @onready var btn_clear: Button = $Margin/Content/MainPanel/ToolRow/BtnClear
+@onready var btn_menu: Button = $Margin/Content/MainPanel/ToolRow/BtnMenu
 @onready var game_viewport: SubViewport = $Margin/Content/MainPanel/GameViewport/SubViewport
 @onready var hand_panel: HBoxContainer = $Margin/Content/MainPanel/HandPanel
 
@@ -149,11 +155,16 @@ func _ready() -> void:
 	_update_text()
 	_update_header()
 	_update_vitals()
-	btn_next_week.pressed.connect(_on_next_week)
+	btn_pause.pressed.connect(_on_pause_pressed)
+	btn_slot.pressed.connect(_on_play_next_slot)
+	btn_day.pressed.connect(_on_play_next_day)
+	btn_week.pressed.connect(_on_next_week)
 	btn_clear.pressed.connect(_on_clear)
+	btn_menu.pressed.connect(_on_save_quit)
 	_reset_week_tracking()
 	_load_quests()
 	_apply_default_week()
+	_restore_week_progress()
 	set_process_unhandled_key_input(true)
 	_show_room()
 	_diary(I18n.text(T_WELCOME), COLOR_DEFAULT)
@@ -165,26 +176,31 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	match key.keycode:
 		KEY_SPACE:
 			get_viewport().set_input_as_handled()
-			_paused = not _paused
-			_update_pause_indicator()
+			_on_pause_pressed()
 		KEY_Q:
 			_on_play_next_slot()
 		KEY_W:
 			_on_play_next_day()
 		KEY_E:
 			_on_next_week()
+		KEY_ESCAPE:
+			_on_save_quit()
 		KEY_F:
 			_toggle_fridge_window()
 		KEY_M:
 			_toggle_mirror_window()
 
+func _on_pause_pressed() -> void:
+	_paused = not _paused
+	_update_pause_indicator()
+
 func _update_pause_indicator() -> void:
 	if _paused:
-		plan_header.text = I18n.text(T_PLAN) + "  " + I18n.text(T_PAUSED)
-		plan_header.add_theme_color_override("font_color", COLOR_RUNNING)
+		btn_pause.text = "[SPACE] " + I18n.text(T_RESUME)
+		btn_pause.add_theme_color_override("font_color", COLOR_RUNNING)
 	else:
-		plan_header.text = I18n.text(T_PLAN)
-		plan_header.remove_theme_color_override("font_color")
+		btn_pause.text = "[SPACE] " + I18n.text(T_PAUSE)
+		btn_pause.remove_theme_color_override("font_color")
 
 func _on_play_next_slot() -> void:
 	var day_id: String = _next_unresolved_day()
@@ -199,11 +215,18 @@ func _on_play_next_day() -> void:
 # --- Text ---
 
 func _update_text() -> void:
-	plan_header.text = I18n.text(T_PLAN)
-	btn_next_week.text = "[E] >>"
-	btn_next_week.tooltip_text = I18n.text(T_TIP_WEEK)
-	btn_clear.text = "X"
+	btn_pause.text = "[SPACE] " + I18n.text(T_PAUSE)
+	btn_pause.tooltip_text = I18n.text(T_TIP_PAUSE)
+	btn_slot.text = "[Q] " + I18n.text(T_SLOT_ACTION)
+	btn_slot.tooltip_text = I18n.text(T_TIP_SLOT)
+	btn_day.text = "[W] " + I18n.text(T_DAY_ACTION)
+	btn_day.tooltip_text = I18n.text(T_TIP_DAY)
+	btn_week.text = "[E] " + I18n.text(T_WEEK_ACTION)
+	btn_week.tooltip_text = I18n.text(T_TIP_WEEK)
+	btn_clear.text = I18n.text(T_CLEAR)
 	btn_clear.tooltip_text = I18n.text(T_TIP_CLEAR)
+	btn_menu.text = "[ESC] " + I18n.text(T_MENU)
+	btn_menu.tooltip_text = I18n.text(T_TIP_SAVE_QUIT)
 	quest_header.text = I18n.text(T_QUESTS)
 	room_header.text = I18n.text(T_ROOM)
 	vitals_header.text = I18n.text(T_VITALS)
@@ -224,7 +247,7 @@ func _update_header() -> void:
 # --- Week Grid ---
 
 func _build_grid() -> void:
-	grid_container.columns = SLOTS.size() + 3  # day label + 4 slots + > + >>
+	grid_container.columns = SLOTS.size() + 1  # day label + 4 slots
 
 	# Corner cell
 	var corner: Label = Label.new()
@@ -261,16 +284,6 @@ func _build_grid() -> void:
 
 		grid_container.add_child(col_box)
 
-	# Play columns header (empty spacers)
-	var ph: Label = Label.new()
-	ph.text = ""
-	ph.custom_minimum_size = Vector2(28, 0)
-	grid_container.add_child(ph)
-	var fh: Label = Label.new()
-	fh.text = ""
-	fh.custom_minimum_size = Vector2(28, 0)
-	grid_container.add_child(fh)
-
 	# Day rows
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
@@ -297,22 +310,6 @@ func _build_grid() -> void:
 			_update_select_tooltip(select, key, slot_id)
 			_grid_selects[key] = select
 			grid_container.add_child(select)
-
-		var btn_play: Button = Button.new()
-		btn_play.text = "[Q]>"
-		btn_play.custom_minimum_size = Vector2(28, 28)
-		btn_play.tooltip_text = I18n.text(T_TIP_SLOT)
-		btn_play.pressed.connect(_on_play_slot.bind(day_id))
-		_day_play_buttons[day_id] = btn_play
-		grid_container.add_child(btn_play)
-
-		var btn_fast: Button = Button.new()
-		btn_fast.text = "[W]>>"
-		btn_fast.custom_minimum_size = Vector2(28, 28)
-		btn_fast.tooltip_text = I18n.text(T_TIP_DAY)
-		btn_fast.pressed.connect(_on_play_day.bind(day_id))
-		_day_fast_buttons[day_id] = btn_fast
-		grid_container.add_child(btn_fast)
 
 func _populate_grouped_select(select: OptionButton, slot_id: String) -> void:
 	var grouped: Array[Dictionary] = _activity_def.list_for_slot_grouped(slot_id)
@@ -437,7 +434,18 @@ func _select_first_item(select: OptionButton) -> void:
 			return
 
 func _apply_default_week() -> void:
-	# Realistic 15yo student schedule
+	# If we have saved selections from a previous week (carryover or load), use them
+	var saved: Dictionary = The.session.get("grid_selections", {})
+	if not saved.is_empty():
+		for key: String in saved:
+			var saved_id: String = String(saved[key])
+			if saved_id == "":
+				continue
+			var select: OptionButton = _grid_selects.get(key, null)
+			if select:
+				_select_activity_by_id(select, key, saved_id)
+		return
+	# Realistic 15yo student schedule (first-time only)
 	# Weekdays: study morning, varied afternoon, rest/social night, sleep late_night
 	# Weekend: free morning, active afternoon, social night, sleep late_night
 	var weekday_plan: Dictionary = {
@@ -484,10 +492,6 @@ func _on_clear() -> void:
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
 		_day_slot_index[day_id] = 0
-		_day_play_buttons[day_id].text = "[Q]>"
-		_day_play_buttons[day_id].disabled = false
-		_day_fast_buttons[day_id].text = "[W]>>"
-		_day_fast_buttons[day_id].disabled = false
 
 func _set_select_color(select: OptionButton, color: Color) -> void:
 	select.add_theme_color_override("font_color", color)
@@ -809,10 +813,6 @@ func _on_play_day(day_id: String) -> void:
 
 func _mark_day_done(day_id: String) -> void:
 	_day_resolved[day_id] = true
-	_day_play_buttons[day_id].text = "ok"
-	_day_play_buttons[day_id].disabled = true
-	_day_fast_buttons[day_id].text = "ok"
-	_day_fast_buttons[day_id].disabled = true
 	_finalize_if_week_done()
 
 # --- Resolve full week ---
@@ -830,21 +830,16 @@ func _on_next_week() -> void:
 			await _resolve_slot(day_id, SLOTS[i])
 			_day_slot_index[day_id] = i + 1
 		_day_resolved[day_id] = true
-		_day_play_buttons[day_id].text = "ok"
-		_day_play_buttons[day_id].disabled = true
-		_day_fast_buttons[day_id].text = "ok"
-		_day_fast_buttons[day_id].disabled = true
 	_finalize_week()
 	_resolving = false
 	_set_buttons_enabled(true)
 
 func _set_buttons_enabled(enabled: bool) -> void:
-	btn_next_week.disabled = not enabled
+	btn_slot.disabled = not enabled
+	btn_day.disabled = not enabled
+	btn_week.disabled = not enabled
 	btn_clear.disabled = not enabled
-	for day_id: String in _day_play_buttons:
-		if not _day_resolved.get(day_id, false):
-			(_day_play_buttons[day_id] as Button).disabled = not enabled
-			(_day_fast_buttons[day_id] as Button).disabled = not enabled
+	btn_menu.disabled = not enabled
 
 # --- Core slot resolution ---
 
@@ -1065,15 +1060,20 @@ func _finalize_week() -> void:
 	_last_week_selections.clear()
 	for key: String in _grid_selects:
 		_last_week_selections[key] = _get_selected_activity_id(key)
+	# Persist grid selections to session for save/load carryover
+	The.session["grid_selections"] = _last_week_selections.duplicate()
+	# Week done — clear mid-week progress so next load starts fresh
+	The.session.erase("day_resolved")
+	The.session.erase("day_slot_index")
+	The.session.erase("slot_colors")
+
+	# Auto-save after each week
+	SaveManager.save_game()
 
 	# Reset grid for next week
 	for day_id: String in DAYS:
 		_day_resolved[day_id] = false
 		_day_slot_index[day_id] = 0
-		_day_play_buttons[day_id].text = "[Q]>"
-		_day_play_buttons[day_id].disabled = false
-		_day_fast_buttons[day_id].text = "[W]>>"
-		_day_fast_buttons[day_id].disabled = false
 	for key: String in _grid_selects:
 		var select: OptionButton = _grid_selects[key]
 		_reset_select_color(select)
@@ -1296,11 +1296,15 @@ func _run_tryout(act: Dictionary) -> void:
 		The.session["team_id"] = "pending_selection"
 		The.session["player_position"] = data.get("position", "")
 		The.session["tryout_results"] = data
+		The.session["last_tryout_result"] = data
 		_diary("  Tryout: " + str(data.get("total_score", 0)) + "/" + str(data.get("total_possible", 0)) + " " + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}), COLOR_SYNERGY)
+		_show_tryout_win()
 	else:
 		The.session["tryout_failed_count"] = int(The.session.get("tryout_failed_count", 0)) + 1
+		The.session["last_tryout_result"] = data
 		_diary("  Tryout: " + str(data.get("total_score", 0)) + "/" + str(data.get("total_possible", 0)) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
-	The.session["last_tryout_result"] = data
+		if int(The.session["tryout_failed_count"]) >= 4:
+			_show_game_over()
 
 # --- Meals ---
 
@@ -1501,45 +1505,61 @@ func _show_week_summary(on_closed: Callable = Callable()) -> void:
 
 # --- Win / Game Over ---
 
+func _on_save_quit() -> void:
+	if _resolving:
+		_diary(I18n.text({"pt": "Aguarde a semana terminar para salvar.", "en": "Wait for the week to finish before saving."}), COLOR_COLLAPSE)
+		return
+	_persist_week_progress()
+	SaveManager.save_game()
+	var scene: PackedScene = The.ui("main_menu")
+	if scene:
+		The.next_scene(scene)
+
+# Serialize mid-week progress into session so a save/load round-trip preserves
+# which slots have already been played.
+func _persist_week_progress() -> void:
+	var current_selections: Dictionary = {}
+	for key: String in _grid_selects:
+		current_selections[key] = _get_selected_activity_id(key)
+	The.session["grid_selections"] = current_selections
+	The.session["day_resolved"] = _day_resolved.duplicate()
+	The.session["day_slot_index"] = _day_slot_index.duplicate()
+	var slot_colors: Dictionary = {}
+	for key: String in _grid_selects:
+		var select: OptionButton = _grid_selects[key]
+		if select.has_theme_color_override("font_color"):
+			slot_colors[key] = select.get_theme_color("font_color").to_html()
+	The.session["slot_colors"] = slot_colors
+
+func _restore_week_progress() -> void:
+	var resolved: Dictionary = The.session.get("day_resolved", {})
+	var slot_idx: Dictionary = The.session.get("day_slot_index", {})
+	var slot_colors: Dictionary = The.session.get("slot_colors", {})
+	if resolved.is_empty() and slot_idx.is_empty() and slot_colors.is_empty():
+		return
+	for day_id: String in DAYS:
+		var is_done: bool = bool(resolved.get(day_id, false))
+		_day_resolved[day_id] = is_done
+		_day_slot_index[day_id] = int(slot_idx.get(day_id, 0))
+	for key: String in slot_colors:
+		var select: OptionButton = _grid_selects.get(key, null)
+		if select == null:
+			continue
+		var color_hex: String = String(slot_colors[key])
+		if color_hex != "":
+			_set_select_color(select, Color(color_hex))
+
 func _show_tryout_win() -> void:
-	var pos: String = String(The.session.get("player_position", "")).to_upper()
-	var popup: AcceptDialog = AcceptDialog.new()
-	popup.title = "TRYOUT"
-	popup.ok_button_text = I18n.text(T_CLOSE)
-	popup.min_size = Vector2(400, 250)
-	var rtl: RichTextLabel = RichTextLabel.new()
-	rtl.bbcode_enabled = true
-	rtl.custom_minimum_size = Vector2(380, 200)
-	rtl.text = "[center][font_size=28][color=#" + COLOR_SYNERGY.to_html(false) + "]" + I18n.text({"pt": "APROVADO!", "en": "PASSED!"}) + "[/color][/font_size]\n\n"
-	rtl.text += I18n.text({"pt": "Voce entrou pro time!", "en": "You made the team!"}) + "\n"
-	rtl.text += I18n.text({"pt": "Posicao: ", "en": "Position: "}) + pos + "\n\n"
-	rtl.text += I18n.text({"pt": "Sua carreira no flag football comeca agora.", "en": "Your flag football career starts now."}) + "[/center]"
-	popup.add_child(rtl)
-	add_child(popup)
-	popup.popup_centered()
-	popup.confirmed.connect(popup.queue_free)
+	The.session["ato0_complete"] = true
+	SaveManager.save_game()
+	var scene: PackedScene = The.ui("win_ato0")
+	if scene:
+		The.next_scene(scene)
 
 func _show_game_over() -> void:
-	var popup: AcceptDialog = AcceptDialog.new()
-	popup.title = "GAME OVER"
-	popup.ok_button_text = I18n.text(T_CLOSE)
-	popup.min_size = Vector2(400, 250)
-	var rtl: RichTextLabel = RichTextLabel.new()
-	rtl.bbcode_enabled = true
-	rtl.custom_minimum_size = Vector2(380, 200)
-	rtl.text = "[center][font_size=28][color=#" + COLOR_COLLAPSE.to_html(false) + "]GAME OVER[/color][/font_size]\n\n"
-	rtl.text += I18n.text({"pt": "Voce nao conseguiu entrar em nenhum time.", "en": "You didn't make any team."}) + "\n"
-	rtl.text += I18n.text({"pt": "A janela de tryouts se fechou.", "en": "The tryout window has closed."}) + "\n\n"
-	rtl.text += I18n.text({"pt": "Quem sabe na proxima temporada...", "en": "Maybe next season..."}) + "[/center]"
-	popup.add_child(rtl)
-	add_child(popup)
-	popup.popup_centered()
-	popup.confirmed.connect(func() -> void:
-		popup.queue_free()
-		var menu_scene: PackedScene = The.ui("main_menu")
-		if menu_scene:
-			The.next_scene(menu_scene)
-	)
+	var scene: PackedScene = The.ui("game_over")
+	if scene:
+		The.next_scene(scene)
 
 # --- Viewport ---
 

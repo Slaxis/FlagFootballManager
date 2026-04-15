@@ -133,26 +133,41 @@ theme_override_constants/separation = 4
 
 [node name="ToolRow" type="HBoxContainer" parent="Margin/Content/MainPanel"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="PlanHeader" type="Label" parent="Margin/Content/MainPanel/ToolRow"]
+[node name="BtnPause" type="Button" parent="Margin/Content/MainPanel/ToolRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "PLAN YOUR WEEK"
+custom_minimum_size = Vector2(120, 32)
+text = "[SPACE] PAUSE"
+
+[node name="BtnSlot" type="Button" parent="Margin/Content/MainPanel/ToolRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 32)
+text = "[Q] ACTIVITY"
+
+[node name="BtnDay" type="Button" parent="Margin/Content/MainPanel/ToolRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(110, 32)
+text = "[W] DAY"
+
+[node name="BtnWeek" type="Button" parent="Margin/Content/MainPanel/ToolRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(130, 32)
+text = "[E] WEEK"
 
 [node name="ToolSpacer" type="Control" parent="Margin/Content/MainPanel/ToolRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="BtnNextWeek" type="Button" parent="Margin/Content/MainPanel/ToolRow"]
-layout_mode = 2
-custom_minimum_size = Vector2(28, 28)
-text = ">>"
-
 [node name="BtnClear" type="Button" parent="Margin/Content/MainPanel/ToolRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(28, 28)
-text = "X"
+custom_minimum_size = Vector2(110, 32)
+text = "LIMPAR PLANO"
+
+[node name="BtnMenu" type="Button" parent="Margin/Content/MainPanel/ToolRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(110, 32)
+text = "[ESC] MENU"
 
 [node name="GridScroll" type="ScrollContainer" parent="Margin/Content/MainPanel"]
 layout_mode = 2
