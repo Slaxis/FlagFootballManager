@@ -22,6 +22,9 @@ func _ready() -> void:
 	_populate()
 	btn_new.pressed.connect(_on_new)
 	btn_menu.pressed.connect(_on_menu)
+	for btn: Button in [btn_new, btn_menu]:
+		btn.pressed.connect(func() -> void: Audio.play_sfx("menu_click"))
+	Audio.play_music("game_over")
 
 func _save_to_hall_of_fame() -> void:
 	var entry: Dictionary = {

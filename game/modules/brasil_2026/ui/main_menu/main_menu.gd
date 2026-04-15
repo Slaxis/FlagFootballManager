@@ -23,8 +23,11 @@ func _ready() -> void:
 	btn_hall.pressed.connect(_on_hall_pressed)
 	btn_quit.pressed.connect(_on_quit_pressed)
 	btn_lang.pressed.connect(_on_lang_toggle)
+	for btn: Button in [btn_start, btn_continue, btn_options, btn_hall, btn_quit, btn_lang]:
+		btn.pressed.connect(func() -> void: Audio.play_sfx("menu_click"))
 	_update_text()
 	_refresh_continue_state()
+	Audio.play_music("main_menu")
 
 func _refresh_continue_state() -> void:
 	btn_continue.disabled = not SaveManager.has_save()

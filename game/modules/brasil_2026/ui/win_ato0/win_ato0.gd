@@ -18,6 +18,8 @@ func _ready() -> void:
 	_save_to_hall_of_fame()
 	_populate()
 	btn_continue.pressed.connect(_on_continue)
+	btn_continue.pressed.connect(func() -> void: Audio.play_sfx("menu_click"))
+	Audio.play_music("victory")
 
 func _save_to_hall_of_fame() -> void:
 	var entry: Dictionary = {
