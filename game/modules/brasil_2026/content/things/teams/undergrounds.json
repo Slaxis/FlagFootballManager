@@ -17,6 +17,9 @@
   "difficulty": "hard",
   "drill_focus": ["speed", "strength", "agility", "trash_talk"],
   "tryout_threshold": 0.65,
+  "tryout_week": 4,
+  "tryout_day": "fri",
+  "tryout_slot": "night",
   "roster": [
     {"name": "Thiaguinho",   "speed": 9, "strength": 6, "stamina": 6, "agility": 8, "dexterity": 5, "balance": 5, "perception": 5, "intelligence": 3, "charisma": 8, "throwing": 2, "catching": 5, "route_running": 4, "snap": 1, "release": 5, "pass_rush": 3, "coverage": 3, "deflecting": 2, "flag_pulling": 4, "play_reading": 3, "game_rules": 2, "trash_talk": 9},
     {"name": "Keké",         "speed": 8, "strength": 7, "stamina": 6, "agility": 7, "dexterity": 5, "balance": 6, "perception": 5, "intelligence": 3, "charisma": 6, "throwing": 2, "catching": 4, "route_running": 3, "snap": 2, "release": 3, "pass_rush": 7, "coverage": 4, "deflecting": 4, "flag_pulling": 7, "play_reading": 3, "game_rules": 2, "trash_talk": 8},

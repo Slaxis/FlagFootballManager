@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added (Phase C.1/C.2 — Ato 0 team picking)
+- Existing 8 teams tagged `division: "1a_div"` (not accessible in Ato 0)
+- 4 fictional 4a_div teen teams with distinct archetypes (`pelada_quadra`, `colegio_bulldogs`, `clube_recanto`, `undergrounds`) — each with `drill_focus`, `difficulty`, `tryout_threshold`, fixed `tryout_week`/`tryout_day`/`tryout_slot`, and bilingual descriptions
+- **Phone** scene (`game/modules/brasil_2026/ui/phone/phone.{gd,tscn}`): grid of apps → Network (social feed) → team account → Ficha with "Inscrever no tryout" button
+- Enrollment flow: clicking Inscrever persists `The.session.enrolled_tryouts[team_id] = {week, day, slot}`
+- `_apply_enrolled_tryouts()` in player_home overrides the matching day/slot with "★ Tryout: \<team\>", disables the OptionButton, and tags it with a `tryout_team_id` meta
+- Slot resolution detects the tryout meta and routes to `_run_tryout_for_team(team_id)` instead of the normal activity flow; passes `drill_focus`, `difficulty`, `tryout_threshold` into tryout config (consumed by C.3 balance)
+- Tryout music swaps to `tryout_intense` during the attempt and back to `home_ambient` after
+- Passing a team-specific tryout sets `session.team_id = team_id` (no longer `pending_selection`) so win screen shows the actual team joined
+
 ### Added (Phase B — audio)
 - `AudioDef` (`game/defs/audio.gd` + `audio.json`) — mapping of music/sfx ids to file paths, buses, and loop flags
 - `Audio` autoload (`engine/globals/audio_manager.gd`) — `play_music(id)` with cross-fade between tracks, `play_sfx(id)` with pooled `AudioStreamPlayer`s, `stop_music()`; silently no-ops when the mapped file is missing so the game runs without audio assets

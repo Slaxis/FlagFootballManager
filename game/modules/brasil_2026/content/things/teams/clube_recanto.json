@@ -17,6 +17,9 @@
   "difficulty": "medium",
   "drill_focus": ["balance", "dexterity", "stamina", "flag_pulling"],
   "tryout_threshold": 0.55,
+  "tryout_week": 3,
+  "tryout_day": "sat",
+  "tryout_slot": "afternoon",
   "roster": [
     {"name": "Diego Cardoso",  "speed": 6, "strength": 6, "stamina": 7, "agility": 6, "dexterity": 6, "balance": 7, "perception": 6, "intelligence": 5, "charisma": 6, "throwing": 4, "catching": 5, "route_running": 4, "snap": 4, "release": 4, "pass_rush": 4, "coverage": 5, "deflecting": 5, "flag_pulling": 6, "play_reading": 5, "game_rules": 5, "trash_talk": 4},
     {"name": "Tiago Moura",    "speed": 7, "strength": 5, "stamina": 7, "agility": 7, "dexterity": 6, "balance": 7, "perception": 6, "intelligence": 5, "charisma": 5, "throwing": 3, "catching": 6, "route_running": 5, "snap": 2, "release": 5, "pass_rush": 3, "coverage": 4, "deflecting": 4, "flag_pulling": 5, "play_reading": 5, "game_rules": 4, "trash_talk": 3},

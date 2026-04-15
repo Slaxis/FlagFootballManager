@@ -17,6 +17,9 @@
   "difficulty": "easy",
   "drill_focus": ["speed", "agility", "catching"],
   "tryout_threshold": 0.45,
+  "tryout_week": 1,
+  "tryout_day": "sat",
+  "tryout_slot": "afternoon",
   "roster": [
     {"name": "Jeh",      "speed": 6, "strength": 4, "stamina": 5, "agility": 6, "dexterity": 5, "balance": 5, "perception": 4, "intelligence": 4, "charisma": 7, "throwing": 3, "catching": 4, "route_running": 3, "snap": 2, "release": 3, "pass_rush": 2, "coverage": 3, "deflecting": 2, "flag_pulling": 3, "play_reading": 3, "game_rules": 2, "trash_talk": 6},
     {"name": "Wesley",   "speed": 7, "strength": 5, "stamina": 6, "agility": 7, "dexterity": 4, "balance": 5, "perception": 5, "intelligence": 3, "charisma": 5, "throwing": 2, "catching": 5, "route_running": 4, "snap": 1, "release": 4, "pass_rush": 2, "coverage": 2, "deflecting": 2, "flag_pulling": 3, "play_reading": 2, "game_rules": 2, "trash_talk": 4},
