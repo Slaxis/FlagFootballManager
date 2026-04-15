@@ -1,11 +1,13 @@
 # Audio assets
 
-Drop `.ogg` files matching the names below and Godot will auto-import them.
-If a file is missing the `Audio` autoload silently no-ops — the game still runs.
+All audio mapped in `game/defs/audio.json`. See [LICENSES.md](./LICENSES.md) for
+sources and licensing (everything here is CC0).
 
-Mapping lives in `game/defs/audio.json`.
+On first open, Godot scans this folder and auto-imports the files. If a file is
+missing or unimported, the `Audio` autoload silently no-ops — the game still
+runs without audio.
 
-## Music loops (`audio/music/`)
+## Music loops (`audio/music/`) — `.ogg`
 
 - `main_menu.ogg` — main menu screen
 - `home_ambient.ogg` — player home (weekly planner)
@@ -14,12 +16,12 @@ Mapping lives in `game/defs/audio.json`.
 - `victory.ogg` — Ato 0 win screen
 - `game_over.ogg` — game over screen
 
-## SFX (`audio/sfx/`)
+## SFX (`audio/sfx/`) — `.wav`
 
-- `menu_click.ogg` — any button press
-- `menu_open.ogg` / `menu_close.ogg` — window/popup open & close
-- `card_pick.ogg` — selecting a card in the drill minigame
-- `pass.ogg` / `fail.ogg` — drill situation result
-- `week_advance.ogg` — week finalized
-- `collapse.ogg` — vital hit 0 and triggered a binge
-- `fridge_open.ogg` / `phone_open.ogg` — room item windows
+- `menu_click.wav` — any button press
+- `menu_open.wav` / `menu_close.wav` — window/popup open & close
+- `card_pick.wav` — selecting a card in the drill minigame
+- `pass.wav` / `fail.wav` — drill situation result
+- `week_advance.wav` — week finalized
+- `collapse.wav` — vital hit 0 and triggered a binge
+- `fridge_open.wav` / `phone_open.wav` — room item windows
