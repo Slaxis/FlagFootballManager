@@ -1,6 +1,7 @@
 {
   "id": "flag_kings",
   "group": "team",
+  "division": "1a_div",
   "name": "Flag Kings",
   "city": "Rio de Janeiro",
   "state": "RJ",

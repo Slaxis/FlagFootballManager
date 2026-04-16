@@ -1,0 +1,28 @@
+{
+  "id": "undergrounds",
+  "group": "team",
+  "division": "4a_div",
+  "age_range": "teen",
+  "name": "Undergrounds",
+  "city": "São Paulo",
+  "state": "SP",
+  "colors": ["#0a0a0a", "#ff1f4f"],
+  "budget": 400,
+  "monthly_fee": 0,
+  "description": {
+    "pt": "Turma da quebrada que transforma flag em pista de corrida. Sem coach, sem horário fixo. Tryout é na porrada — se não tiver velocidade e atitude, nem aparece.",
+    "en": "Outsider crew that turns flag football into a track meet. No coach, no fixed schedule. The tryout is brutal — if you don't have speed and attitude, don't bother showing up."
+  },
+  "vibe": "rebel",
+  "difficulty": "hard",
+  "drill_focus": ["speed", "strength", "agility", "trash_talk"],
+  "tryout_threshold": 0.65,
+  "tryout_week": 4,
+  "tryout_day": "fri",
+  "tryout_slot": "night",
+  "roster": [
+    {"name": "Thiaguinho",   "speed": 9, "strength": 6, "stamina": 6, "agility": 8, "dexterity": 5, "balance": 5, "perception": 5, "intelligence": 3, "charisma": 8, "throwing": 2, "catching": 5, "route_running": 4, "snap": 1, "release": 5, "pass_rush": 3, "coverage": 3, "deflecting": 2, "flag_pulling": 4, "play_reading": 3, "game_rules": 2, "trash_talk": 9},
+    {"name": "Keké",         "speed": 8, "strength": 7, "stamina": 6, "agility": 7, "dexterity": 5, "balance": 6, "perception": 5, "intelligence": 3, "charisma": 6, "throwing": 2, "catching": 4, "route_running": 3, "snap": 2, "release": 3, "pass_rush": 7, "coverage": 4, "deflecting": 4, "flag_pulling": 7, "play_reading": 3, "game_rules": 2, "trash_talk": 8},
+    {"name": "Luquinha 7.1", "speed": 7, "strength": 8, "stamina": 7, "agility": 5, "dexterity": 4, "balance": 6, "perception": 5, "intelligence": 3, "charisma": 7, "throwing": 3, "catching": 3, "route_running": 2, "snap": 3, "release": 2, "pass_rush": 8, "coverage": 5, "deflecting": 5, "flag_pulling": 7, "play_reading": 3, "game_rules": 2, "trash_talk": 8}
+  ]
+}

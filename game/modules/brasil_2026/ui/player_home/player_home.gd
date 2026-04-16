@@ -101,6 +101,7 @@ var _vital_bars: Dictionary = {}
 var _fridge_window: Window = null
 var _fridge_label: Label = null
 var _mirror_window: Window = null
+var _phone_window: Window = null
 var _paused: bool = false
 var _last_week_selections: Dictionary = {}  # key -> activity_id
 # Active effects: Array of {name, desc, duration, category_bonus, icon, color_rank}
@@ -166,6 +167,7 @@ func _ready() -> void:
 	_reset_week_tracking()
 	_load_quests()
 	_apply_default_week()
+	_apply_enrolled_tryouts()
 	_restore_week_progress()
 	set_process_unhandled_key_input(true)
 	_show_room()
@@ -538,6 +540,8 @@ func _on_room_item(item_id: String) -> void:
 			_toggle_fridge_window()
 		"mirror":
 			_toggle_mirror_window()
+		"phone":
+			_toggle_phone_window()
 		_:
 			_diary("[" + item_id.capitalize() + I18n.text(T_NOT_IMPL) + "]", COLOR_DEFAULT)
 
@@ -578,6 +582,62 @@ func _close_fridge_window() -> void:
 		_fridge_window = null
 
 # --- Mirror window (character sheet) ---
+
+func _toggle_phone_window() -> void:
+	if _phone_window != null and is_instance_valid(_phone_window):
+		Audio.play_sfx("menu_close")
+		_phone_window.queue_free()
+		_phone_window = null
+		return
+	Audio.play_sfx("phone_open")
+	var scene: PackedScene = load("res://game/modules/brasil_2026/ui/phone/phone.tscn")
+	if scene == null:
+		return
+	_phone_window = scene.instantiate()
+	_phone_window.position = Vector2i(800, 180)
+	_phone_window.close_requested.connect(func() -> void:
+		_phone_window = null
+	)
+	_phone_window.connect("tryout_enrolled", _on_tryout_enrolled)
+	add_child(_phone_window)
+
+func _on_tryout_enrolled(team_id: String) -> void:
+	_diary("  " + I18n.text({"pt": "Inscrito no tryout de ", "en": "Enrolled in tryout for "}) + String(_read_team(team_id).get("name", team_id)), COLOR_SYNERGY)
+	_apply_enrolled_tryouts()
+
+func _read_team(team_id: String) -> Dictionary:
+	return Drive.read_content(Drive.content_path(team_id))
+
+# For each enrolled team whose tryout week == current week, force its
+# day/slot to show "Tryout: <name>" and mark the OptionButton disabled.
+func _apply_enrolled_tryouts() -> void:
+	var enrolled: Dictionary = The.session.get("enrolled_tryouts", {})
+	if enrolled.is_empty():
+		return
+	var current_week: int = int(The.session.get("week", 1))
+	for team_id: String in enrolled:
+		var e: Dictionary = enrolled[team_id]
+		if int(e.get("week", 0)) != current_week:
+			continue
+		var key: String = String(e.get("day", "")) + "_" + String(e.get("slot", ""))
+		var select: OptionButton = _grid_selects.get(key, null)
+		if select == null:
+			continue
+		var team: Dictionary = _read_team(team_id)
+		var label: String = "★ Tryout: " + String(team.get("name", team_id))
+		# Insert at end if not already present, then select it
+		var existing_idx: int = -1
+		for i: int in range(select.item_count):
+			if select.get_item_text(i) == label:
+				existing_idx = i
+				break
+		if existing_idx < 0:
+			select.add_item(label)
+			existing_idx = select.item_count - 1
+		select.select(existing_idx)
+		select.disabled = true
+		_set_select_color(select, Color(0.9, 0.75, 0.2))
+		select.set_meta("tryout_team_id", team_id)
 
 func _toggle_mirror_window() -> void:
 	if _mirror_window != null and is_instance_valid(_mirror_window):
@@ -851,14 +911,19 @@ func _set_buttons_enabled(enabled: bool) -> void:
 # --- Core slot resolution ---
 
 func _resolve_slot(day_id: String, slot_id: String) -> void:
-	var vitals: Dictionary = The.session.get("vitals", {}).duplicate()
-	var money: int = int(The.session.get("money", 0))
-	var day_text: String = I18n.text(DAY_LABELS[day_id])
-
 	var key: String = day_id + "_" + slot_id
 	var select: OptionButton = _grid_selects.get(key, null)
 	if select == null:
 		return
+	# Enrolled tryout? Take over this slot entirely.
+	if select.has_meta("tryout_team_id"):
+		var team_id: String = String(select.get_meta("tryout_team_id"))
+		await _run_tryout_for_team(team_id, day_id, slot_id)
+		return
+
+	var vitals: Dictionary = The.session.get("vitals", {}).duplicate()
+	var money: int = int(The.session.get("money", 0))
+	var day_text: String = I18n.text(DAY_LABELS[day_id])
 	var act: Dictionary = {}
 	var collapsed: bool = false
 	var fridge_meals: int = int(The.session.get("fridge_meals", 0))
@@ -1086,6 +1151,9 @@ func _finalize_week() -> void:
 	for key: String in _grid_selects:
 		var select: OptionButton = _grid_selects[key]
 		_reset_select_color(select)
+		select.disabled = false
+		if select.has_meta("tryout_team_id"):
+			select.remove_meta("tryout_team_id")
 		var slot_id: String = key.substr(key.find("_") + 1) if "_" in key else ""
 		select.clear()
 		if slot_id != "":
@@ -1102,6 +1170,9 @@ func _finalize_week() -> void:
 				_select_activity_by_id(select, key, prev_id)
 	for slot_id: String in _column_selects:
 		_column_selects[slot_id].selected = 0
+
+	# Lay down this week's enrolled tryouts onto the fresh grid
+	_apply_enrolled_tryouts()
 
 func _update_effects_check() -> void:
 	_update_effects()
@@ -1274,7 +1345,22 @@ func _run_play_minigame(act: Dictionary) -> void:
 		_diary("  " + I18n.text(act.get("name", "?")) + ": " + str(final_score) + "/" + str(final_total) + " " + I18n.text({"pt": "REPROVADO", "en": "FAILED"}), COLOR_COLLAPSE)
 
 func _run_tryout(act: Dictionary) -> void:
-	var config: Dictionary = act.get("minigame_config", {})
+	await _do_tryout(act.get("minigame_config", {}), "")
+
+func _run_tryout_for_team(team_id: String, _day_id: String, _slot_id: String) -> void:
+	var team: Dictionary = _read_team(team_id)
+	var config: Dictionary = {
+		"team_id": team_id,
+		"drill_focus": team.get("drill_focus", []),
+		"tryout_threshold": float(team.get("tryout_threshold", 0.5)),
+		"difficulty": String(team.get("difficulty", "medium")),
+	}
+	Audio.play_music("tryout_intense")
+	_diary("  ★ " + I18n.text({"pt": "Tryout: ", "en": "Tryout: "}) + String(team.get("name", team_id)), Color(0.9, 0.75, 0.2))
+	await _do_tryout(config, team_id)
+	Audio.play_music("home_ambient")
+
+func _do_tryout(config: Dictionary, team_id: String) -> void:
 	var scene: PackedScene = load("res://game/modules/brasil_2026/ui/tryout/tryout_manager.tscn")
 	if scene == null:
 		_diary("  [tryout scene not found]", COLOR_COLLAPSE)
@@ -1302,7 +1388,7 @@ func _run_tryout(act: Dictionary) -> void:
 	# Process tryout results
 	var data: Dictionary = result["data"]
 	if result["passed"]:
-		The.session["team_id"] = "pending_selection"
+		The.session["team_id"] = team_id if team_id != "" else "pending_selection"
 		The.session["player_position"] = data.get("position", "")
 		The.session["tryout_results"] = data
 		The.session["last_tryout_result"] = data
