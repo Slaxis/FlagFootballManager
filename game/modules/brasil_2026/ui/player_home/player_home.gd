@@ -606,7 +606,7 @@ func _on_tryout_enrolled(team_id: String) -> void:
 	_apply_enrolled_tryouts()
 
 func _read_team(team_id: String) -> Dictionary:
-	return Drive.read_content(Drive.content_path(team_id))
+	return God.thing_data(team_id)
 
 # For each enrolled team whose tryout week == current week, force its
 # day/slot to show "Tryout: <name>" and mark the OptionButton disabled.

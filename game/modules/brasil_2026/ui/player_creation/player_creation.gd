@@ -753,11 +753,19 @@ func _on_start_pressed() -> void:
 	The.session["height"] = _height
 	The.session["weight"] = _weight
 	The.session["personality"] = _selected_personality
-	The.session["city"] = _city_input.text.strip_edges()
+	var city: String = _city_input.text.strip_edges()
+	The.session["city"] = city
 	var state_id: String = ""
 	if _state_select != null and _state_select.selected >= 0:
 		state_id = String(_state_select.get_item_metadata(_state_select.selected))
 	The.session["state"] = state_id
+
+	# Procedural 4a-div teen teams seeded by (city, state).
+	var career_seed: int = SeedRng.seed_from_string(city + "|" + state_id)
+	var team_rng: RandomNumberGenerator = SeedRng.make_rng(SeedRng.derive(career_seed, "teen_teams"))
+	var teen_specs: Array[Dictionary] = TeenTeamGen.generate(city, state_id, team_rng)
+	God.load_types(teen_specs)
+	The.session["generated_teen_teams"] = teen_specs
 
 	# Build starter deck: 1 personality base card + 1 origin bonus
 	var starter_deck: Array[String] = []

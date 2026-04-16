@@ -71,6 +71,10 @@ func apply_save(payload: Dictionary) -> void:
 	var lang: String = String(payload.get("lang", I18n.lang))
 	if lang != "":
 		I18n.set_lang(lang)
+	# Re-register procedurally-generated runtime Things (teen teams, future map).
+	var teen_specs: Variant = The.session.get("generated_teen_teams", [])
+	if teen_specs is Array and not (teen_specs as Array).is_empty():
+		God.load_types(teen_specs as Array)
 	load_completed.emit()
 
 func has_save() -> bool:

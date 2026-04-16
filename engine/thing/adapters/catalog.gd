@@ -267,6 +267,15 @@ func has_runtime_type(type_id: String) -> bool:
 		return false
 	return _runtime_specs.has(key)
 
+func get_runtime_spec(type_id: String) -> Dictionary:
+	var key: String = String(type_id).strip_edges().to_lower()
+	if key == "":
+		return {}
+	var entry: Variant = _runtime_specs.get(key, null)
+	if entry is Dictionary:
+		return (entry as Dictionary).duplicate(true)
+	return {}
+
 func get_type(type_id: String) -> ThingType:
 	return _get_type(type_id)
 
