@@ -225,7 +225,9 @@ func _render_profile() -> void:
 	page_title.text = String(team.get("name", _profile_account_id))
 
 	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 10)
@@ -248,6 +250,8 @@ func _render_profile() -> void:
 	var desc_rtl: RichTextLabel = RichTextLabel.new()
 	desc_rtl.bbcode_enabled = true
 	desc_rtl.fit_content = true
+	desc_rtl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	desc_rtl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_rtl.text = "[i]" + I18n.text(team.get("description", "")) + "[/i]"
 	vbox.add_child(desc_rtl)
 
@@ -295,7 +299,7 @@ func _profile_row(label: String, value: String) -> HBoxContainer:
 	row.add_theme_constant_override("separation", 10)
 	var k: Label = Label.new()
 	k.text = label
-	k.custom_minimum_size = Vector2(140, 0)
+	k.custom_minimum_size = Vector2(110, 0)
 	k.add_theme_font_size_override("font_size", 12)
 	k.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 	row.add_child(k)
@@ -303,6 +307,8 @@ func _profile_row(label: String, value: String) -> HBoxContainer:
 	v.text = value
 	v.add_theme_font_size_override("font_size", 12)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.custom_minimum_size = Vector2(0, 0)
 	row.add_child(v)
 	return row
 
