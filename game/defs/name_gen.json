@@ -1,0 +1,55 @@
+{
+  "first_male": [
+    "Lucas", "Pedro", "Gabriel", "Matheus", "Rafael", "João", "Bruno", "Thiago", "Felipe", "Daniel",
+    "Rodrigo", "Guilherme", "Leonardo", "Vinícius", "Gustavo", "Diego", "Marcelo", "Henrique", "Igor", "Caio",
+    "André", "Eduardo", "Fábio", "Ricardo", "Paulo", "Carlos", "Marcos", "Alexandre", "Fernando", "Renato",
+    "Wesley", "Vitor", "Davi", "Breno", "Enzo", "Murilo", "Samuel", "Arthur", "Nicolas", "Kauã",
+    "Erick", "Yuri", "Leandro", "Douglas", "Jonatan", "Róger", "Cauã", "Heitor", "Bernardo", "Miguel"
+  ],
+  "first_female": [
+    "Ana", "Maria", "Juliana", "Camila", "Beatriz", "Fernanda", "Larissa", "Gabriela", "Letícia", "Mariana",
+    "Rafaela", "Carolina", "Amanda", "Bruna", "Isabela", "Jéssica", "Natália", "Paula", "Priscila", "Patricia",
+    "Tatiana", "Vanessa", "Aline", "Daniela", "Renata", "Luana", "Yasmin", "Manuela", "Sofia", "Valentina",
+    "Helena", "Alice", "Laura", "Lívia", "Nathália", "Débora", "Cristina", "Thaís", "Bianca", "Raíssa",
+    "Clarice", "Melissa", "Lorena", "Luiza", "Maya", "Nicole", "Júlia", "Isadora", "Sabrina", "Victória"
+  ],
+  "last": [
+    "Silva", "Santos", "Oliveira", "Souza", "Lima", "Ferreira", "Pereira", "Almeida", "Costa", "Rodrigues",
+    "Gomes", "Martins", "Araújo", "Ribeiro", "Carvalho", "Mendes", "Barbosa", "Cardoso", "Moura", "Reis",
+    "Nascimento", "Dias", "Teixeira", "Cavalcanti", "Azevedo", "Rocha", "Campos", "Machado", "Nogueira", "Freitas",
+    "Medeiros", "Moreira", "Castro", "Duarte", "Gonçalves", "Monteiro", "Vieira", "Brito", "Correia", "Andrade",
+    "Vargas", "Xavier", "Tavares", "Pinto", "Siqueira", "Vasconcelos", "Fonseca", "Pacheco", "Amaral", "Borges"
+  ],
+  "team_prefixes": [
+    "Águias", "Bulldogs", "Guerreiros", "Corvos", "Falcões", "Lobos", "Tigres", "Dragões",
+    "Raposas", "Pumas", "Panteras", "Furacões", "Trovões", "Chamas", "Selvagens", "Gladiadores",
+    "Tubarões", "Jaguares", "Piratas", "Rebeldes", "Rinocerontes", "Cavaleiros", "Bárbaros", "Estrelas",
+    "Pelada", "Turma", "Galera", "Molecada", "Quadra"
+  ],
+  "team_suffixes": [
+    "do Bairro", "da Vila", "do Morro", "da Quebrada", "do Centro", "da Zona Sul", "da Zona Norte",
+    "do Subúrbio", "da Vizinhança", "da Rua", "da Praça", "do Campo", "do Parque",
+    "da Esquina", "do Beco", "do Loteamento", "do Conjunto", "da Cidade Nova", "da Vila Velha"
+  ],
+  "neighborhoods": [
+    "Aurora", "Esperança", "Boa Vista", "São Pedro", "Santa Cruz", "Jardim", "Vila Nova",
+    "Centro", "Progresso", "União", "Alvorada", "Esplanada", "Liberdade", "Paraíso",
+    "Monte Verde", "Vale do Sol", "Alto da Colina", "Recanto", "Mirante", "Horizonte"
+  ],
+  "street_patterns": [
+    "Rua {last}",
+    "Avenida {last}",
+    "Rua do {neighborhood}",
+    "Travessa {last}",
+    "Alameda {neighborhood}"
+  ],
+  "place_patterns": [
+    "Praça do {neighborhood}",
+    "Campo do {neighborhood}",
+    "Escola Estadual {neighborhood}",
+    "Colégio {last}",
+    "Mercadinho do {first_male}",
+    "Lanchonete da {first_female}",
+    "Bar do {first_male}"
+  ]
+}
