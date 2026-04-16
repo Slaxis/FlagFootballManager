@@ -4,6 +4,9 @@ const T_TITLE: Dictionary = {"pt": "NOVA CARREIRA", "en": "NEW CAREER"}
 const T_NAME: Dictionary = {"pt": "Nome:", "en": "Name:"}
 const T_NAME_HINT: Dictionary = {"pt": "Seu nome de jogador", "en": "Your player name"}
 const T_AGE: Dictionary = {"pt": "Idade: 15", "en": "Age: 15"}
+const T_CITY: Dictionary = {"pt": "Cidade:", "en": "City:"}
+const T_CITY_HINT: Dictionary = {"pt": "Sua cidade", "en": "Your city"}
+const T_STATE: Dictionary = {"pt": "Estado:", "en": "State:"}
 const T_ORIGIN: Dictionary = {"pt": "ORIGEM", "en": "ORIGIN"}
 const T_SCHOOL: Dictionary = {"pt": "COLEGIO", "en": "SCHOOL"}
 const T_TURNO: Dictionary = {"pt": "TURNO", "en": "SHIFT"}
@@ -32,6 +35,7 @@ var _stat_def: Def
 var _creation: Def
 var _origin_def: Def
 var _tech_def: Def
+var _state_def: Def
 
 # Stat state
 var stat_values: Dictionary = {}
@@ -62,6 +66,8 @@ var _turno_container: HBoxContainer
 
 # Shared UI refs
 var _name_input: LineEdit
+var _city_input: LineEdit
+var _state_select: OptionButton
 var _btn_male: Button
 var _btn_female: Button
 var _btn_start: Button
@@ -76,6 +82,7 @@ func _ready() -> void:
 		Log.log(self, "error", "PlayerCreation: missing stat or creation Def.")
 		return
 	_tech_def = Drive.def("technique")
+	_state_def = Drive.def("state")
 	points_remaining = _creation.point_pool
 	_init_stats()
 	_build_ui()
@@ -282,6 +289,38 @@ func _build_right_column(parent: VBoxContainer) -> void:
 	age_lbl.add_theme_color_override("font_color", COLOR_GROUP)
 	name_row.add_child(age_lbl)
 	parent.add_child(name_row)
+
+	# City + State
+	var loc_row: HBoxContainer = HBoxContainer.new()
+	loc_row.add_theme_constant_override("separation", 8)
+	var city_lbl: Label = Label.new()
+	city_lbl.text = I18n.text(T_CITY)
+	loc_row.add_child(city_lbl)
+	_city_input = LineEdit.new()
+	_city_input.placeholder_text = I18n.text(T_CITY_HINT)
+	_city_input.max_length = 32
+	_city_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_city_input.text_changed.connect(func(_t: String) -> void: _validate())
+	loc_row.add_child(_city_input)
+	var state_lbl: Label = Label.new()
+	state_lbl.text = I18n.text(T_STATE)
+	loc_row.add_child(state_lbl)
+	_state_select = OptionButton.new()
+	_state_select.custom_minimum_size = Vector2(180, 0)
+	if _state_def != null:
+		var default_idx: int = 0
+		var items: Array[Dictionary] = _state_def.call("list_states_sorted_by_name")
+		for i: int in items.size():
+			var s: Dictionary = items[i]
+			var id: String = String(s.get("id", ""))
+			_state_select.add_item(id + " — " + String(s.get("name", id)))
+			_state_select.set_item_metadata(i, id)
+			if id == "RJ":
+				default_idx = i
+		_state_select.selected = default_idx
+	_state_select.item_selected.connect(func(_i: int) -> void: _validate())
+	loc_row.add_child(_state_select)
+	parent.add_child(loc_row)
 
 	if _origin_def == null:
 		return
@@ -643,12 +682,14 @@ func _update_labels() -> void:
 
 func _validate() -> void:
 	var has_name: bool = _name_input.text.strip_edges().length() >= 2
+	var has_city: bool = _city_input != null and _city_input.text.strip_edges().length() >= 2
+	var has_state: bool = _state_select != null and _state_select.selected >= 0
 	var has_stars: bool = _star_points_spent() > 0
 	var balanced: bool = _star_points_free() == 0
 	var points_ok: bool = points_remaining >= 0
 	var has_origin: bool = _selected_origin != ""
 	var has_pers: bool = _selected_personality != ""
-	_btn_start.disabled = not (has_name and has_stars and balanced and points_ok and has_origin and has_pers)
+	_btn_start.disabled = not (has_name and has_city and has_state and has_stars and balanced and points_ok and has_origin and has_pers)
 
 # --- Navigation ---
 
@@ -712,6 +753,11 @@ func _on_start_pressed() -> void:
 	The.session["height"] = _height
 	The.session["weight"] = _weight
 	The.session["personality"] = _selected_personality
+	The.session["city"] = _city_input.text.strip_edges()
+	var state_id: String = ""
+	if _state_select != null and _state_select.selected >= 0:
+		state_id = String(_state_select.get_item_metadata(_state_select.selected))
+	The.session["state"] = state_id
 
 	# Build starter deck: 1 personality base card + 1 origin bonus
 	var starter_deck: Array[String] = []
