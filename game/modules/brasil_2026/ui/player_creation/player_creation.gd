@@ -2,7 +2,12 @@ extends Control
 
 const T_TITLE: Dictionary = {"pt": "NOVA CARREIRA", "en": "NEW CAREER"}
 const T_NAME: Dictionary = {"pt": "Nome:", "en": "Name:"}
-const T_NAME_HINT: Dictionary = {"pt": "Seu nome de jogador", "en": "Your player name"}
+const T_SURNAME: Dictionary = {"pt": "Sobrenome:", "en": "Last name:"}
+const T_NICKNAME: Dictionary = {"pt": "Apelido:", "en": "Nickname:"}
+const T_NAME_HINT: Dictionary = {"pt": "Primeiro nome", "en": "First name"}
+const T_SURNAME_HINT: Dictionary = {"pt": "Sobrenome", "en": "Last name"}
+const T_NICKNAME_HINT: Dictionary = {"pt": "Opcional", "en": "Optional"}
+const T_RANDOMIZE: Dictionary = {"pt": "🎲 Randomizar", "en": "🎲 Randomize"}
 const T_AGE: Dictionary = {"pt": "Idade: 15", "en": "Age: 15"}
 const T_CITY: Dictionary = {"pt": "Cidade:", "en": "City:"}
 const T_CITY_HINT: Dictionary = {"pt": "Sua cidade", "en": "Your city"}
@@ -65,7 +70,10 @@ var _profile_label: RichTextLabel
 var _turno_container: HBoxContainer
 
 # Shared UI refs
-var _name_input: LineEdit
+var _first_name_input: LineEdit
+var _last_name_input: LineEdit
+var _nickname_input: LineEdit
+var _btn_randomize: Button
 var _city_input: LineEdit
 var _state_select: OptionButton
 var _btn_male: Button
@@ -73,6 +81,7 @@ var _btn_female: Button
 var _btn_start: Button
 var _points_label: Label
 var _marks_label: Label
+var _name_def: Def
 
 func _ready() -> void:
 	_stat_def = Drive.def("stat")
@@ -83,6 +92,7 @@ func _ready() -> void:
 		return
 	_tech_def = Drive.def("technique")
 	_state_def = Drive.def("state")
+	_name_def = Drive.def("name_gen")
 	points_remaining = _creation.point_pool
 	_init_stats()
 	_build_ui()
@@ -259,28 +269,49 @@ func _build_stat_row(parent: VBoxContainer, entry: Dictionary) -> void:
 
 func _build_right_column(parent: VBoxContainer) -> void:
 	# --- ROW 1: INPUTS ---
-	# Name + Gender
+	# First / Last / Nickname + Randomize + Gender + Age
 	var name_row: HBoxContainer = HBoxContainer.new()
-	name_row.add_theme_constant_override("separation", 8)
+	name_row.add_theme_constant_override("separation", 6)
 	var name_lbl: Label = Label.new()
 	name_lbl.text = I18n.text(T_NAME)
 	name_row.add_child(name_lbl)
-	_name_input = LineEdit.new()
-	_name_input.placeholder_text = I18n.text(T_NAME_HINT)
-	_name_input.max_length = 24
-	_name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_name_input.text_changed.connect(func(_t: String) -> void: _validate())
-	name_row.add_child(_name_input)
+	_first_name_input = LineEdit.new()
+	_first_name_input.placeholder_text = I18n.text(T_NAME_HINT)
+	_first_name_input.max_length = 16
+	_first_name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_first_name_input.text_changed.connect(func(_t: String) -> void: _validate())
+	name_row.add_child(_first_name_input)
+	var surname_lbl: Label = Label.new()
+	surname_lbl.text = I18n.text(T_SURNAME)
+	name_row.add_child(surname_lbl)
+	_last_name_input = LineEdit.new()
+	_last_name_input.placeholder_text = I18n.text(T_SURNAME_HINT)
+	_last_name_input.max_length = 16
+	_last_name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_last_name_input.text_changed.connect(func(_t: String) -> void: _validate())
+	name_row.add_child(_last_name_input)
+	var nick_lbl: Label = Label.new()
+	nick_lbl.text = I18n.text(T_NICKNAME)
+	name_row.add_child(nick_lbl)
+	_nickname_input = LineEdit.new()
+	_nickname_input.placeholder_text = I18n.text(T_NICKNAME_HINT)
+	_nickname_input.max_length = 16
+	_nickname_input.custom_minimum_size = Vector2(110, 0)
+	name_row.add_child(_nickname_input)
+	_btn_randomize = Button.new()
+	_btn_randomize.text = I18n.text(T_RANDOMIZE)
+	_btn_randomize.pressed.connect(_on_randomize_pressed)
+	name_row.add_child(_btn_randomize)
 	_btn_male = Button.new()
 	_btn_male.text = "M"
-	_btn_male.custom_minimum_size = Vector2(40, 0)
+	_btn_male.custom_minimum_size = Vector2(36, 0)
 	_btn_male.toggle_mode = true
 	_btn_male.button_pressed = true
 	_btn_male.pressed.connect(_on_gender.bind("male"))
 	name_row.add_child(_btn_male)
 	_btn_female = Button.new()
 	_btn_female.text = "F"
-	_btn_female.custom_minimum_size = Vector2(40, 0)
+	_btn_female.custom_minimum_size = Vector2(36, 0)
 	_btn_female.toggle_mode = true
 	_btn_female.pressed.connect(_on_gender.bind("female"))
 	name_row.add_child(_btn_female)
@@ -681,7 +712,8 @@ func _update_labels() -> void:
 	_marks_label.text = I18n.text(T_TALENTS) + str(spent) + "/" + str(available)
 
 func _validate() -> void:
-	var has_name: bool = _name_input.text.strip_edges().length() >= 2
+	var has_first: bool = _first_name_input != null and _first_name_input.text.strip_edges().length() >= 2
+	var has_last: bool = _last_name_input != null and _last_name_input.text.strip_edges().length() >= 2
 	var has_city: bool = _city_input != null and _city_input.text.strip_edges().length() >= 2
 	var has_state: bool = _state_select != null and _state_select.selected >= 0
 	var has_stars: bool = _star_points_spent() > 0
@@ -689,7 +721,22 @@ func _validate() -> void:
 	var points_ok: bool = points_remaining >= 0
 	var has_origin: bool = _selected_origin != ""
 	var has_pers: bool = _selected_personality != ""
-	_btn_start.disabled = not (has_name and has_city and has_state and has_stars and balanced and points_ok and has_origin and has_pers)
+	_btn_start.disabled = not (has_first and has_last and has_city and has_state and has_stars and balanced and points_ok and has_origin and has_pers)
+
+func _on_randomize_pressed() -> void:
+	if _name_def == null:
+		return
+	# Non-deterministic — each click picks fresh names, distinct from the
+	# career-seeded RNG used later for teen teams / map.
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.randomize()
+	if _first_name_input != null:
+		_first_name_input.text = _name_def.call("random_first_name", _gender, rng)
+	if _last_name_input != null:
+		_last_name_input.text = _name_def.call("random_last_name", rng)
+	if _nickname_input != null:
+		_nickname_input.text = _name_def.call("random_nickname", _gender, rng)
+	_validate()
 
 # --- Navigation ---
 
@@ -704,7 +751,10 @@ func _on_back_pressed() -> void:
 		The.next_scene(scene)
 
 func _on_start_pressed() -> void:
-	var player_name: String = _name_input.text.strip_edges()
+	var first_name: String = _first_name_input.text.strip_edges()
+	var last_name: String = _last_name_input.text.strip_edges()
+	var nickname: String = _nickname_input.text.strip_edges() if _nickname_input != null else ""
+	var player_name: String = (first_name + " " + last_name).strip_edges()
 
 	var stars: Array[String] = []
 	var doubles: Array[String] = []
@@ -734,6 +784,9 @@ func _on_start_pressed() -> void:
 
 	The.session["player_id"] = spec["id"]
 	The.session["player_name"] = player_name
+	The.session["player_first_name"] = first_name
+	The.session["player_last_name"] = last_name
+	The.session["player_nickname"] = nickname
 	The.session["player_age"] = 15
 	The.session["player_gender"] = _gender
 	The.session["mode"] = "player"
@@ -753,11 +806,19 @@ func _on_start_pressed() -> void:
 	The.session["height"] = _height
 	The.session["weight"] = _weight
 	The.session["personality"] = _selected_personality
-	The.session["city"] = _city_input.text.strip_edges()
+	var city: String = _city_input.text.strip_edges()
+	The.session["city"] = city
 	var state_id: String = ""
 	if _state_select != null and _state_select.selected >= 0:
 		state_id = String(_state_select.get_item_metadata(_state_select.selected))
 	The.session["state"] = state_id
+
+	# Procedural 4a-div teen teams seeded by (city, state).
+	var career_seed: int = SeedRng.seed_from_string(city + "|" + state_id)
+	var team_rng: RandomNumberGenerator = SeedRng.make_rng(SeedRng.derive(career_seed, "teen_teams"))
+	var teen_specs: Array[Dictionary] = TeenTeamGen.generate(city, state_id, team_rng)
+	God.load_types(teen_specs)
+	The.session["generated_teen_teams"] = teen_specs
 
 	# Build starter deck: 1 personality base card + 1 origin bonus
 	var starter_deck: Array[String] = []

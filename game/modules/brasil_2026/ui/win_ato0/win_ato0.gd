@@ -44,7 +44,7 @@ func _populate() -> void:
 	btn_continue.text = I18n.text(T_CONTINUE)
 
 	var team_id: String = String(The.session.get("team_id", ""))
-	var team_data: Dictionary = Drive.read_content(Drive.content_path(team_id))
+	var team_data: Dictionary = God.thing_data(team_id)
 	var team_name: String = I18n.text(team_data.get("name", team_id))
 	welcome_label.text = I18n.format(I18n.text(T_WELCOME), {"team": team_name})
 

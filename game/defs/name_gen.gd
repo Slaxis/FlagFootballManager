@@ -4,6 +4,8 @@ class_name NameGenDef
 var first_male: Array[String] = []
 var first_female: Array[String] = []
 var last_names: Array[String] = []
+var nicknames_male: Array[String] = []
+var nicknames_female: Array[String] = []
 var team_prefixes: Array[String] = []
 var team_suffixes: Array[String] = []
 var neighborhoods: Array[String] = []
@@ -11,20 +13,24 @@ var street_patterns: Array[String] = []
 var place_patterns: Array[String] = []
 
 func load_data(raw: Dictionary) -> void:
-	first_male    = _load_strings(raw.get("first_male", []))
-	first_female  = _load_strings(raw.get("first_female", []))
-	last_names    = _load_strings(raw.get("last", []))
-	team_prefixes = _load_strings(raw.get("team_prefixes", []))
-	team_suffixes = _load_strings(raw.get("team_suffixes", []))
-	neighborhoods = _load_strings(raw.get("neighborhoods", []))
-	street_patterns = _load_strings(raw.get("street_patterns", []))
-	place_patterns  = _load_strings(raw.get("place_patterns", []))
+	first_male       = _load_strings(raw.get("first_male", []))
+	first_female     = _load_strings(raw.get("first_female", []))
+	last_names       = _load_strings(raw.get("last", []))
+	nicknames_male   = _load_strings(raw.get("nicknames_male", []))
+	nicknames_female = _load_strings(raw.get("nicknames_female", []))
+	team_prefixes    = _load_strings(raw.get("team_prefixes", []))
+	team_suffixes    = _load_strings(raw.get("team_suffixes", []))
+	neighborhoods    = _load_strings(raw.get("neighborhoods", []))
+	street_patterns  = _load_strings(raw.get("street_patterns", []))
+	place_patterns   = _load_strings(raw.get("place_patterns", []))
 
 func merge_data(raw: Dictionary) -> void:
 	# Append rather than replace so user modules can extend the pools.
 	first_male.append_array(_load_strings(raw.get("first_male", [])))
 	first_female.append_array(_load_strings(raw.get("first_female", [])))
 	last_names.append_array(_load_strings(raw.get("last", [])))
+	nicknames_male.append_array(_load_strings(raw.get("nicknames_male", [])))
+	nicknames_female.append_array(_load_strings(raw.get("nicknames_female", [])))
 	team_prefixes.append_array(_load_strings(raw.get("team_prefixes", [])))
 	team_suffixes.append_array(_load_strings(raw.get("team_suffixes", [])))
 	neighborhoods.append_array(_load_strings(raw.get("neighborhoods", [])))
@@ -49,6 +55,10 @@ func random_first_name(gender: String, rng: RandomNumberGenerator) -> String:
 
 func random_last_name(rng: RandomNumberGenerator) -> String:
 	return _pick(last_names, rng)
+
+func random_nickname(gender: String, rng: RandomNumberGenerator) -> String:
+	var pool: Array[String] = nicknames_female if gender.to_lower().begins_with("f") else nicknames_male
+	return _pick(pool, rng)
 
 func random_full_name(gender: String, rng: RandomNumberGenerator) -> String:
 	var first: String = random_first_name(gender, rng)

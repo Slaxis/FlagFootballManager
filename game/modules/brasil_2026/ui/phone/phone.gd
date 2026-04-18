@@ -156,7 +156,7 @@ func _list_4a_div_teams() -> Array[String]:
 	return result
 
 func _read_team(team_id: String) -> Dictionary:
-	return Drive.read_content(Drive.content_path(team_id))
+	return God.thing_data(team_id)
 
 func _build_feed_card(team_id: String, team: Dictionary, is_community: bool) -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()

@@ -82,3 +82,12 @@ func all_content() -> Array[Dictionary]:
 
 func thing_content(thing_id: String) -> Dictionary:
 	return Drive.read_content(Drive.content_path(thing_id))
+
+# Unified lookup: runtime-registered Things first, then disk JSON content.
+# Use this when displaying arbitrary Thing data that may have been injected
+# by a generator (teams, map nodes, etc.) rather than shipped as a file.
+func thing_data(thing_id: String) -> Dictionary:
+	var runtime: Dictionary = _catalog.get_runtime_spec(thing_id)
+	if not runtime.is_empty():
+		return runtime
+	return Drive.read_content(Drive.content_path(thing_id))
