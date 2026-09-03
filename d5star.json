@@ -1,0 +1,11 @@
+{
+  "game_root": "game",
+  "modules": "modules",
+  "defs": "defs",
+  "user_modules": "user://modules",
+  "module_manifest": "module.json",
+  "content": "content",
+  "system": "system",
+  "game_config": "game",
+  "scene_dir": "scene"
+}
