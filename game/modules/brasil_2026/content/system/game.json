@@ -1,9 +1,0 @@
-{
-  "id": "ffm_brasil_2026",
-  "name": "Flag Football Manager - Brasil 2026",
-  "version": "0.1.0",
-  "asset": "main_menu",
-  "directories": {
-    "ui": "ui"
-  }
-}

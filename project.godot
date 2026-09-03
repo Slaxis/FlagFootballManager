@@ -11,20 +11,20 @@ config_version=5
 [application]
 
 config/name="Flag Football Manager"
-run/main_scene="res://engine/game/game.tscn"
-config/features=PackedStringArray("4.6", "Forward Plus")
+run/main_scene="res://addons/d5star/game/game.tscn"
+config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
-Air="*res://engine/globals/air.gd"
-Log="*res://engine/globals/log.gd"
-Drive="*res://engine/globals/drive/drive.gd"
-God="*res://engine/globals/god.gd"
-The="*res://engine/globals/the.gd"
-I18n="*res://engine/globals/i18n.gd"
-SaveManager="*res://engine/globals/save_manager.gd"
-Audio="*res://engine/globals/audio_manager.gd"
+Air="*res://addons/d5star/globals/air.gd"
+Log="*res://addons/d5star/globals/log.gd"
+Drive="*res://addons/d5star/globals/drive/drive.gd"
+God="*res://addons/d5star/globals/god/god.gd"
+The="*res://addons/d5star/globals/the.gd"
+I18n="*res://addons/d5star/globals/i18n.gd"
+SaveManager="*res://addons/d5star/globals/save_manager.gd"
+Audio="*res://addons/d5star/globals/audio_manager.gd"
 
 [display]
 
@@ -36,3 +36,7 @@ window/stretch/aspect="expand"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/d5star/plugin.cfg")

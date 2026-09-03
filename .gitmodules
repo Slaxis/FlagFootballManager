@@ -1,0 +1,3 @@
+[submodule "addons/d5star"]
+	path = addons/d5star
+	url = https://github.com/Slaxis/d5star.git

@@ -1,0 +1,8 @@
+{
+  "id": "brasil",
+  "name": {"pt": "Brasil", "en": "Brazil"},
+  "description": {"pt": "Liga brasileira de flag football.", "en": "Brazilian flag football league."},
+  "version": "0.1.0",
+  "order": 1,
+  "requires": []
+}

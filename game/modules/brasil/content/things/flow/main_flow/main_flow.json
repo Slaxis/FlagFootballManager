@@ -1,0 +1,21 @@
+{
+  "id": "main_flow",
+  "entry": "main",
+  "steps": [
+    {
+      "id": "main",
+      "scene_file": "main",
+      "transitions": {
+        "play": "club_select",
+        "quit": "$exit"
+      }
+    },
+    {
+      "id": "club_select",
+      "scene_file": "club_select",
+      "transitions": {
+        "back": "main"
+      }
+    }
+  ]
+}
