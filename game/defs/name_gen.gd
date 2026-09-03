@@ -79,13 +79,15 @@ func random_neighborhood(rng: RandomNumberGenerator) -> String:
 
 func random_street_name(rng: RandomNumberGenerator) -> String:
 	var pattern: String = _pick(street_patterns, rng)
-	return _fill_pattern(pattern, rng)
+	return fill_pattern(pattern, rng)
 
 func random_place_name(rng: RandomNumberGenerator) -> String:
 	var pattern: String = _pick(place_patterns, rng)
-	return _fill_pattern(pattern, rng)
+	return fill_pattern(pattern, rng)
 
-func _fill_pattern(pattern: String, rng: RandomNumberGenerator) -> String:
+# Public: fill an arbitrary template string with random picks from the pools.
+# Supported placeholders: {last} {first_male} {first_female} {neighborhood}
+func fill_pattern(pattern: String, rng: RandomNumberGenerator) -> String:
 	if pattern == "":
 		return ""
 	var result: String = pattern

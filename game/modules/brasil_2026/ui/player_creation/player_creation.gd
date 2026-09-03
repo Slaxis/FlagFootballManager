@@ -820,6 +820,11 @@ func _on_start_pressed() -> void:
 	God.load_types(teen_specs)
 	The.session["generated_teen_teams"] = teen_specs
 
+	# City graph (home + school + training_field + shop + hangout + 4 team fields).
+	var map_rng: RandomNumberGenerator = SeedRng.make_rng(SeedRng.derive(career_seed, "city_graph"))
+	var city_graph: Dictionary = CityGraphGen.generate(city, state_id, map_rng, teen_specs)
+	The.session["city_graph"] = city_graph
+
 	# Build starter deck: 1 personality base card + 1 origin bonus
 	var starter_deck: Array[String] = []
 	if _tech_def != null:

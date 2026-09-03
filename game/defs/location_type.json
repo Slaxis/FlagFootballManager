@@ -1,0 +1,46 @@
+{
+  "types": [
+    {
+      "id": "home",
+      "name": {"pt": "Casa", "en": "Home"},
+      "icon": "home",
+      "color": "#6bb86b"
+    },
+    {
+      "id": "school",
+      "name": {"pt": "Escola", "en": "School"},
+      "icon": "school",
+      "color": "#e8a94b"
+    },
+    {
+      "id": "training_field",
+      "name": {"pt": "Campo de Treino", "en": "Training Field"},
+      "icon": "field",
+      "color": "#5fb3e8"
+    },
+    {
+      "id": "shop",
+      "name": {"pt": "Loja", "en": "Shop"},
+      "icon": "shop",
+      "color": "#d87cc2"
+    },
+    {
+      "id": "hangout",
+      "name": {"pt": "Rolê", "en": "Hangout"},
+      "icon": "hangout",
+      "color": "#c28cdb"
+    },
+    {
+      "id": "street",
+      "name": {"pt": "Rua", "en": "Street"},
+      "icon": "street",
+      "color": "#999999"
+    },
+    {
+      "id": "team_field",
+      "name": {"pt": "Campo do Time", "en": "Team Field"},
+      "icon": "team_field",
+      "color": "#e86a5a"
+    }
+  ]
+}
