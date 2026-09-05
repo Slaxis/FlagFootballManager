@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed — virada para club manager (2026-09-05)
+- O jogo abandonou a simulacao da vida do atleta e voltou a ser um club
+  manager: "o Elifoot 2000 do flag football". Plano completo em `roadmap.md`.
+- Engine trocada para a d5star como submodule (`addons/d5star`).
+- Docs do life sim removidos deste branch (TODO.md, release_0.1.0.md,
+  game/docs/mechanics.md) — preservados na tag `pre-d5star-migration` e na
+  branch `legacy/life-sim`.
+
 ### Added (Phase C.1/C.2 — Ato 0 team picking)
 - Existing 8 teams tagged `division: "1a_div"` (not accessible in Ato 0)
 - 4 fictional 4a_div teen teams with distinct archetypes (`pelada_quadra`, `colegio_bulldogs`, `clube_recanto`, `undergrounds`) — each with `drill_focus`, `difficulty`, `tryout_threshold`, fixed `tryout_week`/`tryout_day`/`tryout_slot`, and bilingual descriptions

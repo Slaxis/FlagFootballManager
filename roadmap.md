@@ -1,116 +1,208 @@
 # Flag Football Manager — Roadmap
 
-## Completed
+> **O jogo:** o Elifoot 2000 do flag football brasileiro. Gestão de clube,
+> 100% em painéis, single player. Você é o manager de um time amador e sobe
+> — ou é demitido — pela estrutura real da CBFA.
 
-### Cycle A — Skeleton (Life Sim Core)
-- [x] Main menu: Continue / Start / Options / Quit
-- [x] Character creation: Player/Coach toggle, RPG stat sheet, star/dummy marks
-- [x] Cutscene: narrative intro after creation
-- [x] Home screen: top bar (money, calendar), left panel (3 activity slots), center (room objects + log), right panel (vitals), bottom (effects bar)
-- [x] Activity Def system: data-driven activities with time slots and stat effects
-- [x] Day progression: resolve 3 slots, apply effects, advance calendar, debuff on low vitals
-- [x] Stat/Skill/Creation Defs: all game data injectable via JSON
-- [x] Engine ported from SugarLoaf: Thing system, modules, Defs, command bus
-- [x] 8 real Brazilian flag teams with rosters (Things)
+Este documento é a fonte de verdade do plano. Cada branch abaixo segue o
+ciclo: **planejar → apresentar → aprovar → implementar → testar → fechar.**
 
 ---
 
-## Cycle B — Phone & Team Integration
+## 1. A realidade que o jogo adapta
 
-The phone is the player's gateway to the flag football world.
+Estrutura real do flag brasileiro (CBFA, 2025/26), levantada em 2026-09-05:
 
-- [ ] **Phone UI** — modal/overlay accessed from room
-  - [ ] Teams tab: browse teams by state, see rosters, training schedules
-  - [ ] Tryouts tab: sign up for open tryouts (adds event to calendar)
-  - [ ] Shop tab: buy gear, food, supplements
-  - [ ] Contacts tab: chat with friends, teammates
-- [ ] **Team training schedules** — each team has a weekly schedule (JSON per team)
-  - [ ] Training events appear in calendar when player joins a team
-  - [ ] Missing training hurts standing with the team
-- [ ] **Tryout event** — show up at the right day/time
-  - [ ] Minigame or stat check to determine if you make the team
-  - [ ] Success → join team, fail → try again next week
-- [ ] **Team roster view** — Elifoot-style roster screen accessible via phone/computer
+- **139 times em 2025** — 99 masculinos, 40 femininos, 60 cidades, 23 UFs + DF
+- **5 regiões**: Norte, Nordeste, Centro-Oeste, Sudeste, Sul
+- **Fase regional classificatória** → **Super Final** com 16 times por categoria
+- **Três divisões nacionais**: Série A, B e C (a C criada em 2026)
+- **Acesso**: campeão e vice de cada regional vão pra Série A; demais
+  classificados caem em B ou C
+- Flag é olímpico em LA 2028
 
----
+Os 9 times que já estavam no repo são reais (Cronos, Coritiba Crocodiles,
+Goiânia Rednecks, Campo Grande Predadores, Spartans, Batatais Ghosts,
+Tritões, Cavalaria 2 de Julho).
 
-## Cycle C — Equipment & Clothing
+⚠️ A fonte tem erros de região que precisam ser corrigidos **por UF**:
+RR e TO aparecem como Sul (são Norte), PB como Sul (é Nordeste), SC e ES
+como Sudeste (SC é Sul).
 
-- [ ] **Equipment Def** — slots: shirt, shorts, shoes, hat, gloves, accessories
-- [ ] **Clothing items as Things** — each with stat modifiers, durability
-- [ ] **Wardrobe UI** — drag/equip from room wardrobe
-- [ ] **Context penalties** — wrong outfit for activity = bad event (work in gym clothes, etc.)
-- [ ] **Shop** — phone shop sells clothing and gear
-- [ ] **Durability** — training destroys gear over time, need replacements
+Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 
 ---
 
-## Cycle D — Buff/Debuff & Event System
+## 2. Decisões fechadas
 
-- [ ] **Buff/Debuff cards** — visual cards on bottom bar with icons and timers
-- [ ] **Vital thresholds** → automatic debuffs (Hungry, Exhausted, Lonely, Bored)
-- [ ] **Activity events** — random events during activities
-  - [ ] Work: boss angry, got a raise, coworker conflict
-  - [ ] Training: injury risk, breakthrough, bad weather
-  - [ ] Social: made a new friend, argument, party invite
-- [ ] **Event resolution** — stat checks against player attributes
-- [ ] **Notification system** — events pop up as the day resolves
+| # | Decisão |
+|---|---|
+| 1 | **MVP é só masculino.** Mas o clube modela **dois elencos** (`squads`), porque gerir masculino + feminino é o diferencial em relação ao Elifoot. O feminino entra depois sem refatoração. |
+| 2 | **Assimetria estadual é abraçada.** SP tem ~60 times, RR tem 6. Começar em SP é hard mode; em RR é fácil subir e caro viajar. Variedade de carreira de graça. |
+| 3 | **Todos os jogos ao vivo.** A rodada inteira roda junto na tela, um jogo por linha, tabela mudando em tempo real. |
+| 4 | **Duas rotas de carreira**, como no Elifoot: subir de tier **com o time**, ou **trocar de time** (ser demitido, ser convidado). O manager é uma entidade própria, com reputação. |
+| 5 | **Força é um número único.** Os 9 atributos do modo carreira antigo foram descartados. O framework de Def de stats continua igual, então expandir depois é só editar JSON. |
+| 6 | **Perks aprovados** (tabela na §4). |
+| 7 | **Posições e padrões táticos aprovados** (§4). |
 
----
+### Tiers — como o "tier 4" encaixa na realidade
 
-## Cycle E — Season & Competition
+| Tier | Realidade | Como se vive lá |
+|---|---|---|
+| **4** | Não federado | Estadual e amistoso. Jogador **paga** pra jogar. Campo de várzea. |
+| **3** | Série C | Entra no Brasileirão. Primeiro patrocínio local. |
+| **2** | Série B | Estrutura real, viagem começa a doer. |
+| **1** | Série A | Elite. Patrocínio de verdade, disputa o título nacional. |
 
-- [ ] **Season calendar** — shared league schedule (round robin or bracket)
-- [ ] **Match simulation** — play-by-play engine using player/team stats
-- [ ] **Match day** — attend the game, performance depends on stats + vitals + gear
-- [ ] **Tabelão** — Elifoot-style simultaneous match view
-- [ ] **2D grid match view** — pixel art field, player tokens, play-by-play visualization
-- [ ] **Standings** — league table, stats leaders
-- [ ] **End of season** — awards, stats summary, next season transition
+Subir não é promoção de tabela — é **classificação no regional**.
 
----
+### Calendário — toda semana tem uma decisão
 
-## Cycle F — Career Progression
+12 estaduais + 4 regionais + 2 nacionais = 18 semanas com jogo em 52. As
+outras 34 **são o jogo**: treino, campo, mercado, dinheiro.
 
-- [ ] **XP system** — gain XP from training, matches, study
-  - [ ] Intelligence stat affects XP gain rate
-  - [ ] Skills level up through use (train throwing → throwing goes up)
-- [ ] **Perk system** — unlock perks at milestones (level 5, 10, etc.)
-  - [ ] Perks are passive bonuses: "Early Riser" (+energy from sleep), "Clutch" (+stats in 4th quarter)
-- [ ] **Aging** — stats peak around 22-26, slow decline after
-- [ ] **Injuries** — happen during training/matches, require rest to heal
-- [ ] **Retirement** — forced if no team picks you for a full season, or voluntary
-- [ ] **Career stats** — lifetime record, achievements, hall of fame
+```
+toda semana        treino roda + 1 evento/escolha
+                   (campo caiu, jogador sumiu, patrocinador ligou,
+                    talento apareceu no mercado)
+fim de mês         etapa estadual
+fim de trimestre   etapa regional
+fim de semestre    etapa nacional  (a 2a decide o campeão do ano)
+```
 
----
+Etapa de flag amador é um **fim de semana inteiro com vários jogos**, não uma
+partida — o que entrega naturalmente a tela do Elifoot.
 
-## Cycle G — Financial Depth
+### Financeiro — a tensão é viagem
 
-- [ ] **Allowance vs Work** — student gets mesada, worker gets salary
-- [ ] **Job types** — part-time, full-time, gig work, each with different schedules and pay
-- [ ] **Expenses** — team monthly fee (mensalidade), gear replacement, food
-- [ ] **Money events** — bonus from good match performance, sponsor deals (later career)
-- [ ] **Financial stress** — can't afford team fee = risk of being cut
+Sem salário, dinheiro precisa de destino. Ele compra **horas de campo, horas
+de técnico, equipamento e viagem**. A decisão que parte o coração:
 
----
+> Seu time de Boa Vista se classificou pra uma etapa nacional em São Paulo.
+> A passagem de 12 atletas custa mais que o caixa do ano inteiro.
 
-## Cycle H — Coach Mode
-
-- [ ] **Coach creation** — different stat sheet (tactical, motivational, organizational)
-- [ ] **Team management** — recruit players, set lineups, design plays
-- [ ] **Budget management** — mensalidades, field rental, equipment, sponsors
-- [ ] **Playbook system** — design offensive/defensive plays
-- [ ] **Staff** — hire assistant coaches, coordinators
-- [ ] **Dual perspective** — player mode characters appear as NPCs in coach mode
+Receita por tier: **mensalidade de atleta** (tier baixo) → **patrocínio**
+(tier alto).
 
 ---
 
-## Cycle I — Polish & Content
+## 3. O loop
 
-- [ ] **3D room** — replace menu room with 3D scene with clickable sprites
-- [ ] **Mirror/avatar** — visual player representation with equipped gear
-- [ ] **Sound & Music** — ambient home sounds, match day crowd
-- [ ] **More teams** — expand to 20+ teams across more states
-- [ ] **Custom modules** — user guide for creating leagues, teams, players from scratch
-- [ ] **Multiple campaigns** — different starting scenarios (college player, veteran comeback, etc.)
-- [ ] **Localization** — Portuguese (pt-BR) as first content language, i18n for UI
+```
+Novo Jogo
+   └─ sorteio: você é manager de um time tier 4
+        └─ HOME DO CLUBE  ── abas ──┬── Elenco
+             │                      ├── Comissão Técnica
+             │                      ├── Local de Treino
+             │                      └── Financeiro
+             └─ [ Próxima Semana ]
+                   ├─ semana comum  → treino + evento → resumo → HOME
+                   ├─ entre semanas → mercado ("leilão") → HOME
+                   └─ semana de etapa → TELA DE JOGOS AO VIVO → HOME
+```
+
+---
+
+## 4. Referência rápida
+
+**Ficha do jogador (MVP):** nome · número da camisa · posição · **força** · perk
+
+**Posições** (flag é 5×5): QB · Center · Recebedor · Rusher · Safety
+
+**Padrões táticos**
+- *Ataque*: Passe curto · Bomba · Balanceado · Segurar relógio
+- *Defesa*: Homem-a-homem · Zona · Blitz · Prevent
+
+**Perks**
+
+| ASCII | Perk | Efeito |
+|---|---|---|
+| `★` | Craque | Força alta, puxa o time |
+| `⚡` | Foguete | Velocidade fora da curva |
+| `🧠` | Cérebro | Lê jogada, ótimo QB/safety |
+| `✋` | Mãos de cola | Não derruba passe |
+| `🪨` | Mãos de pedra | Derruba o que não devia |
+| `🎯` | Ferrolho | Especialista em puxar flag |
+| `📣` | Capitão | Buff de moral no elenco |
+| `💸` | Padrinho | Traz patrocínio / paga em dia |
+| `👻` | Sumido | Falta treino sem avisar |
+| `🩹` | Vidraça | Lesiona fácil |
+
+---
+
+## 5. Alavancas que já existem
+
+- **Card/Deck/Hand da d5star** — pronto e testado no ScrapWarriors, com
+  raridade, afinidade e Hand como Slate. Jogadas e táticas são literalmente
+  cartas: o técnico tem um baralho, na partida você recebe uma mão de opções.
+- **Flow declarativo** — navegação entre telas é JSON, não código.
+- **Def + per-Thing hosting** — todo dado do jogo é injetável.
+
+## 6. Dívidas conhecidas
+
+- `The.snapshot()` varre `get_nodes_in_group("things")`, mas Things são
+  RefCounted e nunca entram na árvore — **o save não acha nada**. Bloqueante
+  pra jogo de carreira. Endereçado em `D.1`.
+- `game/defs/flow.gd` é cópia literal do ScrapWarriorsOne. O próprio autor
+  anotou no código que deveria viver na d5star. Exigiria o DefManager varrer
+  também um diretório de defs da engine.
+- FFM não tem suíte de testes — validação é só o boot headless.
+
+---
+
+## 7. Feature branches
+
+### Fase A — Dados reais
+| Branch | Entrega |
+|---|---|
+| `A.1-team-database` | Os ~139 times reais em Thing JSON, região corrigida por UF, categorias masc/fem |
+| `A.2-fictional-fill` | Gerador de times fictícios pra completar estaduais rasos |
+| `A.3-player-generation` | Roster procedural: nome, camisa, posição, força, perk |
+| `A.4-perks` | Catálogo de perks com efeito mecânico |
+
+### Fase B — A casca
+| Branch | Entrega |
+|---|---|
+| `B.1-new-game-draft` | Novo Jogo sorteia você como manager de um time tier 4 |
+| `B.2-club-home` | Home com barra de abas + botão Próxima Semana (abas vazias) |
+
+### Fase C — As quatro abas
+| Branch | Entrega |
+|---|---|
+| `C.1-elenco` | Lista com ASCII de qualidade, CRUD (expulsar, elogiar) |
+| `C.2-comissao-tecnica` | CRUD de técnicos, buffs/debuffs, chamam jogadas |
+| `C.3-local-treino` | Campos, custo, buff/debuff no elenco |
+| `C.4-financeiro` | Caixa, mensalidades, patrocínios |
+
+### Fase D — O tempo passa
+| Branch | Entrega |
+|---|---|
+| `D.1-save-load` | Conserta `The.snapshot()` e persiste a carreira |
+| `D.2-calendar` | Semana / mês / trimestre / semestre e o que dispara em cada |
+| `D.3-week-tick` | Próxima Semana processa treino + resumo de evolução |
+| `D.4-mercado` | O "leilão": técnicos atraem talento entre as semanas |
+
+### Fase E — A partida
+| Branch | Entrega |
+|---|---|
+| `E.1-match-engine` | Simulação headless, determinística, emitindo eventos |
+| `E.2-match-view` | **A tela Elifoot**: um jogo por linha, cronômetro, eventos ao vivo |
+| `E.3-match-controls` | Substituição e mudança de padrão tático durante o jogo |
+
+### Fase F — A temporada
+| Branch | Entrega |
+|---|---|
+| `F.1-estadual` | Etapa estadual mensal + tabela |
+| `F.2-regional` | Etapa regional trimestral + classificação |
+| `F.3-nacional` | Etapa nacional semestral + campeão do ano |
+| `F.4-manager-career` | Reputação do manager, demissão e convite de outros clubes |
+| `F.5-season-rollover` | Virada de ano, acesso entre séries, envelhecimento |
+
+---
+
+## 8. Histórico
+
+O FFM nasceu como club manager, virou simulação da vida do atleta, e em
+2026-09-03 voltou à essência. O life sim inteiro está preservado na tag
+`pre-d5star-migration` e na branch `legacy/life-sim` — incluindo 12 telas de
+UI, minigames, cutscenes, quests e o sistema de tryout.
