@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added — A.2 modelo de atributos (2026-09-06)
+- 7 atributos base: strength, stamina, agility, dexterity, perception,
+  intelligence, charisma
+- 9 stats derivadas, cada uma a media (piso) de exatamente 3 atributos base:
+  speed, passing, catching, protection, pressure, coverage, reading,
+  leadership, trash_talk
+- "Geral" (overall): media dos 7 atributos base, arredondada pra baixo
+- Suite de testes do FFM em `tests/run.tscn`, rodando por cena
+- Removidos skill.gd/skill.json — as derivadas substituem os 12 skills
+
 ### Changed — virada para club manager (2026-09-05)
 - O jogo abandonou a simulacao da vida do atleta e voltou a ser um club
   manager: "o Elifoot 2000 do flag football". Plano completo em `roadmap.md`.
