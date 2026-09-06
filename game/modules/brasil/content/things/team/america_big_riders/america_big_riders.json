@@ -1,0 +1,17 @@
+{
+  "id": "america_big_riders",
+  "group": "team",
+  "name": "America Big Riders",
+  "city": "Rio de Janeiro",
+  "state": "RJ",
+  "tier": 2,
+  "reputation": 68,
+  "colors": [
+    "#c8102e",
+    "#ffffff"
+  ],
+  "squads": {
+    "masc": true,
+    "fem": true
+  }
+}

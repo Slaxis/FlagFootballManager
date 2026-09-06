@@ -1,0 +1,17 @@
+{
+  "id": "rio_de_janeiro_devils",
+  "group": "team",
+  "name": "Rio de Janeiro Devils",
+  "city": "Rio de Janeiro",
+  "state": "RJ",
+  "tier": 2,
+  "reputation": 62,
+  "colors": [
+    "#8b0000",
+    "#1a1a1a"
+  ],
+  "squads": {
+    "masc": true,
+    "fem": false
+  }
+}

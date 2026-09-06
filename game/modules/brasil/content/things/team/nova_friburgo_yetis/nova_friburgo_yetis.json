@@ -1,0 +1,17 @@
+{
+  "id": "nova_friburgo_yetis",
+  "group": "team",
+  "name": "Nova Friburgo Yetis",
+  "city": "Nova Friburgo",
+  "state": "RJ",
+  "tier": 3,
+  "reputation": 36,
+  "colors": [
+    "#7fb6d6",
+    "#ffffff"
+  ],
+  "squads": {
+    "masc": true,
+    "fem": false
+  }
+}

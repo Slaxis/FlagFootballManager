@@ -1,0 +1,17 @@
+{
+  "id": "rural_thunders",
+  "group": "team",
+  "name": "Rural Thunders",
+  "city": "Seropédica",
+  "state": "RJ",
+  "tier": 3,
+  "reputation": 42,
+  "colors": [
+    "#f2c94c",
+    "#1d4e89"
+  ],
+  "squads": {
+    "masc": true,
+    "fem": false
+  }
+}

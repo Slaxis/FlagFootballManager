@@ -1,0 +1,17 @@
+{
+  "id": "flamengo_imperadores",
+  "group": "team",
+  "name": "Flamengo Imperadores",
+  "city": "Rio de Janeiro",
+  "state": "RJ",
+  "tier": 1,
+  "reputation": 75,
+  "colors": [
+    "#e2231a",
+    "#000000"
+  ],
+  "squads": {
+    "masc": true,
+    "fem": false
+  }
+}

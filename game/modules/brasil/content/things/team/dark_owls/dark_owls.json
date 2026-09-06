@@ -1,0 +1,17 @@
+{
+  "id": "dark_owls",
+  "group": "team",
+  "name": "Dark Owls",
+  "city": "Niterói",
+  "state": "RJ",
+  "tier": 3,
+  "reputation": 52,
+  "colors": [
+    "#3b2f5e",
+    "#b0b0b0"
+  ],
+  "squads": {
+    "masc": true,
+    "fem": false
+  }
+}

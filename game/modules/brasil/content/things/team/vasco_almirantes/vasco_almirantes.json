@@ -1,0 +1,17 @@
+{
+  "id": "vasco_almirantes",
+  "group": "team",
+  "name": "Vasco Almirantes",
+  "city": "Rio de Janeiro",
+  "state": "RJ",
+  "tier": 1,
+  "reputation": 78,
+  "colors": [
+    "#000000",
+    "#ffffff"
+  ],
+  "squads": {
+    "masc": true,
+    "fem": true
+  }
+}
