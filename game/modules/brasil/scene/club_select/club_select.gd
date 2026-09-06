@@ -1,7 +1,21 @@
-# Club selection — lists the clubs the module declares, read straight from
-# TeamDef. No gameplay yet: this screen exists so the boot chain proves that
-# per-Thing hosting found every team JSON and that Flow transitions work.
+# Club listing — every club the module declares, read straight from TeamDef,
+# strongest first. No gameplay yet: this screen is how we eyeball the team
+# database, and it proves per-Thing hosting, the tier/reputation fields and
+# the UF-derived region are all wired.
 extends Menu
+
+const _TIER_LABEL: Dictionary = {
+	1: "SÉRIE A",
+	2: "SÉRIE B",
+	3: "SÉRIE C",
+	4: "NÃO FED.",
+}
+const _TIER_COLOR: Dictionary = {
+	1: Color(0.95, 0.82, 0.35),
+	2: Color(0.75, 0.78, 0.82),
+	3: Color(0.72, 0.52, 0.36),
+	4: Color(0.45, 0.47, 0.45),
+}
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -25,21 +39,25 @@ func _build_ui() -> void:
 	margin.add_child(box)
 
 	var title := Label.new()
-	title.text = "ESCOLHA SEU CLUBE"
+	title.text = "CAMPEONATO CARIOCA"
 	title.add_theme_font_size_override("font_size", 34)
 	box.add_child(title)
 
 	var teams: Array = _teams()
-	var hint := Label.new()
-	hint.text = "%d clubes carregados do módulo" % teams.size()
-	hint.add_theme_color_override("font_color", Color(0.58, 0.70, 0.60))
-	box.add_child(hint)
+	var subtitle := Label.new()
+	subtitle.text = "%s · %d clubes" % [_region_label(teams), teams.size()]
+	subtitle.add_theme_color_override("font_color", Color(0.58, 0.70, 0.60))
+	box.add_child(subtitle)
+
+	box.add_child(_spacer(10))
 
 	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 6)
+	list.add_theme_constant_override("separation", 5)
 	box.add_child(list)
 	for team: Dictionary in teams:
 		list.add_child(_team_row(team))
+
+	box.add_child(_spacer(10))
 
 	var back := Button.new()
 	back.text = "Voltar"
@@ -49,25 +67,44 @@ func _build_ui() -> void:
 	box.add_child(back)
 	back.grab_focus()
 
+func _def() -> TeamDef:
+	return Drive.def("team") as TeamDef
+
 func _teams() -> Array:
-	var def := Drive.def("team") as TeamDef
+	var def := _def()
+	return def.by_reputation() if def != null else []
+
+# Proves the region comes from the UF via RegionDef, not from the club JSON.
+func _region_label(teams: Array) -> String:
+	if teams.is_empty():
+		return "—"
+	var def := _def()
 	if def == null:
-		return []
-	return def.all()
+		return "—"
+	var region_id: String = def.region_of(teams[0])
+	var region_def := Drive.def("region") as RegionDef
+	if region_def == null or region_id == "":
+		return region_id
+	return I18n.text(region_def.label(region_id), region_id)
 
 func _team_row(team: Dictionary) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 
-	var swatch := ColorRect.new()
+	var tier: int = int(team.get("tier", 4))
+	var badge := Label.new()
+	badge.text = String(_TIER_LABEL.get(tier, "?"))
+	badge.custom_minimum_size = Vector2(96, 0)
+	badge.add_theme_color_override("font_color", _TIER_COLOR.get(tier, Color.WHITE))
+	row.add_child(badge)
+
 	var colors: Array = team.get("colors", [])
-	swatch.color = Color(String(colors[0])) if colors.size() > 0 else Color.WHITE
-	swatch.custom_minimum_size = Vector2(18, 18)
-	row.add_child(swatch)
+	row.add_child(_swatch(colors, 0))
+	row.add_child(_swatch(colors, 1))
 
 	var name_label := Label.new()
 	name_label.text = String(team.get("name", team.get("id", "?")))
-	name_label.custom_minimum_size = Vector2(240, 0)
+	name_label.custom_minimum_size = Vector2(260, 0)
 	row.add_child(name_label)
 
 	var where := Label.new()
@@ -76,10 +113,36 @@ func _team_row(team: Dictionary) -> Control:
 	where.add_theme_color_override("font_color", Color(0.62, 0.62, 0.62))
 	row.add_child(where)
 
-	var roster := Label.new()
-	var players: Array = team.get("roster", [])
-	roster.text = "%d atletas" % players.size()
-	roster.add_theme_color_override("font_color", Color(0.62, 0.62, 0.62))
-	row.add_child(roster)
+	var squads := Label.new()
+	squads.text = _squad_marks(team)
+	squads.custom_minimum_size = Vector2(70, 0)
+	squads.add_theme_color_override("font_color", Color(0.62, 0.62, 0.62))
+	row.add_child(squads)
+
+	var rep := Label.new()
+	var reputation: int = int(team.get("reputation", 0))
+	rep.text = "%s %d" % ["█".repeat(int(reputation / 10.0)), reputation]
+	rep.add_theme_color_override("font_color", Color(0.58, 0.70, 0.60))
+	row.add_child(rep)
 
 	return row
+
+func _swatch(colors: Array, idx: int) -> ColorRect:
+	var rect := ColorRect.new()
+	rect.color = Color(String(colors[idx])) if colors.size() > idx else Color(0.2, 0.2, 0.2)
+	rect.custom_minimum_size = Vector2(14, 18)
+	return rect
+
+func _squad_marks(team: Dictionary) -> String:
+	var squads: Dictionary = team.get("squads", {})
+	var marks: Array[String] = []
+	if bool(squads.get("masc", false)):
+		marks.append("M")
+	if bool(squads.get("fem", false)):
+		marks.append("F")
+	return " ".join(marks)
+
+func _spacer(height: int) -> Control:
+	var s := Control.new()
+	s.custom_minimum_size = Vector2(0, height)
+	return s

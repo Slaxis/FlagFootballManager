@@ -1,0 +1,17 @@
+{
+  "id": "mesquita_titans",
+  "group": "team",
+  "name": "Mesquita Titans",
+  "city": "Mesquita",
+  "state": "RJ",
+  "tier": 3,
+  "reputation": 46,
+  "colors": [
+    "#0f6b3d",
+    "#f2c94c"
+  ],
+  "squads": {
+    "masc": true,
+    "fem": false
+  }
+}

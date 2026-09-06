@@ -1,0 +1,29 @@
+{
+  "regions": [
+    {
+      "id": "norte",
+      "label": {"pt": "Norte", "en": "North"},
+      "ufs": ["AC", "AP", "AM", "PA", "RO", "RR", "TO"]
+    },
+    {
+      "id": "nordeste",
+      "label": {"pt": "Nordeste", "en": "Northeast"},
+      "ufs": ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"]
+    },
+    {
+      "id": "centro_oeste",
+      "label": {"pt": "Centro-Oeste", "en": "Central-West"},
+      "ufs": ["DF", "GO", "MT", "MS"]
+    },
+    {
+      "id": "sudeste",
+      "label": {"pt": "Sudeste", "en": "Southeast"},
+      "ufs": ["ES", "MG", "RJ", "SP"]
+    },
+    {
+      "id": "sul",
+      "label": {"pt": "Sul", "en": "South"},
+      "ufs": ["PR", "RS", "SC"]
+    }
+  ]
+}
