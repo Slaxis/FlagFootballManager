@@ -47,7 +47,7 @@ see the reserved list in `addons/d5star/README.md` before naming a class.
 
 ### Game — `game/`
 
-- `game/defs/` — Def scripts + sibling JSON (stat, skill, team, flow, ...)
+- `game/defs/` — Def scripts + sibling JSON (stat, team, region, flow, ...)
 - `game/modules/brasil/` — the campaign module
 - `res://d5star.json` — project layout config, lives outside the submodule
 
@@ -110,7 +110,18 @@ Do not start implementing before the plan is approved.
 
 ## Testing
 
-- **Boot smoke test** is the primary check — it exercises Drive → engine.json
+- **Unit tests** — run the suite as a SCENE, never with `--script`:
+
+  ```bash
+  godot --headless --path . res://tests/run.tscn
+  ```
+
+  A `--script` run replaces the main loop with a custom SceneTree and the
+  autoloads do not exist while `_init()` executes, so `Drive`/`God`/`The` are
+  unreachable and any suite touching them aborts the runner mid-flight. Register
+  new suites in the `_SUITES` array of `tests/run.gd`. Exit code is 0 / 1.
+
+- **Boot smoke test** is the second check — it exercises Drive → engine.json
   → PathManager → managers → parser/loader/validator discovery → module scan
   → def scan → Flow → first screen:
 

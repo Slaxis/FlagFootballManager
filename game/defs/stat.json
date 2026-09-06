@@ -1,34 +1,96 @@
 {
-  "groups": [
+  "base": [
     {
-      "id": "brutality",
-      "label": {"pt": "BRUTALIDADE", "en": "BRUTALITY"},
-      "base": 5,
-      "stats": [
-        {"id": "speed",    "name": {"pt": "Velocidade",  "en": "Speed"},    "desc": {"pt": "Velocidade máxima em campo aberto", "en": "Top speed in the open field"}},
-        {"id": "strength", "name": {"pt": "Força",       "en": "Strength"}, "desc": {"pt": "Resistência ao contato, puxar flag", "en": "Contact resistance, blocking push, flag pulls"}},
-        {"id": "stamina",  "name": {"pt": "Resistência", "en": "Stamina"},  "desc": {"pt": "Fôlego pro jogo todo", "en": "Gas tank — endurance through the whole game"}}
-      ]
+      "id": "strength",
+      "label": {"pt": "Força", "en": "Strength"},
+      "desc": {"pt": "Potência bruta: bloquear, resistir ao contato, arrancar", "en": "Raw power: blocking, resisting contact, exploding off the line"}
     },
     {
-      "id": "finesse",
-      "label": {"pt": "FINESSE", "en": "FINESSE"},
-      "base": 5,
-      "stats": [
-        {"id": "agility",   "name": {"pt": "Agilidade",  "en": "Agility"},   "desc": {"pt": "Aceleração, desaceleração, mudança de direção", "en": "Acceleration, deceleration, direction changes"}},
-        {"id": "dexterity", "name": {"pt": "Destreza",   "en": "Dexterity"}, "desc": {"pt": "Manuseio de bola, coordenação", "en": "Ball handling, hand-eye coordination, one-handers"}},
-        {"id": "balance",   "name": {"pt": "Equilíbrio", "en": "Balance"},   "desc": {"pt": "Controle corporal, estabilidade nos cortes", "en": "Body control, stability through cuts and contact"}}
-      ]
+      "id": "stamina",
+      "label": {"pt": "Vitalidade", "en": "Stamina"},
+      "desc": {"pt": "Fôlego pro jogo inteiro, e pra etapa inteira", "en": "Gas tank for the whole game, and the whole weekend"}
     },
     {
-      "id": "cognition",
-      "label": {"pt": "COGNICAO", "en": "COGNITION"},
-      "base": 5,
-      "stats": [
-        {"id": "perception",   "name": {"pt": "Percepção",    "en": "Perception"},   "desc": {"pt": "Visão de campo — achar o receiver aberto, ler cobertura", "en": "Field awareness — find the open man, read zone coverage"}},
-        {"id": "intelligence", "name": {"pt": "Inteligência", "en": "Intelligence"}, "desc": {"pt": "Velocidade de aprendizado, ganho de XP", "en": "Learning speed, XP gain, perk unlocks"}},
-        {"id": "charisma",     "name": {"pt": "Carisma",      "en": "Charisma"},     "desc": {"pt": "Energia da torcida, provocação, liderança", "en": "Crowd energy, taunting opponents, leadership"}}
-      ]
+      "id": "agility",
+      "label": {"pt": "Agilidade", "en": "Agility"},
+      "desc": {"pt": "Aceleração, corte, mudança de direção", "en": "Acceleration, cuts, change of direction"}
+    },
+    {
+      "id": "dexterity",
+      "label": {"pt": "Destreza", "en": "Dexterity"},
+      "desc": {"pt": "Mão: segurar a bola, soltar o passe, puxar a flag", "en": "Hands: securing the ball, releasing the throw, pulling the flag"}
+    },
+    {
+      "id": "perception",
+      "label": {"pt": "Percepção", "en": "Perception"},
+      "desc": {"pt": "Enxergar o campo, achar o espaço e o ponto fraco do outro", "en": "Seeing the field, finding space and the opponent's weak spot"}
+    },
+    {
+      "id": "intelligence",
+      "label": {"pt": "Inteligência", "en": "Intelligence"},
+      "desc": {"pt": "Entender a jogada, decidir sob pressão", "en": "Understanding the play, deciding under pressure"}
+    },
+    {
+      "id": "charisma",
+      "label": {"pt": "Carisma", "en": "Charisma"},
+      "desc": {"pt": "Voz no campo: comanda os seus, desestabiliza os outros", "en": "Voice on the field: rallies your own, rattles the others"}
+    }
+  ],
+
+  "derived": [
+    {
+      "id": "speed",
+      "label": {"pt": "Velocidade", "en": "Speed"},
+      "desc": {"pt": "Velocidade máxima em campo aberto", "en": "Top speed in the open field"},
+      "from": ["agility", "strength", "stamina"]
+    },
+    {
+      "id": "passing",
+      "label": {"pt": "Passe", "en": "Passing"},
+      "desc": {"pt": "Precisão e decisão do quarterback", "en": "Quarterback accuracy and decision"},
+      "from": ["dexterity", "intelligence", "perception"]
+    },
+    {
+      "id": "catching",
+      "label": {"pt": "Recepção", "en": "Catching"},
+      "desc": {"pt": "Segurar o que dá pra segurar — e o que não dá", "en": "Holding on to the catchable, and the uncatchable"},
+      "from": ["dexterity", "perception", "agility"]
+    },
+    {
+      "id": "protection",
+      "label": {"pt": "Proteção", "en": "Protection"},
+      "desc": {"pt": "Snap limpo e tempo pro quarterback", "en": "Clean snap and time for the quarterback"},
+      "from": ["strength", "stamina", "dexterity"]
+    },
+    {
+      "id": "pressure",
+      "label": {"pt": "Pressão", "en": "Pressure"},
+      "desc": {"pt": "Chegar no quarterback antes do passe sair", "en": "Reaching the quarterback before the ball leaves"},
+      "from": ["strength", "agility", "perception"]
+    },
+    {
+      "id": "coverage",
+      "label": {"pt": "Cobertura", "en": "Coverage"},
+      "desc": {"pt": "Grudar no recebedor o jogo inteiro", "en": "Sticking to the receiver all game long"},
+      "from": ["perception", "agility", "stamina"]
+    },
+    {
+      "id": "reading",
+      "label": {"pt": "Leitura", "en": "Reading"},
+      "desc": {"pt": "Ler a jogada e reagir antes dela acontecer", "en": "Reading the play and reacting before it happens"},
+      "from": ["intelligence", "perception", "agility"]
+    },
+    {
+      "id": "leadership",
+      "label": {"pt": "Liderança", "en": "Leadership"},
+      "desc": {"pt": "Lê a jogada e comunica — buffa os aliados", "en": "Reads the play and calls it out — buffs allies"},
+      "from": ["charisma", "intelligence", "perception"]
+    },
+    {
+      "id": "trash_talk",
+      "label": {"pt": "Provocação", "en": "Trash Talk"},
+      "desc": {"pt": "Acha o ponto fraco e não larga — debuffa os adversários", "en": "Finds the weak spot and never lets go — debuffs opponents"},
+      "from": ["charisma", "perception", "stamina"]
     }
   ]
 }
