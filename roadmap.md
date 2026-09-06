@@ -41,11 +41,16 @@ Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 | 2 | **Assimetria estadual é abraçada.** SP tem ~60 times, RR tem 6. Começar em SP é hard mode; em RR é fácil subir e caro viajar. Variedade de carreira de graça. |
 | 3 | **Todos os jogos ao vivo.** A rodada inteira roda junto na tela, um jogo por linha, tabela mudando em tempo real. |
 | 4 | **Duas rotas de carreira**, como no Elifoot: subir de tier **com o time**, ou **trocar de time** (ser demitido, ser convidado). O manager é uma entidade própria, com reputação. |
-| 5 | **Força é um número único.** Os 9 atributos do modo carreira antigo foram descartados. O framework de Def de stats continua igual, então expandir depois é só editar JSON. |
+| 5 | ~~Força é um número único.~~ **REVISADA (2026-09-06):** 7 stats base (`strength`, `stamina`, `agility`, `dexterity`, `perception`, `intelligence`, `charisma`) e as stats de jogo **derivadas por fórmula** em JSON. São 7 dos 9 atributos do life sim — `speed` e `balance` saíram porque viraram derivadas. |
 | 6 | **Perks aprovados** (tabela na §4). |
 | 7 | **Posições e padrões táticos aprovados** (§4). |
 | 8 | **Calendário orientado a semana**, não a tempo real: `S/YYYY`, 52 turnos por ano. |
 | 9 | **O evento padrão de toda semana é o coletivo.** Por isso o motor e a tela de partida vêm cedo, não no fim. |
+| 10 | **Não existe "Player" — existe `Actor`.** Jogador, técnico, scout e o seu Manager são a mesma entidade. Função é **escalação, não tipo**: no tier 4 o Manager pode ser head coach *e* quarterback ao mesmo tempo; no tier 1 são actors diferentes. Acumular funções **penaliza o desempenho** — e subir de tier é, literalmente, poder parar de fazer tudo sozinho. |
+| 11 | **A carreira do Manager é um roguelike de vida inteira.** Começa aos **18** como manager tier 4, envelhece, e morre aos 90 (número arbitrário, a evoluir). Dinastia não é sistema: é simplesmente criar um novo manager no ano em que o anterior morreu. |
+| 12 | **A força do Manager persiste e cresce com resultados.** É a correção da falha do Elifoot, onde o técnico não tem memória: perdeu por azar, foi punido igual. Aqui azar é ruído, não sentença. |
+| 13 | **Clubes nascem, se fundem e morrem.** Nada de JSON autorado para clubes novos — `TeamGenerator` inventa. Fusão e extinção (que redistribui os actors) são simulados. |
+| 14 | **"Praça", não "Leilão".** Leilão pressupõe dinheiro que o esporte amador não tem. Na Praça ficam os actors sem clube — jogadores *e* comissão técnica — esperando convite. |
 
 ### Tiers — como o "tier 4" encaixa na realidade
 
@@ -162,6 +167,19 @@ Novo Jogo
 - **Flow declarativo** — navegação entre telas é JSON, não código.
 - **Def + per-Thing hosting** — todo dado do jogo é injetável.
 
+## 5b. Limite técnico registrado
+
+**GDScript não suporta sobrecarga de operadores.** `var c: Team = a + b` não
+compila e não tem workaround — é limitação da linguagem.
+
+A fusão de clubes usa o `ThingVariant` da d5star, que já implementa merge com
+semântica de operadores **no dado** (`+`, `-`, `*`, `/` como prefixo nos
+valores JSON, `=` escapando literal). O `+` existe, só que na camada de dados:
+
+```gdscript
+var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
+```
+
 ## 6. Dívidas conhecidas
 
 - `The.snapshot()` varre `get_nodes_in_group("things")`, mas Things são
@@ -176,20 +194,23 @@ Novo Jogo
 
 ## 7. Feature branches
 
-### Fase A — Dados reais
+### Fase A — O modelo
 | Branch | Entrega | |
 |---|---|---|
 | `A.1-team-database` | Os 9 clubes cariocas como Things, região derivada da UF, tier e reputação | ✅ |
-| `A.2-fictional-fill` | Clubes fictícios não federados (tier 4) completando o Carioca | |
-| `A.3-player-generation` | Elencos: nome, camisa, posição, força, perk | |
-| `A.4-perks` | Catálogo de perks com efeito mecânico | |
+| `A.2-stat-model` | 7 stats base + stats de jogo derivadas por fórmula, e o "geral" por posição | |
+| `A.3-actor-model` | **Actor único**: jogador, técnico, scout e manager são o mesmo tipo | |
+| `A.4-role-assignment` | Escalação em funções + penalidade de acumular | |
+| `A.5-team-generator` | `TeamGenerator` inventa clubes; preenche o Carioca com não federados | |
+| `A.6-perks` | Catálogo de perks com efeito mecânico | |
 
 ### Fase B — A casca
 | Branch | Entrega |
 |---|---|
-| `B.1-new-game-draft` | Novo Jogo sorteia você como manager de um clube tier 4 |
-| `B.2-club-home` | Home com barra de abas + botão Próxima Semana |
-| `B.3-elenco` | A aba Elenco: lista de jogadores com ASCII de qualidade |
+| `B.1-manager-actor` | O seu Manager: nome, idade 18, stats |
+| `B.2-new-game-draft` | Novo Jogo sorteia você como manager de um clube tier 4 |
+| `B.3-club-home` | Home com barra de abas + botão Próxima Semana |
+| `B.4-elenco` | A aba Elenco: lista com ASCII de qualidade e as funções acumuladas |
 
 ### Fase C — O coletivo  🔥 *fim desta fase = jogo rodando em loop*
 | Branch | Entrega |
@@ -205,21 +226,23 @@ Novo Jogo
 | `D.1-comissao-tecnica` | CRUD de técnicos, buffs/debuffs, chamam jogadas |
 | `D.2-local-treino` | Campos, custo, buff/debuff no elenco |
 | `D.3-financeiro` | Caixa, mensalidades, patrocínios |
-| `D.4-mercado` | O "leilão": técnicos atraem talento entre as semanas |
-| `D.5-elenco-crud` | Expulsar, elogiar — a gestão de verdade do elenco |
+| `D.4-praca` | Actors sem clube — jogadores e comissão — esperando convite |
+| `D.5-elenco-crud` | Expulsar, elogiar, convidar da Praça |
 
-### Fase E — A temporada
+### Fase E — A temporada e a carreira
 | Branch | Entrega |
 |---|---|
 | `E.1-save-load` | Conserta `The.snapshot()` e persiste a carreira |
 | `E.2-calendar-season` | 1º semestre estaduais, 2º regionais + nacional |
 | `E.3-carioca` | Campeonato Carioca: tabela, rodadas, decide o tier |
 | `E.4-match-controls` | Substituição e mudança de padrão tático durante o jogo |
-| `E.5-season-rollover` | Virada de ano, envelhecimento |
+| `E.5-manager-career` | Envelhece, morre aos 90, força por resultados, expulsão e convite |
+| `E.6-season-rollover` | Virada de ano, envelhecimento do elenco |
+| `E.7-team-lifecycle` | Fusão e extinção de clubes, redistribuindo os actors |
 
 ### Fora do MVP
-Regional e nacional · categoria feminina · carreira do manager (demissão e
-convite) · amistosos agendados · expansão pros 139 times do Brasil.
+Regional e nacional · categoria feminina · amistosos agendados · expansão
+pros 139 times do Brasil.
 
 ---
 
