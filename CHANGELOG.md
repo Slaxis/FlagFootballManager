@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added — A.3 Actor (2026-09-06)
+- `Actor extends Thing` em `game/model/` — jogador, tecnico, scout e o
+  manager sao a MESMA entidade; funcao e escalacao, nao tipo
+- `ActorGenerator` deterministico: mesma seed, mesmo actor. Sub-seeds salgadas
+  por indice, entao crescer o elenco nao embaralha quem ja estava nele
+- Sem sistema de arquetipos: como cada derivada le um trio diferente de
+  atributos, variancia simples ja produz especialistas (16 pontos medios de
+  espalhamento entre a melhor e a pior derivada de cada actor)
+- Nomes vindos do name_gen salvo do life sim, com pools por genero
+
 ### Added — A.2 modelo de atributos (2026-09-06)
 - 7 atributos base: strength, stamina, agility, dexterity, perception,
   intelligence, charisma

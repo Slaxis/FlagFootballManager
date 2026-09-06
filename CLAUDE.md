@@ -48,6 +48,8 @@ see the reserved list in `addons/d5star/README.md` before naming a class.
 ### Game — `game/`
 
 - `game/defs/` — Def scripts + sibling JSON (stat, team, region, flow, ...)
+- `game/model/` — domain Things and generators (`Actor`, `ActorGenerator`).
+  Kept out of `defs/` because these are runtime entities, not catalogs.
 - `game/modules/brasil/` — the campaign module
 - `res://d5star.json` — project layout config, lives outside the submodule
 
