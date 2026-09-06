@@ -19,15 +19,15 @@ Estrutura real do flag brasileiro (CBFA, 2025/26), levantada em 2026-09-05:
 - **Três divisões nacionais**: Série A, B e C (a C criada em 2026)
 - **Acesso**: campeão e vice de cada regional vão pra Série A; demais
   classificados caem em B ou C
+- O Rio tem 5 títulos nacionais de flag, empatado com SP e atrás só do MS (6)
 - Flag é olímpico em LA 2028
 
-Os 9 times que já estavam no repo são reais (Cronos, Coritiba Crocodiles,
-Goiânia Rednecks, Campo Grande Predadores, Spartans, Batatais Ghosts,
-Tritões, Cavalaria 2 de Julho).
+⚠️ A listagem de origem erra a região de alguns clubes: RR e TO aparecem como
+Sul (são Norte), PB como Sul (é Nordeste), SC como Sudeste (é Sul). Por isso a
+região **nunca é armazenada no clube** — é derivada da UF via `RegionDef`.
 
-⚠️ A fonte tem erros de região que precisam ser corrigidos **por UF**:
-RR e TO aparecem como Sul (são Norte), PB como Sul (é Nordeste), SC e ES
-como Sudeste (SC é Sul).
+⚠️ A mesma página, puxada duas vezes, devolveu listas diferentes (9 vs 8 times
+no RJ). A lista é melhor esforço, não verdade absoluta.
 
 Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 
@@ -44,6 +44,8 @@ Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 | 5 | **Força é um número único.** Os 9 atributos do modo carreira antigo foram descartados. O framework de Def de stats continua igual, então expandir depois é só editar JSON. |
 | 6 | **Perks aprovados** (tabela na §4). |
 | 7 | **Posições e padrões táticos aprovados** (§4). |
+| 8 | **Calendário orientado a semana**, não a tempo real: `S/YYYY`, 52 turnos por ano. |
+| 9 | **O evento padrão de toda semana é o coletivo.** Por isso o motor e a tela de partida vêm cedo, não no fim. |
 
 ### Tiers — como o "tier 4" encaixa na realidade
 
@@ -56,22 +58,34 @@ Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 
 Subir não é promoção de tabela — é **classificação no regional**.
 
-### Calendário — toda semana tem uma decisão
+### Calendário — semana `S/YYYY`, 52 turnos por ano
 
-12 estaduais + 4 regionais + 2 nacionais = 18 semanas com jogo em 52. As
-outras 34 **são o jogo**: treino, campo, mercado, dinheiro.
+O jogo **não é orientado a tempo real, é orientado a turno** — como o Elifoot.
+Cada turno é uma semana identificada por `S/YYYY`: `1/2026`, `2/2026`, …
+`52/2026`. São **52 turnos por ano**, sempre.
+
+Toda semana tem um evento. O evento padrão é o **coletivo** — o racha interno
+do próprio elenco, dividido em dois times. É assistindo ao coletivo que você
+descobre quem joga bem em cada posição, sem precisar de tela de scout.
 
 ```
-toda semana        treino roda + 1 evento/escolha
-                   (campo caiu, jogador sumiu, patrocinador ligou,
-                    talento apareceu no mercado)
-fim de mês         etapa estadual
-fim de trimestre   etapa regional
-fim de semestre    etapa nacional  (a 2a decide o campeão do ano)
+1º semestre  (semanas 1–26)    estaduais
+2º semestre  (semanas 27–52)   regionais + nacional
 ```
 
-Etapa de flag amador é um **fim de semana inteiro com vários jogos**, não uma
-partida — o que entrega naturalmente a tela do Elifoot.
+| Tipo de semana | Evento |
+|---|---|
+| comum (a maioria) | **coletivo** — assiste, observa o elenco, ajusta |
+| semana de etapa | rodada competitiva (estadual, regional ou nacional) |
+| futuro | amistoso agendado por você (mecânica adiada) |
+
+Semana de etapa segue a **mesma lógica de "próximo evento"**, só mais densa —
+etapa de flag amador é um fim de semana inteiro com vários jogos, o que
+entrega naturalmente a tela do Elifoot com um jogo por linha.
+
+**Consequência de projeto:** como toda semana tem um jogo pra assistir, o
+motor de partida e a tela de jogo não são "o fim do projeto" — são o coração
+do loop semanal, e por isso vêm cedo (Fase C).
 
 ### Financeiro — a tensão é viagem
 
@@ -90,16 +104,26 @@ Receita por tier: **mensalidade de atleta** (tier baixo) → **patrocínio**
 
 ```
 Novo Jogo
-   └─ sorteio: você é manager de um time tier 4
+   └─ sorteio: você é manager de um clube tier 4
         └─ HOME DO CLUBE  ── abas ──┬── Elenco
              │                      ├── Comissão Técnica
              │                      ├── Local de Treino
              │                      └── Financeiro
-             └─ [ Próxima Semana ]
-                   ├─ semana comum  → treino + evento → resumo → HOME
-                   ├─ entre semanas → mercado ("leilão") → HOME
-                   └─ semana de etapa → TELA DE JOGOS AO VIVO → HOME
+             └─ [ Próxima Semana ]  → avança S/YYYY
+                   ├─ semana comum   → COLETIVO (assiste) → HOME
+                   ├─ entre semanas  → mercado ("leilão") → HOME
+                   └─ semana de etapa → JOGOS AO VIVO → HOME
 ```
+
+### Escopo do MVP
+
+- **Rio de Janeiro apenas.** Os 9 clubes cariocas reais + clubes fictícios não
+  federados pra completar.
+- **Campeonato Carioca misto**: todos os tiers na mesma tabela. É o resultado
+  do Carioca que **decide o tier no Brasileirão**.
+- **O MVP não chega ao Brasileirão.** Regional e nacional ficam declarados no
+  calendário mas fora do escopo.
+- **Só masculino.**
 
 ---
 
@@ -142,7 +166,7 @@ Novo Jogo
 
 - `The.snapshot()` varre `get_nodes_in_group("things")`, mas Things são
   RefCounted e nunca entram na árvore — **o save não acha nada**. Bloqueante
-  pra jogo de carreira. Endereçado em `D.1`.
+  pra jogo de carreira. Endereçado em `E.1`.
 - `game/defs/flow.gd` é cópia literal do ScrapWarriorsOne. O próprio autor
   anotou no código que deveria viver na d5star. Exigiria o DefManager varrer
   também um diretório de defs da engine.
@@ -153,50 +177,49 @@ Novo Jogo
 ## 7. Feature branches
 
 ### Fase A — Dados reais
-| Branch | Entrega |
-|---|---|
-| `A.1-team-database` | Os ~139 times reais em Thing JSON, região corrigida por UF, categorias masc/fem |
-| `A.2-fictional-fill` | Gerador de times fictícios pra completar estaduais rasos |
-| `A.3-player-generation` | Roster procedural: nome, camisa, posição, força, perk |
-| `A.4-perks` | Catálogo de perks com efeito mecânico |
+| Branch | Entrega | |
+|---|---|---|
+| `A.1-team-database` | Os 9 clubes cariocas como Things, região derivada da UF, tier e reputação | ✅ |
+| `A.2-fictional-fill` | Clubes fictícios não federados (tier 4) completando o Carioca | |
+| `A.3-player-generation` | Elencos: nome, camisa, posição, força, perk | |
+| `A.4-perks` | Catálogo de perks com efeito mecânico | |
 
 ### Fase B — A casca
 | Branch | Entrega |
 |---|---|
-| `B.1-new-game-draft` | Novo Jogo sorteia você como manager de um time tier 4 |
-| `B.2-club-home` | Home com barra de abas + botão Próxima Semana (abas vazias) |
+| `B.1-new-game-draft` | Novo Jogo sorteia você como manager de um clube tier 4 |
+| `B.2-club-home` | Home com barra de abas + botão Próxima Semana |
+| `B.3-elenco` | A aba Elenco: lista de jogadores com ASCII de qualidade |
 
-### Fase C — As quatro abas
+### Fase C — O coletivo  🔥 *fim desta fase = jogo rodando em loop*
 | Branch | Entrega |
 |---|---|
-| `C.1-elenco` | Lista com ASCII de qualidade, CRUD (expulsar, elogiar) |
-| `C.2-comissao-tecnica` | CRUD de técnicos, buffs/debuffs, chamam jogadas |
-| `C.3-local-treino` | Campos, custo, buff/debuff no elenco |
-| `C.4-financeiro` | Caixa, mensalidades, patrocínios |
+| `C.1-match-engine` | Simulação headless, determinística, emitindo eventos |
+| `C.2-match-view` | **A tela Elifoot**: um jogo por linha, cronômetro, eventos ao vivo |
+| `C.3-coletivo` | Coletivo semanal: elenco dividido em dois, você observa |
+| `C.4-week-tick` | Próxima Semana avança `S/YYYY` e dispara o evento da semana |
 
-### Fase D — O tempo passa
+### Fase D — As outras abas
 | Branch | Entrega |
 |---|---|
-| `D.1-save-load` | Conserta `The.snapshot()` e persiste a carreira |
-| `D.2-calendar` | Semana / mês / trimestre / semestre e o que dispara em cada |
-| `D.3-week-tick` | Próxima Semana processa treino + resumo de evolução |
+| `D.1-comissao-tecnica` | CRUD de técnicos, buffs/debuffs, chamam jogadas |
+| `D.2-local-treino` | Campos, custo, buff/debuff no elenco |
+| `D.3-financeiro` | Caixa, mensalidades, patrocínios |
 | `D.4-mercado` | O "leilão": técnicos atraem talento entre as semanas |
+| `D.5-elenco-crud` | Expulsar, elogiar — a gestão de verdade do elenco |
 
-### Fase E — A partida
+### Fase E — A temporada
 | Branch | Entrega |
 |---|---|
-| `E.1-match-engine` | Simulação headless, determinística, emitindo eventos |
-| `E.2-match-view` | **A tela Elifoot**: um jogo por linha, cronômetro, eventos ao vivo |
-| `E.3-match-controls` | Substituição e mudança de padrão tático durante o jogo |
+| `E.1-save-load` | Conserta `The.snapshot()` e persiste a carreira |
+| `E.2-calendar-season` | 1º semestre estaduais, 2º regionais + nacional |
+| `E.3-carioca` | Campeonato Carioca: tabela, rodadas, decide o tier |
+| `E.4-match-controls` | Substituição e mudança de padrão tático durante o jogo |
+| `E.5-season-rollover` | Virada de ano, envelhecimento |
 
-### Fase F — A temporada
-| Branch | Entrega |
-|---|---|
-| `F.1-estadual` | Etapa estadual mensal + tabela |
-| `F.2-regional` | Etapa regional trimestral + classificação |
-| `F.3-nacional` | Etapa nacional semestral + campeão do ano |
-| `F.4-manager-career` | Reputação do manager, demissão e convite de outros clubes |
-| `F.5-season-rollover` | Virada de ano, acesso entre séries, envelhecimento |
+### Fora do MVP
+Regional e nacional · categoria feminina · carreira do manager (demissão e
+convite) · amistosos agendados · expansão pros 139 times do Brasil.
 
 ---
 
