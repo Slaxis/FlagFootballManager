@@ -5,8 +5,11 @@
   "city": "Rio de Janeiro",
   "state": "RJ",
   "tier": 1,
-  "reputation": 88,
-  "colors": ["#c41e3a", "#1a1a1a"],
+  "reputation": 90,
+  "colors": [
+    "#ffcc00",
+    "#111111"
+  ],
   "squads": {
     "masc": true,
     "fem": false
