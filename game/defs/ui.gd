@@ -2,9 +2,12 @@
 # read lives here as an `{"pt": ..., "en": ...}` entry, keyed by a dotted id.
 #
 # Screens do not call this directly; they go through `UiText.t()`, which is
-# shorter and null-safe. Modules can ship their own `ui.json`, which merges
-# over this one through the normal Def merge, so a user universe can rename
-# anything without touching the game.
+# shorter and null-safe.
+#
+# Note: a module CANNOT override this file. DefManager reads a Def's base JSON
+# only from `game/defs/`; modules contribute exclusively through `add_thing()`.
+# If a universe ever needs its own wording, this Def grows an `add_thing()`
+# the way NameGenDef did.
 extends Def
 class_name UiDef
 

@@ -1,0 +1,30 @@
+{
+  "id": "carioca",
+  "neighborhoods": [
+    "Tijuca", "Jacarepaguá", "Realengo", "Méier", "Bangu", "Madureira",
+    "Campo Grande", "Santa Cruz", "Ilha do Governador", "Penha", "Irajá",
+    "Anchieta", "Bonsucesso", "Vila Isabel", "Ramos", "Olaria", "Cascadura",
+    "Piedade", "Engenho de Dentro", "Del Castilho", "Pavuna", "Guaratiba",
+    "Sepetiba", "Paciência", "Grajaú", "Andaraí", "Maracanã", "Estácio",
+    "São Cristóvão", "Rocha Miranda", "Coelho Neto", "Acari",
+    "Marechal Hermes", "Deodoro", "Padre Miguel", "Senador Camará",
+    "Inhoaíba", "Caju", "Benfica", "Turiaçu"
+  ],
+  "team_prefixes": [
+    "Capivaras", "Jacarés", "Gaviões", "Urubus", "Coiotes", "Krakens",
+    "Marrecos", "Tatus", "Quatis", "Bagres", "Piranhas", "Tubarões",
+    "Garças", "Corujas", "Morcegos", "Lobos", "Onças", "Jaguares",
+    "Búfalos", "Touros", "Bodes", "Falcões", "Gaivotas", "Pelicanos",
+    "Golfinhos", "Saruês", "Micos", "Bem-te-vis", "Sabiás", "Tamanduás"
+  ],
+  "team_suffixes": [
+    "do Morro", "da Vila", "da Quebrada", "do Campinho", "da Pista",
+    "do Areal", "da Laje", "do Beco", "da Várzea", "do Aterro"
+  ],
+  "team_patterns": [
+    "{neighborhood} {team_prefix}",
+    "{neighborhood} {team_prefix}",
+    "{neighborhood} {team_prefix}",
+    "{team_prefix} {team_suffix}"
+  ]
+}

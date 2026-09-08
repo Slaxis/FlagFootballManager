@@ -242,15 +242,20 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 | `A.6-perks` | Catálogo de perks com efeito mecânico | |
 
 ### Fase B — O clube na tela
-| # | Branch | O que você vê no jogo |
-|---|---|---|
-| **B.1** | `start-screen` | A Start Screen: Continue (cinza), Novo Jogo, Ajustes, Sair |
-| **B.2** | `module-select` | A lista de módulos com o nativo "Brasileirão de Flag 2026" — e qualquer universo em `user://modules` |
-| **B.3** | `create-manager` | Cria seu manager (nome sorteado, 18 anos) e escolhe Career Type — Random ativo, **Pick Team cadeado** |
-| **B.4** | `team-screen` | Seu clube com abas **Elenco** e **Adversários**. Nomes, idade, Geral, barra ASCII. **Paga a dívida de A.2 e A.3** |
-| **B.5** | `team-generator` *(era A.5)* | A lista salta de 9 pra 16 clubes; abre um não federado e vê o elenco visivelmente pior |
-| **B.6** | `role-assignment` *(era A.4)* | Coluna **Função** no Elenco: escala alguém em duas e vê o Geral cair |
-| **B.7** | `perks` *(era A.6)* | Os ícones `★ ⚡ 🧠 🪨` ao lado dos nomes |
+| # | Branch | O que você vê no jogo | |
+|---|---|---|---|
+| **B.1** | `start-screen` | A Start Screen: Continue (cinza), Novo Jogo, Ajustes, Sair | ✅ |
+| **B.2** | `module-select` | A lista de módulos: o nativo e qualquer universo em `user://modules` | ✅ |
+| **B.3** | `team-generator` | A lista salta de 10 pra 16 clubes; os 6 do fundo são várzea carioca | ✅ |
+| **B.4** | `create-manager` | Cria seu manager (nome sorteado, 18 anos) e escolhe Career Type — Random ativo, **Pick Team cadeado** | |
+| **B.5** | `team-screen` | Seu clube com abas **Elenco** e **Adversários**. **Paga a dívida de A.2 e A.3** | |
+| **B.6** | `role-assignment` | Coluna **Função** no Elenco: escala alguém em duas e vê o Geral cair | |
+| **B.7** | `perks` | Os ícones `★ ⚡ 🧠 🪨` ao lado dos nomes | |
+
+> `team-generator` subiu na frente de `create-manager`: o sorteio coloca você
+> num clube **tier 4**, e nenhum dos 10 clubes reais é tier 4. Sortear num
+> tier 3 agora significaria refazer depois, perdendo a premissa de começar na
+> várzea.
 
 ### Fase C — O coletivo  🔥 *fim desta fase = jogo rodando em loop*
 | Branch | Entrega |

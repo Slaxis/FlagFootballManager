@@ -13,6 +13,7 @@ const _TIER_COLOR: Dictionary = {
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	League.ensure_filled()
 	_build_ui()
 
 func _build_ui() -> void:

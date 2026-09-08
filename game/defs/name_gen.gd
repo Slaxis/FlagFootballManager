@@ -11,6 +11,7 @@ var team_suffixes: Array[String] = []
 var neighborhoods: Array[String] = []
 var street_patterns: Array[String] = []
 var place_patterns: Array[String] = []
+var team_patterns: Array[String] = []
 
 func load_data(raw: Dictionary) -> void:
 	first_male       = _load_strings(raw.get("first_male", []))
@@ -23,6 +24,15 @@ func load_data(raw: Dictionary) -> void:
 	neighborhoods    = _load_strings(raw.get("neighborhoods", []))
 	street_patterns  = _load_strings(raw.get("street_patterns", []))
 	place_patterns   = _load_strings(raw.get("place_patterns", []))
+	team_patterns    = _load_strings(raw.get("team_patterns", []))
+
+# A module hosts its own vocabulary as a Thing under
+# `content/things/name_gen/<id>/<id>.json`. DefManager reads a Def's base JSON
+# only from `game/defs/`, so this is the ONLY way a universe can bring its own
+# neighbourhoods and club names — which is what keeps a South Park league from
+# drafting teams out of Jacarepaguá.
+func add_thing(thing: Dictionary) -> void:
+	merge_data(thing)
 
 func merge_data(raw: Dictionary) -> void:
 	# Append rather than replace so user modules can extend the pools.
@@ -36,6 +46,7 @@ func merge_data(raw: Dictionary) -> void:
 	neighborhoods.append_array(_load_strings(raw.get("neighborhoods", [])))
 	street_patterns.append_array(_load_strings(raw.get("street_patterns", [])))
 	place_patterns.append_array(_load_strings(raw.get("place_patterns", [])))
+	team_patterns.append_array(_load_strings(raw.get("team_patterns", [])))
 
 func _load_strings(raw: Variant) -> Array[String]:
 	var out: Array[String] = []
@@ -68,11 +79,20 @@ func random_full_name(gender: String, rng: RandomNumberGenerator) -> String:
 	return (first + " " + last).strip_edges()
 
 func random_team_name(rng: RandomNumberGenerator) -> String:
+	# Patterns let the module decide the SHAPE of a club name, not just the
+	# words: "Tijuca Capivaras" and "Águias do Morro" are different grammars.
+	if not team_patterns.is_empty():
+		var filled: String = fill_pattern(_pick(team_patterns, rng), rng)
+		if filled != "":
+			return filled
 	var prefix: String = _pick(team_prefixes, rng)
 	var suffix: String = _pick(team_suffixes, rng)
 	if prefix == "" and suffix == "":
 		return "Time"
 	return (prefix + " " + suffix).strip_edges()
+
+func random_team_pattern(rng: RandomNumberGenerator) -> String:
+	return _pick(team_patterns, rng)
 
 func random_neighborhood(rng: RandomNumberGenerator) -> String:
 	return _pick(neighborhoods, rng)
@@ -87,12 +107,14 @@ func random_place_name(rng: RandomNumberGenerator) -> String:
 
 # Public: fill an arbitrary template string with random picks from the pools.
 # Supported placeholders: {last} {first_male} {first_female} {neighborhood}
+#                         {team_prefix} {team_suffix}
 func fill_pattern(pattern: String, rng: RandomNumberGenerator) -> String:
 	if pattern == "":
 		return ""
 	var result: String = pattern
 	# Supported placeholders:
 	#   {last} {first_male} {first_female} {neighborhood}
+	#   {team_prefix} {team_suffix}
 	if result.contains("{last}"):
 		result = result.replace("{last}", random_last_name(rng))
 	if result.contains("{first_male}"):
@@ -101,6 +123,10 @@ func fill_pattern(pattern: String, rng: RandomNumberGenerator) -> String:
 		result = result.replace("{first_female}", random_first_name("f", rng))
 	if result.contains("{neighborhood}"):
 		result = result.replace("{neighborhood}", random_neighborhood(rng))
+	if result.contains("{team_prefix}"):
+		result = result.replace("{team_prefix}", _pick(team_prefixes, rng))
+	if result.contains("{team_suffix}"):
+		result = result.replace("{team_suffix}", _pick(team_suffixes, rng))
 	return result
 
 func _pick(pool: Array[String], rng: RandomNumberGenerator) -> String:
