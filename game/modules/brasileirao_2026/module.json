@@ -1,0 +1,14 @@
+{
+  "id": "brasileirao_2026",
+  "name": {
+    "pt": "Brasileirão de Flag 2026",
+    "en": "Brazilian Flag Championship 2026"
+  },
+  "description": {
+    "pt": "A temporada 2026 do flag football brasileiro. Comece como técnico de um time de várzea e suba pela estrutura da CBFA.",
+    "en": "The 2026 season of Brazilian flag football. Start as coach of a sandlot club and climb the CBFA ladder."
+  },
+  "version": "0.1.0",
+  "order": 1,
+  "requires": []
+}

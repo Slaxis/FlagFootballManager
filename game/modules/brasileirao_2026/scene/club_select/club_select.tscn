@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://game/modules/brasil/scene/club_select/club_select.gd" id="1"]
+[ext_resource type="Script" path="res://game/modules/brasileirao_2026/scene/club_select/club_select.gd" id="1"]
 
 [node name="ClubSelect" type="Control"]
 layout_mode = 3

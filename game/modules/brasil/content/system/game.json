@@ -1,7 +1,0 @@
-{
-  "id": "brasil",
-  "name": "Flag Football Manager — Brasil",
-  "version": "0.1.0",
-  "flow": "main_flow",
-  "directories": { "scene": "scene" }
-}
