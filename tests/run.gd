@@ -14,9 +14,13 @@ const _SUITES: Array[String] = [
 	"res://tests/test_stat.gd",
 	"res://tests/test_actor.gd",
 	"res://tests/test_ui.gd",
+	"res://tests/test_team_colors.gd",
 ]
 
 func _ready() -> void:
+	if not _activate_module():
+		get_tree().quit(1)
+		return
 	var started: int = Time.get_ticks_msec()
 	var passed: int = 0
 	var failed: int = 0
@@ -55,3 +59,17 @@ func _ready() -> void:
 		for name: String in failed_names:
 			print("  - %s" % name)
 	get_tree().quit(0 if failed == 0 else 1)
+
+# Mirror what Game._ready() does. Without this no module is active, the
+# content roots are empty, and every Thing-backed Def (teams, flows, ...)
+# reads as empty — so a suite asserting over module content would pass while
+# testing nothing at all.
+func _activate_module() -> bool:
+	var modules: Array[ModuleInfo] = Drive.list_modules()
+	if modules.is_empty():
+		print("X nenhum módulo em game/modules/ — as suítes não teriam conteúdo")
+		return false
+	if not Drive.set_module(modules[0].id):
+		print("X falhou ao ativar o módulo " + modules[0].id)
+		return false
+	return true

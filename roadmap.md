@@ -27,7 +27,9 @@ Sul (são Norte), PB como Sul (é Nordeste), SC como Sudeste (é Sul). Por isso 
 região **nunca é armazenada no clube** — é derivada da UF via `RegionDef`.
 
 ⚠️ A mesma página, puxada duas vezes, devolveu listas diferentes (9 vs 8 times
-no RJ). A lista é melhor esforço, não verdade absoluta.
+no RJ) e **omitiu o Flag Kings** — o clube mais importante do Rio e atual
+campeão brasileiro. A lista é melhor esforço, não verdade absoluta: o
+conhecimento do autor sobre a cena carioca supera o scrape.
 
 Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 

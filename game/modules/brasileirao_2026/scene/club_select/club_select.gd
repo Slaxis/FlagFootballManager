@@ -96,10 +96,7 @@ func _team_row(team: Dictionary) -> Control:
 	row.add_child(_swatch(colors, 0))
 	row.add_child(_swatch(colors, 1))
 
-	var name_label := Label.new()
-	name_label.text = String(team.get("name", team.get("id", "?")))
-	name_label.custom_minimum_size = Vector2(260, 0)
-	row.add_child(name_label)
+	row.add_child(_name_plate(team))
 
 	var where := Label.new()
 	where.text = "%s/%s" % [team.get("city", "?"), team.get("state", "?")]
@@ -120,6 +117,31 @@ func _team_row(team: Dictionary) -> Control:
 	row.add_child(rep)
 
 	return row
+
+# Elifoot-style: the club name printed in the club's own colours, so the row
+# is recognisable before it is read.
+func _name_plate(team: Dictionary) -> Control:
+	var scheme: Dictionary = TeamColors.of(team)
+	var style := StyleBoxFlat.new()
+	style.bg_color = scheme["plate"]
+	style.set_content_margin_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.corner_radius_top_left = 3
+	style.corner_radius_top_right = 3
+	style.corner_radius_bottom_left = 3
+	style.corner_radius_bottom_right = 3
+
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", style)
+	panel.custom_minimum_size = Vector2(280, 0)
+
+	var label := Label.new()
+	label.text = String(team.get("name", team.get("id", "?")))
+	label.add_theme_color_override("font_color", scheme["ink"])
+	label.add_theme_font_size_override("font_size", 17)
+	panel.add_child(label)
+	return panel
 
 func _swatch(colors: Array, idx: int) -> ColorRect:
 	var rect := ColorRect.new()

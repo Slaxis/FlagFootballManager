@@ -1,0 +1,14 @@
+{
+  "id": "flag_kings",
+  "group": "team",
+  "name": "Flag Kings",
+  "city": "Rio de Janeiro",
+  "state": "RJ",
+  "tier": 1,
+  "reputation": 88,
+  "colors": ["#c41e3a", "#1a1a1a"],
+  "squads": {
+    "masc": true,
+    "fem": false
+  }
+}
