@@ -54,6 +54,8 @@ Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 | 13 | **Clubes nascem, se fundem e morrem.** Nada de JSON autorado para clubes novos — `TeamGenerator` inventa. Fusão e extinção (que redistribui os actors) são simulados. |
 | 14 | **"Praça", não "Leilão".** Leilão pressupõe dinheiro que o esporte amador não tem. Na Praça ficam os actors sem clube — jogadores *e* comissão técnica — esperando convite. |
 | 15 | **Toda branch termina com algo que você abre o jogo e vê.** Quando a branch é lógica pura, ela entrega a visualização mais feia possível de si mesma — uma tela de debug conta. Vale retroativamente: `A.2` e `A.3` somaram ~700 linhas e zero pixels, e essa dívida é paga em `B.3`. |
+| 17 | **Modalidade, não gênero.** O jogo não pergunta se você é homem ou mulher; pergunta **em que modalidade você joga** e **qual você gerencia**. O `Actor` carrega `plays` e `manages` como arrays de `masc`/`fem`/`misto` — "joguei no masculino, treinei o feminino" é a norma no flag brasileiro, não exceção. Regra dura: `plays` não pode conter `masc` e `fem` juntos. |
+| 18 | **`The` é o Blackboard, `Record` é o item.** O quadro compartilhado por onde o estado flui entre cenas é `The.board`; cada entrada tipada nele é um `Record`, que sabe se serializar. O Flow gateia as próprias transições no conteúdo do quadro — controle dirigido por blackboard, e a lib já fazia isso sem nomear. |
 | 16 | **Dois arquivos de persistência, não um.** O *save* morre com o manager (decisão 11). O *perfil* sobrevive: guarda o que foi desbloqueado entre carreiras — a começar pelo modo **Pick Team**, que só abre depois de vencer uma rodada nacional. |
 
 ### Tiers — como o "tier 4" encaixa na realidade
@@ -218,9 +220,15 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 
 ## 6. Dívidas conhecidas
 
-- `The.snapshot()` varre `get_nodes_in_group("things")`, mas Things são
-  RefCounted e nunca entram na árvore — **o save não acha nada**. Bloqueante
-  pra jogo de carreira. Endereçado em `E.1`.
+- **O save tem dois furos independentes**, não um. Bloqueante pra jogo de
+  carreira, e `E.1` é reescrita do caminho de persistência, não um remendo:
+  1. `The.snapshot()` varre `get_nodes_in_group("things")`, mas Things são
+     RefCounted e nunca entram na árvore — a varredura sempre volta vazia.
+  2. `The.snapshot()` faz `board.duplicate(true)` e **nunca chama
+     `to_snapshot()`** nos Records. `duplicate` num Dictionary com RefCounted
+     copia a referência, não o estado — e referência não vira JSON. Os ganchos
+     de memento estão declarados, o `Hand` até os sobrescreve, e ninguém os
+     invoca.
 - `game/defs/flow.gd` é cópia literal do ScrapWarriorsOne. O próprio autor
   anotou no código que deveria viver na d5star. Exigiria o DefManager varrer
   também um diretório de defs da engine.

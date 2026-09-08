@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "id": "masc",
+      "label": {"pt": "Masculino", "en": "Men's"},
+      "min_women": 0
+    },
+    {
+      "id": "fem",
+      "label": {"pt": "Feminino", "en": "Women's"},
+      "min_women": "all"
+    },
+    {
+      "id": "misto",
+      "label": {"pt": "Misto", "en": "Mixed"},
+      "min_women": 2
+    }
+  ],
+
+  "formats": [
+    {
+      "id": "5x5",
+      "label": {"pt": "5×5", "en": "5×5"},
+      "on_field": 5,
+      "surface": "campo"
+    },
+    {
+      "id": "4x4",
+      "label": {"pt": "4×4 Areia", "en": "4×4 Beach"},
+      "on_field": 4,
+      "surface": "areia"
+    }
+  ]
+}
