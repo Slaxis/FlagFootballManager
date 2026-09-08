@@ -15,8 +15,19 @@
       "id": "module_select",
       "scene_file": "module_select",
       "transitions": {
-        "selected": "club_select",
+        "selected": "create_manager",
         "back": "start"
+      }
+    },
+    {
+      "id": "create_manager",
+      "scene_file": "create_manager",
+      "produces": [
+        "career"
+      ],
+      "transitions": {
+        "created": "club_select",
+        "back": "module_select"
       }
     },
     {
@@ -31,7 +42,10 @@
       "scene_file": "club_select",
       "transitions": {
         "back": "start"
-      }
+      },
+      "consumes": [
+        "career"
+      ]
     }
   ]
 }

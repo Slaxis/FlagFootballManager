@@ -34,11 +34,11 @@ func load_data(raw: Dictionary) -> void:
 			continue
 		var inputs: Array = derived.get("from", [])
 		if inputs.size() != DERIVED_INPUTS:
-			push_error("StatDef: derived '%s' has %d inputs, expected %d" % [id, inputs.size(), DERIVED_INPUTS])
+			Log.log(self, "error", "StatDef: derived '%s' has %d inputs, expected %d" % [id, inputs.size(), DERIVED_INPUTS])
 			continue
 		for input: Variant in inputs:
 			if not _base.has(_key(String(input))):
-				push_error("StatDef: derived '%s' reads unknown base stat '%s'" % [id, input])
+				Log.log(self, "error", "StatDef: derived '%s' reads unknown base stat '%s'" % [id, input])
 				return
 		_derived[id] = derived
 

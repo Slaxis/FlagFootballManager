@@ -13,11 +13,14 @@
 # ⚠️ Names are read with `text()`, never `attr()`: `ThingData.attr()` runs
 # strings through `format_attr()`, which lowercases them. "Lucas Silva" would
 # come back as "lucas silva".
+#
+# There is no `gender` field, deliberately. See `plays()` / `manages()`.
 class_name Actor
 extends Thing
 
-const GENDER_MASC := "masc"
-const GENDER_FEM := "fem"
+const CATEGORY_MASC := "masc"
+const CATEGORY_FEM := "fem"
+const CATEGORY_MISTO := "misto"
 const NO_TEAM := ""
 const NO_JERSEY := 0
 
@@ -48,8 +51,55 @@ func age() -> int:
 func set_age(value: int) -> void:
 	data["age"] = value
 
-func gender() -> String:
-	return String(attr("gender", GENDER_MASC))
+# --- Modalidade ---
+#
+# The game never asks whether someone is a man or a woman. It asks which
+# category they COMPETE in and which they COACH — because "played men's,
+# coached women's" is the norm in Brazilian flag, not an exception.
+
+# Categories this actor plays in as an athlete. Empty means they do not play.
+func plays() -> Array:
+	return data.get("plays", [])
+
+# Categories this actor coaches. A head coach running all three squads is a
+# real case, so there is no restriction here.
+func manages() -> Array:
+	return data.get("manages", [])
+
+func set_plays(categories: Array) -> void:
+	data["plays"] = _sanitize_plays(categories)
+
+func set_manages(categories: Array) -> void:
+	data["manages"] = _normalize(categories)
+
+func is_athlete() -> bool:
+	return not plays().is_empty()
+
+func is_coach() -> bool:
+	return not manages().is_empty()
+
+# You can play the men's side and the mixed side, or the women's and the mixed.
+# You cannot play both the men's and the women's — that is the one hard rule.
+static func plays_is_valid(categories: Array) -> bool:
+	return not (categories.has(CATEGORY_MASC) and categories.has(CATEGORY_FEM))
+
+# Drops the offending entry rather than silently accepting an impossible actor.
+# `fem` wins only because something has to: the caller should validate first.
+func _sanitize_plays(categories: Array) -> Array:
+	var clean: Array = _normalize(categories)
+	if not plays_is_valid(clean):
+		Log.log(self, "error",
+			"Actor '%s': plays cannot hold both masc and fem — dropping masc" % thing_id)
+		clean.erase(CATEGORY_MASC)
+	return clean
+
+func _normalize(categories: Array) -> Array:
+	var out: Array = []
+	for entry: Variant in categories:
+		var id: String = String(entry).strip_edges().to_lower()
+		if id != "" and not out.has(id):
+			out.append(id)
+	return out
 
 # --- Attributes ---
 

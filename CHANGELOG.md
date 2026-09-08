@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added — B.1 a B.4: o loop de abertura (2026-09-08)
+- Start Screen, Ajustes (PT/EN), Selecao de Modulo, Criar Gestor
+- Todo texto de UI em i18n (`game/defs/ui.json` + `UiText.t()`)
+- TeamGenerator: 6 clubes de varzea carioca completam o campeonato em 16
+- CategoryDef: masc/fem/misto x 5x5/4x4, com min_women
+- Actor perdeu `gender` e ganhou `plays`/`manages`
+- `Career extends Record`, produzido no Blackboard e validado pelo Flow
+
 ### Added — A.3 Actor (2026-09-06)
 - `Actor extends Thing` em `game/model/` — jogador, tecnico, scout e o
   manager sao a MESMA entidade; funcao e escalacao, nao tipo

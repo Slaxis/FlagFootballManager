@@ -12,7 +12,7 @@ func tests() -> Array:
 		"test_stats_within_range",
 		"test_age_within_range",
 		"test_name_is_filled_and_keeps_its_case",
-		"test_gender_changes_the_name_pool",
+		"test_category_changes_the_name_pool",
 		"test_quality_target_moves_overall",
 		"test_actors_are_specialists",
 		"test_defaults_put_actor_in_praca",
@@ -57,12 +57,14 @@ func test_name_is_filled_and_keeps_its_case(t: TestHelper) -> void:
 		"nome veio minúsculo — leitura passou por attr() em vez de text(): '%s'" % actor.first_name())
 	t.check(actor.display_name() != "", "display_name vazio")
 
-func test_gender_changes_the_name_pool(t: TestHelper) -> void:
-	var masc := ActorGenerator.generate(SEED, 50, Actor.GENDER_MASC)
-	var fem := ActorGenerator.generate(SEED, 50, Actor.GENDER_FEM)
+# The generator takes a CATEGORY, not a gender (decision 17). The category picks
+# which name pool a generated athlete is drawn from.
+func test_category_changes_the_name_pool(t: TestHelper) -> void:
+	var masc := ActorGenerator.generate(SEED, 50, Actor.CATEGORY_MASC)
+	var fem := ActorGenerator.generate(SEED, 50, Actor.CATEGORY_FEM)
 	t.check(masc.first_name() != fem.first_name(),
-		"mesma seed em gêneros diferentes deveria puxar de pools diferentes")
-	t.equal(fem.gender(), Actor.GENDER_FEM, "gênero gravado")
+		"mesma seed em modalidades diferentes deveria puxar de pools diferentes")
+	t.equal(str(fem.plays()), str([Actor.CATEGORY_FEM]), "modalidade gravada em plays")
 
 func test_quality_target_moves_overall(t: TestHelper) -> void:
 	var weak: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 25))
@@ -88,6 +90,8 @@ func test_actors_are_specialists(t: TestHelper) -> void:
 func test_defaults_put_actor_in_praca(t: TestHelper) -> void:
 	var actor := ActorGenerator.generate(SEED, 50)
 	t.check(actor.in_praca(), "actor recém-criado deveria estar na Praça")
+	t.check(actor.is_athlete(), "actor gerado joga na modalidade que pediram")
+	t.check(not actor.is_coach(), "actor gerado não nasce técnico")
 	t.equal(actor.team(), Actor.NO_TEAM, "time")
 	t.equal(actor.jersey(), Actor.NO_JERSEY, "camisa")
 	t.equal(actor.perks().size(), 0, "perks")

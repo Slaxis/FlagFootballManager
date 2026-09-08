@@ -21,7 +21,7 @@ const NICKNAME_CHANCE := 0.6
 static func generate(
 	seed_value: int,
 	quality: int,
-	gender: String = Actor.GENDER_MASC,
+	category: String = Actor.CATEGORY_MASC,
 	spread: float = SPREAD,
 	age_min: int = AGE_MIN,
 	age_max: int = AGE_MAX,
@@ -29,14 +29,15 @@ static func generate(
 	var rng: RandomNumberGenerator = SeedRng.make_rng(seed_value)
 	var actor := Actor.new()
 	var payload: Dictionary = {
-		"gender": gender,
+		"plays": [category],
+		"manages": [],
 		"age": rng.randi_range(age_min, age_max),
 		"stats": _roll_stats(rng, quality, spread),
 		"perks": [],
 		"team": Actor.NO_TEAM,
 		"jersey": Actor.NO_JERSEY,
 	}
-	payload.merge(_roll_name(rng, gender))
+	payload.merge(_roll_name(rng, category))
 	actor._apply_data("actor_%d" % seed_value, "actor", payload)
 	return actor
 
@@ -46,13 +47,13 @@ static func squad(
 	base_seed: int,
 	count: int,
 	quality: int,
-	gender: String = Actor.GENDER_MASC,
+	category: String = Actor.CATEGORY_MASC,
 	spread: float = SPREAD,
 ) -> Array[Actor]:
 	var out: Array[Actor] = []
 	for i: int in range(count):
 		var sub_seed: int = SeedRng.derive(base_seed, "actor_%d" % i)
-		out.append(generate(sub_seed, quality, gender, spread))
+		out.append(generate(sub_seed, quality, category, spread))
 	return out
 
 # --- Internals ---
@@ -66,12 +67,18 @@ static func _roll_stats(rng: RandomNumberGenerator, quality: int, spread: float)
 		out[id] = clampi(int(round(rng.randfn(float(quality), spread))), STAT_MIN, STAT_MAX)
 	return out
 
-static func _roll_name(rng: RandomNumberGenerator, gender: String) -> Dictionary:
+# The name pool follows the squad's category, which is a good enough proxy for
+# an ISS-of-flag: a men's side draws from the men's pool. A mixed side flips a
+# coin, because a mixed squad genuinely holds both.
+static func _roll_name(rng: RandomNumberGenerator, category: String) -> Dictionary:
 	var names := Drive.def("name_gen") as NameGenDef
 	if names == null:
 		return {"first_name": "", "last_name": "", "nickname": ""}
+	var pool: String = category
+	if category == Actor.CATEGORY_MISTO:
+		pool = Actor.CATEGORY_FEM if rng.randf() < 0.5 else Actor.CATEGORY_MASC
 	return {
-		"first_name": names.random_first_name(gender, rng),
+		"first_name": names.random_first_name(pool, rng),
 		"last_name": names.random_last_name(rng),
-		"nickname": names.random_nickname(gender, rng) if rng.randf() < NICKNAME_CHANCE else "",
+		"nickname": names.random_nickname(pool, rng) if rng.randf() < NICKNAME_CHANCE else "",
 	}
