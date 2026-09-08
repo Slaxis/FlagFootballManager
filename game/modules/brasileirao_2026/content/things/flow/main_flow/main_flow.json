@@ -6,9 +6,17 @@
       "id": "start",
       "scene_file": "start",
       "transitions": {
-        "new_game": "club_select",
+        "new_game": "module_select",
         "settings": "settings",
         "quit": "$exit"
+      }
+    },
+    {
+      "id": "module_select",
+      "scene_file": "module_select",
+      "transitions": {
+        "selected": "club_select",
+        "back": "start"
       }
     },
     {
