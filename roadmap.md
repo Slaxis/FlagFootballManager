@@ -51,6 +51,8 @@ Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 | 12 | **A força do Manager persiste e cresce com resultados.** É a correção da falha do Elifoot, onde o técnico não tem memória: perdeu por azar, foi punido igual. Aqui azar é ruído, não sentença. |
 | 13 | **Clubes nascem, se fundem e morrem.** Nada de JSON autorado para clubes novos — `TeamGenerator` inventa. Fusão e extinção (que redistribui os actors) são simulados. |
 | 14 | **"Praça", não "Leilão".** Leilão pressupõe dinheiro que o esporte amador não tem. Na Praça ficam os actors sem clube — jogadores *e* comissão técnica — esperando convite. |
+| 15 | **Toda branch termina com algo que você abre o jogo e vê.** Quando a branch é lógica pura, ela entrega a visualização mais feia possível de si mesma — uma tela de debug conta. Vale retroativamente: `A.2` e `A.3` somaram ~700 linhas e zero pixels, e essa dívida é paga em `B.3`. |
+| 16 | **Dois arquivos de persistência, não um.** O *save* morre com o manager (decisão 11). O *perfil* sobrevive: guarda o que foi desbloqueado entre carreiras — a começar pelo modo **Pick Team**, que só abre depois de vencer uma rodada nacional. |
 
 ### Tiers — como o "tier 4" encaixa na realidade
 
@@ -106,6 +108,30 @@ Receita por tier: **mensalidade de atleta** (tier baixo) → **patrocínio**
 ---
 
 ## 3. O loop
+
+### Fluxo de telas
+
+```
+START SCREEN
+  Continue (cinza até E.1) · Novo Jogo · Ajustes · Sair
+        │
+        └─ CREATE MANAGER
+             nome (sorteado, rerolável) · 18 anos
+             Career Type:
+               ( ) Pick Team  🔒  "vença uma rodada nacional pra liberar"
+               (•) Random         sorteia um clube tier 4  ← Elifoot
+                  │
+                  └─ TEAM SCREEN  ── abas ──┬── Elenco        (o seu)
+                                            ├── Adversários   (os outros clubes)
+                                            ├── Comissão Técnica   (D.1)
+                                            ├── Local de Treino    (D.2)
+                                            └── Financeiro         (D.3)
+                       └─ [ Próxima Semana ]  → C.4
+```
+
+A barra de abas nasce com **duas** abas em `B.3` e cresce conforme a Fase D
+entrega as outras. `club_select` de hoje vira a aba **Adversários**.
+
 
 ```
 Novo Jogo
@@ -205,13 +231,15 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 | `A.5-team-generator` | `TeamGenerator` inventa clubes; preenche o Carioca com não federados | |
 | `A.6-perks` | Catálogo de perks com efeito mecânico | |
 
-### Fase B — A casca
-| Branch | Entrega |
-|---|---|
-| `B.1-manager-actor` | O seu Manager: nome, idade 18, stats |
-| `B.2-new-game-draft` | Novo Jogo sorteia você como manager de um clube tier 4 |
-| `B.3-club-home` | Home com barra de abas + botão Próxima Semana |
-| `B.4-elenco` | A aba Elenco: lista com ASCII de qualidade e as funções acumuladas |
+### Fase B — O clube na tela
+| # | Branch | O que você vê no jogo |
+|---|---|---|
+| **B.1** | `start-screen` | A Start Screen: Continue (cinza), Novo Jogo, Ajustes, Sair |
+| **B.2** | `create-manager` | Cria seu manager (nome sorteado, 18 anos) e escolhe Career Type — Random ativo, **Pick Team cadeado** |
+| **B.3** | `team-screen` | Seu clube com abas **Elenco** e **Adversários**. Nomes, idade, Geral, barra ASCII. **Paga a dívida de A.2 e A.3** |
+| **B.4** | `team-generator` *(era A.5)* | A lista salta de 9 pra 16 clubes; abre um não federado e vê o elenco visivelmente pior |
+| **B.5** | `role-assignment` *(era A.4)* | Coluna **Função** no Elenco: escala alguém em duas e vê o Geral cair |
+| **B.6** | `perks` *(era A.6)* | Os ícones `★ ⚡ 🧠 🪨` ao lado dos nomes |
 
 ### Fase C — O coletivo  🔥 *fim desta fase = jogo rodando em loop*
 | Branch | Entrega |
