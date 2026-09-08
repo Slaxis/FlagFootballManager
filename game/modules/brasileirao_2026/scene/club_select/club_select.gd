@@ -4,12 +4,6 @@
 # the UF-derived region are all wired.
 extends Menu
 
-const _TIER_LABEL: Dictionary = {
-	1: "SÉRIE A",
-	2: "SÉRIE B",
-	3: "SÉRIE C",
-	4: "NÃO FED.",
-}
 const _TIER_COLOR: Dictionary = {
 	1: Color(0.95, 0.82, 0.35),
 	2: Color(0.75, 0.78, 0.82),
@@ -39,13 +33,13 @@ func _build_ui() -> void:
 	margin.add_child(box)
 
 	var title := Label.new()
-	title.text = "CAMPEONATO CARIOCA"
+	title.text = UiText.t("clubs.title")
 	title.add_theme_font_size_override("font_size", 34)
 	box.add_child(title)
 
 	var teams: Array = _teams()
 	var subtitle := Label.new()
-	subtitle.text = "%s · %d clubes" % [_region_label(teams), teams.size()]
+	subtitle.text = UiText.t("clubs.count") % [_region_label(teams), teams.size()]
 	subtitle.add_theme_color_override("font_color", Color(0.58, 0.70, 0.60))
 	box.add_child(subtitle)
 
@@ -60,7 +54,7 @@ func _build_ui() -> void:
 	box.add_child(_spacer(10))
 
 	var back := Button.new()
-	back.text = "Voltar"
+	back.text = UiText.t("common.back")
 	back.custom_minimum_size = Vector2(160, 40)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	back.pressed.connect(func() -> void: go("back"))
@@ -93,7 +87,7 @@ func _team_row(team: Dictionary) -> Control:
 
 	var tier: int = int(team.get("tier", 4))
 	var badge := Label.new()
-	badge.text = String(_TIER_LABEL.get(tier, "?"))
+	badge.text = UiText.t("tier.%d" % tier, "?")
 	badge.custom_minimum_size = Vector2(96, 0)
 	badge.add_theme_color_override("font_color", _TIER_COLOR.get(tier, Color.WHITE))
 	row.add_child(badge)

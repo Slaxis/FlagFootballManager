@@ -1,20 +1,28 @@
 {
   "id": "main_flow",
-  "entry": "main",
+  "entry": "start",
   "steps": [
     {
-      "id": "main",
-      "scene_file": "main",
+      "id": "start",
+      "scene_file": "start",
       "transitions": {
-        "play": "club_select",
+        "new_game": "club_select",
+        "settings": "settings",
         "quit": "$exit"
+      }
+    },
+    {
+      "id": "settings",
+      "scene_file": "settings",
+      "transitions": {
+        "back": "start"
       }
     },
     {
       "id": "club_select",
       "scene_file": "club_select",
       "transitions": {
-        "back": "main"
+        "back": "start"
       }
     }
   ]

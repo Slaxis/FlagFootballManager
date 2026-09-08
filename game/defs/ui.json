@@ -1,0 +1,30 @@
+{
+  "strings": {
+    "common.back":          {"pt": "Voltar",            "en": "Back"},
+
+    "start.title":          {"pt": "FLAG FOOTBALL MANAGER", "en": "FLAG FOOTBALL MANAGER"},
+    "start.tagline":        {"pt": "Da várzea ao Brasileirão", "en": "From the sandlot to the national league"},
+    "start.continue":       {"pt": "Continuar",         "en": "Continue"},
+    "start.continue_hint":  {"pt": "nenhuma carreira salva", "en": "no saved career"},
+    "start.new_game":       {"pt": "Novo Jogo",         "en": "New Game"},
+    "start.settings":       {"pt": "Ajustes",           "en": "Settings"},
+    "start.quit":           {"pt": "Sair",              "en": "Quit"},
+
+    "settings.title":       {"pt": "AJUSTES",           "en": "SETTINGS"},
+    "settings.language":    {"pt": "Idioma",            "en": "Language"},
+
+    "module.title":         {"pt": "ESCOLHA O UNIVERSO", "en": "CHOOSE A UNIVERSE"},
+    "module.subtitle":      {"pt": "%d módulo(s) disponível(is)", "en": "%d module(s) available"},
+    "module.native":        {"pt": "nativo",            "en": "native"},
+    "module.user":          {"pt": "seu",               "en": "yours"},
+    "module.none":          {"pt": "Nenhum módulo encontrado em game/modules/ ou user://modules", "en": "No modules found in game/modules/ or user://modules"},
+
+    "clubs.title":          {"pt": "CLUBES",            "en": "CLUBS"},
+    "clubs.count":          {"pt": "%s · %d clubes",    "en": "%s · %d clubs"},
+
+    "tier.1":               {"pt": "SÉRIE A",           "en": "SERIES A"},
+    "tier.2":               {"pt": "SÉRIE B",           "en": "SERIES B"},
+    "tier.3":               {"pt": "SÉRIE C",           "en": "SERIES C"},
+    "tier.4":               {"pt": "NÃO FED.",          "en": "UNAFFIL."}
+  }
+}
