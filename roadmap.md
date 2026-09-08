@@ -115,7 +115,11 @@ Receita por tier: **mensalidade de atleta** (tier baixo) → **patrocínio**
 START SCREEN
   Continue (cinza até E.1) · Novo Jogo · Ajustes · Sair
         │
-        └─ CREATE MANAGER
+        └─ MODULE SELECT
+             "Brasileirão de Flag 2026"   ← módulo nativo
+             + qualquer coisa em user://modules  ← universos do jogador
+             │
+             └─ CREATE MANAGER
              nome (sorteado, rerolável) · 18 anos
              Career Type:
                ( ) Pick Team  🔒  "vença uma rodada nacional pra liberar"
@@ -129,8 +133,12 @@ START SCREEN
                        └─ [ Próxima Semana ]  → C.4
 ```
 
-A barra de abas nasce com **duas** abas em `B.3` e cresce conforme a Fase D
+A barra de abas nasce com **duas** abas em `B.4` e cresce conforme a Fase D
 entrega as outras. `club_select` de hoje vira a aba **Adversários**.
+
+A seleção de módulo não é enfeite: é onde o jogador pluga o **próprio
+universo**, como as ligas caseiras do Elifoot. A d5star já varre
+`user://modules`, então isso funciona sem código novo.
 
 
 ```
@@ -235,11 +243,12 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 | # | Branch | O que você vê no jogo |
 |---|---|---|
 | **B.1** | `start-screen` | A Start Screen: Continue (cinza), Novo Jogo, Ajustes, Sair |
-| **B.2** | `create-manager` | Cria seu manager (nome sorteado, 18 anos) e escolhe Career Type — Random ativo, **Pick Team cadeado** |
-| **B.3** | `team-screen` | Seu clube com abas **Elenco** e **Adversários**. Nomes, idade, Geral, barra ASCII. **Paga a dívida de A.2 e A.3** |
-| **B.4** | `team-generator` *(era A.5)* | A lista salta de 9 pra 16 clubes; abre um não federado e vê o elenco visivelmente pior |
-| **B.5** | `role-assignment` *(era A.4)* | Coluna **Função** no Elenco: escala alguém em duas e vê o Geral cair |
-| **B.6** | `perks` *(era A.6)* | Os ícones `★ ⚡ 🧠 🪨` ao lado dos nomes |
+| **B.2** | `module-select` | A lista de módulos com o nativo "Brasileirão de Flag 2026" — e qualquer universo em `user://modules` |
+| **B.3** | `create-manager` | Cria seu manager (nome sorteado, 18 anos) e escolhe Career Type — Random ativo, **Pick Team cadeado** |
+| **B.4** | `team-screen` | Seu clube com abas **Elenco** e **Adversários**. Nomes, idade, Geral, barra ASCII. **Paga a dívida de A.2 e A.3** |
+| **B.5** | `team-generator` *(era A.5)* | A lista salta de 9 pra 16 clubes; abre um não federado e vê o elenco visivelmente pior |
+| **B.6** | `role-assignment` *(era A.4)* | Coluna **Função** no Elenco: escala alguém em duas e vê o Geral cair |
+| **B.7** | `perks` *(era A.6)* | Os ícones `★ ⚡ 🧠 🪨` ao lado dos nomes |
 
 ### Fase C — O coletivo  🔥 *fim desta fase = jogo rodando em loop*
 | Branch | Entrega |
