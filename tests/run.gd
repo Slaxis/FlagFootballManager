@@ -12,6 +12,7 @@ extends Node
 
 const _SUITES: Array[String] = [
 	"res://tests/test_stat.gd",
+	"res://tests/test_actor.gd",
 ]
 
 func _ready() -> void:

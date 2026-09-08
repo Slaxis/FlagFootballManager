@@ -234,7 +234,7 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 |---|---|---|
 | `A.1-team-database` | Os 9 clubes cariocas como Things, região derivada da UF, tier e reputação | ✅ |
 | `A.2-stat-model` | 7 stats base + 9 derivadas (média de 3, piso) + Geral, e a suíte de testes | ✅ |
-| `A.3-actor-model` | **Actor único**: jogador, técnico, scout e manager são o mesmo tipo | |
+| `A.3-actor-model` | **Actor único**: jogador, técnico, scout e manager são o mesmo tipo | ✅ |
 | `A.4-role-assignment` | Escalação em funções + penalidade de acumular | |
 | `A.5-team-generator` | `TeamGenerator` inventa clubes; preenche o Carioca com não federados | |
 | `A.6-perks` | Catálogo de perks com efeito mecânico | |
