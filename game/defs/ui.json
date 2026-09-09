@@ -197,12 +197,12 @@
       "en": "SKILLS"
     },
     "manager.points_left": {
-      "pt": "%d pontos",
-      "en": "%d points"
+      "pt": "%d pontos de carreira",
+      "en": "%d career points"
     },
     "manager.invest_hint": {
-      "pt": "Cada ponto é tempo de vida. Onde você investiu sua adolescência?",
-      "en": "Every point is time you lived. Where did you invest your adolescence?"
+      "pt": "Cada ponto de carreira é tempo de vida. Atributo custa 3, habilidade custa 2 — evoluir o corpo é mais caro que aprender.",
+      "en": "Every career point is time you lived. An attribute costs 3, a skill costs 2 — growing is dearer than learning."
     },
     "manager.team_bonus": {
       "pt": "seu time ganha %+d nesta stat",

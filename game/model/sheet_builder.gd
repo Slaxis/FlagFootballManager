@@ -14,7 +14,8 @@ class_name SheetBuilder
 
 const START_AGE := 12
 const END_AGE := 18
-const POINTS_PER_YEAR := 8
+# Career points are the only currency. A year of life buys this many.
+const CAREER_POINTS_PER_YEAR := 40
 
 # A twelve-year-old: a bit under half an adult, and NO practice at all. A kid
 # has raw material and nothing else; every skill point is a choice made later.
@@ -26,15 +27,20 @@ const CHILD_SKILL_STEP := 0
 const MIN_STAT_STEP := 1
 const MIN_SKILL_STEP := 0
 
-# Cost of ENTERING each step. Attributes climb steeply because the scale means
-# something: ten steps is an Olympic medal contender, and nobody buys that at
-# eighteen.
-# Every step must have a price, including the low ones: a table starting at 4
-# silently makes an attribute rolled at 2 impossible to ever raise, because
-# there is no cost to look up and the button just never enables.
-const ATTRIBUTE_COST: Dictionary = {1: 1, 2: 1, 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 8, 9: 13, 10: 21}
-# Skills are practice, so they are cheap — but they cap out at the same wall.
-const SKILL_COST: Dictionary = {1: 1, 2: 1, 3: 2, 4: 2, 5: 3, 6: 3, 7: 4, 8: 4, 9: 5, 10: 5}
+# Entering step N costs N points of its own kind: the first step is cheap and
+# the tenth is brutal, which is what keeps "Olympic medal contender" out of
+# reach at eighteen without needing a hand-tuned table.
+#
+# The two kinds then convert into career points at different rates, and THAT is
+# where "attributes are hard, skills are easy" lives:
+#
+#     1 stat point   = 3 career points
+#     1 skill point  = 2 career points
+#
+# So raising an attribute to step 5 costs 15 career points and raising a skill
+# to the same step costs 10. Same shape, different weight.
+const STAT_POINT_IN_CAREER := 3
+const SKILL_POINT_IN_CAREER := 2
 
 var stats: Dictionary = {}    # id -> step
 var skills: Dictionary = {}   # id -> step
@@ -45,7 +51,7 @@ var _base_stats: Dictionary = {}
 var _base_skills: Dictionary = {}
 
 static func total_points() -> int:
-	return (END_AGE - START_AGE) * POINTS_PER_YEAR
+	return (END_AGE - START_AGE) * CAREER_POINTS_PER_YEAR
 
 # Rolls the twelve-year-old this build starts from. Deterministic per seed, so
 # the same career always offers the same child.
@@ -70,9 +76,9 @@ static func child(seed_value: int) -> SheetBuilder:
 func spent() -> int:
 	var total: int = 0
 	for id: String in stats.keys():
-		total += _cost_between(ATTRIBUTE_COST, int(_base_stats.get(id, 0)), int(stats[id]))
+		total += _cost_between(int(_base_stats.get(id, 0)), int(stats[id])) * STAT_POINT_IN_CAREER
 	for id: String in skills.keys():
-		total += _cost_between(SKILL_COST, int(_base_skills.get(id, 0)), int(skills[id]))
+		total += _cost_between(int(_base_skills.get(id, 0)), int(skills[id])) * SKILL_POINT_IN_CAREER
 	return total
 
 func remaining() -> int:
@@ -87,13 +93,16 @@ func is_complete() -> bool:
 
 # The whole point: your age IS how much you spent.
 func age() -> int:
-	return START_AGE + int(floor(float(spent()) / float(POINTS_PER_YEAR)))
+	return START_AGE + int(floor(float(spent()) / float(CAREER_POINTS_PER_YEAR)))
 
+# In career points, which is the only number the player ever spends.
 func cost_to_raise_stat(id: String) -> int:
-	return int(ATTRIBUTE_COST.get(int(stats.get(id, 0)) + 1, -1))
+	var next_step: int = int(stats.get(id, 0)) + 1
+	return -1 if next_step > StatDef.MAX_STEP else next_step * STAT_POINT_IN_CAREER
 
 func cost_to_raise_skill(id: String) -> int:
-	return int(SKILL_COST.get(int(skills.get(id, 0)) + 1, -1))
+	var next_step: int = int(skills.get(id, 0)) + 1
+	return -1 if next_step > StatDef.MAX_STEP else next_step * SKILL_POINT_IN_CAREER
 
 func can_raise_stat(id: String) -> bool:
 	var cost: int = cost_to_raise_stat(id)
@@ -159,15 +168,17 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 
 # --- Internals ---
 
-# Signed on purpose: walking DOWN returns what walking up would have cost.
-# Without this, lowering below the rolled child would silently burn the points
-# instead of freeing them.
-static func _cost_between(table: Dictionary, from_step: int, to_step: int) -> int:
+# Points of its own kind between two steps, signed. Walking DOWN returns what
+# walking up would have cost — without the sign, selling your childhood back
+# would burn the points instead of freeing them.
+#
+# Entering step N costs N, so the sum from a to b is the triangular difference.
+static func _cost_between(from_step: int, to_step: int) -> int:
 	if to_step == from_step:
 		return 0
 	var low: int = mini(from_step, to_step)
 	var high: int = maxi(from_step, to_step)
 	var total: int = 0
 	for step: int in range(low + 1, high + 1):
-		total += int(table.get(step, 0))
+		total += step
 	return total if to_step > from_step else -total

@@ -14,9 +14,10 @@ func tests() -> Array:
 		"test_lowering_refunds_exactly_what_raising_cost",
 		"test_start_is_blocked_until_the_budget_is_gone",
 		"test_cannot_spend_more_than_you_have",
-		"test_ten_steps_is_out_of_reach_at_eighteen",
+		"test_a_prodigy_costs_everything_else",
 		"test_balanced_build_fits_the_budget",
-		"test_every_step_has_a_price",
+		"test_step_costs_are_linear_and_stats_cost_more",
+		"test_ten_steps_costs_more_than_a_life",
 		"test_bakes_steps_into_stored_units",
 		"test_is_deterministic",
 	]
@@ -39,7 +40,7 @@ func test_age_climbs_as_you_spend(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
 	var id: String = String(builder.stats.keys()[0])
 	var before: int = builder.age()
-	for i: int in range(SheetBuilder.POINTS_PER_YEAR):
+	for i: int in range(20):
 		builder.raise_stat(id)
 	t.check(builder.age() > before,
 		"gastar não envelheceu (%d -> %d, gasto %d)" % [before, builder.age(), builder.spent()])
@@ -97,15 +98,18 @@ func test_cannot_spend_more_than_you_have(t: TestHelper) -> void:
 	t.check(builder.spent() <= SheetBuilder.total_points(),
 		"gastou %d de %d" % [builder.spent(), SheetBuilder.total_points()])
 
-# Ten steps is an Olympic medal contender. Nobody buys that at eighteen, and
-# the cost curve is what makes the anchor mean something.
-func test_ten_steps_is_out_of_reach_at_eighteen(t: TestHelper) -> void:
+# Ten steps IS reachable at eighteen — a kid who did nothing but one thing can
+# be exceptional at it. What it must cost is everything else: the prodigy walks
+# out with over half their life spent on a single attribute.
+func test_a_prodigy_costs_everything_else(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
 	var id: String = String(builder.stats.keys()[0])
 	for i: int in range(20):
 		builder.raise_stat(id)
-	t.check(int(builder.stats[id]) < 10,
-		"chegou a %d passos com o orçamento inteiro num atributo só" % int(builder.stats[id]))
+	t.equal(int(builder.stats[id]), StatDef.MAX_STEP, "não conseguiu chegar ao topo")
+	t.check(builder.spent() > SheetBuilder.total_points() / 2,
+		"o prodígio só gastou %d de %d — barato demais" %
+			[builder.spent(), SheetBuilder.total_points()])
 
 # The budget should land a rounded adult: everything at the average, with some
 # practice. Specialising then means trading that breadth away.
@@ -123,12 +127,29 @@ func test_balanced_build_fits_the_budget(t: TestHelper) -> void:
 	t.check(builder.remaining() > 0,
 		"não sobrou nada para habilidade nenhuma")
 
-# A missing price is not a missing feature — it is a button that never
-# enables, and an attribute the player can never fix.
-func test_every_step_has_a_price(t: TestHelper) -> void:
+# Entering step N costs N of its own kind, converted into career points at
+# 3 for an attribute and 2 for a skill. Attributes are the hard half.
+func test_step_costs_are_linear_and_stats_cost_more(t: TestHelper) -> void:
+	var builder: SheetBuilder = _builder()
+	var stat_id: String = String(builder.stats.keys()[0])
+	var skill_id: String = String(builder.skills.keys()[0])
+	var stat_step: int = int(builder.stats[stat_id])
+	t.equal(builder.cost_to_raise_stat(stat_id), (stat_step + 1) * SheetBuilder.STAT_POINT_IN_CAREER,
+		"custo do próximo passo de atributo")
+	t.equal(builder.cost_to_raise_skill(skill_id), 1 * SheetBuilder.SKILL_POINT_IN_CAREER,
+		"custo do primeiro passo de habilidade")
+	t.check(SheetBuilder.STAT_POINT_IN_CAREER > SheetBuilder.SKILL_POINT_IN_CAREER,
+		"atributo deveria ser mais caro que habilidade")
+
+# Nobody is a medal contender at eighteen: step 10 alone costs 30 career
+# points, and the ten of them together cost more than a whole childhood.
+func test_ten_steps_costs_more_than_a_life(t: TestHelper) -> void:
+	var total: int = 0
 	for step: int in range(1, StatDef.MAX_STEP + 1):
-		t.check(SheetBuilder.ATTRIBUTE_COST.has(step), "atributo sem preço no passo %d" % step)
-		t.check(SheetBuilder.SKILL_COST.has(step), "habilidade sem preço no passo %d" % step)
+		total += step * SheetBuilder.STAT_POINT_IN_CAREER
+	t.check(total > SheetBuilder.total_points() / 2,
+		"levar um atributo do zero ao topo custa %d de %d — barato demais" %
+			[total, SheetBuilder.total_points()])
 
 func test_bakes_steps_into_stored_units(t: TestHelper) -> void:
 	var def := Drive.def("stat") as StatDef
