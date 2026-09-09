@@ -231,6 +231,10 @@
     "manager.roll_hint": {
       "pt": "um teste desta habilidade rola %d + 2d5*",
       "en": "a check on this skill rolls %d + 2d5*"
+    },
+    "manager.must_spend": {
+      "pt": "você ainda tem %d anos para viver — gaste tudo antes de começar",
+      "en": "you still have %d years to live — spend them all before starting"
     }
   }
 }

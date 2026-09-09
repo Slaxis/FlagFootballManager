@@ -139,7 +139,7 @@ func _header() -> Control:
 	var left := Label.new()
 	left.text = UiText.t("manager.points_left") % _build.remaining()
 	left.add_theme_font_size_override("font_size", 18)
-	left.add_theme_color_override("font_color", TEXT if _build.remaining() > 0 else MUTED)
+	left.add_theme_color_override("font_color", WARN if _build.remaining() != 0 else ACCENT)
 	row.add_child(left)
 	return row
 
@@ -323,8 +323,11 @@ func _career_type() -> Control:
 	box.add_child(pick)
 	box.add_child(_hint(UiText.t("manager.pick_locked")))
 	box.add_child(_spacer(4))
-	box.add_child(_flat_button(UiText.t("manager.random"), _on_draw, true))
-	box.add_child(_hint(UiText.t("manager.random_hint")))
+	var draw: Button = _flat_button(UiText.t("manager.random"), _on_draw, true)
+	draw.disabled = not _build.is_complete()
+	box.add_child(draw)
+	box.add_child(_hint(UiText.t("manager.random_hint") if _build.is_complete()
+		else UiText.t("manager.must_spend") % _build.remaining()))
 	return box
 
 # --- Result ---

@@ -16,9 +16,15 @@ const START_AGE := 12
 const END_AGE := 18
 const POINTS_PER_YEAR := 8
 
-# A twelve-year-old: a bit under half an adult, and barely any practice.
+# A twelve-year-old: a bit under half an adult, and NO practice at all. A kid
+# has raw material and nothing else; every skill point is a choice made later.
 const CHILD_ATTRIBUTE_STEP := 3
-const CHILD_SKILL_STEP := 1
+const CHILD_SKILL_STEP := 0
+
+# Floors. You may sell your childhood back down to one step in an attribute and
+# spend the years elsewhere — a bad body that learned to read the game.
+const MIN_STAT_STEP := 1
+const MIN_SKILL_STEP := 0
 
 # Cost of ENTERING each step. Attributes climb steeply because the scale means
 # something: ten steps is an Olympic medal contender, and nobody buys that at
@@ -52,7 +58,7 @@ static func child(seed_value: int) -> SheetBuilder:
 	for id: String in def.base_ids():
 		builder.stats[id] = clampi(CHILD_ATTRIBUTE_STEP + rng.randi_range(-1, 1), 1, StatDef.MAX_STEP)
 	for id: String in def.skill_ids():
-		builder.skills[id] = clampi(CHILD_SKILL_STEP + rng.randi_range(0, 1), 0, StatDef.MAX_STEP)
+		builder.skills[id] = CHILD_SKILL_STEP
 	builder.height = snappedf(rng.randfn(1.78, 0.075), 0.01)
 	builder.weight = snappedf(rng.randfn(78.0, 9.0), 1.0)
 	builder._base_stats = builder.stats.duplicate()
@@ -72,6 +78,13 @@ func spent() -> int:
 func remaining() -> int:
 	return total_points() - spent()
 
+# You leave this screen at eighteen or not at all. Every unspent point is a
+# year you did not live, and the game has no room for a manager who is still
+# fifteen — so the button that starts the career stays shut until the budget is
+# gone. Rearranging is free; leaving early is not.
+func is_complete() -> bool:
+	return remaining() == 0
+
 # The whole point: your age IS how much you spent.
 func age() -> int:
 	return START_AGE + int(floor(float(spent()) / float(POINTS_PER_YEAR)))
@@ -90,13 +103,13 @@ func can_raise_skill(id: String) -> bool:
 	var cost: int = cost_to_raise_skill(id)
 	return cost >= 0 and cost <= remaining()
 
-# You can never go below the child you were rolled as — those years were not
-# yours to spend.
+# Going below the child you were rolled as is allowed, and refunds: those steps
+# were paid for by a childhood you are choosing not to have had.
 func can_lower_stat(id: String) -> bool:
-	return int(stats.get(id, 0)) > int(_base_stats.get(id, 0))
+	return int(stats.get(id, 0)) > MIN_STAT_STEP
 
 func can_lower_skill(id: String) -> bool:
-	return int(skills.get(id, 0)) > int(_base_skills.get(id, 0))
+	return int(skills.get(id, 0)) > MIN_SKILL_STEP
 
 func raise_stat(id: String) -> void:
 	if can_raise_stat(id):
@@ -146,8 +159,15 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 
 # --- Internals ---
 
+# Signed on purpose: walking DOWN returns what walking up would have cost.
+# Without this, lowering below the rolled child would silently burn the points
+# instead of freeing them.
 static func _cost_between(table: Dictionary, from_step: int, to_step: int) -> int:
+	if to_step == from_step:
+		return 0
+	var low: int = mini(from_step, to_step)
+	var high: int = maxi(from_step, to_step)
 	var total: int = 0
-	for step: int in range(from_step + 1, to_step + 1):
+	for step: int in range(low + 1, high + 1):
 		total += int(table.get(step, 0))
-	return total
+	return total if to_step > from_step else -total

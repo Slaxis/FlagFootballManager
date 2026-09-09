@@ -10,7 +10,9 @@ func tests() -> Array:
 		"test_age_climbs_as_you_spend",
 		"test_age_goes_back_when_you_take_points_back",
 		"test_full_budget_reaches_eighteen",
-		"test_cannot_go_below_the_child_you_rolled",
+		"test_can_sell_the_child_back_down_to_one",
+		"test_lowering_refunds_exactly_what_raising_cost",
+		"test_start_is_blocked_until_the_budget_is_gone",
 		"test_cannot_spend_more_than_you_have",
 		"test_ten_steps_is_out_of_reach_at_eighteen",
 		"test_balanced_build_fits_the_budget",
@@ -29,6 +31,8 @@ func test_starts_as_a_twelve_year_old(t: TestHelper) -> void:
 	t.equal(builder.remaining(), SheetBuilder.total_points(), "bolso cheio")
 	for step: int in builder.stats.values():
 		t.check(step >= 2 and step <= 4, "atributo de criança fora de 2..4: %d" % step)
+	for step: int in builder.skills.values():
+		t.equal(step, 0, "criança de 12 não tem prática nenhuma")
 
 # The mechanic in one assertion: points ARE years.
 func test_age_climbs_as_you_spend(t: TestHelper) -> void:
@@ -57,14 +61,35 @@ func test_full_budget_reaches_eighteen(t: TestHelper) -> void:
 	t.check(builder.remaining() < 1, "sobraram %d pontos" % builder.remaining())
 	t.equal(builder.age(), SheetBuilder.END_AGE, "gastar tudo deveria dar 18")
 
-func test_cannot_go_below_the_child_you_rolled(t: TestHelper) -> void:
+# You may sell your childhood back down to one step — a bad body that learned
+# to read the game instead.
+func test_can_sell_the_child_back_down_to_one(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
 	var id: String = String(builder.stats.keys()[0])
-	var floor_step: int = int(builder.stats[id])
 	for i: int in range(10):
 		builder.lower_stat(id)
-	t.equal(int(builder.stats[id]), floor_step, "desceu abaixo da criança sorteada")
-	t.equal(builder.spent(), 0, "descer abaixo do piso gerou crédito")
+	t.equal(int(builder.stats[id]), SheetBuilder.MIN_STAT_STEP, "não chegou ao piso de 1")
+	t.check(builder.remaining() > SheetBuilder.total_points(),
+		"descer não devolveu pontos (sobraram %d de %d)" % [builder.remaining(), SheetBuilder.total_points()])
+
+# Without a signed cost table the refunded points would silently vanish.
+func test_lowering_refunds_exactly_what_raising_cost(t: TestHelper) -> void:
+	var builder: SheetBuilder = _builder()
+	var id: String = String(builder.stats.keys()[0])
+	var before: int = builder.remaining()
+	builder.raise_stat(id)
+	builder.raise_stat(id)
+	builder.lower_stat(id)
+	builder.lower_stat(id)
+	t.equal(builder.remaining(), before, "subir e descer não voltou ao mesmo lugar")
+
+# You leave at eighteen or not at all.
+func test_start_is_blocked_until_the_budget_is_gone(t: TestHelper) -> void:
+	var builder: SheetBuilder = _builder()
+	t.check(not builder.is_complete(), "recém-criado não deveria estar completo")
+	_spend_everything(builder)
+	t.check(builder.is_complete(), "gastou tudo e ainda não está completo")
+	t.equal(builder.age(), SheetBuilder.END_AGE, "completo deveria significar 18 anos")
 
 func test_cannot_spend_more_than_you_have(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
