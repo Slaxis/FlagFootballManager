@@ -16,7 +16,9 @@ func tests() -> Array:
 		"test_step_is_stored_over_ten",
 		"test_modifier_is_zero_at_the_average_adult",
 		"test_modifier_punishes_a_bad_leader",
-		"test_taller_trades_agility_for_strength",
+		"test_taller_trades_agility_for_perception",
+		"test_effects_stay_within_five",
+		"test_measures_never_touch_the_same_attribute",
 		"test_heavier_trades_stamina_for_strength",
 		"test_median_body_changes_nothing",
 		"test_body_trade_is_zero_sum",
@@ -84,12 +86,12 @@ func test_modifier_punishes_a_bad_leader(t: TestHelper) -> void:
 	t.equal(def.modifier(30), -2, "3 passos")
 	t.check(def.modifier(10) < 0, "um líder de 1 passo deveria atrapalhar")
 
-func test_taller_trades_agility_for_strength(t: TestHelper) -> void:
+func test_taller_trades_agility_for_perception(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
 	var tall: Dictionary = def.body_effect({"height": 2.08, "weight": 78})
-	t.check(int(tall.get("strength", 0)) > 0, "alto deveria ganhar força")
+	t.check(int(tall.get("perception", 0)) > 0, "alto deveria enxergar mais")
 	t.check(int(tall.get("agility", 0)) < 0, "alto deveria perder agilidade")
 
 func test_heavier_trades_stamina_for_strength(t: TestHelper) -> void:
@@ -99,6 +101,36 @@ func test_heavier_trades_stamina_for_strength(t: TestHelper) -> void:
 	var heavy: Dictionary = def.body_effect({"height": 1.78, "weight": 108})
 	t.check(int(heavy.get("strength", 0)) > 0, "pesado deveria ganhar força")
 	t.check(int(heavy.get("stamina", 0)) < 0, "pesado deveria perder vitalidade")
+
+# Everything the body does must read between -5 and +5, so a shape never moves
+# an attribute by more than half a step.
+func test_effects_stay_within_five(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	for body: Dictionary in [
+		{"height": 2.15, "weight": 140}, {"height": 1.55, "weight": 50},
+		{"height": 2.15, "weight": 50}, {"height": 1.55, "weight": 140},
+	]:
+		for id: String in def.body_effect(body).keys():
+			var value: int = int(def.body_effect(body)[id])
+			t.check(absi(value) <= 5,
+				"corpo %s move '%s' em %d — fora da faixa -5..+5" % [str(body), id, value])
+
+# The cheese that made this rule necessary: when height and weight both fed
+# strength, a small light build dumped the stat it did not need and collected
+# the credit in two it did.
+func test_measures_never_touch_the_same_attribute(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var seen: Dictionary = {}
+	for id: String in def.measure_ids():
+		for stat_id: String in (def.measure(id).get("affects", {}) as Dictionary).keys():
+			t.check(not seen.has(stat_id),
+				"'%s' é afetado por '%s' e por '%s' — as duas medidas empilham" %
+					[stat_id, seen.get(stat_id, "?"), id])
+			seen[stat_id] = id
 
 func test_median_body_changes_nothing(t: TestHelper) -> void:
 	var def := _def()

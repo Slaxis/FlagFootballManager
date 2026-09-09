@@ -121,10 +121,23 @@ func format_measure(id: String, value: float) -> String:
 	var unit: String = String(spec.get("unit", ""))
 	return "%s %s" % [text, unit] if unit != "" else text
 
-# What a body does to the attributes. Each measure declares a median, a step
-# and what one step away is worth: height trades agility for strength, weight
-# trades stamina for strength. Both trades are zero-sum on purpose — being
-# 2.10 m is a SHAPE, not an upgrade, and it costs no points to choose.
+# What a body does to the attributes. Each measure declares a median, a step,
+# a cap and what one step away is worth.
+#
+# Two rules keep this honest, and both exist because the first version broke
+# them:
+#
+#   NO OVERLAP. Height and weight touch DIFFERENT attributes. When both fed
+#   strength, a minimum-height minimum-weight build dumped -31 into the one
+#   stat it did not care about and collected the credit in two it did — free
+#   points for anyone willing to be small.
+#
+#   CAPPED AND ZERO-SUM. Each measure gives at most `cap` and takes exactly as
+#   much, so an extreme body is a SHAPE, not an upgrade, and never moves an
+#   attribute by more than half a step.
+#
+# Height trades agility for perception — the tall player sees over the line and
+# turns worse. Weight trades stamina for strength.
 func body_effect(values: Dictionary) -> Dictionary:
 	var out: Dictionary = {}
 	for id: String in _measures.keys():
@@ -136,10 +149,12 @@ func body_effect(values: Dictionary) -> Dictionary:
 		var size: float = float(spec.get("step", 1.0))
 		if size == 0.0:
 			continue
-		var steps: float = (float(values.get(id, median)) - median) / size
+		var cap: int = int(spec.get("cap", 5))
+		var magnitude: int = clampi(
+			int(round((float(values.get(id, median)) - median) / size)), -cap, cap)
 		for stat_id: String in affects.keys():
 			var key: String = _key(stat_id)
-			out[key] = int(out.get(key, 0)) + int(round(steps * float(affects[stat_id])))
+			out[key] = int(out.get(key, 0)) + magnitude * int(affects[stat_id])
 	return out
 
 # --- Skills ---
