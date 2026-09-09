@@ -183,7 +183,7 @@ func _body_row() -> Control:
 	for id: String in stats.measure_ids():
 		var spec: Dictionary = stats.measure(id)
 		var cell := HBoxContainer.new()
-		cell.add_theme_constant_override("separation", 4)
+		cell.add_theme_constant_override("separation", 6)
 		cell.tooltip_text = I18n.text(spec.get("desc", ""), "")
 		cell.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -191,15 +191,18 @@ func _body_row() -> Control:
 		caption.text = I18n.text(spec.get("label", id), id)
 		caption.add_theme_color_override("font_color", MUTED)
 		cell.add_child(caption)
-		cell.add_child(_step_button("−", _on_measure.bind(id, -1), true))
 
-		var value := Label.new()
-		value.text = stats.format_measure(id, _measure_value(id))
-		value.custom_minimum_size = Vector2(78, 0)
-		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		value.add_theme_color_override("font_color", TEXT)
-		cell.add_child(value)
-		cell.add_child(_step_button("+", _on_measure.bind(id, 1), true))
+		# A SpinBox, not steppers: someone entering their own 1,83 m should type
+		# it, not click twenty-eight times.
+		var field := SpinBox.new()
+		field.min_value = float(spec.get("min", 0.0))
+		field.max_value = float(spec.get("max", 999.0))
+		field.step = stats.increment(id)
+		field.value = _measure_value(id)
+		field.suffix = String(spec.get("unit", ""))
+		field.custom_minimum_size = Vector2(104, 30)
+		field.value_changed.connect(_on_measure_value.bind(id))
+		cell.add_child(field)
 		row.add_child(cell)
 
 	var effect: Dictionary = stats.body_effect({"height": _build.height, "weight": _build.weight})
@@ -399,19 +402,20 @@ func _on_lower_skill(id: String) -> void:
 	_build.lower_skill(id)
 	_build_ui()
 
-func _on_measure(id: String, direction: int) -> void:
+# Redraws only when the value crosses a threshold. Typing 1,79 then 1,80 then
+# 1,81 changes nothing on the sheet, so rebuilding would just yank the caret
+# out of the field the player is still using.
+func _on_measure_value(value: float, id: String) -> void:
 	var stats := Drive.def("stat") as StatDef
 	if stats == null:
 		return
-	var spec: Dictionary = stats.measure(id)
-	var size: float = float(spec.get("step", 1.0))
-	var value: float = clampf(_measure_value(id) + size * float(direction),
-		float(spec.get("min", 0.0)), float(spec.get("max", 999.0)))
+	var before: int = stats.bucket(id, _measure_value(id))
 	if id == "height":
 		_build.height = snappedf(value, 0.01)
 	else:
 		_build.weight = snappedf(value, 1.0)
-	_build_ui()
+	if stats.bucket(id, value) != before:
+		_build_ui()
 
 func _on_name_typed(text: String) -> void:
 	var parts: PackedStringArray = text.strip_edges().split(" ", false)

@@ -19,6 +19,8 @@ func tests() -> Array:
 		"test_taller_trades_agility_for_perception",
 		"test_effects_stay_within_five",
 		"test_measures_never_touch_the_same_attribute",
+		"test_measures_move_in_real_units",
+		"test_nearby_heights_read_the_same",
 		"test_heavier_trades_stamina_for_strength",
 		"test_median_body_changes_nothing",
 		"test_body_trade_is_zero_sum",
@@ -131,6 +133,35 @@ func test_measures_never_touch_the_same_attribute(t: TestHelper) -> void:
 				"'%s' é afetado por '%s' e por '%s' — as duas medidas empilham" %
 					[stat_id, seen.get(stat_id, "?"), id])
 			seen[stat_id] = id
+
+# You enter your own body in centimetres and kilos, not in game units.
+func test_measures_move_in_real_units(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	t.equal(def.increment("height"), 0.01, "altura anda de centímetro em centímetro")
+	t.equal(def.increment("weight"), 1.0, "peso anda de quilo em quilo")
+	t.check(def.increment("height") < float(def.measure("height").get("step", 1.0)),
+		"o passo do teclado deveria ser mais fino que a faixa do efeito")
+
+# Fine input, coarse effect: a couple of centimetres are the same person, and
+# only crossing a threshold moves an attribute.
+func test_nearby_heights_read_the_same(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	# The band is five centimetres wide and centred on the median, so its edges
+	# fall on odd numbers — 1,79 and 1,81 really are different people.
+	t.equal(def.bucket("height", 1.76), def.bucket("height", 1.80), "1,76 e 1,80")
+	t.equal(def.bucket("height", 1.81), def.bucket("height", 1.84), "1,81 e 1,84")
+	t.equal(def.bucket("height", 1.78), 0, "a mediana é a faixa zero")
+	t.check(def.bucket("height", 1.80) != def.bucket("height", 1.81),
+		"a fronteira da faixa deveria existir em algum lugar")
+	t.check(def.bucket("height", 1.90) > def.bucket("height", 1.80),
+		"10 cm deveriam mudar de faixa")
+	t.equal(def.bucket("height", 2.15), 5, "o topo satura no cap")
+	t.equal(def.bucket("weight", 140.0), 5, "o topo do peso satura no cap")
+	t.equal(def.bucket("weight", 50.0), -5, "o piso do peso satura no cap")
 
 func test_median_body_changes_nothing(t: TestHelper) -> void:
 	var def := _def()

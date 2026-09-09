@@ -138,6 +138,25 @@ func format_measure(id: String, value: float) -> String:
 #
 # Height trades agility for perception — the tall player sees over the line and
 # turns worse. Weight trades stamina for strength.
+# Which threshold band a measured value falls into, from -cap to +cap. Height
+# and weight move in real units — a centimetre, a kilo — so anyone can enter
+# their own body, but only crossing a band changes an attribute. Several
+# centimetres therefore read the same, which is the point: 1,79 m and 1,81 m
+# are the same person.
+func bucket(measure_id: String, value: float) -> int:
+	var spec: Dictionary = measure(measure_id)
+	if spec.is_empty():
+		return 0
+	var size: float = float(spec.get("step", 1.0))
+	if size == 0.0:
+		return 0
+	var cap: int = int(spec.get("cap", 5))
+	return clampi(int(round((value - float(spec.get("median", 0.0))) / size)), -cap, cap)
+
+# How much one press of a stepper moves this measure, in its own unit.
+func increment(measure_id: String) -> float:
+	return float(measure(measure_id).get("increment", measure(measure_id).get("step", 1.0)))
+
 func body_effect(values: Dictionary) -> Dictionary:
 	var out: Dictionary = {}
 	for id: String in _measures.keys():
@@ -145,13 +164,7 @@ func body_effect(values: Dictionary) -> Dictionary:
 		var affects: Dictionary = spec.get("affects", {})
 		if affects.is_empty():
 			continue
-		var median: float = float(spec.get("median", 0.0))
-		var size: float = float(spec.get("step", 1.0))
-		if size == 0.0:
-			continue
-		var cap: int = int(spec.get("cap", 5))
-		var magnitude: int = clampi(
-			int(round((float(values.get(id, median)) - median) / size)), -cap, cap)
+		var magnitude: int = bucket(id, float(values.get(id, float(spec.get("median", 0.0)))))
 		for stat_id: String in affects.keys():
 			var key: String = _key(stat_id)
 			out[key] = int(out.get(key, 0)) + magnitude * int(affects[stat_id])

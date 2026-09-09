@@ -137,7 +137,8 @@
         "perception": 1,
         "agility": -1
       },
-      "cap": 5
+      "cap": 5,
+      "increment": 0.01
     },
     {
       "id": "weight",
@@ -159,7 +160,8 @@
         "strength": 1,
         "stamina": -1
       },
-      "cap": 5
+      "cap": 5,
+      "increment": 1
     }
   ],
   "skills": [
