@@ -132,9 +132,17 @@ func format_measure(id: String, value: float) -> String:
 #   stat it did not care about and collected the credit in two it did — free
 #   points for anyone willing to be small.
 #
-#   CAPPED AND ZERO-SUM. Each measure gives at most `cap` and takes exactly as
-#   much, so an extreme body is a SHAPE, not an upgrade, and never moves an
-#   attribute by more than half a step.
+#   CAPPED AND ZERO-SUM IN STEPS. Each measure gives at most `cap` bands and
+#   takes exactly as many, so an extreme body is a SHAPE. At the limit that is
+#   three steps each way — enough to feel on the field.
+#
+# ⚠️ ZERO-SUM IN STEPS IS NOT ZERO-SUM IN CAREER POINTS. Because step costs are
+# triangular, trading three cheap low steps for three dear high ones nets 27
+# career points per pair, and there are two pairs — so an extreme body is worth
+# 54 free points, which happens to be the entire spare budget. That is only
+# actually free if the penalised attributes are ones you did not need, so
+# whether it is a dominant strategy is decided by the match engine (C.1), not
+# here. Registered in the roadmap as a balance watch.
 #
 # Height trades agility for perception — the tall player sees over the line and
 # turns worse. Weight trades stamina for strength.
