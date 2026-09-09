@@ -6,9 +6,9 @@
 #
 #   manager   the Actor that is you
 #   team_id   the club that drafted you
-#   seed      the root of everything generated in this run
+#   career_seed  the root of everything generated in this run
 #
-# `seed` matters more than it looks: the sandlot clubs that exist, which one
+# The seed matters more than it looks: the sandlot clubs that exist, which one
 # picked you and (from B.5) every roster all derive from it. Two careers with
 # the same seed are the same universe, which is what makes a bug reproducible.
 class_name Career
@@ -16,19 +16,21 @@ extends Record
 
 var manager: Actor = null
 var team_id: String = ""
-var seed: int = 0
+# Not `seed`: that shadows Godot's built-in seed() function.
+var career_seed: int = 0
 
-static func make(manager_actor: Actor, drafted_team_id: String, career_seed: int) -> Career:
+static func make(manager_actor: Actor, drafted_team_id: String, value: int) -> Career:
 	var career := Career.new()
 	career.manager = manager_actor
 	career.team_id = String(drafted_team_id).strip_edges().to_lower()
-	career.seed = career_seed
+	career.career_seed = value
 	return career
 
 # The club that drafted you, straight from TeamDef.
 func team() -> Dictionary:
-	var def := Drive.def("team") as TeamDef
-	return def.get_team(team_id) if def != null else {}
+	# Not `def`: that shadows Record.def().
+	var teams := Drive.def("team") as TeamDef
+	return teams.get_team(team_id) if teams != null else {}
 
 # --- Memento ---
 #
@@ -38,7 +40,7 @@ func team() -> Dictionary:
 func to_snapshot() -> Dictionary:
 	return {
 		"team_id": team_id,
-		"seed": seed,
+		"seed": career_seed,
 		"manager": {
 			"thing_id": manager.thing_id if manager != null else "",
 			"ancestor": manager.ancestor if manager != null else "",
@@ -48,7 +50,7 @@ func to_snapshot() -> Dictionary:
 
 func from_snapshot(state: Dictionary) -> void:
 	team_id = String(state.get("team_id", ""))
-	seed = int(state.get("seed", 0))
+	career_seed = int(state.get("seed", 0))
 	var raw: Dictionary = state.get("manager", {})
 	manager = Actor.new()
 	manager._apply_data(

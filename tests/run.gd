@@ -20,6 +20,7 @@ const _SUITES: Array[String] = [
 	"res://tests/test_sheet_builder.gd",
 	"res://tests/test_career.gd",
 	"res://tests/test_d5.gd",
+	"res://tests/test_lint.gd",
 ]
 
 func _ready() -> void:

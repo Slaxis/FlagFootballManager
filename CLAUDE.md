@@ -138,6 +138,14 @@ Do not start implementing before the plan is approved.
 - UI is tested manually through gameplay.
 - Each task must be independently testable before merge.
 
+⚠️ **GDScript warnings are editor-only.** A headless run, `--editor --quit` and
+`--check-only` all stay silent about them, so the automated loop cannot see a
+shadowed variable or an unused signal. `tests/test_lint.gd` covers the two
+traps that have actually bitten this project — a variable named after a Godot
+built-in, and one named after a method of the base class the file extends —
+but it is not the compiler. Warnings reported from the editor are still worth
+passing along.
+
 ⚠️ After renaming a `class_name` or moving files, Godot keeps the stale names
 in `.godot/global_script_class_cache.cfg` and the boot fails with
 "Could not find type X". It is a cache, not a real break. Run

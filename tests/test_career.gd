@@ -64,7 +64,7 @@ func test_career_round_trips_through_the_snapshot(t: TestHelper) -> void:
 	restored.from_snapshot(original.to_snapshot())
 
 	t.equal(restored.team_id, original.team_id, "team_id")
-	t.equal(restored.seed, original.seed, "seed")
+	t.equal(restored.career_seed, original.career_seed, "seed")
 	t.equal(restored.manager.full_name(), actor.full_name(), "nome do manager")
 	t.equal(restored.manager.overall(), actor.overall(), "Geral do manager")
 	t.equal(str(restored.manager.plays()), str(actor.plays()), "plays")
