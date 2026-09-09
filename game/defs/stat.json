@@ -2,95 +2,258 @@
   "base": [
     {
       "id": "strength",
-      "label": {"pt": "Força", "en": "Strength"},
-      "desc": {"pt": "Potência bruta: bloquear, resistir ao contato, arrancar", "en": "Raw power: blocking, resisting contact, exploding off the line"}
+      "label": {
+        "pt": "Força",
+        "en": "Strength"
+      },
+      "desc": {
+        "pt": "Força muscular geral",
+        "en": "Overall muscular strength"
+      }
     },
     {
       "id": "stamina",
-      "label": {"pt": "Vitalidade", "en": "Stamina"},
-      "desc": {"pt": "Fôlego pro jogo inteiro, e pra etapa inteira", "en": "Gas tank for the whole game, and the whole weekend"}
+      "label": {
+        "pt": "Vitalidade",
+        "en": "Stamina"
+      },
+      "desc": {
+        "pt": "Condicionamento físico",
+        "en": "Physical conditioning"
+      }
     },
     {
       "id": "agility",
-      "label": {"pt": "Agilidade", "en": "Agility"},
-      "desc": {"pt": "Aceleração, corte, mudança de direção", "en": "Acceleration, cuts, change of direction"}
+      "label": {
+        "pt": "Agilidade",
+        "en": "Agility"
+      },
+      "desc": {
+        "pt": "Habilidade com as pernas: aceleração, mudança de movimento",
+        "en": "Legs: acceleration, change of direction"
+      }
     },
     {
       "id": "dexterity",
-      "label": {"pt": "Destreza", "en": "Dexterity"},
-      "desc": {"pt": "Mão: segurar a bola, soltar o passe, puxar a flag", "en": "Hands: securing the ball, releasing the throw, pulling the flag"}
+      "label": {
+        "pt": "Destreza",
+        "en": "Dexterity"
+      },
+      "desc": {
+        "pt": "Habilidade com as mãos: recepção, lançamento",
+        "en": "Hands: catching, throwing"
+      }
     },
     {
       "id": "perception",
-      "label": {"pt": "Percepção", "en": "Perception"},
-      "desc": {"pt": "Enxergar o campo, achar o espaço e o ponto fraco do outro", "en": "Seeing the field, finding space and the opponent's weak spot"}
+      "label": {
+        "pt": "Percepção",
+        "en": "Perception"
+      },
+      "desc": {
+        "pt": "Capacidade visual e leitura de padrões",
+        "en": "Vision and pattern reading"
+      }
     },
     {
       "id": "intelligence",
-      "label": {"pt": "Inteligência", "en": "Intelligence"},
-      "desc": {"pt": "Entender a jogada, decidir sob pressão", "en": "Understanding the play, deciding under pressure"}
+      "label": {
+        "pt": "Inteligência",
+        "en": "Intelligence"
+      },
+      "desc": {
+        "pt": "Capacidade cognitiva: aprender jogadas, memória e uso dela",
+        "en": "Cognition: learning plays, memory and using it"
+      }
     },
     {
       "id": "charisma",
-      "label": {"pt": "Carisma", "en": "Charisma"},
-      "desc": {"pt": "Voz no campo: comanda os seus, desestabiliza os outros", "en": "Voice on the field: rallies your own, rattles the others"}
+      "label": {
+        "pt": "Carisma",
+        "en": "Charisma"
+      },
+      "desc": {
+        "pt": "Capacidade interpessoal: magnetismo, beleza, oratória",
+        "en": "Interpersonal: magnetism, looks, oratory"
+      }
     }
   ],
-
+  "measures": [
+    {
+      "id": "height",
+      "label": {
+        "pt": "Altura",
+        "en": "Height"
+      },
+      "desc": {
+        "pt": "Alcance e presença física",
+        "en": "Reach and physical presence"
+      },
+      "unit": "m",
+      "decimals": 2,
+      "min": 1.55,
+      "max": 2.05
+    },
+    {
+      "id": "weight",
+      "label": {
+        "pt": "Peso",
+        "en": "Weight"
+      },
+      "desc": {
+        "pt": "Massa: ajuda a segurar contato, atrapalha a arrancada",
+        "en": "Mass: helps absorb contact, hurts the burst"
+      },
+      "unit": "kg",
+      "decimals": 0,
+      "min": 50.0,
+      "max": 130.0
+    }
+  ],
   "derived": [
     {
       "id": "speed",
-      "label": {"pt": "Velocidade", "en": "Speed"},
-      "desc": {"pt": "Velocidade máxima em campo aberto", "en": "Top speed in the open field"},
-      "from": ["agility", "strength", "stamina"]
+      "label": {
+        "pt": "Velocidade",
+        "en": "Speed"
+      },
+      "desc": {
+        "pt": "Velocidade máxima em campo aberto",
+        "en": "Top speed in the open field"
+      },
+      "from": [
+        "agility",
+        "strength",
+        "stamina"
+      ]
     },
     {
       "id": "passing",
-      "label": {"pt": "Passe", "en": "Passing"},
-      "desc": {"pt": "Precisão e decisão do quarterback", "en": "Quarterback accuracy and decision"},
-      "from": ["dexterity", "intelligence", "perception"]
+      "label": {
+        "pt": "Passe",
+        "en": "Passing"
+      },
+      "desc": {
+        "pt": "Precisão e decisão do quarterback",
+        "en": "Quarterback accuracy and decision"
+      },
+      "from": [
+        "dexterity",
+        "intelligence",
+        "perception"
+      ]
     },
     {
       "id": "catching",
-      "label": {"pt": "Recepção", "en": "Catching"},
-      "desc": {"pt": "Segurar o que dá pra segurar — e o que não dá", "en": "Holding on to the catchable, and the uncatchable"},
-      "from": ["dexterity", "perception", "agility"]
+      "label": {
+        "pt": "Recepção",
+        "en": "Catching"
+      },
+      "desc": {
+        "pt": "Segurar o que dá pra segurar — e o que não dá",
+        "en": "Holding on to the catchable, and the uncatchable"
+      },
+      "from": [
+        "dexterity",
+        "perception",
+        "agility"
+      ]
     },
     {
       "id": "protection",
-      "label": {"pt": "Proteção", "en": "Protection"},
-      "desc": {"pt": "Snap limpo e tempo pro quarterback", "en": "Clean snap and time for the quarterback"},
-      "from": ["strength", "stamina", "dexterity"]
+      "label": {
+        "pt": "Proteção",
+        "en": "Protection"
+      },
+      "desc": {
+        "pt": "Snap limpo e tempo pro quarterback",
+        "en": "Clean snap and time for the quarterback"
+      },
+      "from": [
+        "strength",
+        "stamina",
+        "dexterity"
+      ]
     },
     {
       "id": "pressure",
-      "label": {"pt": "Pressão", "en": "Pressure"},
-      "desc": {"pt": "Chegar no quarterback antes do passe sair", "en": "Reaching the quarterback before the ball leaves"},
-      "from": ["strength", "agility", "perception"]
+      "label": {
+        "pt": "Pressão",
+        "en": "Pressure"
+      },
+      "desc": {
+        "pt": "Chegar no quarterback antes do passe sair",
+        "en": "Reaching the quarterback before the ball leaves"
+      },
+      "from": [
+        "strength",
+        "agility",
+        "perception"
+      ]
     },
     {
       "id": "coverage",
-      "label": {"pt": "Cobertura", "en": "Coverage"},
-      "desc": {"pt": "Grudar no recebedor o jogo inteiro", "en": "Sticking to the receiver all game long"},
-      "from": ["perception", "agility", "stamina"]
+      "label": {
+        "pt": "Cobertura",
+        "en": "Coverage"
+      },
+      "desc": {
+        "pt": "Grudar no recebedor o jogo inteiro",
+        "en": "Sticking to the receiver all game long"
+      },
+      "from": [
+        "perception",
+        "agility",
+        "stamina"
+      ]
     },
     {
       "id": "reading",
-      "label": {"pt": "Leitura", "en": "Reading"},
-      "desc": {"pt": "Ler a jogada e reagir antes dela acontecer", "en": "Reading the play and reacting before it happens"},
-      "from": ["intelligence", "perception", "agility"]
+      "label": {
+        "pt": "Leitura",
+        "en": "Reading"
+      },
+      "desc": {
+        "pt": "Ler a jogada e reagir antes dela acontecer",
+        "en": "Reading the play and reacting before it happens"
+      },
+      "from": [
+        "intelligence",
+        "perception",
+        "agility"
+      ]
     },
     {
       "id": "leadership",
-      "label": {"pt": "Liderança", "en": "Leadership"},
-      "desc": {"pt": "Lê a jogada e comunica — buffa os aliados", "en": "Reads the play and calls it out — buffs allies"},
-      "from": ["charisma", "intelligence", "perception"]
+      "label": {
+        "pt": "Liderança",
+        "en": "Leadership"
+      },
+      "desc": {
+        "pt": "Lê a jogada e comunica — buffa os aliados",
+        "en": "Reads the play and calls it out — buffs allies"
+      },
+      "from": [
+        "charisma",
+        "intelligence",
+        "perception"
+      ]
     },
     {
       "id": "trash_talk",
-      "label": {"pt": "Provocação", "en": "Trash Talk"},
-      "desc": {"pt": "Acha o ponto fraco e não larga — debuffa os adversários", "en": "Finds the weak spot and never lets go — debuffs opponents"},
-      "from": ["charisma", "perception", "stamina"]
+      "label": {
+        "pt": "Provocação",
+        "en": "Trash Talk"
+      },
+      "desc": {
+        "pt": "Acha o ponto fraco e não larga — debuffa os adversários",
+        "en": "Finds the weak spot and never lets go — debuffs opponents"
+      },
+      "from": [
+        "charisma",
+        "perception",
+        "stamina"
+      ]
     }
   ]
 }

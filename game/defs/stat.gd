@@ -1,6 +1,10 @@
 # StatDef — the two-layer attribute model.
 #
-#   base      the 7 attributes an actor actually owns and that training moves
+#   base      the 7 attributes an actor actually owns and that training moves.
+#             0..99, shown as ten-slot bars — the number is for the tooltip.
+#   measures  height and weight. NOT attributes: they carry real units, are
+#             never drawn as bars, and no amount of training changes how tall
+#             someone is.
 #   derived   the 9 in-game stats, each the floor of the average of exactly
 #             3 base attributes. Never stored on an actor — always computed.
 #   overall   "Geral": floor of the average of the 7 base attributes. One
@@ -15,16 +19,23 @@ const DERIVED_INPUTS := 3
 
 var _base: Dictionary = {}      # id -> raw base Dictionary, insertion ordered
 var _derived: Dictionary = {}   # id -> raw derived Dictionary
+var _measures: Dictionary = {}  # id -> raw measure Dictionary
 
 func load_data(raw: Dictionary) -> void:
 	_base.clear()
 	_derived.clear()
+	_measures.clear()
 	for entry: Variant in raw.get("base", []):
 		if not entry is Dictionary:
 			continue
 		var id: String = _key(String((entry as Dictionary).get("id", "")))
 		if id != "":
 			_base[id] = entry
+	for entry: Variant in raw.get("measures", []):
+		if entry is Dictionary:
+			var measure_id: String = _key(String((entry as Dictionary).get("id", "")))
+			if measure_id != "":
+				_measures[measure_id] = entry
 	for entry: Variant in raw.get("derived", []):
 		if not entry is Dictionary:
 			continue
@@ -61,6 +72,30 @@ func has_base(id: String) -> bool:
 
 func has_derived(id: String) -> bool:
 	return _derived.has(_key(id))
+
+# --- Measures ---
+
+func measure_ids() -> Array:
+	return _measures.keys()
+
+func measure(id: String) -> Dictionary:
+	return _measures.get(_key(id), {})
+
+func has_measure(id: String) -> bool:
+	return _measures.has(_key(id))
+
+# "1,78 m" / "74 kg" — the unit and precision come from the JSON, so a module
+# could ship feet and pounds without touching a line of code. The decimal
+# separator follows the language, because "1.78 m" reads wrong in Portuguese.
+func format_measure(id: String, value: float) -> String:
+	var spec: Dictionary = measure(id)
+	if spec.is_empty():
+		return str(value)
+	var text: String = "%.*f" % [int(spec.get("decimals", 0)), value]
+	if I18n.get_lang().begins_with("pt"):
+		text = text.replace(".", ",")
+	var unit: String = String(spec.get("unit", ""))
+	return "%s %s" % [text, unit] if unit != "" else text
 
 func inputs_of(derived_id: String) -> Array:
 	return (_derived.get(_key(derived_id), {}) as Dictionary).get("from", [])

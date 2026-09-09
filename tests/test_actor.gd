@@ -17,6 +17,9 @@ func tests() -> Array:
 		"test_actors_are_specialists",
 		"test_defaults_put_actor_in_praca",
 		"test_squad_is_stable_per_index",
+		"test_body_measures_are_plausible",
+		"test_weight_follows_strength",
+		"test_measures_format_with_locale_separator",
 	]
 
 func _sheet(a: Actor) -> String:
@@ -103,6 +106,46 @@ func test_squad_is_stable_per_index(t: TestHelper) -> void:
 	var large: Array[Actor] = ActorGenerator.squad(SEED, 12, 50)
 	for i: int in range(small.size()):
 		t.equal(_sheet(large[i]), _sheet(small[i]), "actor %d mudou ao crescer o elenco" % i)
+
+# Height and weight are MEASURES, not attributes: real units, own ranges.
+func test_body_measures_are_plausible(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	for actor: Actor in ActorGenerator.squad(SEED, COHORT, 50):
+		for id: String in def.measure_ids():
+			var spec: Dictionary = def.measure(id)
+			var value: float = actor.measure(id)
+			t.check(value >= float(spec.get("min", 0.0)) and value <= float(spec.get("max", 999.0)),
+				"%s fora da faixa: %.2f" % [id, value])
+		t.check(not def.has_base("height"), "altura não deveria ser atributo")
+		t.check(not def.has_base("weight"), "peso não deveria ser atributo")
+
+# The body must agree with the sheet: the strong cohort is visibly the heavy
+# one, so nobody has to reconcile a wiry giant who bench-presses a car.
+func test_weight_follows_strength(t: TestHelper) -> void:
+	var light: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 20))
+	var heavy: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 85))
+	t.check(heavy > light + 5.0,
+		"elenco forte deveria ser mais pesado (veio %.1f vs %.1f kg)" % [heavy, light])
+
+func test_measures_format_with_locale_separator(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var previous: String = I18n.get_lang()
+	I18n.set_lang("pt")
+	t.equal(def.format_measure("height", 1.78), "1,78 m", "altura em pt")
+	I18n.set_lang("en")
+	t.equal(def.format_measure("height", 1.78), "1.78 m", "altura em en")
+	t.equal(def.format_measure("weight", 74.0), "74 kg", "peso")
+	I18n.set_lang(previous)
+
+func _mean_weight(squad: Array[Actor]) -> float:
+	var total: float = 0.0
+	for actor: Actor in squad:
+		total += actor.weight()
+	return total / float(squad.size())
 
 func _mean_overall(squad: Array[Actor]) -> int:
 	var total: int = 0

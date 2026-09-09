@@ -28,15 +28,17 @@ static func generate(
 ) -> Actor:
 	var rng: RandomNumberGenerator = SeedRng.make_rng(seed_value)
 	var actor := Actor.new()
+	var stats: Dictionary = _roll_stats(rng, quality, spread)
 	var payload: Dictionary = {
 		"plays": [category],
 		"manages": [],
 		"age": rng.randi_range(age_min, age_max),
-		"stats": _roll_stats(rng, quality, spread),
+		"stats": stats,
 		"perks": [],
 		"team": Actor.NO_TEAM,
 		"jersey": Actor.NO_JERSEY,
 	}
+	payload.merge(_roll_body(rng, stats))
 	payload.merge(_roll_name(rng, category))
 	actor._apply_data("actor_%d" % seed_value, "actor", payload)
 	return actor
@@ -70,6 +72,24 @@ static func _roll_stats(rng: RandomNumberGenerator, quality: int, spread: float)
 # The name pool follows the squad's category, which is a good enough proxy for
 # an ISS-of-flag: a men's side draws from the men's pool. A mixed side flips a
 # coin, because a mixed squad genuinely holds both.
+# Height is its own roll; weight follows from height AND strength, so the body
+# agrees with the sheet — the 90-strength actor is visibly the heavy one, and
+# nobody has to reconcile a wiry giant who bench-presses a car.
+static func _roll_body(rng: RandomNumberGenerator, stats: Dictionary) -> Dictionary:
+	var def := Drive.def("stat") as StatDef
+	var height_spec: Dictionary = def.measure("height") if def != null else {}
+	var weight_spec: Dictionary = def.measure("weight") if def != null else {}
+	var height: float = clampf(
+		rng.randfn(1.78, 0.075),
+		float(height_spec.get("min", 1.55)), float(height_spec.get("max", 2.05)))
+	# BMI climbs with strength: lean at 21, thick at 28.
+	var strength: float = float(stats.get("strength", 50)) / float(STAT_MAX)
+	var bmi: float = lerpf(21.0, 28.0, strength) + rng.randfn(0.0, 1.0)
+	var weight: float = clampf(
+		bmi * height * height,
+		float(weight_spec.get("min", 50.0)), float(weight_spec.get("max", 130.0)))
+	return {"height": snappedf(height, 0.01), "weight": snappedf(weight, 1.0)}
+
 static func _roll_name(rng: RandomNumberGenerator, category: String) -> Dictionary:
 	var names := Drive.def("name_gen") as NameGenDef
 	if names == null:

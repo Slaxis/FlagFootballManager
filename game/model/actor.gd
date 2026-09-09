@@ -109,6 +109,20 @@ func stats() -> Dictionary:
 func stat(id: String) -> int:
 	return int(stats().get(String(id).strip_edges().to_lower(), 0))
 
+# --- Measures ---
+#
+# Height and weight are not attributes: they have units, and training does not
+# change them. They live beside the stats, never inside them.
+
+func height() -> float:
+	return float(data.get("height", 0.0))
+
+func weight() -> float:
+	return float(data.get("weight", 0.0))
+
+func measure(id: String) -> float:
+	return float(data.get(String(id).strip_edges().to_lower(), 0.0))
+
 func set_stat(id: String, value: int) -> void:
 	if not data.has("stats"):
 		data["stats"] = {}

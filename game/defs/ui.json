@@ -155,6 +155,38 @@
     "manager.seed": {
       "pt": "semente %d",
       "en": "seed %d"
+    },
+    "manager.reroll_name": {
+      "pt": "outro nome",
+      "en": "another name"
+    },
+    "manager.reroll_seed": {
+      "pt": "outra semente",
+      "en": "another seed"
+    },
+    "manager.seed_hint": {
+      "pt": "a semente define TUDO: seus atributos, quais clubes de várzea existem e qual te chama",
+      "en": "the seed defines EVERYTHING: your attributes, which sandlot clubs exist and which one calls you"
+    },
+    "manager.body": {
+      "pt": "CORPO",
+      "en": "BODY"
+    },
+    "manager.identity": {
+      "pt": "IDENTIDADE",
+      "en": "IDENTITY"
+    },
+    "manager.modality": {
+      "pt": "MODALIDADE",
+      "en": "CATEGORY"
+    },
+    "manager.age_label": {
+      "pt": "Idade",
+      "en": "Age"
+    },
+    "manager.years": {
+      "pt": "%d anos",
+      "en": "%d years"
     }
   }
 }
