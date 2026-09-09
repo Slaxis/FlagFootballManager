@@ -468,7 +468,7 @@ func _reseed(value: int) -> void:
 	_career_seed = value
 	League.ensure_filled(_career_seed)
 	if _build == null:
-		_build = SheetBuilder.newborn()
+		_build = SheetBuilder.average_adult()
 	_name = _roll_name()
 
 # Drawn from BOTH pools, which is what asking about categories instead of

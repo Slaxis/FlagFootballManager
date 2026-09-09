@@ -6,7 +6,8 @@ const SEED := 424242
 
 func tests() -> Array:
 	return [
-		"test_starts_as_a_newborn_at_zero",
+		"test_starts_as_an_average_adult",
+		"test_opening_body_is_neutral",
 		"test_age_climbs_as_you_spend",
 		"test_age_goes_back_when_you_take_points_back",
 		"test_full_budget_reaches_eighteen",
@@ -14,7 +15,7 @@ func tests() -> Array:
 		"test_lowering_refunds_exactly_what_raising_cost",
 		"test_start_is_blocked_until_the_budget_is_gone",
 		"test_cannot_spend_more_than_you_have",
-		"test_a_prodigy_costs_a_third_of_a_life",
+		"test_a_prodigy_must_sell_everything_else",
 		"test_balanced_build_fits_the_budget",
 		"test_step_costs_are_linear_and_stats_cost_more",
 		"test_the_top_half_of_the_ladder_costs_far_more",
@@ -23,19 +24,33 @@ func tests() -> Array:
 	]
 
 func _builder() -> SheetBuilder:
-	return SheetBuilder.newborn()
+	return SheetBuilder.average_adult()
 
-# Nothing is rolled. An initial roll only teaches the player to mash reroll
-# until the dice agree with the build they already wanted.
-func test_starts_as_a_newborn_at_zero(t: TestHelper) -> void:
+# The screen opens on an average adult, already paid for. Same place you would
+# reach by hand from zero — minus forty clicks.
+func test_starts_as_an_average_adult(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
 	var builder: SheetBuilder = _builder()
-	t.equal(builder.age(), 0, "idade inicial")
-	t.equal(builder.spent(), 0, "nada gasto")
-	t.equal(builder.remaining(), SheetBuilder.total_points(), "bolso cheio")
 	for step: int in builder.stats.values():
-		t.equal(step, 0, "atributo deveria começar em zero")
+		t.equal(step, SheetBuilder.START_STAT_STEP, "atributo deveria abrir no adulto mediano")
 	for step: int in builder.skills.values():
-		t.equal(step, 0, "habilidade deveria começar em zero")
+		t.equal(step, 0, "habilidade deveria abrir em zero")
+	t.equal(builder.age(), 15, "idade de abertura")
+	t.equal(builder.remaining(), 54, "career points restantes")
+	if def != null:
+		t.equal(int(builder.stats.size()) * 45, builder.spent(), "custo pré-pago")
+
+# And the body it opens with must sit in the neutral band, or the sheet would
+# secretly start biased.
+func test_opening_body_is_neutral(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var builder: SheetBuilder = _builder()
+	t.equal(def.bucket("height", builder.height), 0, "altura de abertura")
+	t.equal(def.bucket("weight", builder.weight), 0, "peso de abertura")
+	for value: int in def.body_effect({"height": builder.height, "weight": builder.weight}).values():
+		t.equal(value, 0, "o corpo de abertura não deveria mexer em nada")
 
 # The mechanic in one assertion: points ARE years.
 func test_age_climbs_as_you_spend(t: TestHelper) -> void:
@@ -49,14 +64,15 @@ func test_age_climbs_as_you_spend(t: TestHelper) -> void:
 
 func test_age_goes_back_when_you_take_points_back(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
+	var opening: int = builder.age()
 	var id: String = String(builder.stats.keys()[0])
-	for i: int in range(6):
+	for i: int in range(3):
 		builder.raise_stat(id)
 	var older: int = builder.age()
-	for i: int in range(6):
+	t.check(older > opening, "subir não envelheceu")
+	for i: int in range(3):
 		builder.lower_stat(id)
-	t.equal(builder.age(), SheetBuilder.START_AGE, "voltar tudo deveria rejuvenescer")
-	t.check(older >= SheetBuilder.START_AGE, "idade nunca deveria cair abaixo do início")
+	t.equal(builder.age(), opening, "desfazer deveria voltar à idade de abertura")
 
 func test_full_budget_reaches_eighteen(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
@@ -64,17 +80,14 @@ func test_full_budget_reaches_eighteen(t: TestHelper) -> void:
 	t.check(builder.remaining() < 1, "sobraram %d pontos" % builder.remaining())
 	t.equal(builder.age(), SheetBuilder.END_AGE, "gastar tudo deveria dar 18")
 
+# Refunds go back to the true origin, not to the sheet you were handed.
 func test_everything_can_be_given_back(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
 	var id: String = String(builder.stats.keys()[0])
-	for i: int in range(5):
-		builder.raise_stat(id)
-	builder.stats[id] = int(builder.stats[id])
 	for i: int in range(10):
 		builder.lower_stat(id)
 	t.equal(int(builder.stats[id]), SheetBuilder.MIN_STAT_STEP, "não voltou ao piso")
-	t.equal(builder.remaining(), SheetBuilder.total_points(), "não devolveu tudo")
-	t.equal(builder.age(), 0, "devolver tudo deveria voltar a zero anos")
+	t.equal(builder.remaining(), 54 + 45, "não devolveu os 45 daquele atributo")
 
 # Without a signed cost table the refunded points would silently vanish.
 func test_lowering_refunds_exactly_what_raising_cost(t: TestHelper) -> void:
@@ -102,17 +115,30 @@ func test_cannot_spend_more_than_you_have(t: TestHelper) -> void:
 		"gastou %d de %d" % [builder.spent(), SheetBuilder.total_points()])
 
 # Ten steps IS reachable at eighteen — a kid who did nothing but one thing can
-# be exceptional at it. What it must cost is a visible slice of the whole life,
-# so nobody stumbles into being a medal contender.
-func test_a_prodigy_costs_a_third_of_a_life(t: TestHelper) -> void:
+# be exceptional at it. But not from the sheet as handed: the 54 spare points
+# buy two steps. To reach the podium you have to SELL the rest of yourself,
+# which is exactly the choice the mechanic is for.
+func test_a_prodigy_must_sell_everything_else(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
-	var id: String = String(builder.stats.keys()[0])
+	var gift: String = String(builder.stats.keys()[0])
+
 	for i: int in range(20):
-		builder.raise_stat(id)
-	t.equal(int(builder.stats[id]), StatDef.MAX_STEP, "não conseguiu chegar ao topo")
-	t.check(builder.spent() > SheetBuilder.total_points() / 3,
-		"o prodígio só gastou %d de %d — barato demais" %
-			[builder.spent(), SheetBuilder.total_points()])
+		builder.raise_stat(gift)
+	t.check(int(builder.stats[gift]) < StatDef.MAX_STEP,
+		"chegou ao topo sem sacrificar nada — barato demais")
+
+	for id: String in builder.stats.keys():
+		if id == gift:
+			continue
+		while builder.can_lower_stat(id):
+			builder.lower_stat(id)
+	for i: int in range(20):
+		builder.raise_stat(gift)
+
+	t.equal(int(builder.stats[gift]), StatDef.MAX_STEP, "nem vendendo tudo chegou ao topo")
+	for id: String in builder.stats.keys():
+		if id != gift:
+			t.equal(int(builder.stats[id]), 0, "o prodígio deveria ter zerado o resto")
 
 # The budget should land a rounded adult: everything at the average, with some
 # practice. Specialising then means trading that breadth away.
@@ -176,9 +202,9 @@ func test_bakes_steps_into_stored_units(t: TestHelper) -> void:
 # There is no seed here at all any more: two newborns are identical, and the
 # career seed builds the world instead of the person.
 func test_no_randomness_in_creation(t: TestHelper) -> void:
-	t.equal(str(SheetBuilder.newborn().stats), str(SheetBuilder.newborn().stats), "atributos")
-	t.equal(str(SheetBuilder.newborn().skills), str(SheetBuilder.newborn().skills), "habilidades")
-	t.equal(SheetBuilder.newborn().height, SheetBuilder.newborn().height, "altura")
+	t.equal(str(SheetBuilder.average_adult().stats), str(SheetBuilder.average_adult().stats), "atributos")
+	t.equal(str(SheetBuilder.average_adult().skills), str(SheetBuilder.average_adult().skills), "habilidades")
+	t.equal(SheetBuilder.average_adult().height, SheetBuilder.average_adult().height, "altura")
 
 func _spend_everything(builder: SheetBuilder) -> void:
 	var guard: int = 0

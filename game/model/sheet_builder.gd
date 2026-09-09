@@ -20,9 +20,17 @@ const END_AGE := 18
 # Career points are the only currency. A year of life buys this many.
 const CAREER_POINTS_PER_YEAR := 23
 
-# Floors. Everything starts here and everything can come back here.
+# Floors. The ORIGIN of every cost is zero — that is where refunds go back to —
+# even though the screen hands you an average adult already paid for.
 const MIN_STAT_STEP := 0
 const MIN_SKILL_STEP := 0
+
+# Where the screen starts you: an average adult with a median body, which costs
+# 360 of the 414 career points and leaves 54 to spend. Identical to building it
+# by hand from zero, minus forty clicks — and clicking is not a choice.
+const START_STAT_STEP := 5
+const START_HEIGHT := 1.80
+const START_WEIGHT := 80.0
 
 # Entering step N costs N points of its own kind: the first step is cheap and
 # the tenth is brutal, which is what keeps "Olympic medal contender" out of
@@ -50,22 +58,29 @@ var _base_skills: Dictionary = {}
 static func total_points() -> int:
 	return (END_AGE - START_AGE) * CAREER_POINTS_PER_YEAR
 
-# A newborn: zero in everything, median body. Nothing here is random — an
-# initial roll only teaches the player to mash reroll until the dice agree
-# with the build they already wanted.
-static func newborn() -> SheetBuilder:
+# The sheet the screen opens with: every attribute at the average adult, every
+# skill at zero, and a body that sits squarely in the neutral band.
+#
+# Nothing here is random. An initial roll only teaches the player to mash
+# reroll until the dice agree with the build they already wanted.
+#
+# The baselines stay at ZERO while the starting values do not: the cost of
+# those five steps is already counted as spent, so the sheet opens at fifteen
+# years old with 54 career points left, and selling an attribute back refunds
+# all the way down to nothing.
+static func average_adult() -> SheetBuilder:
 	var builder := SheetBuilder.new()
 	var def := Drive.def("stat") as StatDef
 	if def == null:
 		return builder
 	for id: String in def.base_ids():
-		builder.stats[id] = 0
+		builder._base_stats[id] = 0
+		builder.stats[id] = START_STAT_STEP
 	for id: String in def.skill_ids():
+		builder._base_skills[id] = 0
 		builder.skills[id] = 0
-	builder.height = float(def.measure("height").get("median", 1.78))
-	builder.weight = float(def.measure("weight").get("median", 78.0))
-	builder._base_stats = builder.stats.duplicate()
-	builder._base_skills = builder.skills.duplicate()
+	builder.height = START_HEIGHT
+	builder.weight = START_WEIGHT
 	return builder
 
 # --- Spending ---
