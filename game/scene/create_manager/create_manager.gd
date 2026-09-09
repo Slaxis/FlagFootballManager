@@ -218,7 +218,9 @@ func _attribute_row(stats: StatDef, id: String) -> Control:
 	var step_value: int = int(_build.stats.get(id, 0))
 	var effect: int = int(stats.body_effect(
 		{"height": _build.height, "weight": _build.weight}).get(id, 0))
-	var effective: int = clampi(step_value + int(round(float(effect) / 10.0)), 0, StatDef.MAX_STEP)
+	# Same arithmetic the Actor uses at runtime: the bias lands in stored
+	# points and only lights a bar when it carries the value across a step.
+	var effective: int = stats.step(stats.stored_for(step_value) + effect)
 	var bonus: int = effective - stats.average_step
 
 	var row := HBoxContainer.new()
@@ -458,10 +460,15 @@ func _on_start() -> void:
 
 # --- Internals ---
 
+# The seed builds the WORLD — which sandlot clubs exist and which one calls
+# you. It deliberately no longer touches the manager: an initial roll only
+# teaches the player to mash reroll until the dice agree with the build they
+# already wanted.
 func _reseed(value: int) -> void:
 	_career_seed = value
 	League.ensure_filled(_career_seed)
-	_build = SheetBuilder.child(SeedRng.derive(_career_seed, "manager"))
+	if _build == null:
+		_build = SheetBuilder.newborn()
 	_name = _roll_name()
 
 # Drawn from BOTH pools, which is what asking about categories instead of

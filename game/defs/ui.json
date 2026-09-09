@@ -201,16 +201,16 @@
       "en": "%d career points"
     },
     "manager.invest_hint": {
-      "pt": "Cada ponto de carreira é tempo de vida. Atributo custa 3, habilidade custa 2 — evoluir o corpo é mais caro que aprender.",
-      "en": "Every career point is time you lived. An attribute costs 3, a skill costs 2 — growing is dearer than learning."
+      "pt": "Você nasce zerado e aloca a vida inteira. Atributo custa 3 career points por passo, habilidade custa 2 — crescer é mais caro que aprender.",
+      "en": "You are born at zero and allocate a whole life. An attribute costs 3 career points a step, a skill costs 2 — growing is dearer than learning."
     },
     "manager.team_bonus": {
       "pt": "seu time ganha %+d nesta stat",
       "en": "your squad gets %+d in this stat"
     },
     "manager.body_hint": {
-      "pt": "altura e peso trocam atributos, não custam pontos",
-      "en": "height and weight trade attributes, they cost no points"
+      "pt": "altura e peso são um viés pequeno: no extremo valem um passo, e não custam pontos",
+      "en": "height and weight are a small bias: worth one step at the extreme, and free"
     },
     "skillgroup.offense": {
       "pt": "Ataque",

@@ -82,13 +82,13 @@ func test_actors_are_specialists(t: TestHelper) -> void:
 	var total: int = 0
 	var squad: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 50)
 	for actor: Actor in squad:
-		var values: Array = actor.derived_all().values()
+		var values: Array = actor.skills().values()
 		if values.is_empty():
-			t.fail("actor sem derivadas"); return
+			t.fail("actor sem habilidades"); return
 		total += int(values.max()) - int(values.min())
 	var average: int = int(float(total) / float(squad.size()))
 	t.check(average >= 10,
-		"espalhamento médio entre derivadas ficou em %d — actors saíram genéricos demais" % average)
+		"espalhamento médio entre habilidades ficou em %d — actors saíram genéricos demais" % average)
 
 func test_defaults_put_actor_in_praca(t: TestHelper) -> void:
 	var actor := ActorGenerator.generate(SEED, 50)

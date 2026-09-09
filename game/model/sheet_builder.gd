@@ -12,19 +12,16 @@
 # make you throw better — the player picks which, and neither is wrong.
 class_name SheetBuilder
 
-const START_AGE := 12
+# Nothing is rolled. You are born at zero in everything and allocate the whole
+# eighteen years — which is also why the seed no longer touches the manager:
+# rerolling it changes the world, never you.
+const START_AGE := 0
 const END_AGE := 18
 # Career points are the only currency. A year of life buys this many.
-const CAREER_POINTS_PER_YEAR := 40
+const CAREER_POINTS_PER_YEAR := 23
 
-# A twelve-year-old: a bit under half an adult, and NO practice at all. A kid
-# has raw material and nothing else; every skill point is a choice made later.
-const CHILD_ATTRIBUTE_STEP := 3
-const CHILD_SKILL_STEP := 0
-
-# Floors. You may sell your childhood back down to one step in an attribute and
-# spend the years elsewhere — a bad body that learned to read the game.
-const MIN_STAT_STEP := 1
+# Floors. Everything starts here and everything can come back here.
+const MIN_STAT_STEP := 0
 const MIN_SKILL_STEP := 0
 
 # Entering step N costs N points of its own kind: the first step is cheap and
@@ -53,20 +50,20 @@ var _base_skills: Dictionary = {}
 static func total_points() -> int:
 	return (END_AGE - START_AGE) * CAREER_POINTS_PER_YEAR
 
-# Rolls the twelve-year-old this build starts from. Deterministic per seed, so
-# the same career always offers the same child.
-static func child(seed_value: int) -> SheetBuilder:
+# A newborn: zero in everything, median body. Nothing here is random — an
+# initial roll only teaches the player to mash reroll until the dice agree
+# with the build they already wanted.
+static func newborn() -> SheetBuilder:
 	var builder := SheetBuilder.new()
 	var def := Drive.def("stat") as StatDef
 	if def == null:
 		return builder
-	var rng: RandomNumberGenerator = SeedRng.make_rng(seed_value)
 	for id: String in def.base_ids():
-		builder.stats[id] = clampi(CHILD_ATTRIBUTE_STEP + rng.randi_range(-1, 1), 1, StatDef.MAX_STEP)
+		builder.stats[id] = 0
 	for id: String in def.skill_ids():
-		builder.skills[id] = CHILD_SKILL_STEP
-	builder.height = snappedf(rng.randfn(1.78, 0.075), 0.01)
-	builder.weight = snappedf(rng.randfn(78.0, 9.0), 1.0)
+		builder.skills[id] = 0
+	builder.height = float(def.measure("height").get("median", 1.78))
+	builder.weight = float(def.measure("weight").get("median", 78.0))
 	builder._base_stats = builder.stats.duplicate()
 	builder._base_skills = builder.skills.duplicate()
 	return builder
@@ -112,8 +109,7 @@ func can_raise_skill(id: String) -> bool:
 	var cost: int = cost_to_raise_skill(id)
 	return cost >= 0 and cost <= remaining()
 
-# Going below the child you were rolled as is allowed, and refunds: those steps
-# were paid for by a childhood you are choosing not to have had.
+# Everything can be given back, all the way to zero.
 func can_lower_stat(id: String) -> bool:
 	return int(stats.get(id, 0)) > MIN_STAT_STEP
 

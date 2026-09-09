@@ -39,7 +39,18 @@ func _ready() -> void:
 			print("\n[%s]\n  X não carregou" % label)
 			failed += 1
 			continue
-		var suite: Object = suite_script.new()
+		# A script with a parse error still loads as a non-null Script but
+		# cannot be instantiated. Without this the whole run dies on one bad
+		# file, and every suite after it silently never runs.
+		var suite: Object = null
+		if suite_script.can_instantiate():
+			suite = suite_script.new()
+		if suite == null:
+			print("
+[%s]
+  X não instanciou (erro de parse?)" % label)
+			failed += 1
+			continue
 		if not suite.has_method("tests"):
 			print("\n[%s]\n  X não expõe tests()" % label)
 			failed += 1
