@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed — B.4c: a ficha ganha dados, habilidades e idade (2026-09-09)
+- D5 na d5star v0.4.0: o dado explodente que da nome a lib
+- 8o atributo: Vontade (resiliencia mental)
+- camada `derived` removida; 15 HABILIDADES no lugar, cada uma regida por um
+  atributo. Roll = atributo + habilidade + 2d5*
+- altura e peso trocam atributos (soma zero), nao custam pontos
+- criacao paga em anos: crianca de 12 -> adulto de 18
+- modificador de lider = passo - 5
+
 ### Added — B.1 a B.4: o loop de abertura (2026-09-08)
 - Start Screen, Ajustes (PT/EN), Selecao de Modulo, Criar Gestor
 - Todo texto de UI em i18n (`game/defs/ui.json` + `UiText.t()`)

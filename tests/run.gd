@@ -17,7 +17,9 @@ const _SUITES: Array[String] = [
 	"res://tests/test_team_colors.gd",
 	"res://tests/test_team_generator.gd",
 	"res://tests/test_category.gd",
+	"res://tests/test_sheet_builder.gd",
 	"res://tests/test_career.gd",
+	"res://tests/test_d5.gd",
 ]
 
 func _ready() -> void:

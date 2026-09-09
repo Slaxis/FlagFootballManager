@@ -1,259 +1,94 @@
 {
+  "scale": {
+    "stored_per_step": 10,
+    "average_adult": 5,
+    "anchors": [
+      {"step": 1,  "label": {"pt": "criança pequena", "en": "toddler"}},
+      {"step": 5,  "label": {"pt": "adulto mediano", "en": "average adult"}},
+      {"step": 10, "label": {"pt": "atleta olímpico, candidato a medalha", "en": "Olympic athlete, medal contender"}}
+    ]
+  },
+
   "base": [
     {
       "id": "strength",
-      "label": {
-        "pt": "Força",
-        "en": "Strength"
-      },
-      "desc": {
-        "pt": "Força muscular geral",
-        "en": "Overall muscular strength"
-      }
+      "label": {"pt": "Força", "en": "Strength"},
+      "desc": {"pt": "Força muscular geral", "en": "Overall muscular strength"}
     },
     {
       "id": "stamina",
-      "label": {
-        "pt": "Vitalidade",
-        "en": "Stamina"
-      },
-      "desc": {
-        "pt": "Condicionamento físico",
-        "en": "Physical conditioning"
-      }
+      "label": {"pt": "Vitalidade", "en": "Stamina"},
+      "desc": {"pt": "Condicionamento físico", "en": "Physical conditioning"}
     },
     {
       "id": "agility",
-      "label": {
-        "pt": "Agilidade",
-        "en": "Agility"
-      },
-      "desc": {
-        "pt": "Habilidade com as pernas: aceleração, mudança de movimento",
-        "en": "Legs: acceleration, change of direction"
-      }
+      "label": {"pt": "Agilidade", "en": "Agility"},
+      "desc": {"pt": "Habilidade com as pernas: aceleração, mudança de movimento", "en": "Legs: acceleration, change of direction"}
     },
     {
       "id": "dexterity",
-      "label": {
-        "pt": "Destreza",
-        "en": "Dexterity"
-      },
-      "desc": {
-        "pt": "Habilidade com as mãos: recepção, lançamento",
-        "en": "Hands: catching, throwing"
-      }
+      "label": {"pt": "Destreza", "en": "Dexterity"},
+      "desc": {"pt": "Habilidade com as mãos: recepção, lançamento", "en": "Hands: catching, throwing"}
     },
     {
       "id": "perception",
-      "label": {
-        "pt": "Percepção",
-        "en": "Perception"
-      },
-      "desc": {
-        "pt": "Capacidade visual e leitura de padrões",
-        "en": "Vision and pattern reading"
-      }
+      "label": {"pt": "Percepção", "en": "Perception"},
+      "desc": {"pt": "Capacidade visual e leitura de padrões", "en": "Vision and pattern reading"}
     },
     {
       "id": "intelligence",
-      "label": {
-        "pt": "Inteligência",
-        "en": "Intelligence"
-      },
-      "desc": {
-        "pt": "Capacidade cognitiva: aprender jogadas, memória e uso dela",
-        "en": "Cognition: learning plays, memory and using it"
-      }
+      "label": {"pt": "Inteligência", "en": "Intelligence"},
+      "desc": {"pt": "Capacidade cognitiva: aprender jogadas, memória e uso dela", "en": "Cognition: learning plays, memory and using it"}
     },
     {
       "id": "charisma",
-      "label": {
-        "pt": "Carisma",
-        "en": "Charisma"
-      },
-      "desc": {
-        "pt": "Capacidade interpessoal: magnetismo, beleza, oratória",
-        "en": "Interpersonal: magnetism, looks, oratory"
-      }
+      "label": {"pt": "Carisma", "en": "Charisma"},
+      "desc": {"pt": "Capacidade interpessoal: magnetismo, beleza, oratória", "en": "Interpersonal: magnetism, looks, oratory"}
+    },
+    {
+      "id": "will",
+      "label": {"pt": "Vontade", "en": "Will"},
+      "desc": {"pt": "Resiliência mental: ir a todo treino no horário, e continuar indo com o time na lanterna", "en": "Mental resilience: showing up to every session on time, and still showing up when the club is bottom of the table"}
     }
   ],
+
   "measures": [
     {
       "id": "height",
-      "label": {
-        "pt": "Altura",
-        "en": "Height"
-      },
-      "desc": {
-        "pt": "Alcance e presença física",
-        "en": "Reach and physical presence"
-      },
-      "unit": "m",
-      "decimals": 2,
-      "min": 1.55,
-      "max": 2.05
+      "label": {"pt": "Altura", "en": "Height"},
+      "desc": {"pt": "Alavanca contra leveza: mais alto empurra melhor e vira pior", "en": "Leverage against nimbleness: taller pushes better and turns worse"},
+      "unit": "m", "decimals": 2, "min": 1.55, "max": 2.15,
+      "median": 1.78, "step": 0.05,
+      "affects": {"strength": 3, "agility": -3}
     },
     {
       "id": "weight",
-      "label": {
-        "pt": "Peso",
-        "en": "Weight"
-      },
-      "desc": {
-        "pt": "Massa: ajuda a segurar contato, atrapalha a arrancada",
-        "en": "Mass: helps absorb contact, hurts the burst"
-      },
-      "unit": "kg",
-      "decimals": 0,
-      "min": 50.0,
-      "max": 130.0
+      "label": {"pt": "Peso", "en": "Weight"},
+      "desc": {"pt": "Massa contra fôlego: mais pesado segura o contato e apaga antes", "en": "Mass against wind: heavier absorbs contact and gasses out sooner"},
+      "unit": "kg", "decimals": 0, "min": 50, "max": 140,
+      "median": 78, "step": 5,
+      "affects": {"strength": 3, "stamina": -3}
     }
   ],
-  "derived": [
-    {
-      "id": "speed",
-      "label": {
-        "pt": "Velocidade",
-        "en": "Speed"
-      },
-      "desc": {
-        "pt": "Velocidade máxima em campo aberto",
-        "en": "Top speed in the open field"
-      },
-      "from": [
-        "agility",
-        "strength",
-        "stamina"
-      ]
-    },
-    {
-      "id": "passing",
-      "label": {
-        "pt": "Passe",
-        "en": "Passing"
-      },
-      "desc": {
-        "pt": "Precisão e decisão do quarterback",
-        "en": "Quarterback accuracy and decision"
-      },
-      "from": [
-        "dexterity",
-        "intelligence",
-        "perception"
-      ]
-    },
-    {
-      "id": "catching",
-      "label": {
-        "pt": "Recepção",
-        "en": "Catching"
-      },
-      "desc": {
-        "pt": "Segurar o que dá pra segurar — e o que não dá",
-        "en": "Holding on to the catchable, and the uncatchable"
-      },
-      "from": [
-        "dexterity",
-        "perception",
-        "agility"
-      ]
-    },
-    {
-      "id": "protection",
-      "label": {
-        "pt": "Proteção",
-        "en": "Protection"
-      },
-      "desc": {
-        "pt": "Snap limpo e tempo pro quarterback",
-        "en": "Clean snap and time for the quarterback"
-      },
-      "from": [
-        "strength",
-        "stamina",
-        "dexterity"
-      ]
-    },
-    {
-      "id": "pressure",
-      "label": {
-        "pt": "Pressão",
-        "en": "Pressure"
-      },
-      "desc": {
-        "pt": "Chegar no quarterback antes do passe sair",
-        "en": "Reaching the quarterback before the ball leaves"
-      },
-      "from": [
-        "strength",
-        "agility",
-        "perception"
-      ]
-    },
-    {
-      "id": "coverage",
-      "label": {
-        "pt": "Cobertura",
-        "en": "Coverage"
-      },
-      "desc": {
-        "pt": "Grudar no recebedor o jogo inteiro",
-        "en": "Sticking to the receiver all game long"
-      },
-      "from": [
-        "perception",
-        "agility",
-        "stamina"
-      ]
-    },
-    {
-      "id": "reading",
-      "label": {
-        "pt": "Leitura",
-        "en": "Reading"
-      },
-      "desc": {
-        "pt": "Ler a jogada e reagir antes dela acontecer",
-        "en": "Reading the play and reacting before it happens"
-      },
-      "from": [
-        "intelligence",
-        "perception",
-        "agility"
-      ]
-    },
-    {
-      "id": "leadership",
-      "label": {
-        "pt": "Liderança",
-        "en": "Leadership"
-      },
-      "desc": {
-        "pt": "Lê a jogada e comunica — buffa os aliados",
-        "en": "Reads the play and calls it out — buffs allies"
-      },
-      "from": [
-        "charisma",
-        "intelligence",
-        "perception"
-      ]
-    },
-    {
-      "id": "trash_talk",
-      "label": {
-        "pt": "Provocação",
-        "en": "Trash Talk"
-      },
-      "desc": {
-        "pt": "Acha o ponto fraco e não larga — debuffa os adversários",
-        "en": "Finds the weak spot and never lets go — debuffs opponents"
-      },
-      "from": [
-        "charisma",
-        "perception",
-        "stamina"
-      ]
-    }
+
+  "skills": [
+    {"id": "throwing",   "attribute": "dexterity",  "group": "offense", "label": {"pt": "Lançamento", "en": "Throwing"},   "desc": {"pt": "Colocar a bola onde só o seu recebedor alcança", "en": "Putting the ball where only your receiver can reach"}},
+    {"id": "catching",   "attribute": "dexterity",  "group": "offense", "label": {"pt": "Recepção", "en": "Catching"},     "desc": {"pt": "Segurar o que dá pra segurar — e o que não dá", "en": "Holding the catchable, and the uncatchable"}},
+    {"id": "route",      "attribute": "agility",    "group": "offense", "label": {"pt": "Rota", "en": "Route"},            "desc": {"pt": "Correr a jogada certa no tempo certo", "en": "Running the right route at the right time"}},
+    {"id": "snap",       "attribute": "dexterity",  "group": "offense", "label": {"pt": "Snap", "en": "Snap"},             "desc": {"pt": "Entregar a bola limpa e ainda entrar na jogada", "en": "Delivering a clean ball and still joining the play"}},
+    {"id": "juke",       "attribute": "agility",    "group": "offense", "label": {"pt": "Drible", "en": "Juke"},           "desc": {"pt": "Escapar da puxada no espaço curto", "en": "Escaping the flag pull in tight space"}},
+
+    {"id": "tackle",     "attribute": "dexterity",  "group": "defense", "label": {"pt": "Tackle", "en": "Tackle"},         "desc": {"pt": "Arrancar a flag na primeira tentativa", "en": "Ripping the flag on the first try"}},
+    {"id": "coverage",   "attribute": "perception", "group": "defense", "label": {"pt": "Cobertura", "en": "Coverage"},    "desc": {"pt": "Grudar no recebedor o jogo inteiro", "en": "Sticking to the receiver all game"}},
+    {"id": "rush",       "attribute": "agility",    "group": "defense", "label": {"pt": "Rush", "en": "Rush"},             "desc": {"pt": "Contar os segundos e chegar no quarterback", "en": "Counting the seconds and reaching the quarterback"}},
+    {"id": "deflection", "attribute": "perception", "group": "defense", "label": {"pt": "Deflexão", "en": "Deflection"},   "desc": {"pt": "Tipar a bola na mão do recebedor", "en": "Tipping the ball out of the receiver's hands"}},
+
+    {"id": "rules",      "attribute": "intelligence", "group": "general", "label": {"pt": "Regras", "en": "Rules"},          "desc": {"pt": "No amador, saber a regra ganha jogo", "en": "In amateur play, knowing the rulebook wins games"}},
+    {"id": "leadership", "attribute": "charisma",     "group": "general", "label": {"pt": "Liderança", "en": "Leadership"},  "desc": {"pt": "Lê a jogada, comunica, e o time inteiro joga melhor", "en": "Reads the play, calls it, and the whole side plays better"}},
+    {"id": "trash_talk", "attribute": "charisma",     "group": "general", "label": {"pt": "Provocação", "en": "Trash Talk"}, "desc": {"pt": "Acha o ponto fraco do adversário e não larga", "en": "Finds the opponent's weak spot and never lets go"}},
+
+    {"id": "play_calling", "attribute": "intelligence", "group": "staff", "label": {"pt": "Chamada de jogada", "en": "Play Calling"}, "desc": {"pt": "Escolher a jogada certa para o momento certo", "en": "Choosing the right play for the moment"}},
+    {"id": "coaching",     "attribute": "will",         "group": "staff", "label": {"pt": "Treinamento", "en": "Coaching"},          "desc": {"pt": "Fazer o elenco evoluir semana após semana", "en": "Making the squad improve week after week"}},
+    {"id": "scouting",     "attribute": "perception",   "group": "staff", "label": {"pt": "Olheiro", "en": "Scouting"},              "desc": {"pt": "Bater o olho e saber quem presta", "en": "One look and you know who can play"}}
   ]
 }

@@ -128,19 +128,67 @@ func set_stat(id: String, value: int) -> void:
 		data["stats"] = {}
 	data["stats"][String(id).strip_edges().to_lower()] = value
 
-# Derived stats are never stored — always a function of the 7 base ones.
-func derived(derived_id: String) -> int:
-	var def := Drive.def("stat") as StatDef
-	return def.derive(stats(), derived_id) if def != null else 0
+# --- Skills ---
 
-func derived_all() -> Dictionary:
+func skills() -> Dictionary:
+	return data.get("skills", {})
+
+func skill(id: String) -> int:
+	return int(skills().get(String(id).strip_edges().to_lower(), 0))
+
+func set_skill(id: String, value: int) -> void:
+	if not data.has("skills"):
+		data["skills"] = {}
+	data["skills"][String(id).strip_edges().to_lower()] = value
+
+# --- Steps: what the game actually reads ---
+
+# An attribute in steps, body effects included. Height and weight trade
+# attributes, so the number on the sheet is not always the number that rolls.
+func step(stat_id: String) -> int:
 	var def := Drive.def("stat") as StatDef
-	return def.derive_all(stats()) if def != null else {}
+	if def == null:
+		return 0
+	return def.step(stat(stat_id) + int(body_effect().get(_norm(stat_id), 0)))
+
+func skill_step(skill_id: String) -> int:
+	var def := Drive.def("stat") as StatDef
+	return def.step(skill(skill_id)) if def != null else 0
+
+# What an attempt is worth before the dice: aptitude plus practice. A roll is
+# this plus 2d5*, which is why a trained sandlot player can beat an untalented
+# natural — and why the natural still wins more often.
+func roll_base(skill_id: String) -> int:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return 0
+	return step(def.skill_attribute(skill_id)) + skill_step(skill_id)
+
+# The bonus this actor passes to everyone they lead, in that attribute. Zero at
+# five steps (an average adult leads nobody anywhere); negative below it.
+func team_bonus(stat_id: String) -> int:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return 0
+	return def.step(stat(stat_id) + int(body_effect().get(_norm(stat_id), 0))) - def.average_step
+
+# Attribute deltas coming from height and weight.
+func body_effect() -> Dictionary:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return {}
+	var values: Dictionary = {}
+	for id: String in def.measure_ids():
+		values[id] = measure(id)
+	return def.body_effect(values)
 
 # "Geral" — the one number the roster list shows.
 func overall() -> int:
 	var def := Drive.def("stat") as StatDef
 	return def.overall(stats()) if def != null else 0
+
+func _norm(id: String) -> String:
+	return String(id).strip_edges().to_lower()
 
 # --- Career ---
 

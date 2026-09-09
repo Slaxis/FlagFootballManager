@@ -187,6 +187,50 @@
     "manager.years": {
       "pt": "%d anos",
       "en": "%d years"
+    },
+    "manager.attributes": {
+      "pt": "ATRIBUTOS",
+      "en": "ATTRIBUTES"
+    },
+    "manager.skills": {
+      "pt": "HABILIDADES",
+      "en": "SKILLS"
+    },
+    "manager.points_left": {
+      "pt": "%d pontos",
+      "en": "%d points"
+    },
+    "manager.invest_hint": {
+      "pt": "Cada ponto é tempo de vida. Onde você investiu sua adolescência?",
+      "en": "Every point is time you lived. Where did you invest your adolescence?"
+    },
+    "manager.team_bonus": {
+      "pt": "seu time ganha %+d nesta stat",
+      "en": "your squad gets %+d in this stat"
+    },
+    "manager.body_hint": {
+      "pt": "altura e peso trocam atributos, não custam pontos",
+      "en": "height and weight trade attributes, they cost no points"
+    },
+    "skillgroup.offense": {
+      "pt": "Ataque",
+      "en": "Offense"
+    },
+    "skillgroup.defense": {
+      "pt": "Defesa",
+      "en": "Defense"
+    },
+    "skillgroup.general": {
+      "pt": "Geral",
+      "en": "General"
+    },
+    "skillgroup.staff": {
+      "pt": "Comissão",
+      "en": "Staff"
+    },
+    "manager.roll_hint": {
+      "pt": "um teste desta habilidade rola %d + 2d5*",
+      "en": "a check on this skill rolls %d + 2d5*"
     }
   }
 }

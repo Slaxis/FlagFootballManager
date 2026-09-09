@@ -2,11 +2,11 @@
 # the same actor, which is what makes a career reproducible and lets the match
 # simulation be replayed.
 #
-# No archetype system, on purpose. Each derived stat reads a DIFFERENT trio of
-# base attributes, so plain variance across the 7 already produces specialists
-# — the actor who rolled high agility and low dexterity simply IS a safety,
-# and nobody had to decide that. `test_actor.gd` measures how much spread this
-# actually creates so `SPREAD` is tuned against numbers, not vibes.
+# No archetype system, on purpose. Attributes AND skills are rolled with
+# variance, and a skill roll sums the two — so the actor who came out with high
+# agility and a trained juke simply IS an evasive receiver, and nobody had to
+# decide that. `test_actor.gd` measures the spread so SPREAD is tuned against
+# numbers, not vibes.
 class_name ActorGenerator
 
 const AGE_MIN := 16
@@ -15,6 +15,14 @@ const STAT_MIN := 1
 const STAT_MAX := 99
 # Standard deviation of the bell curve around the quality target.
 const SPREAD := 14.0
+# Practice lags aptitude: an actor knows less than they could.
+const SKILL_LAG := 12
+# Nobody in the game is a toddler and nobody is an Olympic medallist. The
+# worst sandlot player is still an adult (about 4 steps) and the champion is
+# near the national side (about 8), so club reputation maps into that band
+# rather than straight onto the attribute scale.
+const QUALITY_FLOOR := 35
+const QUALITY_CEILING := 80
 # Roughly how many amateur athletes go by a nickname at the field.
 const NICKNAME_CHANCE := 0.6
 
@@ -29,11 +37,13 @@ static func generate(
 	var rng: RandomNumberGenerator = SeedRng.make_rng(seed_value)
 	var actor := Actor.new()
 	var stats: Dictionary = _roll_stats(rng, quality, spread)
+	var skills: Dictionary = _roll_skills(rng, quality - SKILL_LAG, spread)
 	var payload: Dictionary = {
 		"plays": [category],
 		"manages": [],
 		"age": rng.randi_range(age_min, age_max),
 		"stats": stats,
+		"skills": skills,
 		"perks": [],
 		"team": Actor.NO_TEAM,
 		"jersey": Actor.NO_JERSEY,
@@ -59,6 +69,21 @@ static func squad(
 	return out
 
 # --- Internals ---
+
+# Club reputation is not an attribute value. A club at reputation 12 fields
+# bad adults, not children.
+static func quality_from_reputation(reputation: int) -> int:
+	var t: float = clampf(float(reputation) / 100.0, 0.0, 1.0)
+	return int(round(lerpf(float(QUALITY_FLOOR), float(QUALITY_CEILING), t)))
+
+static func _roll_skills(rng: RandomNumberGenerator, quality: int, spread: float) -> Dictionary:
+	var def := Drive.def("stat") as StatDef
+	var out: Dictionary = {}
+	if def == null:
+		return out
+	for id: String in def.skill_ids():
+		out[id] = clampi(int(round(rng.randfn(float(quality), spread))), STAT_MIN, STAT_MAX)
+	return out
 
 static func _roll_stats(rng: RandomNumberGenerator, quality: int, spread: float) -> Dictionary:
 	var def := Drive.def("stat") as StatDef
