@@ -319,9 +319,9 @@ func _career_type() -> Control:
 	box.add_child(pick)
 	box.add_child(_hint(UiText.t("manager.pick_locked")))
 	box.add_child(_spacer(4))
-	var draw: Button = _flat_button(UiText.t("manager.random"), _on_draw, true)
-	draw.disabled = not _build.is_complete()
-	box.add_child(draw)
+	var draw_button: Button = _flat_button(UiText.t("manager.random"), _on_draw, true)
+	draw_button.disabled = not _build.is_complete()
+	box.add_child(draw_button)
 	box.add_child(_hint(UiText.t("manager.random_hint") if _build.is_complete()
 		else UiText.t("manager.must_spend") % _build.remaining()))
 	return box

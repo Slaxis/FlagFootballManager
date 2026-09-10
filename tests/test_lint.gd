@@ -26,8 +26,8 @@ const BUILTINS: Array[String] = [
 	"randf", "exp", "sqrt", "range", "snapped", "instance_from_id",
 ]
 
-# Methods our own base classes expose. A local with one of these names inside
-# a subclass shadows the real thing.
+# Methods our own GDScript base classes expose. ClassDB does not know about
+# these — it only sees engine classes — so they stay hand-listed.
 const BASE_METHODS: Dictionary = {
 	"Record": ["def", "text", "to_snapshot", "from_snapshot"],
 	"Def": ["load_data", "merge_data", "add_thing"],
@@ -37,6 +37,22 @@ const BASE_METHODS: Dictionary = {
 	"Menu": ["read", "write", "go"],
 	"World": ["read", "write", "go"],
 	"Overlay": ["read", "write", "go"],
+}
+
+# Where each of our base classes lands in the engine hierarchy. Everything a
+# script inherits from Godot — every signal, property and method, all the way
+# up — comes from ClassDB rather than a hand-kept list, because a hand-kept
+# list is exactly what let `var draw` through: it shadows a CanvasItem signal
+# three levels above Menu, and no list of ours was ever going to have it.
+const ENGINE_BASE: Dictionary = {
+	"Menu": "Control",
+	"World": "Node2D",
+	"Overlay": "CanvasLayer",
+	"Record": "RefCounted",
+	"Def": "Resource",
+	"Thing": "RefCounted",
+	"ThingData": "RefCounted",
+	"Actor": "RefCounted",
 }
 
 func tests() -> Array:
@@ -62,12 +78,37 @@ func test_no_variable_shadows_a_base_class_method(t: TestHelper) -> void:
 	for path: String in _scripts():
 		var source: String = _read(path)
 		var base: String = _base_class(source)
-		if not BASE_METHODS.has(base):
+		if base == "":
 			continue
-		for name: String in BASE_METHODS[base]:
+		for name: String in BASE_METHODS.get(base, []):
 			var line: int = _find_declaration(source, name)
 			if line > 0:
 				t.fail("%s:%d — 'var %s' sombreia %s.%s()" % [path, line, name, base, name])
+		for name: String in _engine_members(base):
+			var line: int = _find_declaration(source, name)
+			if line > 0:
+				t.fail("%s:%d — 'var %s' sombreia um membro herdado de %s" %
+					[path, line, name, _engine_class(base)])
+
+# Every signal, property and method a script inherits from the engine, asked of
+# ClassDB with inheritance on.
+func _engine_members(base: String) -> Array[String]:
+	var engine: String = _engine_class(base)
+	var out: Array[String] = []
+	if engine == "" or not ClassDB.class_exists(engine):
+		return out
+	for entry: Dictionary in ClassDB.class_get_signal_list(engine):
+		out.append(String(entry.get("name", "")))
+	for entry: Dictionary in ClassDB.class_get_property_list(engine):
+		out.append(String(entry.get("name", "")))
+	for entry: Dictionary in ClassDB.class_get_method_list(engine):
+		out.append(String(entry.get("name", "")))
+	return out
+
+func _engine_class(base: String) -> String:
+	if ClassDB.class_exists(base):
+		return base
+	return String(ENGINE_BASE.get(base, ""))
 
 # --- Internals ---
 

@@ -152,8 +152,12 @@ Do not start implementing before the plan is approved.
 `--check-only` all stay silent about them, so the automated loop cannot see a
 shadowed variable or an unused signal. `tests/test_lint.gd` covers the two
 traps that have actually bitten this project — a variable named after a Godot
-built-in, and one named after a method of the base class the file extends —
-but it is not the compiler. Warnings reported from the editor are still worth
+built-in, and one named after anything the file's base class inherits. The
+second asks **ClassDB** for every signal, property and method up the engine
+chain rather than keeping a list: a hand-kept list is what let `var draw`
+through, since it shadows a `CanvasItem` signal three levels above `Menu`.
+Map any new game base class to its engine ancestor in `ENGINE_BASE`. It is
+still not the compiler. Warnings reported from the editor are still worth
 passing along.
 
 ⚠️ After renaming a `class_name` or moving files, Godot keeps the stale names
