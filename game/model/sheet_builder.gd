@@ -91,7 +91,28 @@ func spent() -> int:
 		total += _cost_between(int(_base_stats.get(id, 0)), int(stats[id])) * STAT_POINT_IN_CAREER
 	for id: String in skills.keys():
 		total += _cost_between(int(_base_skills.get(id, 0)), int(skills[id])) * SKILL_POINT_IN_CAREER
-	return total
+	return total + body_cost()
+
+# The body is billed at exactly what the swap it performs is worth, so shape
+# costs points and power does not come free. Moving away from the centre gives
+# one attribute a step and takes a step from another — and because the ladder
+# is triangular, the step you gain always costs more than the one you give up.
+# That is true going up AND going down, which is why both directions are
+# charged instead of only the tall one.
+func body_cost() -> int:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return 0
+	return def.body_value({"height": height, "weight": weight}) * STAT_POINT_IN_CAREER
+
+func can_move_body(id: String, value: float) -> bool:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return true
+	var values: Dictionary = {"height": height, "weight": weight}
+	values[id] = value
+	var after: int = def.body_value(values) * STAT_POINT_IN_CAREER
+	return after - body_cost() <= remaining()
 
 func remaining() -> int:
 	return total_points() - spent()

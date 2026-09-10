@@ -209,8 +209,8 @@
       "en": "your squad gets %+d in this stat"
     },
     "manager.body_hint": {
-      "pt": "só aparência: altura e peso não mexem em atributo nenhum",
-      "en": "looks only: height and weight change no attribute"
+      "pt": "sair do centro dá um passo a um atributo e tira de outro — e custa career points, porque o passo que você ganha vale mais que o que você entrega",
+      "en": "leaving the centre gives one attribute a step and takes one from another — and costs career points, because the step you gain is dearer than the one you give up"
     },
     "skillgroup.offense": {
       "pt": "Ataque",
@@ -235,6 +235,14 @@
     "manager.must_spend": {
       "pt": "você ainda tem %d anos para viver — gaste tudo antes de começar",
       "en": "you still have %d years to live — spend them all before starting"
+    },
+    "manager.body_cost": {
+      "pt": "corpo: %d cp",
+      "en": "body: %d cp"
+    },
+    "manager.overspent": {
+      "pt": "você gastou %d career points a mais do que viveu",
+      "en": "you spent %d career points more than you lived"
     }
   }
 }

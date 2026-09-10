@@ -137,7 +137,7 @@ func _header() -> Control:
 	row.add_child(age)
 
 	var left := Label.new()
-	left.text = UiText.t("manager.points_left") % _build.remaining()
+	left.text = (UiText.t("manager.overspent") % -_build.remaining()) if _build.remaining() < 0 		else (UiText.t("manager.points_left") % _build.remaining())
 	left.add_theme_font_size_override("font_size", 18)
 	left.add_theme_color_override("font_color", WARN if _build.remaining() != 0 else ACCENT)
 	row.add_child(left)
@@ -205,20 +205,47 @@ func _body_row() -> Control:
 		cell.add_child(field)
 		row.add_child(cell)
 
+	var effect: Dictionary = stats.body_effect({"height": _build.height, "weight": _build.weight})
+	var summary := Label.new()
+	summary.text = _effect_text(stats, effect)
+	summary.add_theme_font_size_override("font_size", 12)
+	summary.add_theme_color_override("font_color", WARN)
+	row.add_child(summary)
+
+	var price := Label.new()
+	price.text = UiText.t("manager.body_cost") % _build.body_cost()
+	price.add_theme_font_size_override("font_size", 12)
+	price.add_theme_color_override("font_color", MUTED if _build.body_cost() == 0 else ACCENT)
+	row.add_child(price)
 	return row
+
+# Reads the shift the body performs, so the player sees the trade before paying
+# for it.
+func _effect_text(stats: StatDef, effect: Dictionary) -> String:
+	var parts: Array[String] = []
+	for id: String in effect.keys():
+		var value: int = int(effect[id])
+		if value == 0:
+			continue
+		parts.append("%+d %s" % [value, I18n.text(stats.base_stat(id).get("label", id), id)])
+	return "   ".join(parts)
 
 func _attribute_row(stats: StatDef, id: String) -> Control:
 	var spec: Dictionary = stats.base_stat(id)
 	var step_value: int = int(_build.stats.get(id, 0))
-	var bonus: int = step_value - stats.average_step
+	var shift: int = int(stats.body_effect(
+		{"height": _build.height, "weight": _build.weight}).get(id, 0))
+	var effective: int = clampi(step_value + shift, 0, StatDef.MAX_STEP)
+	var bonus: int = effective - stats.average_step
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 5)
 	row.tooltip_text = "%s
 
-%d/10
+%d/10%s
 %s" % [
-		I18n.text(spec.get("desc", ""), ""), step_value,
+		I18n.text(spec.get("desc", ""), ""), effective,
+		"   (%+d do corpo)" % shift if shift != 0 else "",
 		UiText.t("manager.team_bonus") % bonus,
 	]
 	row.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -232,7 +259,7 @@ func _attribute_row(stats: StatDef, id: String) -> Control:
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_color", TEXT)
 	row.add_child(label)
-	row.add_child(StatBar.bar(step_value * 10))
+	row.add_child(StatBar.bar(effective * 10))
 
 	var mod := Label.new()
 	mod.text = "%+d" % bonus if bonus != 0 else "·"
@@ -395,13 +422,20 @@ func _on_lower_skill(id: String) -> void:
 	_build.lower_skill(id)
 	_build_ui()
 
-# Never redraws: the body is cosmetic, so nothing else on the sheet depends on
-# it, and rebuilding would only yank the caret out of the field being typed in.
+# Redraws only when the value crosses a band. Typing 1,81 then 1,82 changes
+# nothing on the sheet, so rebuilding would just yank the caret out of the
+# field the player is still using.
 func _on_measure_value(value: float, id: String) -> void:
+	var stats := Drive.def("stat") as StatDef
+	if stats == null:
+		return
+	var before: int = stats.band(id, _measure_value(id))
 	if id == "height":
 		_build.height = snappedf(value, 0.01)
 	else:
 		_build.weight = snappedf(value, 1.0)
+	if stats.band(id, value) != before:
+		_build_ui()
 
 func _on_name_typed(text: String) -> void:
 	var parts: PackedStringArray = text.strip_edges().split(" ", false)

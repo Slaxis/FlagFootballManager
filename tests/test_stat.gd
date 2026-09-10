@@ -17,7 +17,9 @@ func tests() -> Array:
 		"test_modifier_is_zero_at_the_average_adult",
 		"test_modifier_punishes_a_bad_leader",
 		"test_measures_move_in_real_units",
-		"test_body_is_purely_cosmetic",
+		"test_body_shifts_whole_steps",
+		"test_body_is_symmetric_in_effect_and_price",
+		"test_body_price_matches_the_swap_it_performs",
 		"test_roll_base_sums_aptitude_and_practice",
 		"test_quality_stays_inside_the_adult_band",
 	]
@@ -91,26 +93,49 @@ func test_measures_move_in_real_units(t: TestHelper) -> void:
 	t.check(def.increment("height") < float(def.measure("height").get("step", 1.0)),
 		"o passo do teclado deveria ser mais fino que a faixa do efeito")
 
-# Height and weight are cosmetic. They used to trade attributes, and the trade
-# was zero-sum in steps but net-positive in career points — an extreme body was
-# a free upgrade worth the entire spare budget. This guards the removal.
-func test_body_is_purely_cosmetic(t: TestHelper) -> void:
+# The ruler shifts whole steps, so moving the body is visible immediately —
+# half a step would exist only on paper, since every value the creation screen
+# produces is a multiple of ten.
+func test_body_shifts_whole_steps(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	var sheet: Dictionary = def.blank_sheet(50)
-	var small := Actor.new()
-	small._apply_data("s", "actor", {"stats": sheet.duplicate(), "skills": def.blank_skills(30),
-		"height": 1.55, "weight": 50})
-	var huge := Actor.new()
-	huge._apply_data("h", "actor", {"stats": sheet.duplicate(), "skills": def.blank_skills(30),
-		"height": 2.15, "weight": 140})
-	for id: String in def.base_ids():
-		t.equal(huge.step(id), small.step(id), "o corpo mexeu em '%s'" % id)
-		t.equal(huge.team_bonus(id), small.team_bonus(id), "o corpo mexeu no bônus de '%s'" % id)
-	for id: String in def.skill_ids():
-		t.equal(huge.roll_base(id), small.roll_base(id), "o corpo mexeu no roll de '%s'" % id)
-	t.check(not def.has_method("body_effect"), "body_effect voltou")
+	var tall: Dictionary = def.body_effect({"height": 2.10, "weight": 80})
+	t.equal(int(tall.get("perception", 0)), 3, "alto deveria enxergar 3 passos mais")
+	t.equal(int(tall.get("agility", 0)), -3, "alto deveria perder 3 passos de agilidade")
+	var heavy: Dictionary = def.body_effect({"height": 1.80, "weight": 110})
+	t.equal(int(heavy.get("strength", 0)), 3, "pesado deveria ganhar 3 de força")
+	t.equal(int(heavy.get("stamina", 0)), -3, "pesado deveria perder 3 de vitalidade")
+	for value: int in def.body_effect({"height": 1.80, "weight": 80}).values():
+		t.equal(value, 0, "o corpo central não deveria mexer em nada")
+
+# Being taller than average is an advantage AND being shorter than average is
+# an advantage, because in both directions the step you gain costs more than
+# the one you give up. So both directions cost the same.
+func test_body_is_symmetric_in_effect_and_price(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	for pair: Array in [[1.50, 2.10], [1.60, 2.00], [1.70, 1.90]]:
+		var short_value: int = def.body_value({"height": pair[0], "weight": 80})
+		var tall_value: int = def.body_value({"height": pair[1], "weight": 80})
+		t.equal(short_value, tall_value,
+			"%.2f e %.2f deveriam custar o mesmo" % [pair[0], pair[1]])
+		var low: Dictionary = def.body_effect({"height": pair[0], "weight": 80})
+		var high: Dictionary = def.body_effect({"height": pair[1], "weight": 80})
+		t.equal(int(low.get("perception", 0)), -int(high.get("perception", 0)),
+			"o efeito deveria espelhar em %.2f / %.2f" % [pair[0], pair[1]])
+
+# The price IS the swap: at the average adult, +1 costs 6 points and -1 refunds
+# 5, so one band is worth 1. The next is worth 3, the next 5 — n bands total n².
+func test_body_price_matches_the_swap_it_performs(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	t.equal(def.body_value({"height": 1.90, "weight": 80}), 1, "uma faixa")
+	t.equal(def.body_value({"height": 2.00, "weight": 80}), 4, "duas faixas")
+	t.equal(def.body_value({"height": 2.10, "weight": 80}), 9, "três faixas")
+	t.equal(def.body_value({"height": 2.10, "weight": 110}), 18, "extremo nos dois")
 
 func test_roll_base_sums_aptitude_and_practice(t: TestHelper) -> void:
 	var def := _def()

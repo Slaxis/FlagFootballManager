@@ -20,6 +20,7 @@ func tests() -> Array:
 		"test_the_top_half_of_the_ladder_costs_far_more",
 		"test_bakes_steps_into_stored_units",
 		"test_no_randomness_in_creation",
+		"test_an_extreme_body_costs_the_whole_spare_budget",
 	]
 
 func _builder() -> SheetBuilder:
@@ -184,6 +185,19 @@ func test_bakes_steps_into_stored_units(t: TestHelper) -> void:
 			"armazenado de '%s'" % id)
 		t.equal(def.step(actor.stat(id)), int(builder.stats[id]),
 			"ida e volta de passos em '%s'" % id)
+
+# The body is billed, and at the extreme of both measures the bill is exactly
+# the spare budget — so a wildly shaped manager reaches eighteen with nothing
+# left for skills. Shape or practice, not both.
+func test_an_extreme_body_costs_the_whole_spare_budget(t: TestHelper) -> void:
+	var builder: SheetBuilder = _builder()
+	t.equal(builder.body_cost(), 0, "o corpo de abertura deveria ser grátis")
+	var spare: int = builder.remaining()
+	builder.height = 2.10
+	builder.weight = 110.0
+	t.equal(builder.body_cost(), spare, "o corpo extremo deveria custar toda a sobra")
+	t.equal(builder.remaining(), 0, "não deveria sobrar nada")
+	t.check(builder.is_complete(), "e ainda assim fecha os 18 anos")
 
 # There is no seed here at all any more: two newborns are identical, and the
 # career seed builds the world instead of the person.

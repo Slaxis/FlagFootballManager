@@ -124,15 +124,21 @@
         "en": "Height"
       },
       "desc": {
-        "pt": "Só aparência — não muda atributo nenhum",
-        "en": "Looks only — changes no attribute"
+        "pt": "Enxerga por cima da linha, mas vira pior",
+        "en": "Sees over the line, but turns worse"
       },
       "unit": "m",
       "decimals": 2,
-      "min": 1.55,
-      "max": 2.15,
-      "median": 1.78,
-      "increment": 0.01
+      "min": 1.5,
+      "max": 2.1,
+      "center": 1.8,
+      "band": 0.1,
+      "increment": 0.01,
+      "cap": 3,
+      "affects": {
+        "perception": 1,
+        "agility": -1
+      }
     },
     {
       "id": "weight",
@@ -141,15 +147,21 @@
         "en": "Weight"
       },
       "desc": {
-        "pt": "Só aparência — não muda atributo nenhum",
-        "en": "Looks only — changes no attribute"
+        "pt": "Segura o contato, mas apaga antes",
+        "en": "Absorbs contact, but gasses out sooner"
       },
       "unit": "kg",
       "decimals": 0,
       "min": 50,
-      "max": 140,
-      "median": 78,
-      "increment": 1
+      "max": 110,
+      "center": 80,
+      "band": 10,
+      "increment": 1,
+      "cap": 3,
+      "affects": {
+        "strength": 1,
+        "stamina": -1
+      }
     }
   ],
   "skills": [

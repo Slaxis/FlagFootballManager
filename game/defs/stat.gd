@@ -15,11 +15,10 @@
 # THREE SECTIONS.
 #
 #   base      8 attributes. What you are.
-#   measures  height and weight. NOT attributes and NOT mechanics: real units,
-#             never bars, purely how the person looks on the sheet. They used
-#             to trade attributes; that was removed because the trade was
-#             zero-sum in steps but net-positive in career points, which made
-#             an extreme body a free upgrade.
+#   measures  height and weight. NOT attributes: real units, never bars, and no
+#             training makes anyone taller. They shift attributes by whole
+#             STEPS — one per band away from the centre — and you pay career
+#             points for it, because the swap is worth points.
 #   skills    15 of them, each governed by ONE attribute. What you learned.
 #
 # A skill roll is `attribute_step + skill_step + 2d5*`, so aptitude and practice
@@ -151,6 +150,60 @@ func format_measure(id: String, value: float) -> String:
 # How much one press of a stepper moves this measure, in its own unit.
 func increment(measure_id: String) -> float:
 	return float(measure(measure_id).get("increment", 1.0))
+
+# How many bands away from the centre a measured value sits, signed and capped.
+# Height and weight move in real units — a centimetre, a kilo — so anyone can
+# enter their own body, but only crossing a band shifts an attribute. Several
+# centimetres therefore read the same, which is the point: 1,79 m and 1,81 m
+# are the same person.
+func band(measure_id: String, value: float) -> int:
+	var spec: Dictionary = measure(measure_id)
+	if spec.is_empty():
+		return 0
+	var width: float = float(spec.get("band", 1.0))
+	if width == 0.0:
+		return 0
+	var cap: int = int(spec.get("cap", 3))
+	return clampi(int(round((value - float(spec.get("center", 0.0))) / width)), -cap, cap)
+
+# What the body does to the attributes, in whole STEPS. Height trades agility
+# for perception — the tall player sees over the line and turns worse. Weight
+# trades stamina for strength.
+#
+# The two measures touch DIFFERENT attributes on purpose: when both fed
+# strength, a small light build dumped the stat it did not need and collected
+# the credit in two it did.
+func body_effect(values: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for id: String in _measures.keys():
+		var affects: Dictionary = _measures[id].get("affects", {})
+		if affects.is_empty():
+			continue
+		var bands: int = band(id, float(values.get(id, float(_measures[id].get("center", 0.0)))))
+		for stat_id: String in affects.keys():
+			var key: String = _key(stat_id)
+			out[key] = int(out.get(key, 0)) + bands * int(affects[stat_id])
+	return out
+
+# What a body is WORTH, in points of the attribute kind — which is what makes
+# charging for it fair.
+#
+# Moving one band gives one stat a step and takes a step from another. Starting
+# from the average adult that is `+1 costs 6, -1 refunds 5`, so the swap is
+# worth 1 point. The next band swaps 7 against 4 and is worth 3; the third
+# swaps 8 against 3 and is worth 5. The running total for n bands is n².
+#
+# So being taller than average is an advantage AND being shorter than average
+# is an advantage: in both directions the step you gain is dearer than the one
+# you give up. Both get billed.
+func body_value(values: Dictionary) -> int:
+	var total: int = 0
+	for id: String in _measures.keys():
+		if (_measures[id].get("affects", {}) as Dictionary).is_empty():
+			continue
+		var bands: int = absi(band(id, float(values.get(id, float(_measures[id].get("center", 0.0))))))
+		total += bands * bands
+	return total
 
 # --- Skills ---
 

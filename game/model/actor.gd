@@ -111,8 +111,9 @@ func stat(id: String) -> int:
 
 # --- Measures ---
 #
-# Height and weight are not attributes and not mechanics: they have units,
-# training does not change them, and nothing reads them but the sheet.
+# Height and weight are not attributes: they have units and training does not
+# change them. They shift attributes by whole steps instead, and the creation
+# screen charges career points for the shift.
 
 func height() -> float:
 	return float(data.get("height", 0.0))
@@ -143,11 +144,15 @@ func set_skill(id: String, value: int) -> void:
 
 # --- Steps: what the game actually reads ---
 
-# An attribute in steps — what the game actually reads. Height and weight do
-# not enter here: the body is cosmetic.
+# An attribute in steps — what the game actually reads, body included. Height
+# and weight shift whole steps, so the number on the sheet is not always the
+# number that rolls.
 func step(stat_id: String) -> int:
 	var def := Drive.def("stat") as StatDef
-	return def.step(stat(stat_id)) if def != null else 0
+	if def == null:
+		return 0
+	var shift: int = int(body_effect().get(String(stat_id).strip_edges().to_lower(), 0))
+	return clampi(def.step(stat(stat_id)) + shift, 0, StatDef.MAX_STEP)
 
 func skill_step(skill_id: String) -> int:
 	var def := Drive.def("stat") as StatDef
@@ -166,7 +171,17 @@ func roll_base(skill_id: String) -> int:
 # five steps (an average adult leads nobody anywhere); negative below it.
 func team_bonus(stat_id: String) -> int:
 	var def := Drive.def("stat") as StatDef
-	return def.modifier(stat(stat_id)) if def != null else 0
+	return step(stat_id) - def.average_step if def != null else 0
+
+# Step deltas coming from height and weight.
+func body_effect() -> Dictionary:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return {}
+	var values: Dictionary = {}
+	for id: String in def.measure_ids():
+		values[id] = measure(id)
+	return def.body_effect(values)
 
 # "Geral" — the one number the roster list shows.
 func overall() -> int:
