@@ -7,7 +7,6 @@ const SEED := 424242
 func tests() -> Array:
 	return [
 		"test_starts_as_an_average_adult",
-		"test_opening_body_is_neutral",
 		"test_age_climbs_as_you_spend",
 		"test_age_goes_back_when_you_take_points_back",
 		"test_full_budget_reaches_eighteen",
@@ -40,19 +39,6 @@ func test_starts_as_an_average_adult(t: TestHelper) -> void:
 	if def != null:
 		t.equal(int(builder.stats.size()) * 45, builder.spent(), "custo pré-pago")
 
-# And the body it opens with must sit in the neutral band, or the sheet would
-# secretly start biased.
-func test_opening_body_is_neutral(t: TestHelper) -> void:
-	var def := Drive.def("stat") as StatDef
-	if def == null:
-		t.fail("StatDef ausente"); return
-	var builder: SheetBuilder = _builder()
-	t.equal(def.bucket("height", builder.height), 0, "altura de abertura")
-	t.equal(def.bucket("weight", builder.weight), 0, "peso de abertura")
-	for value: int in def.body_effect({"height": builder.height, "weight": builder.weight}).values():
-		t.equal(value, 0, "o corpo de abertura não deveria mexer em nada")
-
-# The mechanic in one assertion: points ARE years.
 func test_age_climbs_as_you_spend(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
 	var id: String = String(builder.stats.keys()[0])

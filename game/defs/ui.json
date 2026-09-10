@@ -209,8 +209,8 @@
       "en": "your squad gets %+d in this stat"
     },
     "manager.body_hint": {
-      "pt": "altura e peso são um viés pequeno: no extremo valem um passo, e não custam pontos",
-      "en": "height and weight are a small bias: worth one step at the extreme, and free"
+      "pt": "só aparência: altura e peso não mexem em atributo nenhum",
+      "en": "looks only: height and weight change no attribute"
     },
     "skillgroup.offense": {
       "pt": "Ataque",

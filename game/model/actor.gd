@@ -111,8 +111,8 @@ func stat(id: String) -> int:
 
 # --- Measures ---
 #
-# Height and weight are not attributes: they have units, and training does not
-# change them. They live beside the stats, never inside them.
+# Height and weight are not attributes and not mechanics: they have units,
+# training does not change them, and nothing reads them but the sheet.
 
 func height() -> float:
 	return float(data.get("height", 0.0))
@@ -143,13 +143,11 @@ func set_skill(id: String, value: int) -> void:
 
 # --- Steps: what the game actually reads ---
 
-# An attribute in steps, body effects included. Height and weight trade
-# attributes, so the number on the sheet is not always the number that rolls.
+# An attribute in steps — what the game actually reads. Height and weight do
+# not enter here: the body is cosmetic.
 func step(stat_id: String) -> int:
 	var def := Drive.def("stat") as StatDef
-	if def == null:
-		return 0
-	return def.step(stat(stat_id) + int(body_effect().get(_norm(stat_id), 0)))
+	return def.step(stat(stat_id)) if def != null else 0
 
 func skill_step(skill_id: String) -> int:
 	var def := Drive.def("stat") as StatDef
@@ -168,27 +166,13 @@ func roll_base(skill_id: String) -> int:
 # five steps (an average adult leads nobody anywhere); negative below it.
 func team_bonus(stat_id: String) -> int:
 	var def := Drive.def("stat") as StatDef
-	if def == null:
-		return 0
-	return def.step(stat(stat_id) + int(body_effect().get(_norm(stat_id), 0))) - def.average_step
-
-# Attribute deltas coming from height and weight.
-func body_effect() -> Dictionary:
-	var def := Drive.def("stat") as StatDef
-	if def == null:
-		return {}
-	var values: Dictionary = {}
-	for id: String in def.measure_ids():
-		values[id] = measure(id)
-	return def.body_effect(values)
+	return def.modifier(stat(stat_id)) if def != null else 0
 
 # "Geral" — the one number the roster list shows.
 func overall() -> int:
 	var def := Drive.def("stat") as StatDef
 	return def.overall(stats()) if def != null else 0
 
-func _norm(id: String) -> String:
-	return String(id).strip_edges().to_lower()
 
 # --- Career ---
 

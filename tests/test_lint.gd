@@ -46,6 +46,10 @@ func tests() -> Array:
 	]
 
 func test_no_variable_shadows_a_builtin(t: TestHelper) -> void:
+	# Assert the scan happened. A test whose only statement is a conditional
+	# fail() asserts nothing on a clean codebase, and "asserted nothing" is
+	# indistinguishable from "crashed on line one".
+	t.check(_scripts().size() > 0, "não encontrou script nenhum para varrer")
 	for path: String in _scripts():
 		var source: String = _read(path)
 		for name: String in BUILTINS:
@@ -54,6 +58,7 @@ func test_no_variable_shadows_a_builtin(t: TestHelper) -> void:
 				t.fail("%s:%d — 'var %s' sombreia a função embutida %s()" % [path, line, name, name])
 
 func test_no_variable_shadows_a_base_class_method(t: TestHelper) -> void:
+	t.check(_scripts().size() > 0, "não encontrou script nenhum para varrer")
 	for path: String in _scripts():
 		var source: String = _read(path)
 		var base: String = _base_class(source)

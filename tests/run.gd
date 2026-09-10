@@ -59,7 +59,15 @@ func _ready() -> void:
 		for test_name: String in (suite.tests() as Array):
 			var helper := TestHelper.new()
 			suite.call(test_name, helper)
-			if helper.has_failures():
+			# A test that asserted nothing did not run: GDScript aborted it on a
+			# runtime error and handed control back here, where "no failures"
+			# used to read as success. That false green hid five broken tests.
+			if helper.checks() == 0:
+				failed += 1
+				failed_names.append("%s::%s" % [label, test_name])
+				print("  X %s" % test_name)
+				print("      . não fez asserção nenhuma — erro em tempo de execução?")
+			elif helper.has_failures():
 				failed += 1
 				failed_names.append("%s::%s" % [label, test_name])
 				print("  X %s" % test_name)

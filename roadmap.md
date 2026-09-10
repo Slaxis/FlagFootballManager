@@ -223,30 +223,6 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 
 ## 6. Dívidas conhecidas
 
-- **Vigiar quando `C.1-match-engine` existir:** o viés de corpo é soma-zero em
-  passos, mas **não** em career points. Como o custo por passo é triangular,
-  trocar 3 passos baratos por 3 caros rende **27 cp por par**, e há dois pares
-  (altura e peso) — ou seja, um corpo extremo vale **54 cp de graça**, que é
-  exatamente a sobra do orçamento de criação. Isso só é lucro de fato se os
-  atributos penalizados forem ones que você não usaria, então quem decide se
-  virou estratégia dominante é a partida, não a planilha. Se virar, a correção
-  é cobrar career points proporcionais à extremidade do corpo.
-- ⚠️ O piso (`floor`) faz a penalidade chegar uma faixa antes do bônus: a
-  1,83 m você já perdeu 1 de Agilidade e ainda não ganhou Percepção. É
-  acidental, não desenhado — e por acaso amortece o item acima.
-
-- **O save tem dois furos independentes**, não um. Bloqueante pra jogo de
-  carreira, e `E.1` é reescrita do caminho de persistência, não um remendo:
-  1. `The.snapshot()` varre `get_nodes_in_group("things")`, mas Things são
-     RefCounted e nunca entram na árvore — a varredura sempre volta vazia.
-  2. `The.snapshot()` faz `board.duplicate(true)` e **nunca chama
-     `to_snapshot()`** nos Records. `duplicate` num Dictionary com RefCounted
-     copia a referência, não o estado — e referência não vira JSON. Os ganchos
-     de memento estão declarados, o `Hand` até os sobrescreve, e ninguém os
-     invoca.
-- `game/defs/flow.gd` é cópia literal do ScrapWarriorsOne. O próprio autor
-  anotou no código que deveria viver na d5star. Exigiria o DefManager varrer
-  também um diretório de defs da engine.
 - ~~FFM não tem suíte de testes~~ — resolvida em `A.2`: `tests/run.tscn`,
   rodando por cena para os autoloads existirem.
 

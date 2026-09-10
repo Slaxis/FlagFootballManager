@@ -123,6 +123,16 @@ Do not start implementing before the plan is approved.
   unreachable and any suite touching them aborts the runner mid-flight. Register
   new suites in the `_SUITES` array of `tests/run.gd`. Exit code is 0 / 1.
 
+  ⚠️ **GDScript has no exceptions.** A runtime error inside a test aborts that
+  function and returns to the runner, which used to see no recorded failures
+  and print `ok` — a green run hiding broken tests. The runner now fails any
+  test that asserted **nothing**, on the grounds that "asserted nothing" and
+  "died on line one" are indistinguishable. A test whose only statement is a
+  conditional `fail()` must therefore assert something positive too.
+
+  Also grep the run for `SCRIPT ERROR`: the runner cannot see those, but the
+  shell can, and a clean suite should print none.
+
 - **Boot smoke test** is the second check — it exercises Drive → engine.json
   → PathManager → managers → parser/loader/validator discovery → module scan
   → def scan → Flow → first screen:

@@ -205,29 +205,20 @@ func _body_row() -> Control:
 		cell.add_child(field)
 		row.add_child(cell)
 
-	var effect: Dictionary = stats.body_effect({"height": _build.height, "weight": _build.weight})
-	var summary := Label.new()
-	summary.text = _effect_text(stats, effect)
-	summary.add_theme_font_size_override("font_size", 12)
-	summary.add_theme_color_override("font_color", WARN)
-	row.add_child(summary)
 	return row
 
 func _attribute_row(stats: StatDef, id: String) -> Control:
 	var spec: Dictionary = stats.base_stat(id)
 	var step_value: int = int(_build.stats.get(id, 0))
-	var effect: int = int(stats.body_effect(
-		{"height": _build.height, "weight": _build.weight}).get(id, 0))
-	# Same arithmetic the Actor uses at runtime: the bias lands in stored
-	# points and only lights a bar when it carries the value across a step.
-	var effective: int = stats.step(stats.stored_for(step_value) + effect)
-	var bonus: int = effective - stats.average_step
+	var bonus: int = step_value - stats.average_step
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 5)
-	row.tooltip_text = "%s\n\n%d/10%s\n%s" % [
-		I18n.text(spec.get("desc", ""), ""), effective,
-		"  (%+d do corpo)" % effect if effect != 0 else "",
+	row.tooltip_text = "%s
+
+%d/10
+%s" % [
+		I18n.text(spec.get("desc", ""), ""), step_value,
 		UiText.t("manager.team_bonus") % bonus,
 	]
 	row.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -241,7 +232,7 @@ func _attribute_row(stats: StatDef, id: String) -> Control:
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_color", TEXT)
 	row.add_child(label)
-	row.add_child(StatBar.bar(effective * 10))
+	row.add_child(StatBar.bar(step_value * 10))
 
 	var mod := Label.new()
 	mod.text = "%+d" % bonus if bonus != 0 else "·"
@@ -404,20 +395,13 @@ func _on_lower_skill(id: String) -> void:
 	_build.lower_skill(id)
 	_build_ui()
 
-# Redraws only when the value crosses a threshold. Typing 1,79 then 1,80 then
-# 1,81 changes nothing on the sheet, so rebuilding would just yank the caret
-# out of the field the player is still using.
+# Never redraws: the body is cosmetic, so nothing else on the sheet depends on
+# it, and rebuilding would only yank the caret out of the field being typed in.
 func _on_measure_value(value: float, id: String) -> void:
-	var stats := Drive.def("stat") as StatDef
-	if stats == null:
-		return
-	var before: int = stats.bucket(id, _measure_value(id))
 	if id == "height":
 		_build.height = snappedf(value, 0.01)
 	else:
 		_build.weight = snappedf(value, 1.0)
-	if stats.bucket(id, value) != before:
-		_build_ui()
 
 func _on_name_typed(text: String) -> void:
 	var parts: PackedStringArray = text.strip_edges().split(" ", false)
@@ -488,15 +472,6 @@ func _roll_name() -> Dictionary:
 
 func _measure_value(id: String) -> float:
 	return _build.height if id == "height" else _build.weight
-
-func _effect_text(stats: StatDef, effect: Dictionary) -> String:
-	var parts: Array[String] = []
-	for id: String in effect.keys():
-		var value: int = int(effect[id])
-		if value == 0:
-			continue
-		parts.append("%+d %s" % [value, I18n.text(stats.base_stat(id).get("label", id), id)])
-	return "  ".join(parts)
 
 func _new_seed() -> int:
 	var rng := RandomNumberGenerator.new()
