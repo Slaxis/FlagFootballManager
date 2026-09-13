@@ -42,6 +42,8 @@ func test_morphology_produces_sayable_names(t: TestHelper) -> void:
 		"Matheus": ["Matheusinho", "Matheusão"],
 		"Vinícius": ["Viniciusinho", "Viniciusão"],
 		"Silva": ["Silvinho", "Silvão"],
+		"Henrique": ["Henriquinho", "Henricão"],
+		"Rocha": ["Rochinho", "Rochão"],
 		"Nascimento": ["Nascimentinho", "Nascimentão"],
 	}
 	for name: String in expected.keys():

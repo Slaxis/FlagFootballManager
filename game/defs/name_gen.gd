@@ -200,7 +200,12 @@ func diminutive(name: String, gender: String) -> String:
 		return clean + suffix
 	# Pedro -> Pedrinho: an unstressed final vowel simply goes. Not when the
 	# vowel before it shares the nucleus - Joao has no "o" to drop on its own.
-	if SOFT_ENDINGS.contains(last_char) and not VOWELS.contains(_at(clean, -2)):
+	var preceding: String = _at(clean, -2)
+	# Except the u in que/gue, which is a digraph spelling the hard consonant
+	# and not a vowel at all: Henrique does give up its -e, for Henriquinho.
+	if preceding == "u" and "qg".contains(_at(clean, -3)):
+		preceding = ""
+	if SOFT_ENDINGS.contains(last_char) and not VOWELS.contains(preceding):
 		return _soften(clean.substr(0, clean.length() - 1), suffix) + suffix
 	if last_char == "s":
 		var body: String = clean.substr(0, clean.length() - 1)
@@ -444,12 +449,16 @@ func _soften(stem: String, suffix: String) -> String:
 		if tail == "g":
 			return stem + "u"
 	elif head == "a" or head == "o" or head == "ã":
-		# And the other way for a hard suffix, so a qu/gu stem does not keep a
-		# u that now spells nothing.
+		# And the other way for a hard suffix. The u in qu/gu spelled the hard
+		# sound before an i or an e and spells nothing before an a or an o, so
+		# it goes — and a bare q cannot stand at all: Henrique gives up its
+		# whole digraph and comes back as Henricao.
 		if stem.to_lower().ends_with("qu"):
 			return stem.substr(0, stem.length() - 2) + "c"
 		if stem.to_lower().ends_with("gu"):
 			return stem.substr(0, stem.length() - 1)
+		if tail == "q":
+			return stem.substr(0, stem.length() - 1) + "c"
 	return stem
 
 const ACCENTED := "áàâéêíóôúü"
