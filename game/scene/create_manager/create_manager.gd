@@ -349,9 +349,20 @@ func _career_type() -> Control:
 	var draw_button: Button = _flat_button(UiText.t("manager.random"), _on_draw, true)
 	draw_button.disabled = not _build.is_complete()
 	box.add_child(draw_button)
-	box.add_child(_hint(UiText.t("manager.random_hint") if _build.is_complete()
-		else UiText.t("manager.must_spend") % _build.remaining()))
+	box.add_child(_hint(_draw_hint()))
 	return box
+
+# Three states, not two: ready, still holding points, or holding a remainder
+# too small to spend. The third used to read as the second and locked the
+# player in place.
+func _draw_hint() -> String:
+	if not _build.is_complete():
+		return UiText.t("manager.must_spend") % _build.remaining()
+	if _build.remaining() == 1:
+		return UiText.t("manager.leftover_one")
+	if _build.remaining() > 0:
+		return UiText.t("manager.leftover_many") % _build.remaining()
+	return UiText.t("manager.random_hint")
 
 # --- Result ---
 

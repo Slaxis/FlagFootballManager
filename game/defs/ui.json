@@ -243,6 +243,14 @@
     "manager.overspent": {
       "pt": "você gastou %d career points a mais do que viveu",
       "en": "you spent %d career points more than you lived"
+    },
+    "manager.leftover_one": {
+      "pt": "sobra 1 career point e nada custa tão pouco — pode começar",
+      "en": "1 career point left and nothing costs that little — you can start"
+    },
+    "manager.leftover_many": {
+      "pt": "sobram %d career points e nada custa tão pouco — pode começar",
+      "en": "%d career points left and nothing costs that little — you can start"
     }
   }
 }

@@ -117,12 +117,32 @@ func can_move_body(id: String, value: float) -> bool:
 func remaining() -> int:
 	return total_points() - spent()
 
-# You leave this screen at eighteen or not at all. Every unspent point is a
-# year you did not live, and the game has no room for a manager who is still
-# fifteen — so the button that starts the career stays shut until the budget is
-# gone. Rearranging is free; leaving early is not.
+# You leave this screen when there is nothing left to buy — which is not the
+# same as leaving with zero.
+#
+# The denominations are 2 for a skill step and 3 for an attribute one, so a
+# player can easily land on 1 career point that nothing in the game costs. The
+# old rule demanded exactly zero and deadlocked them there: no purchase was
+# affordable and the start button never opened.
 func is_complete() -> bool:
-	return remaining() == 0
+	if remaining() < 0:
+		return false
+	var cheapest: int = cheapest_purchase()
+	return cheapest < 0 or remaining() < cheapest
+
+# Price of the least expensive thing still on offer, or -1 when everything is
+# maxed out.
+func cheapest_purchase() -> int:
+	var best: int = -1
+	for id: String in stats.keys():
+		var cost: int = cost_to_raise_stat(id)
+		if cost >= 0 and (best < 0 or cost < best):
+			best = cost
+	for id: String in skills.keys():
+		var cost: int = cost_to_raise_skill(id)
+		if cost >= 0 and (best < 0 or cost < best):
+			best = cost
+	return best
 
 # The whole point: your age IS how much you spent.
 func age() -> int:

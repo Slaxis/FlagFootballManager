@@ -21,6 +21,7 @@ func tests() -> Array:
 		"test_bakes_steps_into_stored_units",
 		"test_no_randomness_in_creation",
 		"test_an_extreme_body_costs_the_whole_spare_budget",
+		"test_a_remainder_nothing_costs_still_finishes",
 	]
 
 func _builder() -> SheetBuilder:
@@ -185,6 +186,46 @@ func test_bakes_steps_into_stored_units(t: TestHelper) -> void:
 			"armazenado de '%s'" % id)
 		t.equal(def.step(actor.stat(id)), int(builder.stats[id]),
 			"ida e volta de passos em '%s'" % id)
+
+# Skill steps cost 2 and attribute steps cost 3, so a player can land on 1
+# career point that nothing in the game costs. Demanding exactly zero
+# deadlocked them: no purchase affordable, and the start button never opened.
+func test_a_remainder_nothing_costs_still_finishes(t: TestHelper) -> void:
+	var builder: SheetBuilder = _builder()
+	# Every skill step costs an even number, so the parity has to come from an
+	# attribute: entering step 7 costs 21. From 54 that leaves an odd purse
+	# which even purchases can never empty.
+	var id: String = String(builder.stats.keys()[0])
+	builder.raise_stat(id)
+	builder.raise_stat(id)
+	t.check(builder.remaining() % 2 == 1, "o cenário precisava de uma sobra ímpar")
+
+	var guard: int = 0
+	while guard < 400:
+		guard += 1
+		var cheapest: int = builder.cheapest_purchase()
+		if cheapest < 0 or cheapest > builder.remaining():
+			break
+		var bought: bool = false
+		for skill_id: String in builder.skills.keys():
+			if builder.cost_to_raise_skill(skill_id) == cheapest and builder.can_raise_skill(skill_id):
+				builder.raise_skill(skill_id)
+				bought = true
+				break
+		if not bought:
+			for stat_id: String in builder.stats.keys():
+				if builder.cost_to_raise_stat(stat_id) == cheapest and builder.can_raise_stat(stat_id):
+					builder.raise_stat(stat_id)
+					bought = true
+					break
+		if not bought:
+			break
+
+	t.check(builder.remaining() > 0, "o cenário não deixou sobra nenhuma")
+	t.check(builder.cheapest_purchase() > builder.remaining(),
+		"ainda havia algo comprável com %d pontos" % builder.remaining())
+	t.check(builder.is_complete(),
+		"com %d ponto(s) e nada comprável o jogador ficou preso na tela" % builder.remaining())
 
 # The body is billed, and at the extreme of both measures the bill is exactly
 # the spare budget — so a wildly shaped manager reaches eighteen with nothing
