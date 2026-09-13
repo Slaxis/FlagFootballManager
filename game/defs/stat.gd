@@ -32,6 +32,9 @@ const DEFAULT_AVERAGE_STEP := 5
 const MAX_STEP := 10
 const STORED_MIN := 0
 const STORED_MAX := 100
+# Where "notable" begins, in steps, on either side of the average adult.
+const NOTABLE_HIGH := 7
+const NOTABLE_LOW := 3
 
 var stored_per_step: int = DEFAULT_STORED_PER_STEP
 var average_step: int = DEFAULT_AVERAGE_STEP
@@ -261,3 +264,34 @@ func blank_skills(value: int = 0) -> Dictionary:
 	for id: String in _skills.keys():
 		out[id] = value
 	return out
+
+# --- What somebody is known for ---
+#
+# Which of the twenty-three numbers on a sheet are worth mentioning. The
+# nickname generator reads this: "Foguete" only means something if the guy is
+# actually fast, and calling an average adult anything at all is what makes a
+# generated squad read as filler.
+#
+# Both arguments are in STEPS, not stored units — the scale the game reads.
+# Returns [{stat, dir}, ...] ordered by distance from the average adult, most
+# extreme first, so the caller can weight toward the thing people notice.
+func notable_traits(stat_steps: Dictionary, skill_steps: Dictionary = {}) -> Array:
+	var found: Array = []
+	for id: String in stat_steps.keys():
+		var value: int = int(stat_steps[id])
+		if value >= NOTABLE_HIGH:
+			found.append({"stat": id, "dir": "high", "distance": value - average_step})
+		elif value <= NOTABLE_LOW:
+			found.append({"stat": id, "dir": "low", "distance": average_step - value})
+	# Skills count only upward. Everybody is born with all eight attributes, so
+	# a low one is a real deficit - but nobody is born knowing how to cover a
+	# receiver, and an amateur has a dozen skills at zero simply because he
+	# never trained them. Reading those as flaws would get every generated
+	# player mocked for something that was never a failing.
+	for id: String in skill_steps.keys():
+		var trained: int = int(skill_steps[id])
+		if trained >= NOTABLE_HIGH:
+			found.append({"stat": id, "dir": "high", "distance": trained - average_step})
+	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["distance"]) > int(b["distance"]))
+	return found

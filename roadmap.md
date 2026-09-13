@@ -58,7 +58,9 @@ Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 | 18 | **`The` é o Blackboard, `Record` é o item.** O quadro compartilhado por onde o estado flui entre cenas é `The.board`; cada entrada tipada nele é um `Record`, que sabe se serializar. O Flow gateia as próprias transições no conteúdo do quadro — controle dirigido por blackboard, e a lib já fazia isso sem nomear. |
 | 19 | **A régua é ancorada e o d5\* a define.** 1 passo é criança pequena, **5 é adulto mediano**, 10 é atleta olímpico candidato a medalha. Armazenado 0..100 (o caminho do treino), lido em passos de dez (o que rola). Um teste de habilidade é `atributo + habilidade + 2d5*` — e é essa soma que obriga a escala a ser 1..10: com 0..100 o dado viraria ruído. |
 | 20 | **O líder empresta seus passos ao elenco.** O modificador é `passo − 5`, com a âncora do adulto mediano como zero: 6 dá +1, 7 dá +2, e um líder de 3 passos **atrapalha** em −2. Vale para atributos e para as habilidades de comissão, e é por isso que a ficha do manager não é enfeite. |
-| 21 | **A criação é paga em anos de vida.** A tela **abre num adulto mediano de 15 anos** — tudo em 5 passos, 1,80 m / 80 kg, viés de corpo neutro — com **54 career points** de sobra. Nada é sorteado. A origem de todo custo continua sendo o zero, então vender um atributo devolve os 45 pontos inteiros e você pode se refazer do nada. A idade sobe enquanto você distribui e volta quando você desfaz. Tudo pode ser devolvido até zero. Atributos e habilidades saem do mesmo bolso, porque treinar destreza e treinar lançamento melhoram a mesma jogada. **E você sai da tela aos 18 ou não sai**: o botão de começar fica fechado enquanto sobrar ponto. A moeda é o **career point**: entrar no passo N custa N pontos do próprio tipo, e um ponto de atributo vale 3 career points contra 2 de habilidade — crescer é mais caro que aprender. Um ano de vida dá 23, então a vida inteira vale 414. A semente **não toca no manager**: ela constrói o mundo, nunca a pessoa — senão o jogador aperta reseed até os dados concordarem com a build que ele já queria. |
+| 21 | **A criação é paga em anos de vida.** A tela **abre num adulto mediano de 15 anos** — tudo em 5 passos, 1,80 m / 80 kg, viés de corpo neutro — com **54 career points** de sobra. Nada é sorteado. A origem de todo custo continua sendo o zero, então vender um atributo devolve os 45 pontos inteiros e você pode se refazer do nada. A idade sobe enquanto você distribui e volta quando você desfaz. Tudo pode ser devolvido até zero. Atributos e habilidades saem do mesmo bolso, porque treinar destreza e treinar lançamento melhoram a mesma jogada. **E você sai da tela aos 18 ou não sai**: o botão de começar fica fechado enquanto sobrar ponto. A moeda é o **career point**: entrar no passo N custa N pontos do próprio tipo, e um ponto de atributo vale 3 career points contra 2 de habilidade — crescer é mais caro que aprender. Um ano de vida dá 23, então a vida inteira vale 414. A semente **é o nome**: `hash(nome + sobrenome + apelido)`. Ela não *rola* a ficha — o jogador continua distribuindo cada ponto à mão, que era o motivo de tirar o sorteio inicial do caminho — mas define o mundo em que ele nasce: quais clubes de várzea existem e qual deles te chama. Escrever os três campos num papel é o suficiente para voltar ao mesmo mundo. |
+| 22 | **O apelido tem que ser sobre a pessoa.** No amador brasileiro o apelido *é* o nome — ninguém no campo sabe o sobrenome do cara — então um apelido sorteado de um saco genérico se denuncia na hora. São quatro fontes e três delas são coerentes com o actor: morfologia sobre o **nome** (Pedro → Pedrinho, Lucas → Luquinho), sobre o **sobrenome** (Vasconcelos → Vasco), sobre o que ele é **notável** por (9 de agilidade → Foguete, 2 de vontade → Chorão) e, por último, o saco aberto. Atributo conta para os dois lados; **habilidade só conta para cima**, porque um amador tem uma dúzia de habilidades zeradas por nunca ter treinado, não por ser ruim nelas. |
+| 23 | **Um perk, opcional, e o defeito paga.** No máximo **1** por actor, e não pegar nenhum é uma resposta legítima — tudo vai para a ficha. Qualidade custa career points; **defeito devolve**. Sem isso ninguém escolheria "mãos de pedra", e é justamente o defeito pago que faz o teto de 1 ser uma regra necessária em vez de arbitrária. O `effect` de cada perk fica **declarado** no catálogo e é consumido por quem é dono da regra — `C.1` lê `roll_bonus`, o treino lê `training_penalty`, a temporada lê `injury_risk`. |
 | 16 | **Dois arquivos de persistência, não um.** O *save* morre com o manager (decisão 11). O *perfil* sobrevive: guarda o que foi desbloqueado entre carreiras — a começar pelo modo **Pick Team**, que só abre depois de vencer uma rodada nacional. |
 
 ### Tiers — como o "tier 4" encaixa na realidade
@@ -183,20 +185,26 @@ Novo Jogo
 - *Ataque*: Passe curto · Bomba · Balanceado · Segurar relógio
 - *Defesa*: Homem-a-homem · Zona · Blitz · Prevent
 
-**Perks**
+**Perks** — catálogo em `game/defs/perk.json`, no máximo **1** por actor e
+opcional. O preço é em career points e o defeito **devolve**.
 
-| ASCII | Perk | Efeito |
-|---|---|---|
-| `★` | Craque | Força alta, puxa o time |
-| `⚡` | Foguete | Velocidade fora da curva |
-| `🧠` | Cérebro | Lê jogada, ótimo QB/safety |
-| `✋` | Mãos de cola | Não derruba passe |
-| `🪨` | Mãos de pedra | Derruba o que não devia |
-| `🎯` | Ferrolho | Especialista em puxar flag |
-| `📣` | Capitão | Buff de moral no elenco |
-| `💸` | Padrinho | Traz patrocínio / paga em dia |
-| `👻` | Sumido | Falta treino sem avisar |
-| `🩹` | Vidraça | Lesiona fácil |
+| ASCII | Perk | cp | Efeito declarado |
+|---|---|---|---|
+| `★` | Craque | 40 | `roll_bonus` +1 em tudo |
+| `⚡` | Foguete | 25 | `roll_bonus` +2 em rota |
+| `🧠` | Cérebro | 25 | `roll_bonus` +2 em cobertura |
+| `✋` | Mãos de cola | 25 | `roll_bonus` +2 em recepção |
+| `🎯` | Ferrolho | 25 | `roll_bonus` +2 em tackle |
+| `📣` | Capitão | 30 | `team_bonus` +1 de moral |
+| `💸` | Padrinho | 20 | `finance_bonus` em patrocínio |
+| `🪨` | Mãos de pedra | **−25** | `roll_bonus` −2 em recepção |
+| `👻` | Sumido | **−30** | `training_penalty` na presença |
+| `🩹` | Vidraça | **−30** | `injury_risk` +2 |
+
+O `effect` é um **contrato**, não uma regra: quem o executa é o sistema dono
+dela — `C.1` lê `roll_bonus`, o treino lê `training_penalty`, a temporada lê
+`injury_risk`. Enquanto esses sistemas não existirem, o perk custa, aparece na
+ficha e não faz nada — do mesmo jeito que `min_women` esperou a partida.
 
 ---
 
@@ -247,9 +255,10 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 | **B.2** | `module-select` | A lista de módulos: o nativo e qualquer universo em `user://modules` | ✅ |
 | **B.3** | `team-generator` | A lista salta de 10 pra 16 clubes; os 6 do fundo são várzea carioca | ✅ |
 | **B.4** | `create-manager` | Ficha estilo Zomboid: 8 atributos, 15 habilidades, corpo com régua cobrada, idade como preço, Career Type com Pick Team cadeado | ✅ |
+| **B.4c** | `names-and-perks` | Nome/sobrenome/apelido em campos separados, gerador de apelidos coerente, 10 perks com preço em career point (defeito devolve), 🎲 que sorteia a vida inteira, semente derivada do nome | ✅ |
 | **B.5** | `team-screen` | Seu clube com abas **Elenco** e **Adversários**. **Paga a dívida de A.2 e A.3** | |
 | **B.6** | `role-assignment` | Coluna **Função** no Elenco: escala alguém em duas e vê o Geral cair | |
-| **B.7** | `perks` | Os ícones `★ ⚡ 🧠 🪨` ao lado dos nomes | |
+| **B.7** | `perks` | Os ícones `★ ⚡ 🧠 🪨` na lista do elenco — o catálogo e a escolha já saíram em `B.4c`, falta o roster mostrar | |
 
 > `team-generator` subiu na frente de `create-manager`: o sorteio coloca você
 > num clube **tier 4**, e nenhum dos 10 clubes reais é tier 4. Sortear num

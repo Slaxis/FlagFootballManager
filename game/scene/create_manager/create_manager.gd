@@ -9,6 +9,11 @@
 # `attribute + skill + 2d5*` — training dexterity and training throwing both
 # make you throw better, and neither is the wrong answer.
 #
+# The seed is a HASH of the three name fields. Editing them is how you fix a
+# world: the same nome + sobrenome + apelido always draws the same sandlot
+# clubs and the same club calls you. Rerolling is therefore never separate from
+# renaming — there is one 🎲 and it changes the person and the world together.
+#
 # Produces the `career` Record onto the Blackboard; the Flow gates every later
 # step on it. Deliberately never asks your gender — it asks which CATEGORY you
 # play (decision 17).
@@ -22,17 +27,17 @@ const TEXT := Color(0.87, 0.90, 0.87)
 const LINE := Color(0.16, 0.22, 0.17)
 const WARN := Color(0.85, 0.72, 0.45)
 
-var _career_seed: int = 0
 var _build: SheetBuilder = null
 var _name: Dictionary = {}
 var _plays: String = Actor.CATEGORY_MASC
 var _drafted: Dictionary = {}
-var _name_field: LineEdit = null
+var _seed_label: Label = null
 var _root: VBoxContainer = null
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_reseed(_new_seed())
+	_build = SheetBuilder.average_adult()
+	_name = _roll_name(_free_rng())
 
 	var bg := ColorRect.new()
 	bg.color = BG
@@ -74,10 +79,13 @@ func _build_ui() -> void:
 func _build_form() -> void:
 	_root.add_child(_header())
 	_root.add_child(_rule())
-	_root.add_child(_name_row())
+	_root.add_child(_identity_row())
 	_root.add_child(_seed_row())
 	_root.add_child(_section(UiText.t("manager.body"), UiText.t("manager.body_hint")))
 	_root.add_child(_body_row())
+	_root.add_child(_section(UiText.t("manager.perks"), UiText.t("manager.perks_hint")))
+	_root.add_child(_perk_row())
+	_root.add_child(_perk_detail())
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 40)
@@ -143,34 +151,89 @@ func _header() -> Control:
 	row.add_child(left)
 	return row
 
-func _name_row() -> Control:
+# Three fields, not one. They are three different things — the surname the
+# league table prints, the apelido everyone at the field actually uses — and
+# the generator needs them apart to make the apelido cohere with the rest.
+func _identity_row() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	row.add_child(_field_label(UiText.t("manager.name")))
-	_name_field = LineEdit.new()
-	_name_field.text = "%s %s" % [_name.get("first_name", ""), _name.get("last_name", "")]
-	_name_field.custom_minimum_size = Vector2(280, 32)
-	_name_field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_name_field.text_changed.connect(_on_name_typed)
-	row.add_child(_name_field)
-	row.add_child(_flat_button("🎲 " + UiText.t("manager.reroll_name"), _on_reroll_name, false))
+	row.add_child(_name_field("first_name", UiText.t("manager.first_name"), 200))
+	row.add_child(_name_field("last_name", UiText.t("manager.last_name"), 200))
+	row.add_child(_name_field("nickname", UiText.t("manager.nickname"), 160))
+	row.add_child(_flat_button("🎲 " + UiText.t("manager.reroll_all"), _on_reroll_all, false))
 	return row
 
+func _name_field(key: String, caption: String, width: int) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var label := Label.new()
+	label.text = caption
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", MUTED)
+	box.add_child(label)
+	var field := LineEdit.new()
+	field.text = String(_name.get(key, ""))
+	field.custom_minimum_size = Vector2(width, 32)
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	field.text_changed.connect(_on_name_typed.bind(key))
+	box.add_child(field)
+	return box
+
+# Read-only, because it is not an input: it is what the three fields above add
+# up to. Typing updates it in place — rebuilding the form on every keystroke
+# would yank the caret out of the field being used.
 func _seed_row() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 1)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	row.add_child(_field_label("Seed"))
-	var value := Label.new()
-	value.text = str(_career_seed)
-	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value.add_theme_color_override("font_color", ACCENT)
-	row.add_child(value)
-	row.add_child(_flat_button("🎲 " + UiText.t("manager.reroll_seed"), _on_reroll_seed, false))
+	_seed_label = Label.new()
+	_seed_label.text = str(_career_seed())
+	_seed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_seed_label.add_theme_color_override("font_color", ACCENT)
+	row.add_child(_seed_label)
 	box.add_child(row)
 	box.add_child(_hint(UiText.t("manager.seed_hint")))
 	return box
+
+# --- Perks ---
+
+# One sentence about you, and you may take none. A defect is a perk with a
+# negative price: it hands career points back, which is the only reason anybody
+# would ever choose to drop passes on purpose.
+func _perk_row() -> Control:
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", 6)
+	flow.add_theme_constant_override("v_separation", 6)
+	var perks := Drive.def("perk") as PerkDef
+	if perks == null:
+		return flow
+	for id: String in perks.perk_ids():
+		flow.add_child(_perk_chip(perks, id))
+	return flow
+
+func _perk_chip(perks: PerkDef, id: String) -> Control:
+	var cost: int = perks.cost(id)
+	var price: String = (UiText.t("manager.perk_refund") % -cost) if cost < 0 		else (UiText.t("manager.perk_price") % cost)
+	var chip: Button = _choice("%s %s  %s" % [perks.icon(id), perks.label(id), price],
+		_build.perk == id, _on_perk.bind(id))
+	chip.custom_minimum_size = Vector2(0, 32)
+	chip.tooltip_text = perks.desc(id)
+	# Unaffordable is not the same as unchosen: grey it so the player can see
+	# the perk exists and costs more than they have left.
+	if _build.perk != id and not _build.can_take_perk(id):
+		chip.disabled = true
+		chip.add_theme_color_override("font_disabled_color", Color(0.30, 0.34, 0.31))
+	return chip
+
+func _perk_detail() -> Control:
+	var perks := Drive.def("perk") as PerkDef
+	if perks == null or not _build.has_perk():
+		return _hint(UiText.t("manager.perk_none"))
+	return _hint("%s %s — %s" % [
+		perks.icon(_build.perk), perks.label(_build.perk), perks.desc(_build.perk)])
 
 # Height and weight step through the ranges the JSON declares. They cost no
 # points: the trade they force IS the price.
@@ -448,19 +511,24 @@ func _on_measure_value(value: float, id: String) -> void:
 	if stats.band(id, value) != before:
 		_build_ui()
 
-func _on_name_typed(text: String) -> void:
-	var parts: PackedStringArray = text.strip_edges().split(" ", false)
-	_name["first_name"] = parts[0] if parts.size() > 0 else ""
-	_name["last_name"] = " ".join(parts.slice(1)) if parts.size() > 1 else ""
+# Never rebuilds the form: the seed label is the only thing a keystroke can
+# change, and redrawing would take the caret with it.
+func _on_name_typed(text: String, key: String) -> void:
+	_name[key] = text.strip_edges()
+	if is_instance_valid(_seed_label):
+		_seed_label.text = str(_career_seed())
 
-# Name only. The universe stays exactly as it was.
-func _on_reroll_name() -> void:
-	_name = _roll_name()
+# One button, everything at once: a new person AND the world that person was
+# born into. Name, surname, apelido, the whole sheet, and a perk — or no perk,
+# which is a legitimate roll.
+func _on_reroll_all() -> void:
+	var rng: RandomNumberGenerator = _free_rng()
+	_build.roll_random(rng)
+	_name = _roll_name(rng)
 	_build_ui()
 
-# Seed only. Rebuilds the child, the sandlot clubs, everything.
-func _on_reroll_seed() -> void:
-	_reseed(_new_seed())
+func _on_perk(id: String) -> void:
+	_build.set_perk(id)
 	_build_ui()
 
 func _on_plays(category: String) -> void:
@@ -471,57 +539,73 @@ func _on_draw() -> void:
 	var def := Drive.def("team") as TeamDef
 	if def == null:
 		return
+	# Built here and not while typing: the sandlot clubs come from the seed the
+	# three fields ended up spelling, and nobody needs six clubs invented per
+	# keystroke.
+	var career_seed: int = _career_seed()
+	League.ensure_filled(career_seed)
 	var pool: Array = def.by_tier(TeamGenerator.TIER_UNAFFILIATED)
 	if pool.is_empty():
 		Log.log(self, "error", "CreateManager: no tier-4 club to draft into.")
 		return
-	var rng: RandomNumberGenerator = SeedRng.make_rng(SeedRng.derive(_career_seed, "draft"))
+	var rng: RandomNumberGenerator = SeedRng.make_rng(SeedRng.derive(career_seed, "draft"))
 	_drafted = pool[rng.randi() % pool.size()]
 	_build_ui()
 
 func _on_start() -> void:
-	var manager: Actor = _build.to_actor(_career_seed, _name)
+	var career_seed: int = _career_seed()
+	var manager: Actor = _build.to_actor(career_seed, _name)
 	manager.set_plays([_plays] if _plays != "" else [])
 	manager.set_manages([Actor.CATEGORY_MASC])
 	manager.set_team(String(_drafted.get("id", "")))
-	write("career", Career.make(manager, String(_drafted.get("id", "")), _career_seed))
+	write("career", Career.make(manager, String(_drafted.get("id", "")), career_seed))
 	go("created")
 
 # --- Internals ---
 
-# The seed builds the WORLD — which sandlot clubs exist and which one calls
-# you. It deliberately no longer touches the manager: an initial roll only
-# teaches the player to mash reroll until the dice agree with the build they
-# already wanted.
-func _reseed(value: int) -> void:
-	_career_seed = value
-	League.ensure_filled(_career_seed)
-	if _build == null:
-		_build = SheetBuilder.average_adult()
-	_name = _roll_name()
+# The seed IS the name. Hashing nome + sobrenome + apelido means two players
+# who type the same three words get the same world — and a player who liked a
+# roll can write the three down and come back to it. Zero is reserved as
+# "nothing built yet" by League, so it never leaves here.
+func _career_seed() -> int:
+	var spelled: String = "%s|%s|%s" % [
+		_name.get("first_name", ""), _name.get("last_name", ""), _name.get("nickname", "")]
+	return maxi(absi(SeedRng.seed_from_string(spelled)), 1)
 
 # Drawn from BOTH pools, which is what asking about categories instead of
 # identity buys us: no gender question, and the player still gets a name they
 # like — or types their own.
-func _roll_name() -> Dictionary:
+#
+# The apelido comes last on purpose: it is drawn from the sheet that was just
+# rolled, so a manager with 9 agility can come out as Foguete.
+func _roll_name(rng: RandomNumberGenerator) -> Dictionary:
 	var names := Drive.def("name_gen") as NameGenDef
 	if names == null:
-		return {"first_name": "", "last_name": ""}
-	var rng := RandomNumberGenerator.new()
-	rng.randomize()
+		return {"first_name": "", "last_name": "", "nickname": ""}
 	var pool: String = Actor.CATEGORY_FEM if rng.randf() < 0.5 else Actor.CATEGORY_MASC
+	var first: String = names.random_first_name(pool, rng)
+	var last: String = names.random_last_name(rng)
 	return {
-		"first_name": names.random_first_name(pool, rng),
-		"last_name": names.random_last_name(rng),
+		"first_name": first,
+		"last_name": last,
+		"nickname": names.nickname_for(first, last, pool, _traits(), rng),
 	}
+
+# What the current build is notable for, in the steps the nickname table reads.
+func _traits() -> Array:
+	var stats := Drive.def("stat") as StatDef
+	return stats.notable_traits(_build.stats, _build.skills) if stats != null else []
 
 func _measure_value(id: String) -> float:
 	return _build.height if id == "height" else _build.weight
 
-func _new_seed() -> int:
+# The one RNG on this screen that is NOT seeded: pressing 🎲 must give you
+# something new, and seeding it from the thing it is about to overwrite would
+# make the button a fixed point.
+func _free_rng() -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
-	return rng.randi_range(1, 99999999)
+	return rng
 
 # --- Widgets ---
 

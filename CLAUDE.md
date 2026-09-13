@@ -133,6 +133,11 @@ Do not start implementing before the plan is approved.
   Also grep the run for `SCRIPT ERROR`: the runner cannot see those, but the
   shell can, and a clean suite should print none.
 
+  The runner waits one frame before running anything, so a suite MAY mount a
+  screen with `(Engine.get_main_loop() as SceneTree).root.add_child(...)`.
+  Inside `_ready` that call is refused ("parent node is busy setting up
+  children") and the screen silently never builds.
+
 - **Boot smoke test** is the second check — it exercises Drive → engine.json
   → PathManager → managers → parser/loader/validator discovery → module scan
   → def scan → Flow → first screen:
@@ -142,6 +147,13 @@ Do not start implementing before the plan is approved.
   ```
 
   Exit 0 with no `SCRIPT ERROR` means the chain is intact.
+
+- **Screen smoke tests** are the third check. UI is otherwise invisible to the
+  loop: GDScript has no exceptions, so a screen that dies halfway through
+  building its own form leaves a half-drawn panel and a green run — which is
+  how the 1-career-point deadlock reached the player.
+  `tests/test_screen_create_manager.gd` mounts the scene and presses the
+  buttons. Add one per screen that has state worth breaking.
 
 - The match simulation must be **deterministic given a seed** — test with
   known seeds.

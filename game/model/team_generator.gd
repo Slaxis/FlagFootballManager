@@ -49,6 +49,9 @@ static func invent(seed_value: int, state: String = "RJ") -> Dictionary:
 		"reputation": rng.randi_range(REPUTATION_MIN, REPUTATION_MAX),
 		"colors": [palette[0], palette[1]],
 		"squads": {"masc": true, "fem": false},
+		# The league tears these down and rebuilds them when the career seed
+		# changes; an authored club must never be caught in that sweep.
+		"generated": true,
 	}
 
 # A batch sharing one base seed. Salted sub-seeds per index, same discipline as

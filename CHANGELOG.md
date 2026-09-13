@@ -2,7 +2,36 @@
 
 ## [Unreleased]
 
-### Changed — B.4c: a ficha ganha dados, habilidades e idade (2026-09-09)
+### Added — B.4c: nome, apelido e perks (2026-09-13)
+- Nome, sobrenome e apelido em TRES campos separados na criacao do gestor
+- Gerador de apelidos coerente com o actor, quatro fontes:
+  morfologia do nome (Pedro -> Pedrinho, Lucas -> Luquinho, Thiago ->
+  Thiaguinho), do sobrenome (Vasconcelos -> Vasco), do que ele e notavel por
+  (9 de agilidade -> Foguete, 2 de percepcao -> Tapado) e o saco aberto
+- 313 apelidos novos em `name_gen.json`, indexados por stat e direcao
+- `StatDef.notable_traits()`: atributo conta pros dois lados, habilidade so
+  pra cima — um amador tem 12 habilidades zeradas por nunca ter treinado
+- `PerkDef` + `game/defs/perk.json`: os 10 perks aprovados, com preco em
+  career point. Defeito DEVOLVE pontos (Vidraca +30, Sumido +30, Maos de
+  pedra +25), no maximo 1 por actor, e nao pegar nenhum e uma resposta
+- A semente agora e `hash(nome + sobrenome + apelido)` — escreva os tres num
+  papel e voce volta ao mesmo mundo (inverte a decisao 21)
+- Um so 🎲: sorteia nome, sobrenome, apelido, a vida inteira em career points
+  e talvez um perk. `SheetBuilder.roll_random()` gasta tudo com apetites
+  lognormais, entao sai especialista e nao uma linha reta na media
+- `ActorGenerator` usa o mesmo catalogo — um jogador garimpado le igual a um
+  criado. Prepara os elencos aleatorios de B.5
+- 31 testes novos (`test_names`, `test_perk`, `test_screen_create_manager`)
+
+### Fixed
+- `League.ensure_filled()` era idempotente pelo NUMERO de clubes, entao trocar
+  a semente nao trocava a varzea. Agora refaz quando a semente muda, e
+  `TeamDef.remove_generated()` poupa os clubes autorais
+- O runner esperava um frame antes de rodar: dentro de `_ready` a arvore ainda
+  esta montando filhos e `add_child()` e recusado, o que trancava fora
+  qualquer suite que precise montar uma tela
+
+### Changed — B.4b: a ficha ganha dados, habilidades e idade (2026-09-09)
 - D5 na d5star v0.4.0: o dado explodente que da nome a lib
 - 8o atributo: Vontade (resiliencia mental)
 - camada `derived` removida; 15 HABILIDADES no lugar, cada uma regida por um

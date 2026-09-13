@@ -312,5 +312,610 @@
     "Mercadinho do {first_male}",
     "Lanchonete da {first_female}",
     "Bar do {first_male}"
+  ],
+  "nickname_weights": {
+    "stat": 45,
+    "first": 25,
+    "last": 20,
+    "random": 10
+  },
+  "nickname_suffixes": {
+    "masc": [
+      "inho",
+      "ão",
+      "inho",
+      "zinho",
+      "ão"
+    ],
+    "fem": [
+      "inha",
+      "ona",
+      "inha",
+      "zinha",
+      "inha"
+    ]
+  },
+  "stat_nicknames": [
+    {
+      "stat": "strength",
+      "dir": "high",
+      "pool": [
+        "Tanque",
+        "Marreta",
+        "Trator",
+        "Touro",
+        "Britadeira",
+        "Guincho",
+        "Bigorna",
+        "Muralha"
+      ],
+      "fem": [
+        "Tanque",
+        "Marreta",
+        "Trator",
+        "Britadeira",
+        "Bigorna",
+        "Muralha",
+        "Fera"
+      ]
+    },
+    {
+      "stat": "strength",
+      "dir": "low",
+      "pool": [
+        "Graveto",
+        "Palito",
+        "Vareta",
+        "Magrelo",
+        "Espeto",
+        "Bambu"
+      ],
+      "fem": [
+        "Graveto",
+        "Palito",
+        "Vareta",
+        "Magrela",
+        "Espeto",
+        "Bambu"
+      ]
+    },
+    {
+      "stat": "stamina",
+      "dir": "high",
+      "pool": [
+        "Motor",
+        "Diesel",
+        "Pulmão",
+        "Turbina",
+        "Maratona",
+        "Bateria",
+        "Fornalha"
+      ]
+    },
+    {
+      "stat": "stamina",
+      "dir": "low",
+      "pool": [
+        "Apagão",
+        "Pisca-Pisca",
+        "Vela",
+        "Reserva",
+        "Cochilo",
+        "Fumante"
+      ]
+    },
+    {
+      "stat": "agility",
+      "dir": "high",
+      "pool": [
+        "Foguete",
+        "Raio",
+        "Flash",
+        "Fumaça",
+        "Vento",
+        "Míssil",
+        "Bólido",
+        "Pé de Vento"
+      ]
+    },
+    {
+      "stat": "agility",
+      "dir": "low",
+      "pool": [
+        "Tartaruga",
+        "Lesma",
+        "Âncora",
+        "Poste",
+        "Trilho",
+        "Geladeira"
+      ]
+    },
+    {
+      "stat": "dexterity",
+      "dir": "high",
+      "pool": [
+        "Relojoeiro",
+        "Bisturi",
+        "Cirurgião",
+        "Mãozinha",
+        "Costureiro",
+        "Agulha"
+      ],
+      "fem": [
+        "Relojoeira",
+        "Bisturi",
+        "Cirurgiã",
+        "Mãozinha",
+        "Costureira",
+        "Agulha"
+      ]
+    },
+    {
+      "stat": "dexterity",
+      "dir": "low",
+      "pool": [
+        "Manteiga",
+        "Sabonete",
+        "Luva",
+        "Cotoco",
+        "Escorrega"
+      ]
+    },
+    {
+      "stat": "perception",
+      "dir": "high",
+      "pool": [
+        "Radar",
+        "Antena",
+        "Falcão",
+        "Coruja",
+        "Satélite",
+        "Periscópio",
+        "Farol"
+      ],
+      "fem": [
+        "Radar",
+        "Antena",
+        "Coruja",
+        "Satélite",
+        "Periscópio",
+        "Farol"
+      ]
+    },
+    {
+      "stat": "perception",
+      "dir": "low",
+      "pool": [
+        "Neblina",
+        "Míope",
+        "Tapado",
+        "Cortina",
+        "Vidro Fumê",
+        "Fone"
+      ],
+      "fem": [
+        "Neblina",
+        "Míope",
+        "Tapada",
+        "Cortina",
+        "Vidro Fumê",
+        "Fone"
+      ]
+    },
+    {
+      "stat": "intelligence",
+      "dir": "high",
+      "pool": [
+        "Professor",
+        "Doutor",
+        "Cérebro",
+        "Xadrez",
+        "Enciclopédia",
+        "Régua",
+        "Cartola"
+      ],
+      "fem": [
+        "Professora",
+        "Doutora",
+        "Cérebro",
+        "Xadrez",
+        "Enciclopédia",
+        "Régua"
+      ]
+    },
+    {
+      "stat": "intelligence",
+      "dir": "low",
+      "pool": [
+        "Pastel",
+        "Lombada",
+        "Zé Mané",
+        "Bagre",
+        "Pombo",
+        "Quebra-Molas"
+      ],
+      "fem": [
+        "Pastel",
+        "Lombada",
+        "Bagre",
+        "Pomba",
+        "Quebra-Molas"
+      ]
+    },
+    {
+      "stat": "charisma",
+      "dir": "high",
+      "pool": [
+        "Prefeito",
+        "Embaixador",
+        "Locutor",
+        "Rádio",
+        "Padrinho",
+        "Anfitrião",
+        "Cartaz"
+      ],
+      "fem": [
+        "Prefeita",
+        "Embaixadora",
+        "Locutora",
+        "Rádio",
+        "Madrinha",
+        "Anfitriã",
+        "Cartaz"
+      ]
+    },
+    {
+      "stat": "charisma",
+      "dir": "low",
+      "pool": [
+        "Ermitão",
+        "Bicho do Mato",
+        "Mudo",
+        "Carrancudo",
+        "Poste",
+        "Rabugento"
+      ],
+      "fem": [
+        "Ermitã",
+        "Bicho do Mato",
+        "Muda",
+        "Carrancuda",
+        "Poste",
+        "Rabugenta"
+      ]
+    },
+    {
+      "stat": "will",
+      "dir": "high",
+      "pool": [
+        "Casca Grossa",
+        "Pitbull",
+        "Bigorna",
+        "Teimoso",
+        "Cabeça-Dura",
+        "Ferro"
+      ],
+      "fem": [
+        "Casca Grossa",
+        "Pitbull",
+        "Bigorna",
+        "Teimosa",
+        "Cabeça-Dura",
+        "Ferro"
+      ]
+    },
+    {
+      "stat": "will",
+      "dir": "low",
+      "pool": [
+        "Chorão",
+        "Mimimi",
+        "Algodão",
+        "Frouxo",
+        "Pipoqueiro",
+        "Vela"
+      ],
+      "fem": [
+        "Chorona",
+        "Mimimi",
+        "Algodão",
+        "Frouxa",
+        "Pipoqueira",
+        "Vela"
+      ]
+    },
+    {
+      "stat": "throwing",
+      "dir": "high",
+      "pool": [
+        "Canhão",
+        "Bazuca",
+        "Estilingue",
+        "Braço",
+        "Catapulta",
+        "Míssil"
+      ]
+    },
+    {
+      "stat": "throwing",
+      "dir": "low",
+      "pool": [
+        "Frango",
+        "Cotoco",
+        "Bilé",
+        "Peteca"
+      ]
+    },
+    {
+      "stat": "catching",
+      "dir": "high",
+      "pool": [
+        "Velcro",
+        "Ímã",
+        "Cesta",
+        "Grude",
+        "Pinça",
+        "Ventosa"
+      ]
+    },
+    {
+      "stat": "catching",
+      "dir": "low",
+      "pool": [
+        "Manteiga",
+        "Ferrugem",
+        "Pedra",
+        "Sabão",
+        "Peneira"
+      ]
+    },
+    {
+      "stat": "route",
+      "dir": "high",
+      "pool": [
+        "Serpentina",
+        "Zigue-Zague",
+        "Fantasma",
+        "Riscador",
+        "Compasso"
+      ]
+    },
+    {
+      "stat": "route",
+      "dir": "low",
+      "pool": [
+        "Trilho",
+        "Retão",
+        "Corredor"
+      ]
+    },
+    {
+      "stat": "juke",
+      "dir": "high",
+      "pool": [
+        "Ginga",
+        "Requebra",
+        "Malandro",
+        "Drible",
+        "Molejo",
+        "Chicote"
+      ],
+      "fem": [
+        "Ginga",
+        "Requebra",
+        "Malandra",
+        "Drible",
+        "Molejo",
+        "Chicote"
+      ]
+    },
+    {
+      "stat": "juke",
+      "dir": "low",
+      "pool": [
+        "Estaca",
+        "Poste",
+        "Prego",
+        "Trave"
+      ]
+    },
+    {
+      "stat": "tackle",
+      "dir": "high",
+      "pool": [
+        "Ferrolho",
+        "Cadeado",
+        "Alicate",
+        "Tesoura",
+        "Gancho"
+      ]
+    },
+    {
+      "stat": "tackle",
+      "dir": "low",
+      "pool": [
+        "Abraço",
+        "Aceno",
+        "Tchauzinho",
+        "Cafuné"
+      ]
+    },
+    {
+      "stat": "coverage",
+      "dir": "high",
+      "pool": [
+        "Sombra",
+        "Carrapato",
+        "Xerife",
+        "Cola",
+        "Coleira",
+        "Algema"
+      ]
+    },
+    {
+      "stat": "coverage",
+      "dir": "low",
+      "pool": [
+        "Portão",
+        "Tapete",
+        "Passagem"
+      ]
+    },
+    {
+      "stat": "rush",
+      "dir": "high",
+      "pool": [
+        "Furacão",
+        "Avalanche",
+        "Britadeira",
+        "Tsunami",
+        "Estouro"
+      ]
+    },
+    {
+      "stat": "deflection",
+      "dir": "high",
+      "pool": [
+        "Muralha",
+        "Pá",
+        "Tapa",
+        "Rede",
+        "Guarda-Chuva",
+        "Limpador"
+      ]
+    },
+    {
+      "stat": "snap",
+      "dir": "high",
+      "pool": [
+        "Relógio",
+        "Cronômetro",
+        "Gatilho",
+        "Compasso"
+      ]
+    },
+    {
+      "stat": "rules",
+      "dir": "high",
+      "pool": [
+        "Súmula",
+        "Advogado",
+        "Juiz",
+        "Regulamento",
+        "Cartilha"
+      ],
+      "fem": [
+        "Súmula",
+        "Advogada",
+        "Juíza",
+        "Regulamento",
+        "Cartilha"
+      ]
+    },
+    {
+      "stat": "rules",
+      "dir": "low",
+      "pool": [
+        "Cartão",
+        "Amarelo",
+        "Encrenca",
+        "Bafafá"
+      ]
+    },
+    {
+      "stat": "leadership",
+      "dir": "high",
+      "pool": [
+        "Capitão",
+        "Coronel",
+        "General",
+        "Maestro",
+        "Comandante",
+        "Faixa"
+      ],
+      "fem": [
+        "Capitã",
+        "Coronela",
+        "Generala",
+        "Maestrina",
+        "Comandante",
+        "Faixa"
+      ]
+    },
+    {
+      "stat": "trash_talk",
+      "dir": "high",
+      "pool": [
+        "Megafone",
+        "Boca",
+        "Papagaio",
+        "Alto-Falante",
+        "Rádio Relógio",
+        "Sirene"
+      ]
+    },
+    {
+      "stat": "trash_talk",
+      "dir": "low",
+      "pool": [
+        "Silêncio",
+        "Surdina",
+        "Biblioteca"
+      ]
+    },
+    {
+      "stat": "play_calling",
+      "dir": "high",
+      "pool": [
+        "Maestro",
+        "Regente",
+        "Xadrez",
+        "Prancheta",
+        "Roteirista"
+      ],
+      "fem": [
+        "Maestrina",
+        "Regente",
+        "Xadrez",
+        "Prancheta",
+        "Roteirista"
+      ]
+    },
+    {
+      "stat": "coaching",
+      "dir": "high",
+      "pool": [
+        "Mestre",
+        "Professor",
+        "Guru",
+        "Sensei",
+        "Padrinho"
+      ],
+      "fem": [
+        "Mestra",
+        "Professora",
+        "Guru",
+        "Sensei",
+        "Madrinha"
+      ]
+    },
+    {
+      "stat": "scouting",
+      "dir": "high",
+      "pool": [
+        "Olheiro",
+        "Faro",
+        "Detetive",
+        "Lupa",
+        "Garimpeiro"
+      ],
+      "fem": [
+        "Olheira",
+        "Faro",
+        "Detetive",
+        "Lupa",
+        "Garimpeira"
+      ]
+    }
   ]
 }

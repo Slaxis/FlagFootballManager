@@ -47,10 +47,23 @@ const START_WEIGHT := 80.0
 const STAT_POINT_IN_CAREER := 3
 const SKILL_POINT_IN_CAREER := 2
 
+# How the 🎲 spends a whole life. Attributes get the larger appetite because a
+# person is mostly what they are, and the appetite is then divided by the step
+# already bought, so a track self-limits instead of eating the entire budget.
+const RANDOM_STAT_APPETITE := 3.0
+const RANDOM_SKILL_APPETITE := 1.0
+# Lognormal sigma. At 0 everybody comes out identical and average; this is what
+# makes one rolled actor a specialist and the next one a generalist.
+const RANDOM_APPETITE_SPREAD := 0.85
+const RANDOM_PERK_CHANCE := 0.55
+const RANDOM_BOON_CHANCE := 0.70
+
 var stats: Dictionary = {}    # id -> step
 var skills: Dictionary = {}   # id -> step
 var height: float = 1.78
 var weight: float = 78.0
+
+var perk: String = ""
 
 var _base_stats: Dictionary = {}
 var _base_skills: Dictionary = {}
@@ -91,7 +104,7 @@ func spent() -> int:
 		total += _cost_between(int(_base_stats.get(id, 0)), int(stats[id])) * STAT_POINT_IN_CAREER
 	for id: String in skills.keys():
 		total += _cost_between(int(_base_skills.get(id, 0)), int(skills[id])) * SKILL_POINT_IN_CAREER
-	return total + body_cost()
+	return total + body_cost() + perk_cost()
 
 # The body is billed at exactly what the swap it performs is worth, so shape
 # costs points and power does not come free. Moving away from the centre gives
@@ -188,6 +201,131 @@ func lower_skill(id: String) -> void:
 	if can_lower_skill(id):
 		skills[id] = int(skills[id]) - 1
 
+# --- Perks ---
+#
+# One sentence about you, priced in career points, and the price can be
+# negative. A flaw hands points back — which is the only reason anybody would
+# ever pick "drops what he shouldn't" — and the cap of one is what keeps the
+# optimal build from being the whole flaw list.
+#
+# Optional on purpose: passing on the perk and putting everything into the
+# sheet is a real answer, not a wasted slot.
+
+func perk_cost() -> int:
+	var def := Drive.def("perk") as PerkDef
+	return def.cost(perk) if def != null and perk != "" else 0
+
+func has_perk() -> bool:
+	return perk != ""
+
+# Swapping counts the difference, so trading a 40-point boon for a 25-point one
+# does not ask you to afford both.
+func can_take_perk(id: String) -> bool:
+	var def := Drive.def("perk") as PerkDef
+	if def == null:
+		return false
+	if id != "" and not def.has_perk(id):
+		return false
+	# Dropping a flaw is a PURCHASE: it costs back the points it paid you, and
+	# without this you could take Vidraça, spend the thirty points, untick it
+	# and walk out thirty points over budget.
+	var wanted: int = def.cost(id) if id != "" else 0
+	return wanted - perk_cost() <= remaining()
+
+# Clicking the perk you already have takes it off: there is no "none" button to
+# hunt for.
+func set_perk(id: String) -> void:
+	var wanted: String = "" if id == perk else id
+	if can_take_perk(wanted):
+		perk = wanted
+
+# --- The dice ---
+
+# Spends an entire life at random, legally: a body, maybe a perk, and every
+# career point the two leave behind.
+#
+# Not a uniform fill. Each of the twenty-three tracks draws a lognormal
+# APPETITE and the loop buys proportionally to it, divided by the step already
+# paid for — so the cheap early steps go everywhere, the expensive late ones go
+# only where the appetite was high, and what comes out is a person with a
+# shape instead of a flat line at the average.
+func roll_random(rng: RandomNumberGenerator) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return
+	for id: String in def.base_ids():
+		stats[id] = MIN_STAT_STEP
+	for id: String in def.skill_ids():
+		skills[id] = MIN_SKILL_STEP
+	perk = ""
+	_roll_body(def, rng)
+	_roll_perk(rng)
+
+	var appetite: Dictionary = {}
+	for id: String in def.base_ids():
+		appetite[id] = RANDOM_STAT_APPETITE * exp(rng.randfn(0.0, RANDOM_APPETITE_SPREAD))
+	for id: String in def.skill_ids():
+		appetite[id] = RANDOM_SKILL_APPETITE * exp(rng.randfn(0.0, RANDOM_APPETITE_SPREAD))
+
+	while true:
+		var ids: Array[String] = []
+		var weights: Array[float] = []
+		for id: String in def.base_ids():
+			if can_raise_stat(id):
+				ids.append(id)
+				weights.append(float(appetite[id]) / float(int(stats[id]) + 1))
+		for id: String in def.skill_ids():
+			if can_raise_skill(id):
+				ids.append(id)
+				weights.append(float(appetite[id]) / float(int(skills[id]) + 1))
+		if ids.is_empty():
+			return
+		var chosen: String = ids[_weighted_index(weights, rng)]
+		if stats.has(chosen):
+			raise_stat(chosen)
+		else:
+			raise_skill(chosen)
+
+# Height and weight land near the centre and rarely more than a band out — an
+# extreme body costs most of the budget, and the roll should produce a person,
+# not a stunt.
+func _roll_body(def: StatDef, rng: RandomNumberGenerator) -> void:
+	for id: String in def.measure_ids():
+		var spec: Dictionary = def.measure(id)
+		var centre: float = float(spec.get("center", 0.0))
+		var band_width: float = float(spec.get("band", 1.0))
+		var value: float = clampf(
+			rng.randfn(centre, band_width * 0.85),
+			float(spec.get("min", centre)), float(spec.get("max", centre)))
+		if id == "height":
+			height = snappedf(value, def.increment(id))
+		else:
+			weight = snappedf(value, def.increment(id))
+
+func _roll_perk(rng: RandomNumberGenerator) -> void:
+	var def := Drive.def("perk") as PerkDef
+	if def == null or rng.randf() >= RANDOM_PERK_CHANCE:
+		return
+	var pool: Array[String] = def.boons() if rng.randf() < RANDOM_BOON_CHANCE else def.flaws()
+	if pool.is_empty():
+		return
+	# Affordability is checked before the sheet is bought, so a 40-point boon is
+	# always payable here and only the sheet gets thinner.
+	set_perk(pool[rng.randi() % pool.size()])
+
+func _weighted_index(weights: Array[float], rng: RandomNumberGenerator) -> int:
+	var total: float = 0.0
+	for w: float in weights:
+		total += w
+	if total <= 0.0:
+		return rng.randi() % weights.size()
+	var roll: float = rng.randf() * total
+	for i: int in range(weights.size()):
+		roll -= weights[i]
+		if roll <= 0.0:
+			return i
+	return weights.size() - 1
+
 # --- Result ---
 
 # Bakes the build into an Actor, converting steps back into stored units so
@@ -208,7 +346,7 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 		"weight": weight,
 		"stats": stored_stats,
 		"skills": stored_skills,
-		"perks": [],
+		"perks": [perk] if perk != "" else [],
 		"plays": [],
 		"manages": [],
 		"team": Actor.NO_TEAM,

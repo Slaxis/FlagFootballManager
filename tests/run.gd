@@ -20,6 +20,9 @@ const _SUITES: Array[String] = [
 	"res://tests/test_sheet_builder.gd",
 	"res://tests/test_career.gd",
 	"res://tests/test_d5.gd",
+	"res://tests/test_names.gd",
+	"res://tests/test_perk.gd",
+	"res://tests/test_screen_create_manager.gd",
 	"res://tests/test_lint.gd",
 ]
 
@@ -27,6 +30,14 @@ func _ready() -> void:
 	if not _activate_module():
 		get_tree().quit(1)
 		return
+	# One frame before anything runs. Inside _ready the tree is still building
+	# its children and add_child() is refused, which locks out any suite that
+	# needs to mount a screen — and a screen nobody mounts is a screen nobody
+	# tests.
+	await get_tree().process_frame
+	_run()
+
+func _run() -> void:
 	var started: int = Time.get_ticks_msec()
 	var passed: int = 0
 	var failed: int = 0

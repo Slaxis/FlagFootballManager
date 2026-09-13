@@ -88,14 +88,6 @@
       "pt": "CRIAR GESTOR",
       "en": "CREATE MANAGER"
     },
-    "manager.name": {
-      "pt": "Nome",
-      "en": "Name"
-    },
-    "manager.reroll": {
-      "pt": "Sortear outro",
-      "en": "Reroll"
-    },
     "manager.age": {
       "pt": "%d anos",
       "en": "%d years old"
@@ -156,17 +148,9 @@
       "pt": "semente %d",
       "en": "seed %d"
     },
-    "manager.reroll_name": {
-      "pt": "outro nome",
-      "en": "another name"
-    },
-    "manager.reroll_seed": {
-      "pt": "outra semente",
-      "en": "another seed"
-    },
     "manager.seed_hint": {
-      "pt": "a semente define TUDO: seus atributos, quais clubes de várzea existem e qual te chama",
-      "en": "the seed defines EVERYTHING: your attributes, which sandlot clubs exist and which one calls you"
+      "pt": "a semente vem do nome + sobrenome + apelido — edite os três para fixar um mundo e voltar a ele depois",
+      "en": "the seed comes from first name + surname + nickname — edit the three to pin a world down and come back to it"
     },
     "manager.body": {
       "pt": "CORPO",
@@ -251,6 +235,42 @@
     "manager.leftover_many": {
       "pt": "sobram %d career points e nada custa tão pouco — pode começar",
       "en": "%d career points left and nothing costs that little — you can start"
+    },
+    "manager.first_name": {
+      "pt": "Nome",
+      "en": "First name"
+    },
+    "manager.last_name": {
+      "pt": "Sobrenome",
+      "en": "Surname"
+    },
+    "manager.nickname": {
+      "pt": "Apelido",
+      "en": "Nickname"
+    },
+    "manager.reroll_all": {
+      "pt": "sortear tudo",
+      "en": "roll everything"
+    },
+    "manager.perks": {
+      "pt": "PERK",
+      "en": "PERK"
+    },
+    "manager.perks_hint": {
+      "pt": "no máximo 1, e não pegar nenhum é uma resposta — tudo vai para a ficha. Um defeito DEVOLVE career points: você joga pior de um jeito específico e treina mais em troca.",
+      "en": "one at most, and taking none is an answer — it all goes into the sheet. A flaw GIVES career points back: you are worse in one specific way and train more in exchange."
+    },
+    "manager.perk_none": {
+      "pt": "nenhum perk escolhido",
+      "en": "no perk taken"
+    },
+    "manager.perk_price": {
+      "pt": "%d cp",
+      "en": "%d cp"
+    },
+    "manager.perk_refund": {
+      "pt": "+%d cp",
+      "en": "+%d cp"
     }
   }
 }

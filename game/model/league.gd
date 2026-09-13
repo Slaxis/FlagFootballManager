@@ -14,14 +14,24 @@ class_name League
 const FILL_COUNT := 6
 const DEFAULT_SEED := 20260101
 
-# Idempotent: registers the invented clubs into TeamDef once. Screens call this
-# before reading the club list.
+# Which seed the current filler was built from. Zero means nothing is built
+# yet — a career seed is never zero, so there is no ambiguous state.
+static var _filled_seed: int = 0
+
+# Idempotent PER SEED: calling it twice with the same seed does nothing, and
+# calling it with a different one tears the invented clubs down and rebuilds
+# them. Without the rebuild the promise on the creation screen — the seed says
+# which sandlot clubs exist — would only hold for the first seed of a session.
 static func ensure_filled(seed_value: int = DEFAULT_SEED) -> void:
 	var def := Drive.def("team") as TeamDef
 	if def == null:
 		return
-	if def.by_tier(TeamGenerator.TIER_UNAFFILIATED).size() >= FILL_COUNT:
+	var built: bool = def.by_tier(TeamGenerator.TIER_UNAFFILIATED).size() >= FILL_COUNT
+	if built and _filled_seed == seed_value:
 		return
+	if _filled_seed != seed_value:
+		def.remove_generated()
+	_filled_seed = seed_value
 	for team: Dictionary in TeamGenerator.batch(seed_value, FILL_COUNT):
 		# Never overwrite an authored club — the real ones are the truth.
 		if def.get_team(String(team["id"])).is_empty():
