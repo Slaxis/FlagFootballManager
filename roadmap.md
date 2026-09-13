@@ -236,9 +236,9 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 | `A.1-team-database` | Os 9 clubes cariocas como Things, região derivada da UF, tier e reputação | ✅ |
 | `A.2-stat-model` | 7 stats base + 9 derivadas (média de 3, piso) + Geral, e a suíte de testes | ✅ |
 | `A.3-actor-model` | **Actor único**: jogador, técnico, scout e manager são o mesmo tipo | ✅ |
-| `A.4-role-assignment` | Escalação em funções + penalidade de acumular | |
-| `A.5-team-generator` | `TeamGenerator` inventa clubes; preenche o Carioca com não federados | |
-| `A.6-perks` | Catálogo de perks com efeito mecânico | |
+| ~~`A.4-role-assignment`~~ | movida para `B.6` — precisa da aba Elenco para ser visível | → |
+| ~~`A.5-team-generator`~~ | movida para `B.3`, e entregue lá | ✅ |
+| ~~`A.6-perks`~~ | movida para `B.7` — os ícones só fazem sentido ao lado dos nomes | → |
 
 ### Fase B — O clube na tela
 | # | Branch | O que você vê no jogo | |
@@ -246,7 +246,7 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 | **B.1** | `start-screen` | A Start Screen: Continue (cinza), Novo Jogo, Ajustes, Sair | ✅ |
 | **B.2** | `module-select` | A lista de módulos: o nativo e qualquer universo em `user://modules` | ✅ |
 | **B.3** | `team-generator` | A lista salta de 10 pra 16 clubes; os 6 do fundo são várzea carioca | ✅ |
-| **B.4** | `create-manager` | Cria seu manager (nome sorteado, 18 anos) e escolhe Career Type — Random ativo, **Pick Team cadeado** | ✅ |
+| **B.4** | `create-manager` | Ficha estilo Zomboid: 8 atributos, 15 habilidades, corpo com régua cobrada, idade como preço, Career Type com Pick Team cadeado | ✅ |
 | **B.5** | `team-screen` | Seu clube com abas **Elenco** e **Adversários**. **Paga a dívida de A.2 e A.3** | |
 | **B.6** | `role-assignment` | Coluna **Função** no Elenco: escala alguém em duas e vê o Geral cair | |
 | **B.7** | `perks` | Os ícones `★ ⚡ 🧠 🪨` ao lado dos nomes | |
