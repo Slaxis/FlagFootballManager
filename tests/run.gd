@@ -22,6 +22,7 @@ const _SUITES: Array[String] = [
 	"res://tests/test_d5.gd",
 	"res://tests/test_names.gd",
 	"res://tests/test_perk.gd",
+	"res://tests/test_screen_start.gd",
 	"res://tests/test_screen_create_manager.gd",
 	"res://tests/test_lint.gd",
 ]

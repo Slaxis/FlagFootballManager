@@ -24,6 +24,13 @@
 - 31 testes novos (`test_names`, `test_perk`, `test_screen_create_manager`)
 
 ### Fixed
+- Botao **Sair** nao fazia nada: `go("quit")` -> `"$exit"` -> `flow_finished`,
+  e o `Game` da engine nunca conectava o sinal. d5star v0.4.1
+- Voce era sorteado pra um clube **inexistente na lista**: `club_select` chama
+  `League.ensure_filled()` sem semente e o default era uma constante, entao a
+  tela seguinte reconstruia a varzea de outro mundo e o clube que tinha acabado
+  de te chamar sumia. O default agora pergunta pro Blackboard qual carreira
+  esta rodando — tela que nao liga pra semente nao tem como errar
 - `League.ensure_filled()` era idempotente pelo NUMERO de clubes, entao trocar
   a semente nao trocava a varzea. Agora refaz quando a semente muda, e
   `TeamDef.remove_generated()` poupa os clubes autorais

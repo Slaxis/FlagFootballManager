@@ -15,6 +15,7 @@ func tests() -> Array:
 		"test_career_resolves_its_club",
 		"test_same_seed_drafts_the_same_club",
 		"test_draft_pool_is_only_unaffiliated",
+		"test_the_drafted_club_survives_the_next_screen",
 	]
 
 func _actor() -> Actor:
@@ -96,6 +97,39 @@ func test_draft_pool_is_only_unaffiliated(t: TestHelper) -> void:
 	for team: Dictionary in pool:
 		t.equal(int(team.get("tier", 0)), TeamGenerator.TIER_UNAFFILIATED,
 			"'%s' não é várzea" % team.get("name", "?"))
+
+# "Fui sorteado pro time Onças da Pista, inexistente na lista de times."
+#
+# The sandlot belongs to the CAREER's seed. club_select calls
+# `League.ensure_filled()` without one, and while the default was a constant
+# that call rebuilt somebody else's world — the club that had just drafted you
+# stopped existing between one screen and the next. The default now asks the
+# Blackboard, so a screen that does not care about seeds cannot get it wrong.
+func test_the_drafted_club_survives_the_next_screen(t: TestHelper) -> void:
+	var def := Drive.def("team") as TeamDef
+	if def == null:
+		t.fail("TeamDef ausente"); return
+	var career_seed: int = SeedRng.seed_from_string("Pedro|Vasconcelos|Pedrinho")
+	var drafted_id: String = _draft(career_seed)
+	t.check(drafted_id != "", "o sorteio não devolveu clube")
+	var career: Career = Career.make(_actor(), drafted_id, career_seed)
+	The.board["career"] = career
+
+	# Exactly what club_select does when it opens.
+	League.ensure_filled()
+
+	t.check(not def.get_team(drafted_id).is_empty(),
+		"o clube sorteado '%s' sumiu da lista" % drafted_id)
+	t.check(not career.team().is_empty(),
+		"a carreira ficou apontando para um clube que não existe")
+	t.check(def.by_tier(TeamGenerator.TIER_UNAFFILIATED).size() >= League.FILL_COUNT,
+		"a várzea encolheu")
+	The.board.erase("career")
+
+	# And with no career on the board it still falls back to the default world,
+	# which is what the club list shows before anybody starts a run.
+	League.ensure_filled()
+	t.equal(League.current_seed(), League.DEFAULT_SEED, "sem carreira, mundo padrão")
 
 # Mirrors what the screen does, so determinism is asserted on the real path.
 func _draft(seed_value: int) -> String:
