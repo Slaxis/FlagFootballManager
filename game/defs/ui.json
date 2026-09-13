@@ -1,0 +1,256 @@
+{
+  "strings": {
+    "common.back": {
+      "pt": "Voltar",
+      "en": "Back"
+    },
+    "start.title": {
+      "pt": "FLAG FOOTBALL MANAGER",
+      "en": "FLAG FOOTBALL MANAGER"
+    },
+    "start.tagline": {
+      "pt": "Da várzea ao Brasileirão",
+      "en": "From the sandlot to the national league"
+    },
+    "start.continue": {
+      "pt": "Continuar",
+      "en": "Continue"
+    },
+    "start.continue_hint": {
+      "pt": "nenhuma carreira salva",
+      "en": "no saved career"
+    },
+    "start.new_game": {
+      "pt": "Novo Jogo",
+      "en": "New Game"
+    },
+    "start.settings": {
+      "pt": "Ajustes",
+      "en": "Settings"
+    },
+    "start.quit": {
+      "pt": "Sair",
+      "en": "Quit"
+    },
+    "settings.title": {
+      "pt": "AJUSTES",
+      "en": "SETTINGS"
+    },
+    "settings.language": {
+      "pt": "Idioma",
+      "en": "Language"
+    },
+    "module.title": {
+      "pt": "ESCOLHA O UNIVERSO",
+      "en": "CHOOSE A UNIVERSE"
+    },
+    "module.subtitle": {
+      "pt": "%d módulo(s) disponível(is)",
+      "en": "%d module(s) available"
+    },
+    "module.native": {
+      "pt": "nativo",
+      "en": "native"
+    },
+    "module.user": {
+      "pt": "seu",
+      "en": "yours"
+    },
+    "module.none": {
+      "pt": "Nenhum módulo encontrado em game/modules/ ou user://modules",
+      "en": "No modules found in game/modules/ or user://modules"
+    },
+    "clubs.title": {
+      "pt": "CLUBES",
+      "en": "CLUBS"
+    },
+    "clubs.count": {
+      "pt": "%s · %d clubes",
+      "en": "%s · %d clubs"
+    },
+    "tier.1": {
+      "pt": "SÉRIE A",
+      "en": "SERIES A"
+    },
+    "tier.2": {
+      "pt": "SÉRIE B",
+      "en": "SERIES B"
+    },
+    "tier.3": {
+      "pt": "SÉRIE C",
+      "en": "SERIES C"
+    },
+    "tier.4": {
+      "pt": "NÃO FED.",
+      "en": "UNAFFIL."
+    },
+    "manager.title": {
+      "pt": "CRIAR GESTOR",
+      "en": "CREATE MANAGER"
+    },
+    "manager.name": {
+      "pt": "Nome",
+      "en": "Name"
+    },
+    "manager.reroll": {
+      "pt": "Sortear outro",
+      "en": "Reroll"
+    },
+    "manager.age": {
+      "pt": "%d anos",
+      "en": "%d years old"
+    },
+    "manager.sheet": {
+      "pt": "FICHA",
+      "en": "SHEET"
+    },
+    "manager.overall": {
+      "pt": "Geral",
+      "en": "Overall"
+    },
+    "manager.plays": {
+      "pt": "Você joga",
+      "en": "You play"
+    },
+    "manager.manages": {
+      "pt": "Você gerencia",
+      "en": "You coach"
+    },
+    "manager.plays_none": {
+      "pt": "Não jogo",
+      "en": "I don't play"
+    },
+    "manager.career_type": {
+      "pt": "TIPO DE CARREIRA",
+      "en": "CAREER TYPE"
+    },
+    "manager.pick_team": {
+      "pt": "Escolher clube",
+      "en": "Pick a club"
+    },
+    "manager.pick_locked": {
+      "pt": "vença uma rodada nacional para liberar",
+      "en": "win a national round to unlock"
+    },
+    "manager.random": {
+      "pt": "Sortear meu clube",
+      "en": "Draw my club"
+    },
+    "manager.random_hint": {
+      "pt": "como no Elifoot: um clube de várzea te chama",
+      "en": "Elifoot style: a sandlot club calls you"
+    },
+    "manager.drafted": {
+      "pt": "Você é o novo técnico do",
+      "en": "You are the new coach of"
+    },
+    "manager.not_fielded": {
+      "pt": "você não poderá se escalar: o clube não tem equipe dessa modalidade",
+      "en": "you won't be able to field yourself: the club has no squad in that category"
+    },
+    "manager.start": {
+      "pt": "Começar",
+      "en": "Start"
+    },
+    "manager.seed": {
+      "pt": "semente %d",
+      "en": "seed %d"
+    },
+    "manager.reroll_name": {
+      "pt": "outro nome",
+      "en": "another name"
+    },
+    "manager.reroll_seed": {
+      "pt": "outra semente",
+      "en": "another seed"
+    },
+    "manager.seed_hint": {
+      "pt": "a semente define TUDO: seus atributos, quais clubes de várzea existem e qual te chama",
+      "en": "the seed defines EVERYTHING: your attributes, which sandlot clubs exist and which one calls you"
+    },
+    "manager.body": {
+      "pt": "CORPO",
+      "en": "BODY"
+    },
+    "manager.identity": {
+      "pt": "IDENTIDADE",
+      "en": "IDENTITY"
+    },
+    "manager.modality": {
+      "pt": "MODALIDADE",
+      "en": "CATEGORY"
+    },
+    "manager.age_label": {
+      "pt": "Idade",
+      "en": "Age"
+    },
+    "manager.years": {
+      "pt": "%d anos",
+      "en": "%d years"
+    },
+    "manager.attributes": {
+      "pt": "ATRIBUTOS",
+      "en": "ATTRIBUTES"
+    },
+    "manager.skills": {
+      "pt": "HABILIDADES",
+      "en": "SKILLS"
+    },
+    "manager.points_left": {
+      "pt": "%d pontos de carreira",
+      "en": "%d career points"
+    },
+    "manager.invest_hint": {
+      "pt": "Você nasce zerado e aloca a vida inteira. Atributo custa 3 career points por passo, habilidade custa 2 — crescer é mais caro que aprender.",
+      "en": "You are born at zero and allocate a whole life. An attribute costs 3 career points a step, a skill costs 2 — growing is dearer than learning."
+    },
+    "manager.team_bonus": {
+      "pt": "seu time ganha %+d nesta stat",
+      "en": "your squad gets %+d in this stat"
+    },
+    "manager.body_hint": {
+      "pt": "sair do centro dá um passo a um atributo e tira de outro — e custa career points, porque o passo que você ganha vale mais que o que você entrega",
+      "en": "leaving the centre gives one attribute a step and takes one from another — and costs career points, because the step you gain is dearer than the one you give up"
+    },
+    "skillgroup.offense": {
+      "pt": "Ataque",
+      "en": "Offense"
+    },
+    "skillgroup.defense": {
+      "pt": "Defesa",
+      "en": "Defense"
+    },
+    "skillgroup.general": {
+      "pt": "Geral",
+      "en": "General"
+    },
+    "skillgroup.staff": {
+      "pt": "Comissão",
+      "en": "Staff"
+    },
+    "manager.roll_hint": {
+      "pt": "um teste desta habilidade rola %d + 2d5*",
+      "en": "a check on this skill rolls %d + 2d5*"
+    },
+    "manager.must_spend": {
+      "pt": "você ainda tem %d anos para viver — gaste tudo antes de começar",
+      "en": "you still have %d years to live — spend them all before starting"
+    },
+    "manager.body_cost": {
+      "pt": "corpo: %d cp",
+      "en": "body: %d cp"
+    },
+    "manager.overspent": {
+      "pt": "você gastou %d career points a mais do que viveu",
+      "en": "you spent %d career points more than you lived"
+    },
+    "manager.leftover_one": {
+      "pt": "sobra 1 career point e nada custa tão pouco — pode começar",
+      "en": "1 career point left and nothing costs that little — you can start"
+    },
+    "manager.leftover_many": {
+      "pt": "sobram %d career points e nada custa tão pouco — pode começar",
+      "en": "%d career points left and nothing costs that little — you can start"
+    }
+  }
+}

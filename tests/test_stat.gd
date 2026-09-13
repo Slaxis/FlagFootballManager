@@ -1,127 +1,161 @@
-# Tests for the two-layer attribute model: 7 base attributes, 9 derived
-# stats (each the floor of the average of exactly 3 base ones), and "Geral".
+# Tests for the sheet: 8 attributes, 15 skills, two measures, and the scale
+# that ties them to the dice.
 extends RefCounted
 class_name TestStat
 
 const BASE_IDS: Array[String] = [
 	"strength", "stamina", "agility", "dexterity",
-	"perception", "intelligence", "charisma",
-]
-const DERIVED_IDS: Array[String] = [
-	"speed", "passing", "catching", "protection", "pressure",
-	"coverage", "reading", "leadership", "trash_talk",
+	"perception", "intelligence", "charisma", "will",
 ]
 
 func tests() -> Array:
 	return [
-		"test_def_loads",
-		"test_seven_base_attributes",
-		"test_nine_derived_stats",
-		"test_every_derived_reads_three_base",
-		"test_derived_inputs_are_distinct_sets",
-		"test_flat_sheet_derives_flat",
-		"test_derive_floors_the_average",
-		"test_overall_floors_the_average",
-		"test_same_actor_differs_by_derived_stat",
-		"test_unknown_ids_do_not_crash",
+		"test_eight_attributes_including_will",
+		"test_fifteen_skills_each_governed_by_a_real_attribute",
+		"test_no_derived_layer_survives",
+		"test_step_is_stored_over_ten",
+		"test_modifier_is_zero_at_the_average_adult",
+		"test_modifier_punishes_a_bad_leader",
+		"test_measures_move_in_real_units",
+		"test_body_shifts_whole_steps",
+		"test_body_is_symmetric_in_effect_and_price",
+		"test_body_price_matches_the_swap_it_performs",
+		"test_roll_base_sums_aptitude_and_practice",
+		"test_quality_stays_inside_the_adult_band",
 	]
 
 func _def() -> StatDef:
 	return Drive.def("stat") as StatDef
 
-func test_def_loads(t: TestHelper) -> void:
-	t.not_null(_def(), "StatDef")
-
-func test_seven_base_attributes(t: TestHelper) -> void:
+func test_eight_attributes_including_will(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	t.equal(def.base_ids().size(), 7, "quantidade de stats base")
+	t.equal(def.base_ids().size(), 8, "quantidade de atributos")
 	for id: String in BASE_IDS:
-		t.check(def.has_base(id), "stat base ausente: " + id)
+		t.check(def.has_base(id), "atributo ausente: " + id)
 
-func test_nine_derived_stats(t: TestHelper) -> void:
+func test_fifteen_skills_each_governed_by_a_real_attribute(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	t.equal(def.derived_ids().size(), 9, "quantidade de derivadas")
-	for id: String in DERIVED_IDS:
-		t.check(def.has_derived(id), "derivada ausente: " + id)
+	t.equal(def.skill_ids().size(), 15, "quantidade de habilidades")
+	for id: String in def.skill_ids():
+		var attribute: String = def.skill_attribute(id)
+		t.check(def.has_base(attribute),
+			"habilidade '%s' é regida por '%s', que não é atributo" % [id, attribute])
+		t.check(def.skill_group(id) != "", "habilidade '%s' sem grupo" % id)
 
-func test_every_derived_reads_three_base(t: TestHelper) -> void:
+# The derived layer had nowhere to put training. If it comes back, the roll
+# stops being aptitude + practice.
+func test_no_derived_layer_survives(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	for id: String in def.derived_ids():
-		var inputs: Array = def.inputs_of(id)
-		t.equal(inputs.size(), 3, "entradas de '%s'" % id)
-		for input: Variant in inputs:
-			t.check(def.has_base(String(input)),
-				"derivada '%s' lê base inexistente '%s'" % [id, input])
+	t.check(not def.has_method("derive"), "a camada 'derived' voltou")
 
-# Two derived stats built from the same three attributes would be the same
-# number under a different name — the model would be lying about depth.
-func test_derived_inputs_are_distinct_sets(t: TestHelper) -> void:
+func test_step_is_stored_over_ten(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	var seen: Dictionary = {}
-	for id: String in def.derived_ids():
-		var inputs: Array = def.inputs_of(id).duplicate()
-		inputs.sort()
-		var key: String = ",".join(PackedStringArray(inputs))
-		t.check(not seen.has(key),
-			"'%s' usa os mesmos 3 stats de '%s'" % [id, seen.get(key, "")])
-		seen[key] = id
+	t.equal(def.step(0), 0, "0 armazenado")
+	t.equal(def.step(49), 4, "49 armazenado")
+	t.equal(def.step(50), 5, "50 armazenado")
+	t.equal(def.step(100), 10, "100 armazenado")
+	t.equal(def.step(180), 10, "acima do teto")
+	t.equal(def.stored_for(5), 50, "5 passos de volta a armazenado")
 
-func test_flat_sheet_derives_flat(t: TestHelper) -> void:
+# The anchor the author defined IS the zero of the modifier: an average adult
+# leads nobody anywhere.
+func test_modifier_is_zero_at_the_average_adult(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	var sheet: Dictionary = def.blank_sheet(50)
-	for id: String in def.derived_ids():
-		t.equal(def.derive(sheet, id), 50, "derivada '%s' com tudo em 50" % id)
-	t.equal(def.overall(sheet), 50, "Geral com tudo em 50")
+	t.equal(def.modifier(50), 0, "5 passos")
+	t.equal(def.modifier(60), 1, "6 passos")
+	t.equal(def.modifier(70), 2, "7 passos")
+	t.equal(def.modifier(100), 5, "10 passos")
 
-func test_derive_floors_the_average(t: TestHelper) -> void:
+func test_modifier_punishes_a_bad_leader(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	# speed = agility + strength + stamina -> (7 + 8 + 8) / 3 = 7.66 -> 7
-	var sheet: Dictionary = def.blank_sheet(0)
-	sheet["agility"] = 7
-	sheet["strength"] = 8
-	sheet["stamina"] = 8
-	t.equal(def.derive(sheet, "speed"), 7, "arredondamento pra baixo em speed")
+	t.equal(def.modifier(40), -1, "4 passos")
+	t.equal(def.modifier(30), -2, "3 passos")
+	t.check(def.modifier(10) < 0, "um líder de 1 passo deveria atrapalhar")
 
-func test_overall_floors_the_average(t: TestHelper) -> void:
+func test_measures_move_in_real_units(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	# 6 atributos em 10 e um em 3 -> 63 / 7 = 9
-	var sheet: Dictionary = def.blank_sheet(10)
-	sheet["charisma"] = 3
-	t.equal(def.overall(sheet), 9, "Geral arredondado pra baixo")
+	t.equal(def.increment("height"), 0.01, "altura anda de centímetro em centímetro")
+	t.equal(def.increment("weight"), 1.0, "peso anda de quilo em quilo")
+	t.check(def.increment("height") < float(def.measure("height").get("step", 1.0)),
+		"o passo do teclado deveria ser mais fino que a faixa do efeito")
 
-# The point of the model: one actor is not "good" or "bad", he is good at
-# some things. This is what the coletivo is meant to reveal.
-func test_same_actor_differs_by_derived_stat(t: TestHelper) -> void:
+# The ruler shifts whole steps, so moving the body is visible immediately —
+# half a step would exist only on paper, since every value the creation screen
+# produces is a multiple of ten.
+func test_body_shifts_whole_steps(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	var brute: Dictionary = def.blank_sheet(3)
-	brute["strength"] = 10
-	brute["stamina"] = 10
-	brute["agility"] = 9
-	t.check(def.derive(brute, "speed") > def.derive(brute, "passing"),
-		"o brutamontes deveria correr melhor do que passar")
-	t.check(def.derive(brute, "protection") > def.derive(brute, "leadership"),
-		"o brutamontes deveria proteger melhor do que liderar")
+	var tall: Dictionary = def.body_effect({"height": 2.10, "weight": 80})
+	t.equal(int(tall.get("perception", 0)), 3, "alto deveria enxergar 3 passos mais")
+	t.equal(int(tall.get("agility", 0)), -3, "alto deveria perder 3 passos de agilidade")
+	var heavy: Dictionary = def.body_effect({"height": 1.80, "weight": 110})
+	t.equal(int(heavy.get("strength", 0)), 3, "pesado deveria ganhar 3 de força")
+	t.equal(int(heavy.get("stamina", 0)), -3, "pesado deveria perder 3 de vitalidade")
+	for value: int in def.body_effect({"height": 1.80, "weight": 80}).values():
+		t.equal(value, 0, "o corpo central não deveria mexer em nada")
 
-func test_unknown_ids_do_not_crash(t: TestHelper) -> void:
+# Being taller than average is an advantage AND being shorter than average is
+# an advantage, because in both directions the step you gain costs more than
+# the one you give up. So both directions cost the same.
+func test_body_is_symmetric_in_effect_and_price(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
-	t.equal(def.derive(def.blank_sheet(50), "nao_existe"), 0, "derivada inexistente")
-	t.equal(def.base_stat("nao_existe"), {}, "base inexistente")
-	t.equal(def.derive({}, "speed"), 0, "ficha vazia")
+	for pair: Array in [[1.50, 2.10], [1.60, 2.00], [1.70, 1.90]]:
+		var short_value: int = def.body_value({"height": pair[0], "weight": 80})
+		var tall_value: int = def.body_value({"height": pair[1], "weight": 80})
+		t.equal(short_value, tall_value,
+			"%.2f e %.2f deveriam custar o mesmo" % [pair[0], pair[1]])
+		var low: Dictionary = def.body_effect({"height": pair[0], "weight": 80})
+		var high: Dictionary = def.body_effect({"height": pair[1], "weight": 80})
+		t.equal(int(low.get("perception", 0)), -int(high.get("perception", 0)),
+			"o efeito deveria espelhar em %.2f / %.2f" % [pair[0], pair[1]])
+
+# The price IS the swap: at the average adult, +1 costs 6 points and -1 refunds
+# 5, so one band is worth 1. The next is worth 3, the next 5 — n bands total n².
+func test_body_price_matches_the_swap_it_performs(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	t.equal(def.body_value({"height": 1.90, "weight": 80}), 1, "uma faixa")
+	t.equal(def.body_value({"height": 2.00, "weight": 80}), 4, "duas faixas")
+	t.equal(def.body_value({"height": 2.10, "weight": 80}), 9, "três faixas")
+	t.equal(def.body_value({"height": 2.10, "weight": 110}), 18, "extremo nos dois")
+
+func test_roll_base_sums_aptitude_and_practice(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var actor := Actor.new()
+	actor._apply_data("t", "actor", {
+		"stats": def.blank_sheet(70), "skills": def.blank_skills(30),
+		"height": 1.78, "weight": 78,
+	})
+	# throwing is governed by dexterity: 7 steps of aptitude + 3 of practice.
+	t.equal(actor.step("dexterity"), 7, "passos do atributo")
+	t.equal(actor.skill_step("throwing"), 3, "passos da habilidade")
+	t.equal(actor.roll_base("throwing"), 10, "base do roll")
+
+# Reputation is not an attribute value: the worst club fields bad adults, not
+# children, and the champion is not an Olympian.
+func test_quality_stays_inside_the_adult_band(t: TestHelper) -> void:
+	var worst: int = ActorGenerator.quality_from_reputation(12)
+	var best: int = ActorGenerator.quality_from_reputation(90)
+	t.check(worst >= 35 and worst <= 45, "várzea saiu com qualidade %d" % worst)
+	t.check(best >= 70 and best <= 85, "campeão saiu com qualidade %d" % best)
+	t.check(best > worst + 20, "a distância entre várzea e elite ficou pequena")

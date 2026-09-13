@@ -28,15 +28,15 @@ func load_data(_raw: Dictionary) -> void:
 func add_thing(thing: Dictionary) -> void:
 	var id: String = _key(String(thing.get("id", "")))
 	if id == "":
-		push_error("TeamDef: team Thing without id")
+		Log.log(self, "error", "TeamDef: team Thing without id")
 		return
 	for field: String in _REQUIRED:
 		if String(thing.get(field, "")).strip_edges() == "":
-			push_error("TeamDef: team '%s' is missing '%s'" % [id, field])
+			Log.log(self, "error", "TeamDef: team '%s' is missing '%s'" % [id, field])
 			return
 	var tier: int = int(thing.get("tier", TIER_MAX))
 	if tier < TIER_MIN or tier > TIER_MAX:
-		push_error("TeamDef: team '%s' has tier %d outside %d..%d" % [id, tier, TIER_MIN, TIER_MAX])
+		Log.log(self, "error", "TeamDef: team '%s' has tier %d outside %d..%d" % [id, tier, TIER_MIN, TIER_MAX])
 		return
 	_by_id[id] = thing
 

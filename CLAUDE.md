@@ -123,6 +123,16 @@ Do not start implementing before the plan is approved.
   unreachable and any suite touching them aborts the runner mid-flight. Register
   new suites in the `_SUITES` array of `tests/run.gd`. Exit code is 0 / 1.
 
+  ⚠️ **GDScript has no exceptions.** A runtime error inside a test aborts that
+  function and returns to the runner, which used to see no recorded failures
+  and print `ok` — a green run hiding broken tests. The runner now fails any
+  test that asserted **nothing**, on the grounds that "asserted nothing" and
+  "died on line one" are indistinguishable. A test whose only statement is a
+  conditional `fail()` must therefore assert something positive too.
+
+  Also grep the run for `SCRIPT ERROR`: the runner cannot see those, but the
+  shell can, and a clean suite should print none.
+
 - **Boot smoke test** is the second check — it exercises Drive → engine.json
   → PathManager → managers → parser/loader/validator discovery → module scan
   → def scan → Flow → first screen:
@@ -137,6 +147,18 @@ Do not start implementing before the plan is approved.
   known seeds.
 - UI is tested manually through gameplay.
 - Each task must be independently testable before merge.
+
+⚠️ **GDScript warnings are editor-only.** A headless run, `--editor --quit` and
+`--check-only` all stay silent about them, so the automated loop cannot see a
+shadowed variable or an unused signal. `tests/test_lint.gd` covers the two
+traps that have actually bitten this project — a variable named after a Godot
+built-in, and one named after anything the file's base class inherits. The
+second asks **ClassDB** for every signal, property and method up the engine
+chain rather than keeping a list: a hand-kept list is what let `var draw`
+through, since it shadows a `CanvasItem` signal three levels above `Menu`.
+Map any new game base class to its engine ancestor in `ENGINE_BASE`. It is
+still not the compiler. Warnings reported from the editor are still worth
+passing along.
 
 ⚠️ After renaming a `class_name` or moving files, Godot keeps the stale names
 in `.godot/global_script_class_cache.cfg` and the boot fails with

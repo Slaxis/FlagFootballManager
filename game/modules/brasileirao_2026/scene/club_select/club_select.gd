@@ -4,12 +4,6 @@
 # the UF-derived region are all wired.
 extends Menu
 
-const _TIER_LABEL: Dictionary = {
-	1: "SÉRIE A",
-	2: "SÉRIE B",
-	3: "SÉRIE C",
-	4: "NÃO FED.",
-}
 const _TIER_COLOR: Dictionary = {
 	1: Color(0.95, 0.82, 0.35),
 	2: Color(0.75, 0.78, 0.82),
@@ -19,6 +13,7 @@ const _TIER_COLOR: Dictionary = {
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	League.ensure_filled()
 	_build_ui()
 
 func _build_ui() -> void:
@@ -39,13 +34,13 @@ func _build_ui() -> void:
 	margin.add_child(box)
 
 	var title := Label.new()
-	title.text = "CAMPEONATO CARIOCA"
+	title.text = UiText.t("clubs.title")
 	title.add_theme_font_size_override("font_size", 34)
 	box.add_child(title)
 
 	var teams: Array = _teams()
 	var subtitle := Label.new()
-	subtitle.text = "%s · %d clubes" % [_region_label(teams), teams.size()]
+	subtitle.text = UiText.t("clubs.count") % [_region_label(teams), teams.size()]
 	subtitle.add_theme_color_override("font_color", Color(0.58, 0.70, 0.60))
 	box.add_child(subtitle)
 
@@ -60,7 +55,7 @@ func _build_ui() -> void:
 	box.add_child(_spacer(10))
 
 	var back := Button.new()
-	back.text = "Voltar"
+	back.text = UiText.t("common.back")
 	back.custom_minimum_size = Vector2(160, 40)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	back.pressed.connect(func() -> void: go("back"))
@@ -93,7 +88,7 @@ func _team_row(team: Dictionary) -> Control:
 
 	var tier: int = int(team.get("tier", 4))
 	var badge := Label.new()
-	badge.text = String(_TIER_LABEL.get(tier, "?"))
+	badge.text = UiText.t("tier.%d" % tier, "?")
 	badge.custom_minimum_size = Vector2(96, 0)
 	badge.add_theme_color_override("font_color", _TIER_COLOR.get(tier, Color.WHITE))
 	row.add_child(badge)
@@ -102,10 +97,7 @@ func _team_row(team: Dictionary) -> Control:
 	row.add_child(_swatch(colors, 0))
 	row.add_child(_swatch(colors, 1))
 
-	var name_label := Label.new()
-	name_label.text = String(team.get("name", team.get("id", "?")))
-	name_label.custom_minimum_size = Vector2(260, 0)
-	row.add_child(name_label)
+	row.add_child(_name_plate(team))
 
 	var where := Label.new()
 	where.text = "%s/%s" % [team.get("city", "?"), team.get("state", "?")]
@@ -126,6 +118,31 @@ func _team_row(team: Dictionary) -> Control:
 	row.add_child(rep)
 
 	return row
+
+# Elifoot-style: the club name printed in the club's own colours, so the row
+# is recognisable before it is read.
+func _name_plate(team: Dictionary) -> Control:
+	var scheme: Dictionary = TeamColors.of(team)
+	var style := StyleBoxFlat.new()
+	style.bg_color = scheme["plate"]
+	style.set_content_margin_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.corner_radius_top_left = 3
+	style.corner_radius_top_right = 3
+	style.corner_radius_bottom_left = 3
+	style.corner_radius_bottom_right = 3
+
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", style)
+	panel.custom_minimum_size = Vector2(280, 0)
+
+	var label := Label.new()
+	label.text = String(team.get("name", team.get("id", "?")))
+	label.add_theme_color_override("font_color", scheme["ink"])
+	label.add_theme_font_size_override("font_size", 17)
+	panel.add_child(label)
+	return panel
 
 func _swatch(colors: Array, idx: int) -> ColorRect:
 	var rect := ColorRect.new()

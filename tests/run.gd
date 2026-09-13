@@ -13,9 +13,20 @@ extends Node
 const _SUITES: Array[String] = [
 	"res://tests/test_stat.gd",
 	"res://tests/test_actor.gd",
+	"res://tests/test_ui.gd",
+	"res://tests/test_team_colors.gd",
+	"res://tests/test_team_generator.gd",
+	"res://tests/test_category.gd",
+	"res://tests/test_sheet_builder.gd",
+	"res://tests/test_career.gd",
+	"res://tests/test_d5.gd",
+	"res://tests/test_lint.gd",
 ]
 
 func _ready() -> void:
+	if not _activate_module():
+		get_tree().quit(1)
+		return
 	var started: int = Time.get_ticks_msec()
 	var passed: int = 0
 	var failed: int = 0
@@ -28,7 +39,18 @@ func _ready() -> void:
 			print("\n[%s]\n  X não carregou" % label)
 			failed += 1
 			continue
-		var suite: Object = suite_script.new()
+		# A script with a parse error still loads as a non-null Script but
+		# cannot be instantiated. Without this the whole run dies on one bad
+		# file, and every suite after it silently never runs.
+		var suite: Object = null
+		if suite_script.can_instantiate():
+			suite = suite_script.new()
+		if suite == null:
+			print("
+[%s]
+  X não instanciou (erro de parse?)" % label)
+			failed += 1
+			continue
 		if not suite.has_method("tests"):
 			print("\n[%s]\n  X não expõe tests()" % label)
 			failed += 1
@@ -37,7 +59,15 @@ func _ready() -> void:
 		for test_name: String in (suite.tests() as Array):
 			var helper := TestHelper.new()
 			suite.call(test_name, helper)
-			if helper.has_failures():
+			# A test that asserted nothing did not run: GDScript aborted it on a
+			# runtime error and handed control back here, where "no failures"
+			# used to read as success. That false green hid five broken tests.
+			if helper.checks() == 0:
+				failed += 1
+				failed_names.append("%s::%s" % [label, test_name])
+				print("  X %s" % test_name)
+				print("      . não fez asserção nenhuma — erro em tempo de execução?")
+			elif helper.has_failures():
 				failed += 1
 				failed_names.append("%s::%s" % [label, test_name])
 				print("  X %s" % test_name)
@@ -54,3 +84,17 @@ func _ready() -> void:
 		for name: String in failed_names:
 			print("  - %s" % name)
 	get_tree().quit(0 if failed == 0 else 1)
+
+# Mirror what Game._ready() does. Without this no module is active, the
+# content roots are empty, and every Thing-backed Def (teams, flows, ...)
+# reads as empty — so a suite asserting over module content would pass while
+# testing nothing at all.
+func _activate_module() -> bool:
+	var modules: Array[ModuleInfo] = Drive.list_modules()
+	if modules.is_empty():
+		print("X nenhum módulo em game/modules/ — as suítes não teriam conteúdo")
+		return false
+	if not Drive.set_module(modules[0].id):
+		print("X falhou ao ativar o módulo " + modules[0].id)
+		return false
+	return true

@@ -1,21 +1,51 @@
 {
   "id": "main_flow",
-  "entry": "main",
+  "entry": "start",
   "steps": [
     {
-      "id": "main",
-      "scene_file": "main",
+      "id": "start",
+      "scene_file": "start",
       "transitions": {
-        "play": "club_select",
+        "new_game": "module_select",
+        "settings": "settings",
         "quit": "$exit"
+      }
+    },
+    {
+      "id": "module_select",
+      "scene_file": "module_select",
+      "transitions": {
+        "selected": "create_manager",
+        "back": "start"
+      }
+    },
+    {
+      "id": "create_manager",
+      "scene_file": "create_manager",
+      "produces": [
+        "career"
+      ],
+      "transitions": {
+        "created": "club_select",
+        "back": "module_select"
+      }
+    },
+    {
+      "id": "settings",
+      "scene_file": "settings",
+      "transitions": {
+        "back": "start"
       }
     },
     {
       "id": "club_select",
       "scene_file": "club_select",
       "transitions": {
-        "back": "main"
-      }
+        "back": "start"
+      },
+      "consumes": [
+        "career"
+      ]
     }
   ]
 }

@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed — B.4c: a ficha ganha dados, habilidades e idade (2026-09-09)
+- D5 na d5star v0.4.0: o dado explodente que da nome a lib
+- 8o atributo: Vontade (resiliencia mental)
+- camada `derived` removida; 15 HABILIDADES no lugar, cada uma regida por um
+  atributo. Roll = atributo + habilidade + 2d5*
+- altura e peso trocam atributos (soma zero), nao custam pontos
+- criacao paga em anos: crianca de 12 -> adulto de 18
+- modificador de lider = passo - 5
+
+### Added — B.1 a B.4: o loop de abertura (2026-09-08)
+- Start Screen, Ajustes (PT/EN), Selecao de Modulo, Criar Gestor
+- Todo texto de UI em i18n (`game/defs/ui.json` + `UiText.t()`)
+- TeamGenerator: 6 clubes de varzea carioca completam o campeonato em 16
+- CategoryDef: masc/fem/misto x 5x5/4x4, com min_women
+- Actor perdeu `gender` e ganhou `plays`/`manages`
+- `Career extends Record`, produzido no Blackboard e validado pelo Flow
+
 ### Added — A.3 Actor (2026-09-06)
 - `Actor extends Thing` em `game/model/` — jogador, tecnico, scout e o
   manager sao a MESMA entidade; funcao e escalacao, nao tipo

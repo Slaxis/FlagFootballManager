@@ -12,11 +12,14 @@ func tests() -> Array:
 		"test_stats_within_range",
 		"test_age_within_range",
 		"test_name_is_filled_and_keeps_its_case",
-		"test_gender_changes_the_name_pool",
+		"test_category_changes_the_name_pool",
 		"test_quality_target_moves_overall",
 		"test_actors_are_specialists",
 		"test_defaults_put_actor_in_praca",
 		"test_squad_is_stable_per_index",
+		"test_body_measures_are_plausible",
+		"test_weight_follows_strength",
+		"test_measures_format_with_locale_separator",
 	]
 
 func _sheet(a: Actor) -> String:
@@ -57,12 +60,14 @@ func test_name_is_filled_and_keeps_its_case(t: TestHelper) -> void:
 		"nome veio minúsculo — leitura passou por attr() em vez de text(): '%s'" % actor.first_name())
 	t.check(actor.display_name() != "", "display_name vazio")
 
-func test_gender_changes_the_name_pool(t: TestHelper) -> void:
-	var masc := ActorGenerator.generate(SEED, 50, Actor.GENDER_MASC)
-	var fem := ActorGenerator.generate(SEED, 50, Actor.GENDER_FEM)
+# The generator takes a CATEGORY, not a gender (decision 17). The category picks
+# which name pool a generated athlete is drawn from.
+func test_category_changes_the_name_pool(t: TestHelper) -> void:
+	var masc := ActorGenerator.generate(SEED, 50, Actor.CATEGORY_MASC)
+	var fem := ActorGenerator.generate(SEED, 50, Actor.CATEGORY_FEM)
 	t.check(masc.first_name() != fem.first_name(),
-		"mesma seed em gêneros diferentes deveria puxar de pools diferentes")
-	t.equal(fem.gender(), Actor.GENDER_FEM, "gênero gravado")
+		"mesma seed em modalidades diferentes deveria puxar de pools diferentes")
+	t.equal(str(fem.plays()), str([Actor.CATEGORY_FEM]), "modalidade gravada em plays")
 
 func test_quality_target_moves_overall(t: TestHelper) -> void:
 	var weak: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 25))
@@ -77,17 +82,19 @@ func test_actors_are_specialists(t: TestHelper) -> void:
 	var total: int = 0
 	var squad: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 50)
 	for actor: Actor in squad:
-		var values: Array = actor.derived_all().values()
+		var values: Array = actor.skills().values()
 		if values.is_empty():
-			t.fail("actor sem derivadas"); return
+			t.fail("actor sem habilidades"); return
 		total += int(values.max()) - int(values.min())
 	var average: int = int(float(total) / float(squad.size()))
 	t.check(average >= 10,
-		"espalhamento médio entre derivadas ficou em %d — actors saíram genéricos demais" % average)
+		"espalhamento médio entre habilidades ficou em %d — actors saíram genéricos demais" % average)
 
 func test_defaults_put_actor_in_praca(t: TestHelper) -> void:
 	var actor := ActorGenerator.generate(SEED, 50)
 	t.check(actor.in_praca(), "actor recém-criado deveria estar na Praça")
+	t.check(actor.is_athlete(), "actor gerado joga na modalidade que pediram")
+	t.check(not actor.is_coach(), "actor gerado não nasce técnico")
 	t.equal(actor.team(), Actor.NO_TEAM, "time")
 	t.equal(actor.jersey(), Actor.NO_JERSEY, "camisa")
 	t.equal(actor.perks().size(), 0, "perks")
@@ -99,6 +106,46 @@ func test_squad_is_stable_per_index(t: TestHelper) -> void:
 	var large: Array[Actor] = ActorGenerator.squad(SEED, 12, 50)
 	for i: int in range(small.size()):
 		t.equal(_sheet(large[i]), _sheet(small[i]), "actor %d mudou ao crescer o elenco" % i)
+
+# Height and weight are MEASURES, not attributes: real units, own ranges.
+func test_body_measures_are_plausible(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	for actor: Actor in ActorGenerator.squad(SEED, COHORT, 50):
+		for id: String in def.measure_ids():
+			var spec: Dictionary = def.measure(id)
+			var value: float = actor.measure(id)
+			t.check(value >= float(spec.get("min", 0.0)) and value <= float(spec.get("max", 999.0)),
+				"%s fora da faixa: %.2f" % [id, value])
+		t.check(not def.has_base("height"), "altura não deveria ser atributo")
+		t.check(not def.has_base("weight"), "peso não deveria ser atributo")
+
+# The body must agree with the sheet: the strong cohort is visibly the heavy
+# one, so nobody has to reconcile a wiry giant who bench-presses a car.
+func test_weight_follows_strength(t: TestHelper) -> void:
+	var light: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 20))
+	var heavy: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 85))
+	t.check(heavy > light + 5.0,
+		"elenco forte deveria ser mais pesado (veio %.1f vs %.1f kg)" % [heavy, light])
+
+func test_measures_format_with_locale_separator(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var previous: String = I18n.get_lang()
+	I18n.set_lang("pt")
+	t.equal(def.format_measure("height", 1.78), "1,78 m", "altura em pt")
+	I18n.set_lang("en")
+	t.equal(def.format_measure("height", 1.78), "1.78 m", "altura em en")
+	t.equal(def.format_measure("weight", 74.0), "74 kg", "peso")
+	I18n.set_lang(previous)
+
+func _mean_weight(squad: Array[Actor]) -> float:
+	var total: float = 0.0
+	for actor: Actor in squad:
+		total += actor.weight()
+	return total / float(squad.size())
 
 func _mean_overall(squad: Array[Actor]) -> int:
 	var total: int = 0

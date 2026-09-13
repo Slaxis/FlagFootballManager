@@ -5,6 +5,10 @@ extends RefCounted
 class_name TestHelper
 
 var _failures: Array[String] = []
+# GDScript has no exceptions: a runtime error aborts the test function and
+# returns to the runner, which then sees no failures and prints "ok". Counting
+# assertions is how a test that died on its first line gets caught.
+var _checks: int = 0
 
 func has_failures() -> bool:
 	return not _failures.is_empty()
@@ -12,17 +16,24 @@ func has_failures() -> bool:
 func failures() -> Array[String]:
 	return _failures
 
+func checks() -> int:
+	return _checks
+
 func fail(message: String) -> void:
+	_checks += 1
 	_failures.append(message)
 
 func check(condition: bool, message: String) -> void:
+	_checks += 1
 	if not condition:
-		fail(message)
+		_failures.append(message)
 
 func equal(actual: Variant, expected: Variant, what: String = "") -> void:
+	_checks += 1
 	if actual != expected:
-		fail("%s: esperado %s, veio %s" % [what if what != "" else "valor", str(expected), str(actual)])
+		_failures.append("%s: esperado %s, veio %s" % [what if what != "" else "valor", str(expected), str(actual)])
 
 func not_null(value: Variant, what: String = "") -> void:
+	_checks += 1
 	if value == null:
-		fail("%s é null" % [what if what != "" else "valor"])
+		_failures.append("%s é null" % [what if what != "" else "valor"])
