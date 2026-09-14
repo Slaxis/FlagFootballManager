@@ -12,9 +12,15 @@
 # make you throw better — the player picks which, and neither is wrong.
 class_name SheetBuilder
 
-# Nothing is rolled. You are born at zero in everything and allocate the whole
-# eighteen years — which is also why the seed no longer touches the manager:
-# rerolling it changes the world, never you.
+# The screen opens on somebody ROLLED, not on a blank line — but the roll stops
+# while there is still an adolescence left to spend. You are handed a person
+# with a shape and the same spare budget the flat average adult used to leave,
+# and what you do with it is the question the screen asks.
+#
+# That is the difference between the two entry points:
+#
+#   rolled_opening()  a starting point — a person, plus points to make them yours
+#   roll_random()     the 🎲 — a finished character you can walk out with
 const START_AGE := 0
 const END_AGE := 18
 # Career points are the only currency. A year of life buys this many.
@@ -96,7 +102,81 @@ static func average_adult() -> SheetBuilder:
 	builder.weight = START_WEIGHT
 	return builder
 
-# --- Spending ---
+# What the flat average adult left in your pocket. Derived rather than written
+# down, so it follows if the ladder or the budget is ever retuned.
+static func opening_reserve() -> int:
+	return total_points() - average_adult().spent()
+
+# How far from the average adult an opening attribute strays, in steps.
+const OPENING_SPREAD := 1.25
+const OPENING_MIN_STEP := 2
+const OPENING_MAX_STEP := 8
+# A kid who has played before is not a blank slate, but they have not
+# specialised either.
+const OPENING_SKILLS_MIN := 1
+const OPENING_SKILLS_MAX := 3
+const OPENING_SKILL_STEP_MAX := 3
+
+# The sheet the screen opens with: a rolled adolescent who still has the whole
+# spare budget to spend.
+#
+# NOT the same roll as the 🎲. That one spends all 414 points, and a shape
+# built to eat the entire budget puts a 10 in one skill and a 1 in half the
+# attributes — fine as a finished character, wrong as a starting point. What
+# the opening has to produce is somebody ORDINARY but not identical: the
+# average adult, perturbed, with a couple of things they already know.
+#
+# The arithmetic says so too. Five steps in all eight attributes costs exactly
+# the 360 the opening has, so every point of skill here is paid for out of an
+# attribute. The roll walks each attribute to a target near the average,
+# lowering before raising so the refunds are on the table first.
+static func rolled_opening(rng: RandomNumberGenerator) -> SheetBuilder:
+	var builder: SheetBuilder = average_adult()
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return builder
+	var reserve: int = opening_reserve()
+	builder._roll_body(def, rng, 0.55)
+
+	var targets: Dictionary = {}
+	for id: String in def.base_ids():
+		targets[id] = clampi(
+			int(round(rng.randfn(float(START_STAT_STEP), OPENING_SPREAD))),
+			OPENING_MIN_STEP, OPENING_MAX_STEP)
+	# Down first: selling is what pays for the raises.
+	for id: String in def.base_ids():
+		while int(builder.stats[id]) > int(targets[id]) and builder.can_lower_stat(id):
+			builder.lower_stat(id)
+	for id: String in def.base_ids():
+		while int(builder.stats[id]) < int(targets[id]) \
+				and builder.cost_to_raise_stat(id) <= builder.remaining() - reserve:
+			builder.raise_stat(id)
+
+	var ids: Array = def.skill_ids()
+	for _i: int in range(rng.randi_range(OPENING_SKILLS_MIN, OPENING_SKILLS_MAX)):
+		var id: String = String(ids[rng.randi() % ids.size()])
+		var want: int = rng.randi_range(1, OPENING_SKILL_STEP_MAX)
+		while int(builder.skills[id]) < want \
+				and builder.cost_to_raise_skill(id) <= builder.remaining() - reserve:
+			builder.raise_skill(id)
+
+	# A run of low targets refunds more than the raises spend, and opening with
+	# 130 points in hand is as much of a chore as opening with none is a blank.
+	# The excess goes back into the shape that was just rolled.
+	var guard: int = 0
+	while builder.remaining() > reserve and guard < 200:
+		guard += 1
+		var affordable: Array[String] = []
+		for id: String in def.base_ids():
+			var cost: int = builder.cost_to_raise_stat(id)
+			if cost >= 0 and cost <= builder.remaining() - reserve:
+				affordable.append(id)
+		if affordable.is_empty():
+			break
+		builder.raise_stat(affordable[rng.randi() % affordable.size()])
+	return builder
+
+# --- Spending ---# --- Spending ---
 
 func spent() -> int:
 	var total: int = 0
@@ -289,13 +369,13 @@ func roll_random(rng: RandomNumberGenerator) -> void:
 # Height and weight land near the centre and rarely more than a band out — an
 # extreme body costs most of the budget, and the roll should produce a person,
 # not a stunt.
-func _roll_body(def: StatDef, rng: RandomNumberGenerator) -> void:
+func _roll_body(def: StatDef, rng: RandomNumberGenerator, tightness: float = 0.85) -> void:
 	for id: String in def.measure_ids():
 		var spec: Dictionary = def.measure(id)
 		var centre: float = float(spec.get("center", 0.0))
 		var band_width: float = float(spec.get("band", 1.0))
 		var value: float = clampf(
-			rng.randfn(centre, band_width * 0.85),
+			rng.randfn(centre, band_width * tightness),
 			float(spec.get("min", centre)), float(spec.get("max", centre)))
 		if id == "height":
 			height = snappedf(value, def.increment(id))

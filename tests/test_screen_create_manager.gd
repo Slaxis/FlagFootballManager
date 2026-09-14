@@ -116,22 +116,41 @@ func test_the_dice_button_changes_the_person_and_the_world(t: TestHelper) -> voi
 		"o dado deixou uma ficha que não pode começar")
 	_close(screen)
 
+# The screen opens on a rolled person, so it may already have taken a perk.
+# The chips have to survive that: clear whatever came up, take one by hand,
+# and put it back down.
 func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	var perks := Drive.def("perk") as PerkDef
 	var screen: Control = _open()
 	if screen == null or perks == null:
 		t.fail("não consegui instanciar a tela"); return
-	var chip: Button = _button_starting_with(screen, perks.icon(perks.boons()[0]))
-	if chip == null:
-		t.fail("chip do perk não foi desenhado"); _close(screen); return
-	t.check(not chip.button_pressed, "a tela abriu com um perk já escolhido")
-	chip.pressed.emit()
-	var taken: Button = _button_starting_with(screen, perks.icon(perks.boons()[0]))
-	t.check(taken.button_pressed, "o perk não ficou marcado")
-	taken.pressed.emit()
-	t.check(not _button_starting_with(screen, perks.icon(perks.boons()[0])).button_pressed,
-		"clicar de novo não tirou o perk")
+
+	var taken: Button = _pressed_chip(screen, perks)
+	if taken != null:
+		taken.pressed.emit()
+	t.equal(_pressed_chip(screen, perks), null, "não consegui largar o perk sorteado")
+
+	var wanted: String = perks.boons()[0]
+	_button_starting_with(screen, perks.icon(wanted)).pressed.emit()
+	t.check(_button_starting_with(screen, perks.icon(wanted)).button_pressed,
+		"o perk não ficou marcado")
+	t.equal(_pressed_chip(screen, perks).text,
+		_button_starting_with(screen, perks.icon(wanted)).text,
+		"mais de um perk marcado ao mesmo tempo")
+
+	_button_starting_with(screen, perks.icon(wanted)).pressed.emit()
+	t.equal(_pressed_chip(screen, perks), null, "clicar de novo não tirou o perk")
 	_close(screen)
+
+# The chip currently ON, or null. Doubles as the cap check: a second pressed
+# chip would mean two perks at once.
+func _pressed_chip(screen: Control, perks: PerkDef) -> Button:
+	var found: Button = null
+	for id: String in perks.perk_ids():
+		var chip: Button = _button_starting_with(screen, perks.icon(id))
+		if chip != null and chip.button_pressed:
+			found = chip
+	return found
 
 func test_drafting_a_club_reaches_the_result(t: TestHelper) -> void:
 	var screen: Control = _open()

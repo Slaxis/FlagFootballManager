@@ -1,9 +1,13 @@
-# Create Manager — you, growing from twelve to eighteen.
+# Create Manager — you, growing up.
 #
-# The sheet is not filled with an abstract budget. You start as a rolled
-# twelve-year-old and spend the six years to adulthood, and the age at the top
-# climbs as you allocate. Take points back and you get younger. The question
-# the screen asks is "where did I invest my adolescence?".
+# The sheet is not filled with an abstract budget. The screen deals you a
+# rolled adolescent and you spend the years left to adulthood, and the age at
+# the top climbs as you allocate. Take points back and you get younger. The
+# question the screen asks is "where did I invest my adolescence?".
+#
+# The opening roll is a starting point, not an answer: it stops with the spare
+# budget still in your pocket. 🎲 is the other verb — it spends everything and
+# hands you somebody finished.
 #
 # Attributes and skills share one pocket because a roll is
 # `attribute + skill + 2d5*` — training dexterity and training throwing both
@@ -36,8 +40,9 @@ var _root: VBoxContainer = null
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_build = SheetBuilder.average_adult()
-	_name = _roll_name(_free_rng())
+	var rng: RandomNumberGenerator = _free_rng()
+	_build = SheetBuilder.rolled_opening(rng)
+	_name = _roll_name(rng)
 
 	var bg := ColorRect.new()
 	bg.color = BG

@@ -19,13 +19,14 @@ func tests() -> Array:
 		"test_step_costs_are_linear_and_stats_cost_more",
 		"test_the_top_half_of_the_ladder_costs_far_more",
 		"test_bakes_steps_into_stored_units",
-		"test_no_randomness_in_creation",
 		"test_an_extreme_body_costs_the_whole_spare_budget",
 		"test_a_remainder_nothing_costs_still_finishes",
 		"test_the_dice_spend_the_whole_life",
 		"test_the_dice_are_deterministic",
 		"test_the_dice_make_specialists_not_clones",
 		"test_the_dice_can_afford_the_perk_they_picked",
+		"test_the_opening_is_somebody_with_points_left",
+		"test_the_opening_is_not_the_same_person_twice",
 	]
 
 func _builder() -> SheetBuilder:
@@ -246,11 +247,6 @@ func test_an_extreme_body_costs_the_whole_spare_budget(t: TestHelper) -> void:
 
 # There is no seed here at all any more: two newborns are identical, and the
 # career seed builds the world instead of the person.
-func test_no_randomness_in_creation(t: TestHelper) -> void:
-	t.equal(str(SheetBuilder.average_adult().stats), str(SheetBuilder.average_adult().stats), "atributos")
-	t.equal(str(SheetBuilder.average_adult().skills), str(SheetBuilder.average_adult().skills), "habilidades")
-	t.equal(SheetBuilder.average_adult().height, SheetBuilder.average_adult().height, "altura")
-
 # The screen's 🎲. Whatever it rolls has to be a legal, finished build — if it
 # can leave points on the table the start button stays dark and the button
 # looks broken.
@@ -327,6 +323,41 @@ func test_the_dice_can_afford_the_perk_they_picked(t: TestHelper) -> void:
 		t.check(perks.has_perk(builder.perk), "perk inventado: " + builder.perk)
 		t.check(builder.remaining() >= 0, "o perk levou o orçamento a negativo")
 	t.check(rolled > 0, "nenhum sorteio pegou perk em 60 tentativas")
+
+# The screen used to open on five-in-everything: the same faceless adult every
+# time, and a sheet of identical bars reads as empty. It now opens on a rolled
+# person — but with the spare budget still in the pocket, because a sheet with
+# nothing left to decide is not a creation screen.
+func test_the_opening_is_somebody_with_points_left(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var reserve: int = SheetBuilder.opening_reserve()
+	t.check(reserve > 0, "a abertura não deixou nada para gastar")
+	for seed_value: int in [1, 99, SEED]:
+		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(seed_value))
+		t.check(builder.remaining() >= reserve,
+			"semente %d abriu com %d cp, menos que a reserva de %d" % [
+				seed_value, builder.remaining(), reserve])
+		t.check(not builder.is_complete(),
+			"semente %d abriu já pronta — não sobrou decisão nenhuma" % seed_value)
+		# And it is a PERSON: not every attribute landed on the same number.
+		var seen: Dictionary = {}
+		for id: String in builder.stats.keys():
+			seen[int(builder.stats[id])] = true
+		t.check(seen.size() > 1, "semente %d abriu com tudo no mesmo valor" % seed_value)
+
+func test_the_opening_is_not_the_same_person_twice(t: TestHelper) -> void:
+	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
+	var sheets: Dictionary = {}
+	for i: int in range(20):
+		var builder: SheetBuilder = SheetBuilder.rolled_opening(rng)
+		sheets[str(builder.stats) + str(builder.skills)] = true
+	t.equal(sheets.size(), 20, "só %d aberturas distintas em 20" % sheets.size())
+	# Same seed, same person — the screen still has to be reproducible.
+	t.equal(str(SheetBuilder.rolled_opening(SeedRng.make_rng(7)).stats),
+		str(SheetBuilder.rolled_opening(SeedRng.make_rng(7)).stats),
+		"a mesma semente deveria abrir a mesma ficha")
 
 func _spend_everything(builder: SheetBuilder) -> void:
 	var guard: int = 0

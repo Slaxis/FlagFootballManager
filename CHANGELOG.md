@@ -23,6 +23,13 @@
   criado. Prepara os elencos aleatorios de B.5
 - 31 testes novos (`test_names`, `test_perk`, `test_screen_create_manager`)
 
+### Changed
+- A tela de criacao **abre num adolescente sorteado**, nao mais em 5 em tudo:
+  atributos com variacao de ~1 passo ao redor do adulto mediano, um ou dois
+  conhecimentos que ele ja tem, corpo perto do centro — e os mesmos 54 career
+  points de sobra. Duas entradas com verbos diferentes: a abertura e um ponto
+  de partida, o 🎲 gasta os 414 e entrega alguem pronto
+
 ### Fixed
 - Botao **Sair** nao fazia nada: `go("quit")` -> `"$exit"` -> `flow_finished`,
   e o `Game` da engine nunca conectava o sinal. d5star v0.4.1
