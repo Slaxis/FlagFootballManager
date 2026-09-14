@@ -21,13 +21,10 @@ func tests() -> Array:
 		"test_bakes_steps_into_stored_units",
 		"test_an_extreme_body_costs_the_whole_spare_budget",
 		"test_a_remainder_nothing_costs_still_finishes",
-		"test_the_dice_spend_the_whole_life",
-		"test_the_dice_are_deterministic",
-		"test_the_dice_make_specialists_not_clones",
-		"test_the_dice_can_afford_the_perk_they_picked",
 		"test_the_opening_rolls_a_twelve_year_old",
 		"test_the_opening_never_touches_the_skills",
 		"test_the_opening_leaves_nobody_hollow",
+		"test_the_opening_can_always_afford_the_perk_it_picked",
 		"test_the_opening_is_not_the_same_person_twice",
 	]
 
@@ -249,83 +246,6 @@ func test_an_extreme_body_costs_the_whole_spare_budget(t: TestHelper) -> void:
 
 # There is no seed here at all any more: two newborns are identical, and the
 # career seed builds the world instead of the person.
-# The screen's 🎲. Whatever it rolls has to be a legal, finished build — if it
-# can leave points on the table the start button stays dark and the button
-# looks broken.
-func test_the_dice_spend_the_whole_life(t: TestHelper) -> void:
-	for seed_value: int in [1, 7, 4242, 99999]:
-		var builder: SheetBuilder = _builder()
-		builder.roll_random(SeedRng.make_rng(seed_value))
-		t.check(builder.remaining() >= 0,
-			"semente %d estourou o orçamento em %d" % [seed_value, -builder.remaining()])
-		t.check(builder.is_complete(),
-			"semente %d sobrou %d e nada para comprar" % [seed_value, builder.remaining()])
-		# Not always exactly 18: the denominations are 2 and 3, so a roll can
-		# strand one career point that nothing costs — the same remainder the
-		# hand-built sheet is allowed to finish on.
-		t.check(builder.age() >= SheetBuilder.END_AGE - 1,
-			"semente %d parou aos %d anos" % [seed_value, builder.age()])
-		t.check(builder.remaining() < builder.cheapest_purchase(),
-			"semente %d deixou %d cp e o mais barato custa %d" % [
-				seed_value, builder.remaining(), builder.cheapest_purchase()])
-
-func test_the_dice_are_deterministic(t: TestHelper) -> void:
-	var one: SheetBuilder = _builder()
-	var two: SheetBuilder = _builder()
-	one.roll_random(SeedRng.make_rng(SEED))
-	two.roll_random(SeedRng.make_rng(SEED))
-	t.equal(str(one.stats), str(two.stats), "atributos")
-	t.equal(str(one.skills), str(two.skills), "habilidades")
-	t.equal(one.perk, two.perk, "perk")
-	t.equal(one.height, two.height, "altura")
-
-# A uniform fill would put everybody at the same flat line. The appetite draw
-# is what makes one roll a specialist and the next one a generalist, so this
-# measures the spread rather than trusting it.
-func test_the_dice_make_specialists_not_clones(t: TestHelper) -> void:
-	var def := Drive.def("stat") as StatDef
-	if def == null:
-		t.fail("StatDef ausente"); return
-	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
-	var with_a_peak: int = 0
-	var sheets: Array[String] = []
-	var runs: int = 40
-	for i: int in range(runs):
-		var builder: SheetBuilder = _builder()
-		builder.roll_random(rng)
-		var peak: int = 0
-		for id: String in builder.stats.keys():
-			peak = maxi(peak, int(builder.stats[id]))
-		for id: String in builder.skills.keys():
-			peak = maxi(peak, int(builder.skills[id]))
-		if peak >= StatDef.NOTABLE_HIGH:
-			with_a_peak += 1
-		sheets.append(str(builder.stats) + str(builder.skills))
-	t.check(with_a_peak >= runs / 2,
-		"só %d de %d sorteios tiveram um pico — estão saindo todos medianos" % [with_a_peak, runs])
-	var distinct: Dictionary = {}
-	for sheet: String in sheets:
-		distinct[sheet] = true
-	t.equal(distinct.size(), runs, "sorteios repetidos: só %d fichas distintas" % distinct.size())
-
-# The perk is picked BEFORE the sheet is bought, precisely so it is always
-# payable. If that order ever flips this goes red.
-func test_the_dice_can_afford_the_perk_they_picked(t: TestHelper) -> void:
-	var perks := Drive.def("perk") as PerkDef
-	if perks == null:
-		t.fail("PerkDef ausente"); return
-	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
-	var rolled: int = 0
-	for i: int in range(60):
-		var builder: SheetBuilder = _builder()
-		builder.roll_random(rng)
-		if builder.perk == "":
-			continue
-		rolled += 1
-		t.check(perks.has_perk(builder.perk), "perk inventado: " + builder.perk)
-		t.check(builder.remaining() >= 0, "o perk levou o orçamento a negativo")
-	t.check(rolled > 0, "nenhum sorteio pegou perk em 60 tentativas")
-
 # The screen used to open on five-in-everything: the same faceless adult every
 # time, and eight identical bars read as empty. It now opens on a rolled
 # twelve-year-old — and what makes that a starting point rather than an answer
@@ -378,6 +298,24 @@ func test_the_opening_leaves_nobody_hollow(t: TestHelper) -> void:
 		"uma criança abriu com %d passos, acima do teto" % peak)
 	t.check(peak > StatDef.DEFAULT_AVERAGE_STEP,
 		"em 40 sorteios ninguém passou da média — o espalhamento morreu")
+
+# The perk is picked BEFORE the attributes are bought, precisely so it is
+# always payable. If that order ever flips, a 40-point boon on a sheet with
+# nothing left goes silently unbought and the roll quietly stops giving tones.
+func test_the_opening_can_always_afford_the_perk_it_picked(t: TestHelper) -> void:
+	var perks := Drive.def("perk") as PerkDef
+	if perks == null:
+		t.fail("PerkDef ausente"); return
+	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
+	var rolled: int = 0
+	for i: int in range(60):
+		var builder: SheetBuilder = SheetBuilder.rolled_opening(rng)
+		t.check(builder.remaining() >= 0, "a abertura estourou o orçamento")
+		if builder.perk == "":
+			continue
+		rolled += 1
+		t.check(perks.has_perk(builder.perk), "perk inventado: " + builder.perk)
+	t.check(rolled > 0, "nenhuma abertura pegou perk em 60 sorteios")
 
 func test_the_opening_is_not_the_same_person_twice(t: TestHelper) -> void:
 	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)

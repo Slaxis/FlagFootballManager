@@ -109,11 +109,11 @@ func test_the_dice_button_changes_the_person_and_the_world(t: TestHelper) -> voi
 			changed_seed += 1
 	t.check(changed_name > 0, "o dado nunca trocou o nome")
 	t.check(changed_seed > 0, "o dado nunca trocou o mundo")
-	# Whatever it rolled has to be startable, or the button looks broken.
-	t.check(_button_starting_with(screen, UiText.t("manager.random")) != null,
-		"o botão de sortear clube sumiu depois do dado")
-	t.check(not (_button_starting_with(screen, UiText.t("manager.random")) as Button).disabled,
-		"o dado deixou uma ficha que não pode começar")
+	# And what it rolls is a CHILD: the six years that make an adult are still
+	# the player's to spend, so the draft stays shut until they do.
+	var draw: Button = _button_starting_with(screen, UiText.t("manager.random"))
+	t.check(draw != null, "o botão de sortear clube sumiu depois do dado")
+	t.check(draw.disabled, "o dado entregou uma ficha já pronta — sobrou o quê para decidir?")
 	_close(screen)
 
 # The screen opens on a rolled person, so it may already have taken a perk.
@@ -156,14 +156,34 @@ func test_drafting_a_club_reaches_the_result(t: TestHelper) -> void:
 	var screen: Control = _open()
 	if screen == null:
 		t.fail("não consegui instanciar a tela"); return
-	# The sheet opens with points left over, so spend them the way the dice do.
-	_button_starting_with(screen, "🎲").pressed.emit()
+	var spent: int = _spend_the_six_years(screen)
+	t.check(spent > 0, "não consegui gastar nada clicando")
 	var draw: Button = _button_starting_with(screen, UiText.t("manager.random"))
-	if draw == null:
-		t.fail("botão de sortear clube não existe"); _close(screen); return
+	if draw == null or draw.disabled:
+		t.fail("o botão de sortear clube não abriu depois de gastar tudo"); _close(screen); return
 	draw.pressed.emit()
 	t.check(_button_starting_with(screen, UiText.t("manager.start")) != null,
 		"não cheguei na tela do clube sorteado")
 	t.equal(_collect(screen, "LineEdit", []).size(), 0,
 		"o formulário continuou desenhado por cima do resultado")
 	_close(screen)
+
+# Clicks "+" until the draft opens, which is the only path a player has. It
+# doubles as proof that the sheet the dice deal CAN be spent to completion by
+# hand — a roll that left an unspendable remainder would hang here.
+func _spend_the_six_years(screen: Control) -> int:
+	var clicks: int = 0
+	while clicks < 400:
+		var draw: Button = _button_starting_with(screen, UiText.t("manager.random"))
+		if draw != null and not draw.disabled:
+			return clicks
+		var plus: Array = []
+		for node: Variant in _collect(screen, "Button", []):
+			var button := node as Button
+			if button.text == "+" and not button.disabled:
+				plus.append(button)
+		if plus.is_empty():
+			return clicks
+		(plus[clicks % plus.size()] as Button).pressed.emit()
+		clicks += 1
+	return clicks

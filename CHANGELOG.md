@@ -30,8 +30,9 @@
   personagem. **Nao encosta nas habilidades** — como um teste e atributo +
   habilidade, decidir isso pelo jogador esvaziaria a unica pergunta da tela.
   Sobram ~130 career points, os 6 anos que fazem dele um adulto
-- Dois verbos distintos: a abertura e um ponto de partida, o 🎲 gasta os 414
-  e entrega alguem pronto
+- O 🎲 sorteia outro moleque, identico a abertura. Um verbo so: os dados
+  escolhem quem voce nasceu, nunca quem voce virou. `roll_random()`, que
+  gastava os 414 e entregava um adulto pronto, saiu — ficou sem chamador
 
 ### Fixed
 - Botao **Sair** nao fazia nada: `go("quit")` -> `"$exit"` -> `flow_finished`,

@@ -8,8 +8,8 @@
 # The screen deals you a rolled twelve-year-old — body, attributes, sometimes a
 # perk — and never touches the skills: whether the six years left go into being
 # faster or into knowing how to run a route is the question, and answering it
-# for the player would empty the screen. 🎲 is the other verb, and it spends
-# everything.
+# for the player would empty the screen. 🎲 deals another child, identically:
+# the dice pick who you were born as, never who you became.
 #
 # Attributes and skills share one pocket because a roll is
 # `attribute + skill + 2d5*` — training dexterity and training throwing both
@@ -526,11 +526,14 @@ func _on_name_typed(text: String, key: String) -> void:
 		_seed_label.text = str(_career_seed())
 
 # One button, everything at once: a new person AND the world that person was
-# born into. Name, surname, apelido, the whole sheet, and a perk — or no perk,
-# which is a legitimate roll.
+# born into. Name, surname, apelido, a fresh twelve-year-old and maybe a perk.
+#
+# Exactly the roll the screen opened with, on purpose. A second kind of roll
+# that spent the whole 414 would hand back a finished adult, and then the six
+# years the screen exists to ask about would already be gone.
 func _on_reroll_all() -> void:
 	var rng: RandomNumberGenerator = _free_rng()
-	_build.roll_random(rng)
+	_build = SheetBuilder.rolled_opening(rng)
 	_name = _roll_name(rng)
 	_build_ui()
 

@@ -12,16 +12,11 @@
 # make you throw better — the player picks which, and neither is wrong.
 class_name SheetBuilder
 
-# The screen opens on a ROLLED CHILD, not on a blank line and not on a finished
-# adult. Twelve years of childhood come out of the dice — the body, a shape
-# across the eight attributes, sometimes a perk — and the six years that turn
-# that child into an adult are the ones you spend.
-#
-# That is the difference between the two entry points:
-#
-#   rolled_opening()  a rolled twelve-year-old, attributes only — the six years
-#                     that make an adult are still yours to spend
-#   roll_random()     the 🎲 — all 414 spent, a finished character
+# The dice roll a CHILD, never an adult. Twelve years of childhood come out of
+# `rolled_opening` — the body, a shape across the eight attributes, sometimes a
+# perk — and the six years that turn that child into an adult are the ones you
+# spend. That is true of the sheet the screen opens with and of every press of
+# the 🎲: one verb, not two.
 const START_AGE := 0
 const END_AGE := 18
 # Career points are the only currency. A year of life buys this many.
@@ -54,16 +49,11 @@ const START_WEIGHT := 80.0
 const STAT_POINT_IN_CAREER := 3
 const SKILL_POINT_IN_CAREER := 2
 
-# How the 🎲 spends a whole life. Attributes get the larger appetite because a
-# person is mostly what they are, and the appetite is then divided by the step
-# already bought, so a track self-limits instead of eating the entire budget.
-const RANDOM_STAT_APPETITE := 3.0
-const RANDOM_SKILL_APPETITE := 1.0
-# Lognormal sigma. At 0 everybody comes out identical and average; this is what
-# makes one rolled actor a specialist and the next one a generalist.
-const RANDOM_APPETITE_SPREAD := 0.85
-const RANDOM_PERK_CHANCE := 0.55
-const RANDOM_BOON_CHANCE := 0.70
+# Roughly how many rolled children come out with a perk, and how many of those
+# are a boon rather than a flaw. Both are tones, not rewards: a flaw hands
+# career points back.
+const OPENING_PERK_CHANCE := 0.55
+const OPENING_BOON_CHANCE := 0.70
 
 var stats: Dictionary = {}    # id -> step
 var skills: Dictionary = {}   # id -> step
@@ -337,51 +327,6 @@ func set_perk(id: String) -> void:
 
 # --- The dice ---
 
-# Spends an entire life at random, legally: a body, maybe a perk, and every
-# career point the two leave behind.
-#
-# Not a uniform fill. Each of the twenty-three tracks draws a lognormal
-# APPETITE and the loop buys proportionally to it, divided by the step already
-# paid for — so the cheap early steps go everywhere, the expensive late ones go
-# only where the appetite was high, and what comes out is a person with a
-# shape instead of a flat line at the average.
-func roll_random(rng: RandomNumberGenerator) -> void:
-	var def := Drive.def("stat") as StatDef
-	if def == null:
-		return
-	for id: String in def.base_ids():
-		stats[id] = MIN_STAT_STEP
-	for id: String in def.skill_ids():
-		skills[id] = MIN_SKILL_STEP
-	perk = ""
-	_roll_body(def, rng)
-	_roll_perk(rng)
-
-	var appetite: Dictionary = {}
-	for id: String in def.base_ids():
-		appetite[id] = RANDOM_STAT_APPETITE * exp(rng.randfn(0.0, RANDOM_APPETITE_SPREAD))
-	for id: String in def.skill_ids():
-		appetite[id] = RANDOM_SKILL_APPETITE * exp(rng.randfn(0.0, RANDOM_APPETITE_SPREAD))
-
-	while true:
-		var ids: Array[String] = []
-		var weights: Array[float] = []
-		for id: String in def.base_ids():
-			if can_raise_stat(id):
-				ids.append(id)
-				weights.append(float(appetite[id]) / float(int(stats[id]) + 1))
-		for id: String in def.skill_ids():
-			if can_raise_skill(id):
-				ids.append(id)
-				weights.append(float(appetite[id]) / float(int(skills[id]) + 1))
-		if ids.is_empty():
-			return
-		var chosen: String = ids[_weighted_index(weights, rng)]
-		if stats.has(chosen):
-			raise_stat(chosen)
-		else:
-			raise_skill(chosen)
-
 # Height and weight land near the centre and rarely more than a band out — an
 # extreme body costs most of the budget, and the roll should produce a person,
 # not a stunt.
@@ -400,9 +345,9 @@ func _roll_body(def: StatDef, rng: RandomNumberGenerator, tightness: float = 0.8
 
 func _roll_perk(rng: RandomNumberGenerator) -> void:
 	var def := Drive.def("perk") as PerkDef
-	if def == null or rng.randf() >= RANDOM_PERK_CHANCE:
+	if def == null or rng.randf() >= OPENING_PERK_CHANCE:
 		return
-	var pool: Array[String] = def.boons() if rng.randf() < RANDOM_BOON_CHANCE else def.flaws()
+	var pool: Array[String] = def.boons() if rng.randf() < OPENING_BOON_CHANCE else def.flaws()
 	if pool.is_empty():
 		return
 	# Affordability is checked before the sheet is bought, so a 40-point boon is
