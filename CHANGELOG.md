@@ -34,9 +34,19 @@
   escolhem quem voce nasceu, nunca quem voce virou. `roll_random()`, que
   gastava os 414 e entregava um adulto pronto, saiu — ficou sem chamador
 
+### Changed
+- **Modalidade virou multipla escolha**: masc, fem, masc+misto, fem+misto ou
+  nenhuma. Misto sozinho nao vale — o time misto tem cota de mulheres, entao
+  precisa saber que vaga voce ocupa. `ActorGenerator` passou a gravar isso
+  tambem: um elenco misto sai com `[masc, misto]` / `[fem, misto]`
+
 ### Fixed
-- Botao **Sair** nao fazia nada: `go("quit")` -> `"$exit"` -> `flow_finished`,
-  e o `Game` da engine nunca conectava o sinal. d5star v0.4.1
+- Botao **Sair** nao fazia nada, e o primeiro conserto tambem nao funcionou:
+  `Game` conectava `flow_finished`, mas `Game` E a cena de boot e o primeiro
+  `change_scene_to_packed` libera ela — o sinal chegava num objeto morto antes
+  do jogador ver a tela inicial. Agora o boot DECLARA `Flow.quit_on_finish` e
+  quem executa e o Flow, que e o no feito pra sobreviver a troca de cena.
+  d5star v0.4.2, e `tests/quit_check.tscn` aperta o botao de verdade
 - Voce era sorteado pra um clube **inexistente na lista**: `club_select` chama
   `League.ensure_filled()` sem semente e o default era uma constante, entao a
   tela seguinte reconstruia a varzea de outro mundo e o clube que tinha acabado

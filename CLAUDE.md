@@ -148,6 +148,21 @@ Do not start implementing before the plan is approved.
 
   Exit 0 with no `SCRIPT ERROR` means the chain is intact.
 
+- **Quit check** — the one thing neither of the above can see, because it ends
+  the process:
+
+  ```bash
+  godot --headless --path . res://tests/quit_check.tscn
+  ```
+
+  It boots, waits for the start screen, presses Sair and expects the tree to go
+  down. Exit 1 means it is still standing. This shipped broken twice: `"$exit"`
+  was handled by a listener on `Game`, and **`Game` is freed by the first
+  `change_scene_to_packed`** — which is exactly why `Flow` is parented to the
+  tree root instead. Anything that must outlive a scene swap belongs on the
+  Flow, not on the boot scene, and a unit test asserting "the handler exists"
+  proves nothing about whether it is still connected.
+
 - **Screen smoke tests** are the third check. UI is otherwise invisible to the
   loop: GDScript has no exceptions, so a screen that dies halfway through
   building its own form leaves a half-drawn panel and a green run — which is

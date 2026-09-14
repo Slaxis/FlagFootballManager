@@ -271,6 +271,10 @@
     "manager.perk_refund": {
       "pt": "+%d cp",
       "en": "+%d cp"
+    },
+    "manager.plays_hint": {
+      "pt": "dá para marcar mais de uma: masculino ou feminino, e o misto junto. Misto sozinho não vale — o time misto tem cota de mulheres, então ele precisa saber se você ocupa vaga de homem ou de mulher.",
+      "en": "more than one is fine: men’s or women’s, plus mixed. Mixed alone is not — a mixed squad carries a women’s quota, so it has to know which slot you fill."
     }
   }
 }

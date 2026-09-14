@@ -56,7 +56,14 @@ static func generate(
 		"jersey": Actor.NO_JERSEY,
 	}
 	payload.merge(_roll_body(rng, stats))
-	payload.merge(_roll_name(rng, category, stats, skills))
+	# A mixed squad genuinely holds both, so the coin decides which slot this
+	# actor fills — and `plays` records it, because "mixed" on its own would
+	# leave the women's quota uncountable.
+	var pool: String = category
+	if category == Actor.CATEGORY_MISTO:
+		pool = Actor.CATEGORY_FEM if rng.randf() < 0.5 else Actor.CATEGORY_MASC
+		payload["plays"] = [pool, Actor.CATEGORY_MISTO]
+	payload.merge(_roll_name(rng, pool, stats, skills))
 	payload["perks"] = _roll_perks(rng, quality)
 	actor._apply_data("actor_%d" % seed_value, "actor", payload)
 	return actor
@@ -102,9 +109,6 @@ static func _roll_stats(rng: RandomNumberGenerator, quality: int, spread: float)
 		out[id] = clampi(int(round(rng.randfn(float(quality), spread))), STAT_MIN, STAT_MAX)
 	return out
 
-# The name pool follows the squad's category, which is a good enough proxy for
-# an ISS-of-flag: a men's side draws from the men's pool. A mixed side flips a
-# coin, because a mixed squad genuinely holds both.
 # Height is its own roll; weight follows from height AND strength, so the body
 # agrees with the sheet — the 90-strength actor is visibly the heavy one, and
 # nobody has to reconcile a wiry giant who bench-presses a car.
@@ -123,14 +127,13 @@ static func _roll_body(rng: RandomNumberGenerator, stats: Dictionary) -> Diction
 		float(weight_spec.get("min", 50.0)), float(weight_spec.get("max", 130.0)))
 	return {"height": snappedf(height, 0.01), "weight": snappedf(weight, 1.0)}
 
-static func _roll_name(rng: RandomNumberGenerator, category: String,
+# The name pool follows the slot the actor fills, which is a good enough proxy
+# for an ISS-of-flag: a men's side draws from the men's pool.
+static func _roll_name(rng: RandomNumberGenerator, pool: String,
 		stats: Dictionary, skills: Dictionary) -> Dictionary:
 	var names := Drive.def("name_gen") as NameGenDef
 	if names == null:
 		return {"first_name": "", "last_name": "", "nickname": ""}
-	var pool: String = category
-	if category == Actor.CATEGORY_MISTO:
-		pool = Actor.CATEGORY_FEM if rng.randf() < 0.5 else Actor.CATEGORY_MASC
 	var first: String = names.random_first_name(pool, rng)
 	var last: String = names.random_last_name(rng)
 	var nickname: String = ""

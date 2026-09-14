@@ -78,19 +78,38 @@ func is_athlete() -> bool:
 func is_coach() -> bool:
 	return not manages().is_empty()
 
-# You can play the men's side and the mixed side, or the women's and the mixed.
-# You cannot play both the men's and the women's — that is the one hard rule.
+# Two rules, and the whole set of legal answers falls out of them:
+#
+#   []              does not play
+#   [masc]          men's only
+#   [fem]           women's only
+#   [masc, misto]   men's and mixed
+#   [fem, misto]    women's and mixed
+#
+# You cannot play both the men's and the women's side. And MIXED CANNOT STAND
+# ALONE: a mixed squad carries a women's quota, so the roster has to know
+# whether you fill a man's slot or a woman's — "mixed" on its own never says.
 static func plays_is_valid(categories: Array) -> bool:
-	return not (categories.has(CATEGORY_MASC) and categories.has(CATEGORY_FEM))
+	if categories.has(CATEGORY_MASC) and categories.has(CATEGORY_FEM):
+		return false
+	return not (categories.has(CATEGORY_MISTO)
+		and not categories.has(CATEGORY_MASC)
+		and not categories.has(CATEGORY_FEM))
 
 # Drops the offending entry rather than silently accepting an impossible actor.
-# `fem` wins only because something has to: the caller should validate first.
+# The caller should validate first — this is the loud last resort, not the API.
 func _sanitize_plays(categories: Array) -> Array:
 	var clean: Array = _normalize(categories)
-	if not plays_is_valid(clean):
+	if clean.has(CATEGORY_MASC) and clean.has(CATEGORY_FEM):
+		# `fem` wins only because something has to.
 		Log.log(self, "error",
 			"Actor '%s': plays cannot hold both masc and fem — dropping masc" % thing_id)
 		clean.erase(CATEGORY_MASC)
+	if not plays_is_valid(clean):
+		Log.log(self, "error",
+			"Actor '%s': plays cannot be mixed alone — it does not say which slot they fill"
+			% thing_id)
+		clean.erase(CATEGORY_MISTO)
 	return clean
 
 func _normalize(categories: Array) -> Array:

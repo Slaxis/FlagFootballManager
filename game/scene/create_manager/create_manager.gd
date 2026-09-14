@@ -35,7 +35,7 @@ const WARN := Color(0.85, 0.72, 0.45)
 
 var _build: SheetBuilder = null
 var _name: Dictionary = {}
-var _plays: String = Actor.CATEGORY_MASC
+var _plays: Array[String] = [Actor.CATEGORY_MASC]
 var _drafted: Dictionary = {}
 var _seed_label: Label = null
 var _root: VBoxContainer = null
@@ -387,15 +387,33 @@ func _skill_row(stats: StatDef, id: String) -> Control:
 	row.add_child(cost)
 	return row
 
+# Not a single choice. You can play the men's side and the mixed side, or the
+# women's and the mixed, or one, or none — and the chips have to say so, which
+# they did not: forcing one selection made "mixed" read as though it implied a
+# men's slot when it implies nothing at all.
 func _plays_row() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	row.add_child(_field_label(UiText.t("manager.plays")))
 	var categories := Drive.def("category") as CategoryDef
 	for id: String in (categories.category_ids() if categories != null else []):
-		row.add_child(_choice(categories.category_label(id), _plays == id, _on_plays.bind(id)))
-	row.add_child(_choice(UiText.t("manager.plays_none"), _plays == "", _on_plays.bind("")))
-	return row
+		var chip: Button = _choice(
+			categories.category_label(id), _plays.has(id), _on_plays.bind(id))
+		# Mixed needs a base under it: the quota has to know which slot you
+		# fill. Greyed rather than hidden, so the rule is visible.
+		if id == Actor.CATEGORY_MISTO and not _plays_has_base():
+			chip.disabled = true
+			chip.tooltip_text = UiText.t("manager.plays_hint")
+		row.add_child(chip)
+	row.add_child(_choice(UiText.t("manager.plays_none"), _plays.is_empty(), _on_plays_none))
+	box.add_child(row)
+	box.add_child(_hint(UiText.t("manager.plays_hint")))
+	return box
+
+func _plays_has_base() -> bool:
+	return _plays.has(Actor.CATEGORY_MASC) or _plays.has(Actor.CATEGORY_FEM)
 
 func _manages_row() -> Control:
 	var row := HBoxContainer.new()
@@ -480,10 +498,16 @@ func _build_result() -> void:
 	_root.add_child(_spacer(18))
 	_root.add_child(_flat_button(UiText.t("manager.start"), _on_start, true))
 
+# One squad you can turn out for is enough; the warning is for the club that
+# fields none of them.
 func _club_fields_my_category() -> bool:
-	if _plays == "":
+	if _plays.is_empty():
 		return true
-	return bool((_drafted.get("squads", {}) as Dictionary).get(_plays, false))
+	var squads: Dictionary = _drafted.get("squads", {})
+	for id: String in _plays:
+		if bool(squads.get(id, false)):
+			return true
+	return false
 
 # --- Actions ---
 
@@ -542,7 +566,22 @@ func _on_perk(id: String) -> void:
 	_build_ui()
 
 func _on_plays(category: String) -> void:
-	_plays = category
+	if _plays.has(category):
+		_plays.erase(category)
+		# Dropping the base drops the mixed side with it — nobody plays mixed
+		# without a slot to fill.
+		if not _plays_has_base():
+			_plays.erase(Actor.CATEGORY_MISTO)
+	else:
+		if category == Actor.CATEGORY_MASC:
+			_plays.erase(Actor.CATEGORY_FEM)
+		elif category == Actor.CATEGORY_FEM:
+			_plays.erase(Actor.CATEGORY_MASC)
+		_plays.append(category)
+	_build_ui()
+
+func _on_plays_none() -> void:
+	_plays.clear()
 	_build_ui()
 
 func _on_draw() -> void:
@@ -565,7 +604,7 @@ func _on_draw() -> void:
 func _on_start() -> void:
 	var career_seed: int = _career_seed()
 	var manager: Actor = _build.to_actor(career_seed, _name)
-	manager.set_plays([_plays] if _plays != "" else [])
+	manager.set_plays(_plays)
 	manager.set_manages([Actor.CATEGORY_MASC])
 	manager.set_team(String(_drafted.get("id", "")))
 	write("career", Career.make(manager, String(_drafted.get("id", "")), career_seed))
