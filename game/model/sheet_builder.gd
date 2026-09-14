@@ -12,15 +12,16 @@
 # make you throw better — the player picks which, and neither is wrong.
 class_name SheetBuilder
 
-# The screen opens on somebody ROLLED, not on a blank line — but the roll stops
-# while there is still an adolescence left to spend. You are handed a person
-# with a shape and the same spare budget the flat average adult used to leave,
-# and what you do with it is the question the screen asks.
+# The screen opens on a ROLLED CHILD, not on a blank line and not on a finished
+# adult. Twelve years of childhood come out of the dice — the body, a shape
+# across the eight attributes, sometimes a perk — and the six years that turn
+# that child into an adult are the ones you spend.
 #
 # That is the difference between the two entry points:
 #
-#   rolled_opening()  a starting point — a person, plus points to make them yours
-#   roll_random()     the 🎲 — a finished character you can walk out with
+#   rolled_opening()  a rolled twelve-year-old, attributes only — the six years
+#                     that make an adult are still yours to spend
+#   roll_random()     the 🎲 — all 414 spent, a finished character
 const START_AGE := 0
 const END_AGE := 18
 # Career points are the only currency. A year of life buys this many.
@@ -102,78 +103,93 @@ static func average_adult() -> SheetBuilder:
 	builder.weight = START_WEIGHT
 	return builder
 
-# What the flat average adult left in your pocket. Derived rather than written
-# down, so it follows if the ladder or the budget is ever retuned.
-static func opening_reserve() -> int:
-	return total_points() - average_adult().spent()
+# The age the opening roll leaves you at. Twelve years of childhood are rolled
+# FOR you; the six that turn a kid into an adult are the ones you spend, and
+# they are the whole point of the screen.
+const OPENING_AGE := 12
+# How tight the rolled body sits to the centre of its band.
+const OPENING_BODY_TIGHTNESS := 0.55
+# Narrower than the 🎲's appetite. With only eight tracks to spread across
+# instead of twenty-three, the same spread concentrates hard enough to produce
+# a child with 9 in one attribute and 0 in another — and on this ruler 9 is
+# nearly a medal contender and 0 is less than a toddler.
+const OPENING_APPETITE_SPREAD := 0.45
+# Nobody alive is below a toddler. The floor is bought first so the spread has
+# to work with what is left rather than being free to hollow somebody out.
+const OPENING_FLOOR_STEP := 2
+# And nobody is a prodigy yet. Two steps past the average ADULT is already a
+# remarkable child; the ruler puts 10 at an Olympic medal contender, and the
+# appetite will happily buy one at twelve if nothing stops it.
+const OPENING_CEILING_STEP := 7
 
-# How far from the average adult an opening attribute strays, in steps.
-const OPENING_SPREAD := 1.25
-const OPENING_MIN_STEP := 2
-const OPENING_MAX_STEP := 8
-# A kid who has played before is not a blank slate, but they have not
-# specialised either.
-const OPENING_SKILLS_MIN := 1
-const OPENING_SKILLS_MAX := 3
-const OPENING_SKILL_STEP_MAX := 3
+# Career points the opening roll spends: twelve years of them.
+static func opening_budget() -> int:
+	return OPENING_AGE * CAREER_POINTS_PER_YEAR
 
-# The sheet the screen opens with: a rolled adolescent who still has the whole
-# spare budget to spend.
+# The sheet the screen opens with: a rolled twelve-year-old.
 #
-# NOT the same roll as the 🎲. That one spends all 414 points, and a shape
-# built to eat the entire budget puts a 10 in one skill and a 1 in half the
-# attributes — fine as a finished character, wrong as a starting point. What
-# the opening has to produce is somebody ORDINARY but not identical: the
-# average adult, perturbed, with a couple of things they already know.
+# Four rules, and each one is there for a reason.
 #
-# The arithmetic says so too. Five steps in all eight attributes costs exactly
-# the 360 the opening has, so every point of skill here is paid for out of an
-# attribute. The roll walks each attribute to a target near the average,
-# lowering before raising so the refunds are on the table first.
+# ATTRIBUTES ONLY. A child has not specialised. Spending the rolled years on
+# skills too would answer the screen's one interesting question — attribute or
+# skill, since a roll is the sum of both — before the player got to it, and
+# answer it badly: spread thin over fifteen skills it reads as a smear rather
+# than a person.
+#
+# TWELVE YEARS, NOT ALL OF THEM. What is rolled is a childhood, not a career.
+# The remaining six are the question and they stay open.
+#
+# NOBODY IS HOLLOW, AND NOBODY IS A PRODIGY. Every attribute is walked up to
+# the floor before the appetite gets to play favourites, and none may pass the
+# ceiling: on this ruler 0 is below a toddler and 9 is nearly a medal
+# contender, and a twelve-year-old is neither.
+#
+# A PERK IS FAIR GAME. It is paid for out of those same twelve years — a kid
+# who came out with Craque bought it with attribute points he no longer has,
+# and one who came out with Vidraça is stronger for it — so it gives the rolled
+# character a tone before the player has decided anything.
+#
+# This is NOT the 🎲, which spends all 414 and hands you somebody finished.
 static func rolled_opening(rng: RandomNumberGenerator) -> SheetBuilder:
 	var builder: SheetBuilder = average_adult()
 	var def := Drive.def("stat") as StatDef
 	if def == null:
 		return builder
-	var reserve: int = opening_reserve()
-	builder._roll_body(def, rng, 0.55)
+	# average_adult() sets the dictionaries up and opens them on an adult; a
+	# twelve-year-old starts from nothing.
+	for id: String in def.base_ids():
+		builder.stats[id] = MIN_STAT_STEP
+	for id: String in def.skill_ids():
+		builder.skills[id] = MIN_SKILL_STEP
+	builder.perk = ""
+	builder._roll_body(def, rng, OPENING_BODY_TIGHTNESS)
+	builder._roll_perk(rng)
 
-	var targets: Dictionary = {}
+	# The budget is spent by AGE, not down to a remainder. Stopping when the
+	# next step no longer fits under a reserve leaves a tail smaller than the
+	# cheapest purchase — nine career points — and the header then reads eleven
+	# for a childhood that was all but finished. Buying past the birthday by a
+	# few points and stopping is the honest version.
+	var target: int = opening_budget()
 	for id: String in def.base_ids():
-		targets[id] = clampi(
-			int(round(rng.randfn(float(START_STAT_STEP), OPENING_SPREAD))),
-			OPENING_MIN_STEP, OPENING_MAX_STEP)
-	# Down first: selling is what pays for the raises.
-	for id: String in def.base_ids():
-		while int(builder.stats[id]) > int(targets[id]) and builder.can_lower_stat(id):
-			builder.lower_stat(id)
-	for id: String in def.base_ids():
-		while int(builder.stats[id]) < int(targets[id]) \
-				and builder.cost_to_raise_stat(id) <= builder.remaining() - reserve:
+		while int(builder.stats[id]) < OPENING_FLOOR_STEP and builder.can_raise_stat(id):
 			builder.raise_stat(id)
 
-	var ids: Array = def.skill_ids()
-	for _i: int in range(rng.randi_range(OPENING_SKILLS_MIN, OPENING_SKILLS_MAX)):
-		var id: String = String(ids[rng.randi() % ids.size()])
-		var want: int = rng.randi_range(1, OPENING_SKILL_STEP_MAX)
-		while int(builder.skills[id]) < want \
-				and builder.cost_to_raise_skill(id) <= builder.remaining() - reserve:
-			builder.raise_skill(id)
-
-	# A run of low targets refunds more than the raises spend, and opening with
-	# 130 points in hand is as much of a chore as opening with none is a blank.
-	# The excess goes back into the shape that was just rolled.
+	var appetite: Dictionary = {}
+	for id: String in def.base_ids():
+		appetite[id] = exp(rng.randfn(0.0, OPENING_APPETITE_SPREAD))
 	var guard: int = 0
-	while builder.remaining() > reserve and guard < 200:
+	while builder.spent() < target and guard < 400:
 		guard += 1
-		var affordable: Array[String] = []
+		var ids: Array[String] = []
+		var weights: Array[float] = []
 		for id: String in def.base_ids():
-			var cost: int = builder.cost_to_raise_stat(id)
-			if cost >= 0 and cost <= builder.remaining() - reserve:
-				affordable.append(id)
-		if affordable.is_empty():
+			if int(builder.stats[id]) < OPENING_CEILING_STEP and builder.can_raise_stat(id):
+				ids.append(id)
+				weights.append(float(appetite[id]) / float(int(builder.stats[id]) + 1))
+		if ids.is_empty():
 			break
-		builder.raise_stat(affordable[rng.randi() % affordable.size()])
+		builder.raise_stat(ids[builder._weighted_index(weights, rng)])
 	return builder
 
 # --- Spending ---# --- Spending ---

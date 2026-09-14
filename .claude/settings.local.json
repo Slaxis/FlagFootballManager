@@ -19,7 +19,6 @@
       "Bash(find \"C:\\\\Users\\\\User\\\\Dropbox\\\\Gaming\\\\k3n\\\\FlagFootballManager\\\\flag-football-manager\" -type f -name \"*.gd\" -exec grep -l \"minigame_id\\\\|play_minigame\" {} \\\\;)"
     ],
     "deny": [
-      "Bash(git push *)",
       "Bash(rm -rf *)"
     ]
   }

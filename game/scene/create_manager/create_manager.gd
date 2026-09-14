@@ -5,9 +5,11 @@
 # the top climbs as you allocate. Take points back and you get younger. The
 # question the screen asks is "where did I invest my adolescence?".
 #
-# The opening roll is a starting point, not an answer: it stops with the spare
-# budget still in your pocket. 🎲 is the other verb — it spends everything and
-# hands you somebody finished.
+# The screen deals you a rolled twelve-year-old — body, attributes, sometimes a
+# perk — and never touches the skills: whether the six years left go into being
+# faster or into knowing how to run a route is the question, and answering it
+# for the player would empty the screen. 🎲 is the other verb, and it spends
+# everything.
 #
 # Attributes and skills share one pocket because a roll is
 # `attribute + skill + 2d5*` — training dexterity and training throwing both

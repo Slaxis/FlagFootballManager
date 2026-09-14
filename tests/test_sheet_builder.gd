@@ -25,7 +25,9 @@ func tests() -> Array:
 		"test_the_dice_are_deterministic",
 		"test_the_dice_make_specialists_not_clones",
 		"test_the_dice_can_afford_the_perk_they_picked",
-		"test_the_opening_is_somebody_with_points_left",
+		"test_the_opening_rolls_a_twelve_year_old",
+		"test_the_opening_never_touches_the_skills",
+		"test_the_opening_leaves_nobody_hollow",
 		"test_the_opening_is_not_the_same_person_twice",
 	]
 
@@ -325,36 +327,73 @@ func test_the_dice_can_afford_the_perk_they_picked(t: TestHelper) -> void:
 	t.check(rolled > 0, "nenhum sorteio pegou perk em 60 tentativas")
 
 # The screen used to open on five-in-everything: the same faceless adult every
-# time, and a sheet of identical bars reads as empty. It now opens on a rolled
-# person — but with the spare budget still in the pocket, because a sheet with
-# nothing left to decide is not a creation screen.
-func test_the_opening_is_somebody_with_points_left(t: TestHelper) -> void:
+# time, and eight identical bars read as empty. It now opens on a rolled
+# twelve-year-old — and what makes that a starting point rather than an answer
+# is everything it deliberately does NOT decide.
+func test_the_opening_rolls_a_twelve_year_old(t: TestHelper) -> void:
 	var def := Drive.def("stat") as StatDef
 	if def == null:
 		t.fail("StatDef ausente"); return
-	var reserve: int = SheetBuilder.opening_reserve()
-	t.check(reserve > 0, "a abertura não deixou nada para gastar")
-	for seed_value: int in [1, 99, SEED]:
+	for seed_value: int in [1, 99, SEED, 20260914]:
 		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(seed_value))
-		t.check(builder.remaining() >= reserve,
-			"semente %d abriu com %d cp, menos que a reserva de %d" % [
-				seed_value, builder.remaining(), reserve])
+		t.equal(builder.age(), SheetBuilder.OPENING_AGE,
+			"semente %d abriu com %d anos" % [seed_value, builder.age()])
+		t.check(builder.spent() >= SheetBuilder.opening_budget(),
+			"semente %d não viveu os doze anos inteiros" % seed_value)
 		t.check(not builder.is_complete(),
-			"semente %d abriu já pronta — não sobrou decisão nenhuma" % seed_value)
-		# And it is a PERSON: not every attribute landed on the same number.
-		var seen: Dictionary = {}
-		for id: String in builder.stats.keys():
-			seen[int(builder.stats[id])] = true
-		t.check(seen.size() > 1, "semente %d abriu com tudo no mesmo valor" % seed_value)
+			"semente %d abriu pronta — não sobrou decisão nenhuma" % seed_value)
+
+# The one the player is meant to answer: attribute or skill. A roll is the sum
+# of both, so spending the childhood on skills too would decide it for them.
+func test_the_opening_never_touches_the_skills(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	for seed_value: int in [3, 77, SEED]:
+		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(seed_value))
+		for id: String in def.skill_ids():
+			t.equal(int(builder.skills[id]), 0,
+				"semente %d abriu com '%s' já treinada" % [seed_value, id])
+		# And the six years it leaves are worth spending either way.
+		t.check(builder.remaining() > SheetBuilder.CAREER_POINTS_PER_YEAR * 4,
+			"semente %d deixou só %d cp" % [seed_value, builder.remaining()])
+
+# 0 on this ruler is below a toddler. A rolled child with a hollow attribute is
+# not a starting point, it is a trap the player has to spend points undoing.
+func test_the_opening_leaves_nobody_hollow(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
+	var peak: int = 0
+	for i: int in range(40):
+		var builder: SheetBuilder = SheetBuilder.rolled_opening(rng)
+		for id: String in def.base_ids():
+			var value: int = int(builder.stats[id])
+			t.check(value >= SheetBuilder.OPENING_FLOOR_STEP,
+				"'%s' abriu em %d, abaixo do piso" % [id, value])
+			peak = maxi(peak, value)
+	# A twelve-year-old is not a medal contender either.
+	t.check(peak <= SheetBuilder.OPENING_CEILING_STEP,
+		"uma criança abriu com %d passos, acima do teto" % peak)
+	t.check(peak > StatDef.DEFAULT_AVERAGE_STEP,
+		"em 40 sorteios ninguém passou da média — o espalhamento morreu")
 
 func test_the_opening_is_not_the_same_person_twice(t: TestHelper) -> void:
 	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
 	var sheets: Dictionary = {}
+	var with_a_perk: int = 0
 	for i: int in range(20):
 		var builder: SheetBuilder = SheetBuilder.rolled_opening(rng)
-		sheets[str(builder.stats) + str(builder.skills)] = true
+		sheets[str(builder.stats) + builder.perk] = true
+		if builder.has_perk():
+			with_a_perk += 1
 	t.equal(sheets.size(), 20, "só %d aberturas distintas em 20" % sheets.size())
-	# Same seed, same person — the screen still has to be reproducible.
+	# The perk is what gives a rolled character a tone, so some have one and
+	# some do not — neither extreme is a roll.
+	t.check(with_a_perk > 0, "ninguém abriu com perk em 20 sorteios")
+	t.check(with_a_perk < 20, "todo mundo abriu com perk")
+	# Same seed, same child — the screen still has to be reproducible.
 	t.equal(str(SheetBuilder.rolled_opening(SeedRng.make_rng(7)).stats),
 		str(SheetBuilder.rolled_opening(SeedRng.make_rng(7)).stats),
 		"a mesma semente deveria abrir a mesma ficha")

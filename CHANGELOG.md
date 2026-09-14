@@ -24,11 +24,14 @@
 - 31 testes novos (`test_names`, `test_perk`, `test_screen_create_manager`)
 
 ### Changed
-- A tela de criacao **abre num adolescente sorteado**, nao mais em 5 em tudo:
-  atributos com variacao de ~1 passo ao redor do adulto mediano, um ou dois
-  conhecimentos que ele ja tem, corpo perto do centro — e os mesmos 54 career
-  points de sobra. Duas entradas com verbos diferentes: a abertura e um ponto
-  de partida, o 🎲 gasta os 414 e entrega alguem pronto
+- A tela de criacao **sorteia um moleque de 12 anos** em vez de abrir em 5 em
+  tudo: corpo, os 8 atributos entre 2 e 7 (piso de bebe, teto de crianca
+  excepcional) e as vezes um perk, que sai dos mesmos 12 anos e da um tom ao
+  personagem. **Nao encosta nas habilidades** — como um teste e atributo +
+  habilidade, decidir isso pelo jogador esvaziaria a unica pergunta da tela.
+  Sobram ~130 career points, os 6 anos que fazem dele um adulto
+- Dois verbos distintos: a abertura e um ponto de partida, o 🎲 gasta os 414
+  e entrega alguem pronto
 
 ### Fixed
 - Botao **Sair** nao fazia nada: `go("quit")` -> `"$exit"` -> `flow_finished`,
