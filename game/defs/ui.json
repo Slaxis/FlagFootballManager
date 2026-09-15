@@ -319,6 +319,14 @@
     "team.see_squad": {
       "pt": "ver o elenco do %s",
       "en": "see %s's squad"
+    },
+    "team.sort_by": {
+      "pt": "ordenar por %s",
+      "en": "sort by %s"
+    },
+    "team.fit": {
+      "pt": "afinidade",
+      "en": "fit"
     }
   }
 }

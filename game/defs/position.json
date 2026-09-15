@@ -2,7 +2,9 @@
   "positions": [
     {
       "id": "qb",
-      "label": {"pt": "QB", "en": "QB"},
+      "code": "QB",
+      "side": "offense",
+      "label": {"pt": "Quarterback", "en": "Quarterback"},
       "desc": {"pt": "Passador. Lê a defesa, decide em dois segundos e acerta a janela", "en": "Passer. Reads the defence, decides in two seconds and hits the window"},
       "affinity": {
         "dexterity": 1, "intelligence": 1, "perception": 1, "will": 1,
@@ -13,8 +15,10 @@
     },
     {
       "id": "center",
+      "code": "C",
+      "side": "offense",
       "label": {"pt": "Center", "en": "Center"},
-      "desc": {"pt": "Faz o snap e some pra frente. Sem ele a jogada não começa", "en": "Snaps and slips forward. Without him the play never starts"},
+      "desc": {"pt": "Faz o snap e vira alvo. No flag o center recebe passe, diferente do futebol americano", "en": "Snaps and becomes a target. In flag the center is an eligible receiver, unlike tackle football"},
       "affinity": {
         "strength": 1, "dexterity": 1, "stamina": 1,
         "snap": 1, "catching": 1, "rush": 1, "tackle": 1,
@@ -24,8 +28,10 @@
     },
     {
       "id": "receiver",
-      "label": {"pt": "Recebedor", "en": "Receiver"},
-      "desc": {"pt": "Corre a rota, ganha a costura e não derruba", "en": "Runs the route, wins the seam and does not drop it"},
+      "code": "WR",
+      "side": "offense",
+      "label": {"pt": "Recebedor", "en": "Wide Receiver"},
+      "desc": {"pt": "Corre a rota no ponto, ganha a costura e não derruba", "en": "Runs the route on time, wins the seam and does not drop it"},
       "affinity": {
         "agility": 1, "dexterity": 1, "perception": 1,
         "route": 1, "catching": 1, "juke": 1, "coverage": 1,
@@ -35,8 +41,10 @@
     },
     {
       "id": "rusher",
+      "code": "R",
+      "side": "defense",
       "label": {"pt": "Rusher", "en": "Rusher"},
-      "desc": {"pt": "Conta os três segundos e chega. Vive de motor e de ângulo", "en": "Counts the three seconds and arrives. Lives on motor and angle"},
+      "desc": {"pt": "Sai dos sete pés no snap e conta os segundos até chegar no QB", "en": "Starts seven feet off the line and counts the seconds to the QB"},
       "affinity": {
         "agility": 1, "stamina": 1, "strength": 1,
         "rush": 1, "tackle": 1, "deflection": 1, "juke": 1, "trash_talk": 1,
@@ -45,11 +53,26 @@
       "trains": {"rush": 5, "tackle": 3, "deflection": 2, "juke": 2, "rules": 1}
     },
     {
-      "id": "safety",
-      "label": {"pt": "Safety", "en": "Safety"},
-      "desc": {"pt": "Último homem. Enxerga a jogada inteira e não pode errar", "en": "Last man. Sees the whole play and cannot be wrong"},
+      "id": "cornerback",
+      "code": "CB",
+      "side": "defense",
+      "label": {"pt": "Cornerback", "en": "Cornerback"},
+      "desc": {"pt": "Marca o recebedor de fora, homem a homem ou na zona. Espelha a rota", "en": "Covers the outside receiver, man or zone. Mirrors the route"},
       "affinity": {
-        "perception": 1, "intelligence": 1, "agility": 1, "will": 1,
+        "agility": 1, "perception": 1, "dexterity": 1,
+        "coverage": 1, "deflection": 1, "juke": 1, "route": 1, "tackle": 1,
+        "snap": -1, "throwing": -1
+      },
+      "trains": {"coverage": 5, "deflection": 3, "tackle": 2, "route": 2, "rush": 1}
+    },
+    {
+      "id": "safety",
+      "code": "S",
+      "side": "defense",
+      "label": {"pt": "Safety", "en": "Safety"},
+      "desc": {"pt": "Último homem, atrás dos defensive backs. Cobre o passe profundo e não pode errar", "en": "Last man, behind the backs. Covers the deep ball and cannot be wrong"},
+      "affinity": {
+        "perception": 1, "intelligence": 1, "will": 1, "agility": 1,
         "coverage": 1, "deflection": 1, "tackle": 1, "rules": 1,
         "rush": -1, "snap": -1
       },

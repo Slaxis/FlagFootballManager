@@ -188,7 +188,7 @@ Novo Jogo
 
 **Ficha do jogador (MVP):** nome · número da camisa · posição · **força** · perk
 
-**Posições** (flag é 5×5): QB · Center · Recebedor · Rusher · Safety
+**Posições** (5×5 oficial): ataque **QB · C · WR**, defesa **R · CB · S**. Linebacker é 7v7 e NÃO entra no 5×5 — a defesa de flag 5×5 é rusher, cornerbacks e safeties. Cada uma declara `code` (o botão), `side`, `affinity` (polaridade, decisão 31) e `trains` (peso, decisão 26).
 
 **Padrões táticos**
 - *Ataque*: Passe curto · Bomba · Balanceado · Segurar relógio
@@ -267,7 +267,7 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 | **B.4c** | `names-and-perks` | Nome/sobrenome/apelido em campos separados, gerador de apelidos coerente, 10 perks com preço em career point (defeito devolve), 🎲 que sorteia a vida inteira, semente derivada do nome | ✅ |
 | **B.5** | `team-screen` | Seu clube com abas **Elenco** e **Adversários**, e a ficha completa de qualquer um ao clicar. **Paga a dívida de A.2 e A.3**. Elenco = curadoria (`ActorDef`) + geração por cima | ✅ |
 | **B.5b** | `actor-lifecycle` | Elencos que leem certo: clube iniciante cheio de moleque, clube grande com veterano especializado. O actor deixa de ser sorteado e passa a ser **vivido** — ficha de nascimento, posição, ano a ano de carreira, curva de idade | |
-| **B.6** | `role-assignment` | Coluna **Função** no Elenco: escala alguém em duas e vê o Geral cair. Agora tem `PositionDef` embaixo, vindo da B.5b | |
+| **B.6** | `role-assignment` | Colunas ordenáveis e uma coluna de botões por posição: marca quem está apto pra quê, e a cor não-marcada é a **afinidade** — o elenco lê como mapa de calor | ✅ |
 | **B.8** | `pools-and-leader` | Os quatro pools (Health · Stamina · Sanity · Emotional) e os Leader Action Points na ficha e na home do time. **Só exibição** — são derivados, então dá pra ver antes de existir quem gaste. `C.1` consome os pools, `C.4` gasta os LAP | |
 | **B.7** | `perks` | Os ícones `★ ⚡ 🧠 🪨` na lista do elenco — o catálogo e a escolha já saíram em `B.4c`, falta o roster mostrar | |
 

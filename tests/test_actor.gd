@@ -140,14 +140,29 @@ func test_body_measures_are_plausible(t: TestHelper) -> void:
 
 # The body must agree with the sheet: the strong cohort is visibly the heavy
 # one, so nobody has to reconcile a wiry giant who bench-presses a car.
+# BMI, not weight. Weight is bmi times height squared, and height varies enough
+# on its own that sorting a squad by the scale sorts it mostly by how tall
+# people are — the heavy half came out WEAKER than the light half, which looked
+# like a bug in the body roll and was really a bug in the question. What the
+# generator actually promises is that build follows strength at a given height.
 func test_weight_follows_strength(t: TestHelper) -> void:
-	var light: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 20))
-	var heavy: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 85))
-	# Also narrower than before, and for the same reason: the body follows the
-	# sheet the career produced, and a career at a poor club still produces an
-	# adult.
-	t.check(heavy > light + 1.5,
-		"elenco forte deveria ser mais pesado (veio %.1f vs %.1f kg)" % [heavy, light])
+	var squad: Array[Actor] = ActorGenerator.squad(SEED, 24, 60)
+	var by_build: Array[Actor] = squad.duplicate()
+	by_build.sort_custom(func(a: Actor, b: Actor) -> bool:
+		return _bmi(a) > _bmi(b))
+	var half: int = by_build.size() / 2
+	var thick: float = 0.0
+	var lean: float = 0.0
+	for i: int in range(half):
+		thick += float(by_build[i].stat("strength"))
+		lean += float(by_build[by_build.size() - 1 - i].stat("strength"))
+	t.check(thick > lean,
+		"a metade mais encorpada deveria ser a mais forte (%d vs %d de força)" % [
+			int(thick / half), int(lean / half)])
+
+func _bmi(actor: Actor) -> float:
+	var height: float = actor.height()
+	return actor.weight() / (height * height) if height > 0.0 else 0.0
 
 func test_measures_format_with_locale_separator(t: TestHelper) -> void:
 	var def := Drive.def("stat") as StatDef

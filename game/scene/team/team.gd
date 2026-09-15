@@ -23,6 +23,17 @@ const LINE := Color(0.16, 0.22, 0.17)
 const TAB_SQUAD := "squad"
 const TAB_RIVALS := "rivals"
 
+const SORT_NAME := "name"
+const SORT_PERK := "perk"
+const SORT_STRENGTH := "strength"
+const SORT_AGE := "age"
+
+# Text colour for a position button nobody has ticked: the same grey-to-green
+# gradient the bars use, driven by how well the actor FITS that position. A
+# roster read down this column answers "who could play corner" before anybody
+# clicks anything.
+const FIT_TO_TINT := 150.0
+
 const _TIER_COLOR: Dictionary = {
 	1: Color(0.95, 0.82, 0.35),
 	2: Color(0.75, 0.78, 0.82),
@@ -36,6 +47,11 @@ var _tab: String = TAB_SQUAD
 # the reason the tab is a view and not a fixed page.
 var _viewing: String = ""
 var _selected: Actor = null
+# Which column the roster is ordered by, and which way. Sorting a roster is
+# how a manager actually reads it: who is oldest, who is best, who can play
+# corner.
+var _sort_key: String = SORT_STRENGTH
+var _sort_desc: bool = true
 var _root: VBoxContainer = null
 
 func _ready() -> void:
@@ -177,7 +193,7 @@ func _squad_tab() -> Control:
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var career: Career = _career()
-	var people: Array[Actor] = _rosters().squad(_viewed_id(), _category())
+	var people: Array[Actor] = _sorted(_rosters().squad(_viewed_id(), _category()))
 
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 2)
@@ -204,16 +220,41 @@ func _squad_tab() -> Control:
 func _column_headings() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	for pair: Array in [["", 18], [UiText.t("team.name"), 210],
-			[UiText.t("team.perk"), 34], [UiText.t("team.strength"), 48],
-			[UiText.t("team.age"), 44]]:
-		var label := Label.new()
-		label.text = String(pair[0])
-		label.custom_minimum_size = Vector2(int(pair[1]), 0)
-		label.add_theme_font_size_override("font_size", 11)
-		label.add_theme_color_override("font_color", MUTED)
-		row.add_child(label)
+	row.add_child(_spacer_cell(18))
+	row.add_child(_heading(UiText.t("team.name"), SORT_NAME, 190))
+	row.add_child(_heading(UiText.t("team.perk"), SORT_PERK, 34))
+	row.add_child(_heading(UiText.t("team.strength"), SORT_STRENGTH, 48))
+	row.add_child(_heading(UiText.t("team.age"), SORT_AGE, 44))
+	var positions := Drive.def("position") as PositionDef
+	if positions != null:
+		for id: String in positions.position_ids():
+			row.add_child(_heading(positions.code(id), "fit:" + id, 34))
 	return row
+
+func _spacer_cell(width: int) -> Control:
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(width, 0)
+	return spacer
+
+# A header is a button. The arrow says which way, and clicking the column you
+# are already on flips it.
+func _heading(text: String, key: String, width: int) -> Button:
+	var button := Button.new()
+	var active: bool = _sort_key == key
+	button.text = text + ("  \u25be" if active and _sort_desc else ("  \u25b4" if active else ""))
+	button.custom_minimum_size = Vector2(width, 20)
+	button.focus_mode = Control.FOCUS_NONE
+	button.tooltip_text = UiText.t("team.sort_by") % text
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0)
+	style.set_content_margin_all(0)
+	for state: String in ["normal", "hover", "pressed"]:
+		button.add_theme_stylebox_override(state, style)
+	button.add_theme_font_size_override("font_size", 11)
+	button.add_theme_color_override("font_color", ACCENT if active else MUTED)
+	button.add_theme_color_override("font_hover_color", TEXT)
+	button.pressed.connect(_on_sort.bind(key))
+	return button
 
 func _roster_row(person: Actor, is_manager: bool) -> Control:
 	var button := Button.new()
@@ -231,13 +272,17 @@ func _roster_row(person: Actor, is_manager: bool) -> Control:
 	button.add_child(row)
 
 	row.add_child(_cell("\u2605" if is_manager else "", 18, ACCENT if is_manager else MUTED))
-	row.add_child(_cell(person.display_name(), 210, TEXT))
+	row.add_child(_cell(person.display_name(), 190, TEXT))
 	row.add_child(_perk_cell(person))
 	# Elifoot calls this Forca and so does this column: one number for how good
 	# somebody is, tinted so the roster reads before it is read.
 	var strength: int = person.overall()
 	row.add_child(_cell(str(strength), 48, StatBar.tint(strength)))
 	row.add_child(_cell(str(person.age()), 44, MUTED))
+	var positions := Drive.def("position") as PositionDef
+	if positions != null:
+		for id: String in positions.position_ids():
+			row.add_child(_position_button(person, positions, id))
 	return button
 
 # The perk is the one thing about a player that is a sentence and not a
@@ -449,9 +494,81 @@ func _on_view_mine() -> void:
 	_selected = null
 	_build_ui()
 
+func _on_sort(key: String) -> void:
+	if _sort_key == key:
+		_sort_desc = not _sort_desc
+	else:
+		_sort_key = key
+		# Names read A-Z; every other column reads best-first.
+		_sort_desc = key != SORT_NAME
+	_build_ui()
+
+func _on_toggle_position(person: Actor, position_id: String) -> void:
+	person.toggle_position(position_id)
+	_build_ui()
+
 func _on_pick(person: Actor) -> void:
 	_selected = person
 	_build_ui()
+
+# One button per position, per player. Ticked means "cleared to play here" and
+# fills in; untouched, the letters are tinted by how well he FITS the position,
+# so the column reads as a heat map before anybody has decided anything.
+func _position_button(person: Actor, positions: PositionDef, id: String) -> Button:
+	var button := Button.new()
+	button.text = positions.code(id)
+	button.custom_minimum_size = Vector2(34, 22)
+	button.focus_mode = Control.FOCUS_NONE
+	button.mouse_filter = Control.MOUSE_FILTER_STOP
+	var chosen: bool = person.plays_position(id)
+	var fit: float = positions.fit(id, person.stats(), person.skills())
+	var tint: Color = StatBar.tint(int(round(fit * FIT_TO_TINT)))
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = tint if chosen else Color(0.09, 0.12, 0.10)
+	style.border_color = tint if chosen else Color(0.16, 0.22, 0.17)
+	style.set_border_width_all(1)
+	style.set_content_margin_all(2)
+	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
+		style.set("corner_radius_" + corner, 2)
+	for state: String in ["normal", "hover", "pressed"]:
+		button.add_theme_stylebox_override(state, style)
+	button.add_theme_font_size_override("font_size", 10)
+	button.add_theme_color_override("font_color",
+		Color(0.05, 0.09, 0.05) if chosen else tint)
+	button.tooltip_text = "%s — %s\n%s: %d%%" % [
+		positions.label(id), positions.desc(id),
+		UiText.t("team.fit"), int(round(maxf(fit, 0.0) * 100.0))]
+	button.pressed.connect(_on_toggle_position.bind(person, id))
+	return button
+
+# Sorting is stable on the name, so two players with the same Forca keep a
+# fixed order instead of shuffling every time the screen redraws.
+func _sorted(people: Array[Actor]) -> Array[Actor]:
+	var positions := Drive.def("position") as PositionDef
+	var out: Array[Actor] = people.duplicate()
+	var key: String = _sort_key
+	out.sort_custom(func(a: Actor, b: Actor) -> bool:
+		var left: float = _sort_value(a, key, positions)
+		var right: float = _sort_value(b, key, positions)
+		if is_equal_approx(left, right):
+			return a.display_name().naturalnocasecmp_to(b.display_name()) < 0
+		return left > right if _sort_desc else left < right)
+	return out
+
+func _sort_value(person: Actor, key: String, positions: PositionDef) -> float:
+	if key.begins_with("fit:"):
+		return positions.fit(key.substr(4), person.stats(), person.skills()) \
+			if positions != null else 0.0
+	match key:
+		SORT_STRENGTH:
+			return float(person.overall())
+		SORT_AGE:
+			return float(person.age())
+		SORT_PERK:
+			return 1.0 if not person.perks().is_empty() else 0.0
+	# By name the comparator falls through to the tie-break, which IS the name.
+	return 0.0
 
 # --- Widgets ---
 

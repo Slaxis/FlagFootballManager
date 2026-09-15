@@ -59,6 +59,20 @@ func label(id: String) -> String:
 func desc(id: String) -> String:
 	return I18n.text(position(id).get("desc", ""), "")
 
+# The two or three letters that fit on a button in a roster row.
+func code(id: String) -> String:
+	return String(position(id).get("code", id.to_upper()))
+
+func side(id: String) -> String:
+	return String(position(id).get("side", ""))
+
+func ids_on_side(wanted: String) -> Array[String]:
+	var out: Array[String] = []
+	for id: String in _order:
+		if side(id) == wanted:
+			out.append(id)
+	return out
+
 func affinity(id: String) -> Dictionary:
 	return position(id).get("affinity", {})
 

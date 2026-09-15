@@ -20,6 +20,9 @@ func tests() -> Array:
 		"test_clicking_a_rival_shows_their_squad",
 		"test_the_roster_has_a_perk_column",
 		"test_the_sheet_has_the_same_rows_for_everybody",
+		"test_columns_sort_both_ways",
+		"test_a_position_can_be_ticked_and_unticked",
+		"test_every_position_has_a_button",
 	]
 
 # --- Harness ---
@@ -63,6 +66,10 @@ func _texts(screen: Control) -> String:
 	var all: Array[String] = []
 	for node: Variant in _collect(screen, "Label", []):
 		all.append((node as Label).text)
+	# Buttons count as text too: the headings became sortable, which made them
+	# Buttons, and a check that only read Labels stopped seeing them.
+	for node: Variant in _collect(screen, "Button", []):
+		all.append((node as Button).text)
 	return "\n".join(all)
 
 func _button_with(screen: Control, text: String) -> Button:
@@ -278,4 +285,101 @@ func test_the_sheet_has_the_same_rows_for_everybody(t: TestHelper) -> void:
 		for node: Variant in _collect(screen, "Button", []):
 			if (node as Button).text == "":
 				rows.append(node)
+	_close(screen)
+
+
+func _row_buttons(screen: Control) -> Array:
+	var rows: Array = []
+	for node: Variant in _collect(screen, "Button", []):
+		if (node as Button).text == "":
+			rows.append(node)
+	return rows
+
+func _names_in_order(screen: Control) -> Array[String]:
+	var out: Array[String] = []
+	for node: Variant in _collect(screen, "Label", []):
+		var label := node as Label
+		# The name cell is the wide one; the numeric cells are narrow.
+		if label.custom_minimum_size.x == 190.0 and label.text != "":
+			out.append(label.text)
+	return out
+
+# Sorting a roster is how a manager reads it. Clicking the column you are
+# already on has to flip it, or you can see the best and never the worst.
+func test_columns_sort_both_ways(t: TestHelper) -> void:
+	var screen: Control = _open()
+	if screen == null:
+		t.fail("não consegui instanciar a tela"); return
+	var header: Button = _button_with(screen, UiText.t("team.age"))
+	if header == null:
+		t.fail("cabeçalho de idade não é clicável"); _close(screen); return
+	header.pressed.emit()
+
+	var rosters := The.board.get("rosters", null) as Rosters
+	var by_name: Dictionary = {}
+	for person: Actor in rosters.squad("flag_kings", Actor.CATEGORY_MASC):
+		by_name[person.display_name()] = person.age()
+	var descending: Array[String] = _names_in_order(screen)
+	t.check(descending.size() >= 5, "só %d nomes na lista" % descending.size())
+	for i: int in range(descending.size() - 1):
+		t.check(int(by_name[descending[i]]) >= int(by_name[descending[i + 1]]),
+			"fora de ordem decrescente: %s antes de %s" % [descending[i], descending[i + 1]])
+
+	# Same column again flips it.
+	_button_with(screen, UiText.t("team.age") + "  ▾").pressed.emit()
+	var ascending: Array[String] = _names_in_order(screen)
+	for i: int in range(ascending.size() - 1):
+		t.check(int(by_name[ascending[i]]) <= int(by_name[ascending[i + 1]]),
+			"fora de ordem crescente: %s antes de %s" % [ascending[i], ascending[i + 1]])
+	_close(screen)
+
+func test_a_position_can_be_ticked_and_unticked(t: TestHelper) -> void:
+	var screen: Control = _open()
+	var positions := Drive.def("position") as PositionDef
+	if screen == null or positions == null:
+		t.fail("não consegui instanciar a tela"); return
+	var rosters := The.board.get("rosters", null) as Rosters
+	var people: Array[Actor] = rosters.squad("flag_kings", Actor.CATEGORY_MASC)
+	for person: Actor in people:
+		t.check(person.lineup().is_empty(), "alguém já nasceu escalado")
+		break
+
+	var code: String = positions.code("qb")
+	var buttons: Array = []
+	for node: Variant in _collect(screen, "Button", []):
+		if (node as Button).text == code:
+			buttons.append(node)
+	# One heading plus one per player.
+	t.equal(buttons.size(), people.size() + 1, "botões de QB na tela")
+	(buttons[1] as Button).pressed.emit()
+	var ticked: int = 0
+	for person: Actor in people:
+		if person.plays_position("qb"):
+			ticked += 1
+	t.equal(ticked, 1, "exatamente um atleta deveria ficar escalado de QB")
+
+	# And ticking again releases him.
+	var again: Array = []
+	for node: Variant in _collect(screen, "Button", []):
+		if (node as Button).text == code:
+			again.append(node)
+	(again[1] as Button).pressed.emit()
+	for person: Actor in people:
+		t.check(not person.plays_position("qb"), "clicar de novo não desescalou")
+	_close(screen)
+
+# Six buttons, one per position, and the codes are the ones a flag manager
+# would recognise. Linebacker is 7v7 and must not be here.
+func test_every_position_has_a_button(t: TestHelper) -> void:
+	var screen: Control = _open()
+	var positions := Drive.def("position") as PositionDef
+	if screen == null or positions == null:
+		t.fail("não consegui instanciar a tela"); return
+	t.equal(positions.position_ids().size(), 6, "quantidade de posições")
+	var shown: String = _texts(screen)
+	for id: String in positions.position_ids():
+		t.check(shown.contains(positions.code(id)),
+			"posição '%s' não tem botão" % positions.code(id))
+	t.equal(positions.ids_on_side("offense").size(), 3, "posições de ataque")
+	t.equal(positions.ids_on_side("defense").size(), 3, "posições de defesa")
 	_close(screen)
