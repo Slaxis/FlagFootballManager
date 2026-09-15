@@ -19,6 +19,7 @@ func tests() -> Array:
 		"test_the_roster_is_built_once_and_reused",
 		"test_clicking_a_rival_shows_their_squad",
 		"test_the_roster_has_a_perk_column",
+		"test_the_sheet_has_the_same_rows_for_everybody",
 	]
 
 # --- Harness ---
@@ -221,4 +222,60 @@ func test_the_roster_has_a_perk_column(t: TestHelper) -> void:
 		t.check(shown.contains(perks.icon(String(person.perks()[0]))),
 			"o perk de %s não apareceu na lista" % person.display_name())
 	t.check(with_perk > 0, "nenhum jogador do elenco tem perk — o teste não testou nada")
+	_close(screen)
+
+# A rolled player has every skill above zero and a hand-built manager has one
+# or two. Hiding the empty rows made those two sheets grow DIFFERENT rows, so
+# you could not put them side by side — which is the only thing a sheet is
+# for. An empty bar already says "never trained this".
+func test_the_sheet_has_the_same_rows_for_everybody(t: TestHelper) -> void:
+	var screen: Control = _open()
+	var stats := Drive.def("stat") as StatDef
+	if screen == null or stats == null:
+		t.fail("não consegui instanciar a tela"); return
+	var rosters := The.board.get("rosters", null) as Rosters
+	var people: Array[Actor] = rosters.squad("flag_kings", Actor.CATEGORY_MASC)
+
+	# The manager is the one with a nearly empty skill sheet; a filler is the
+	# one with everything rolled. Both have to render the full set.
+	var manager: Actor = null
+	var filler: Actor = null
+	for person: Actor in people:
+		if person.display_name() == "Chefinho":
+			manager = person
+		elif filler == null:
+			filler = person
+	if manager == null or filler == null:
+		t.fail("preciso do manager e de um gerado"); _close(screen); return
+
+	var untrained: int = 0
+	for id: String in stats.skill_ids():
+		if manager.skill_step(id) <= 0:
+			untrained += 1
+	t.check(untrained > 5,
+		"o manager treinou quase tudo (%d zeradas) — o teste não prova nada" % untrained)
+
+	var rows: Array = []
+	for node: Variant in _collect(screen, "Button", []):
+		if (node as Button).text == "":
+			rows.append(node)
+	for person: Actor in [manager, filler]:
+		for i: int in range(people.size()):
+			if people[i].thing_id == person.thing_id:
+				(rows[i] as Button).pressed.emit()
+				break
+		var shown: String = _texts(screen)
+		for id: String in stats.skill_ids():
+			var label: String = I18n.text(stats.skill(id).get("label", id), id)
+			t.check(shown.contains(label),
+				"a ficha de %s não mostra '%s'" % [person.display_name(), label])
+		for id: String in stats.base_ids():
+			var label: String = I18n.text(stats.base_stat(id).get("label", id), id)
+			t.check(shown.contains(label),
+				"a ficha de %s não mostra '%s'" % [person.display_name(), label])
+		# Re-collect: the screen rebuilt itself around the new selection.
+		rows = []
+		for node: Variant in _collect(screen, "Button", []):
+			if (node as Button).text == "":
+				rows.append(node)
 	_close(screen)

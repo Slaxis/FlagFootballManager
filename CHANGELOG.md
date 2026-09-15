@@ -24,6 +24,10 @@
   ali. Com botao de volta pro seu
 - `StatBar` corta rotulo longo em vez de empurrar o painel ("Chamada de
   jogada" abria a ficha inteira)
+- A ficha mostra **todas** as 15 habilidades, treinadas ou nao, agrupadas e
+  com rolagem. Esconder as zeradas fazia a ficha de um gerado (tudo acima de
+  zero) e a de um manager feito na mao (uma ou duas) crescerem linhas
+  DIFERENTES, e duas fichas incomparaveis nao servem pra nada
 - d5star v0.5.0: o scanner de Things aceita qualquer layout de pasta
 
 ### Added — B.4c: nome, apelido e perks (2026-09-13)

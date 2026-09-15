@@ -282,9 +282,16 @@ func _sheet_panel() -> Control:
 	panel.add_theme_stylebox_override("panel", style)
 	panel.custom_minimum_size = Vector2(430, 0)
 
+	# Twenty-three rows and four captions do not fit a window, and a sheet that
+	# runs off the bottom is the same bug as a sheet with rows missing.
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(scroll)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 3)
-	panel.add_child(box)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(box)
 	if _selected == null:
 		box.add_child(_hint(UiText.t("team.pick_someone")))
 		return panel
@@ -331,18 +338,27 @@ func _sheet_panel() -> Control:
 			_selected.step(id) * 10,
 			I18n.text(spec.get("desc", ""), ""), 132))
 	box.add_child(_section(UiText.t("manager.skills")))
+	# ALL fifteen, trained or not. Hiding the empty ones seemed tidier and was
+	# wrong: a rolled player has every skill above zero and a hand-built
+	# manager has one, so the two sheets grew different rows and stopped being
+	# comparable — which is the only thing a sheet is for. An empty bar already
+	# says "never trained this" perfectly well.
 	for group: String in stats.skill_groups():
+		box.add_child(_group_caption(UiText.t("skillgroup." + group, group)))
 		for id: String in stats.skills_in_group(group):
-			# Only what they actually know: fifteen bars, twelve of them dark,
-			# says nothing that three lit ones do not say better.
-			if _selected.skill_step(id) <= 0:
-				continue
 			var spec: Dictionary = stats.skill(id)
 			box.add_child(StatBar.row(
 				I18n.text(spec.get("label", id), id),
 				_selected.skill_step(id) * 10,
 				I18n.text(spec.get("desc", ""), ""), 132))
 	return panel
+
+func _group_caption(text: String) -> Control:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", MUTED)
+	return label
 
 # --- Adversários ---
 
