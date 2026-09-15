@@ -275,6 +275,38 @@
     "manager.plays_hint": {
       "pt": "dá para marcar mais de uma: masculino ou feminino, e o misto junto. Misto sozinho não vale — o time misto tem cota de mulheres, então ele precisa saber se você ocupa vaga de homem ou de mulher.",
       "en": "more than one is fine: men’s or women’s, plus mixed. Mixed alone is not — a mixed squad carries a women’s quota, so it has to know which slot you fill."
+    },
+    "team.squad": {
+      "pt": "Elenco",
+      "en": "Squad"
+    },
+    "team.rivals": {
+      "pt": "Adversários",
+      "en": "Rivals"
+    },
+    "team.name": {
+      "pt": "Nome",
+      "en": "Name"
+    },
+    "team.age": {
+      "pt": "Idade",
+      "en": "Age"
+    },
+    "team.overall": {
+      "pt": "Geral",
+      "en": "Ovr"
+    },
+    "team.years": {
+      "pt": "%d anos",
+      "en": "%d years old"
+    },
+    "team.week": {
+      "pt": "Semana %d/%d",
+      "en": "Week %d/%d"
+    },
+    "team.pick_someone": {
+      "pt": "escolha alguém do elenco para ver a ficha",
+      "en": "pick someone from the squad to see their sheet"
     }
   }
 }

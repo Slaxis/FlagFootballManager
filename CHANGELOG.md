@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added — B.5: a tela do clube (2026-09-15)
+- **Tela do clube** com abas Elenco e Adversarios. Clicar em alguem abre a
+  ficha completa — 8 atributos, habilidades treinadas, corpo, perk. E isso que
+  paga a divida de A.2/A.3: ~700 linhas de modelo que nunca viraram pixel
+- `ActorDef`: atletas curados como Thing de modulo, **esparsos**. Seis linhas
+  de JSON viram uma pessoa completa; o que o curador nao escreve, o gerador
+  preenche a partir da reputacao do clube. Semeado pelo id do atleta, entao o
+  mesmo atleta sai igual em toda carreira
+- Fonte posterior **mescla** por id em vez de substituir — um mod que so quer
+  mudar uma stat escreve so ela
+- `Rosters` (Record): quem joga onde AGORA. Estado, nao formula — elenco
+  derivado da semente quebraria na primeira contratacao. Montado por clube na
+  primeira leitura
+- Validacao do elenco curado, rodando na suite: clube inexistente, id
+  duplicado, habilidade escrita errado, numero fora de faixa, perk inventado
+- `content/ELENCOS.md` — guia de curadoria
+- d5star v0.5.0: o scanner de Things aceita qualquer layout de pasta
+
 ### Added — B.4c: nome, apelido e perks (2026-09-13)
 - Nome, sobrenome e apelido em TRES campos separados na criacao do gestor
 - Gerador de apelidos coerente com o actor, quatro fontes:

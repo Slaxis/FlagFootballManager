@@ -41,10 +41,40 @@ static func generate(
 	age_min: int = AGE_MIN,
 	age_max: int = AGE_MAX,
 ) -> Actor:
-	var rng: RandomNumberGenerator = SeedRng.make_rng(seed_value)
+	return _build(SeedRng.make_rng(seed_value), "actor_%d" % seed_value,
+		quality, category, {}, spread, age_min, age_max)
+
+# Hydrates a CURATED actor: a sparse spec from ActorDef plus whatever the
+# curator did not say. Everything pinned wins; everything absent is rolled.
+#
+# Seeded from the actor's ID, not from the career seed — a real athlete is the
+# same person in every career, and only the squad-fillers around them move.
+# Which also means a curator deepening a spec later changes only the numbers
+# they touched: the rest was already a function of the id.
+static func from_spec(spec: Dictionary, club_quality: int,
+		category: String = Actor.CATEGORY_MASC) -> Actor:
+	var id: String = String(spec.get("id", "")).strip_edges()
+	return _build(SeedRng.make_rng(SeedRng.seed_from_string(id)), id,
+		int(spec.get("quality", club_quality)), category, spec,
+		SPREAD, AGE_MIN, AGE_MAX)
+
+# The one construction path. `spec` is empty for a generated actor and holds
+# whatever a curator pinned for an authored one, so the two cannot drift apart.
+static func _build(
+	rng: RandomNumberGenerator,
+	thing_id: String,
+	quality: int,
+	category: String,
+	spec: Dictionary,
+	spread: float,
+	age_min: int,
+	age_max: int,
+) -> Actor:
 	var actor := Actor.new()
 	var stats: Dictionary = _roll_stats(rng, quality, spread)
+	stats.merge(_numbers(spec.get("stats", {})), true)
 	var skills: Dictionary = _roll_skills(rng, quality - SKILL_LAG, spread)
+	skills.merge(_numbers(spec.get("skills", {})), true)
 	var payload: Dictionary = {
 		"plays": [category],
 		"manages": [],
@@ -55,6 +85,9 @@ static func generate(
 		"team": Actor.NO_TEAM,
 		"jersey": Actor.NO_JERSEY,
 	}
+	# The body follows the FINAL sheet, so a curator who pinned 90 strength
+	# gets the heavy build that goes with it rather than one rolled around a
+	# number that was thrown away.
 	payload.merge(_roll_body(rng, stats))
 	# A mixed squad genuinely holds both, so the coin decides which slot this
 	# actor fills — and `plays` records it, because "mixed" on its own would
@@ -65,8 +98,22 @@ static func generate(
 		payload["plays"] = [pool, Actor.CATEGORY_MISTO]
 	payload.merge(_roll_name(rng, pool, stats, skills))
 	payload["perks"] = _roll_perks(rng, quality)
-	actor._apply_data("actor_%d" % seed_value, "actor", payload)
+	# Everything the curator stated, last and unconditionally.
+	for key: String in ["first_name", "last_name", "nickname", "age", "height",
+			"weight", "plays", "manages", "perks", "team", "jersey"]:
+		if spec.has(key):
+			payload[key] = spec[key]
+	actor._apply_data(thing_id if thing_id != "" else "actor", "actor", payload)
 	return actor
+
+static func _numbers(raw: Variant) -> Dictionary:
+	var out: Dictionary = {}
+	if not raw is Dictionary:
+		return out
+	for key: String in (raw as Dictionary).keys():
+		out[String(key).strip_edges().to_lower()] = clampi(
+			int((raw as Dictionary)[key]), StatDef.STORED_MIN, StatDef.STORED_MAX)
+	return out
 
 # A cohort sharing one base seed. Each actor gets a salted sub-seed so adding
 # or removing one does not reshuffle the others.
