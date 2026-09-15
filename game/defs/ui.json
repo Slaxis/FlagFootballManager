@@ -383,6 +383,14 @@
     "common.close": {
       "pt": "Fechar",
       "en": "Close"
+    },
+    "team.as_athlete": {
+      "pt": "COMO ATLETA",
+      "en": "AS AN ATHLETE"
+    },
+    "team.as_staff": {
+      "pt": "COMO COMISSÃO",
+      "en": "AS STAFF"
     }
   }
 }

@@ -345,3 +345,31 @@ func quantile_value(quantile: int, rng: RandomNumberGenerator) -> int:
 	if band.is_empty():
 		return 50
 	return rng.randi_range(int(band.get("min", 30)), int(band.get("max", 55)))
+
+
+# --- Chakras ---
+#
+# Each attribute sits on a point of the body and the eight are declared head to
+# foot, so every screen that walks `base_ids()` reads top-down like a person
+# standing up: mind, eyes, voice, heart, core, hands, hips, feet.
+#
+# A liberty, stated plainly: the classic system has seven wheels and the sheet
+# has eight attributes, so DEXTERITY gets a point of its own at the hands. A
+# body has hands; the tradition just never had to roll for catching.
+#
+# The colour is the point. A skill inherits the colour of the attribute that
+# governs it, so "Lançamento" and "Destreza" are the same amber and the link
+# between aptitude and practice is visible instead of being a rule you memorise.
+func chakra(stat_id: String) -> Dictionary:
+	return base_stat(stat_id).get("chakra", {})
+
+func chakra_label(stat_id: String) -> String:
+	return I18n.text(chakra(stat_id).get("label", ""), "")
+
+func chakra_color(stat_id: String) -> Color:
+	var raw: String = String(chakra(stat_id).get("color", ""))
+	return Color(raw) if raw != "" else Color(0.49, 0.78, 0.45)
+
+# The colour a SKILL wears: its governing attribute's.
+func skill_color(skill_id: String) -> Color:
+	return chakra_color(skill_attribute(skill_id))

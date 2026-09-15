@@ -22,6 +22,9 @@ func tests() -> Array:
 		"test_body_price_matches_the_swap_it_performs",
 		"test_roll_base_sums_aptitude_and_practice",
 		"test_quality_stays_inside_the_adult_band",
+		"test_every_attribute_sits_on_a_chakra",
+		"test_attributes_are_ordered_head_to_foot",
+		"test_a_skill_wears_its_attribute_colour",
 	]
 
 func _def() -> StatDef:
@@ -159,3 +162,48 @@ func test_quality_stays_inside_the_adult_band(t: TestHelper) -> void:
 	t.check(worst >= 35 and worst <= 45, "várzea saiu com qualidade %d" % worst)
 	t.check(best >= 70 and best <= 85, "campeão saiu com qualidade %d" % best)
 	t.check(best > worst + 20, "a distância entre várzea e elite ficou pequena")
+
+
+# The colour is the point: a skill inherits the colour of the attribute that
+# governs it, so aptitude and practice are visibly the same thing instead of a
+# rule you have to remember.
+func test_every_attribute_sits_on_a_chakra(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var seen: Dictionary = {}
+	for id: String in def.base_ids():
+		var chakra: Dictionary = def.chakra(id)
+		t.check(not chakra.is_empty(), "'%s' sem chakra" % id)
+		var colour: Color = def.chakra_color(id)
+		t.check(colour.get_luminance() > 0.12,
+			"a cor de '%s' é escura demais para uma barra" % id)
+		var key: String = colour.to_html(false)
+		t.check(not seen.has(key), "'%s' repete a cor de '%s'" % [id, seen.get(key, "")])
+		seen[key] = id
+		t.check(def.chakra_label(id).strip_edges() != "", "'%s' sem nome de chakra" % id)
+
+# Declared head to foot, so every screen that walks base_ids() reads top-down
+# like a person standing up.
+func test_attributes_are_ordered_head_to_foot(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var expected: Array[String] = ["intelligence", "perception", "charisma", "will",
+		"stamina", "dexterity", "agility", "strength"]
+	var actual: Array = def.base_ids()
+	t.equal(actual.size(), expected.size(), "quantidade de atributos")
+	for i: int in range(mini(actual.size(), expected.size())):
+		t.equal(String(actual[i]), expected[i], "atributo na posição %d" % i)
+
+func test_a_skill_wears_its_attribute_colour(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	for id: String in def.skill_ids():
+		var governing: String = def.skill_attribute(id)
+		t.equal(def.skill_color(id).to_html(false), def.chakra_color(governing).to_html(false),
+			"'%s' deveria usar a cor de '%s'" % [id, governing])
+	# And the one that started it: throwing hangs off dexterity, the hands.
+	t.equal(def.skill_color("throwing").to_html(false),
+		def.chakra_color("dexterity").to_html(false), "lançamento é cor de mãos")

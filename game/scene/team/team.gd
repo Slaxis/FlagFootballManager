@@ -13,12 +13,34 @@
 # Two tabs now, and the bar grows as Fase D lands the others.
 extends Menu
 
-const BG := Color(0.055, 0.078, 0.063)
-const PANEL := Color(0.086, 0.118, 0.094)
-const ACCENT := Color(0.49, 0.78, 0.45)
-const MUTED := Color(0.47, 0.52, 0.48)
-const TEXT := Color(0.87, 0.90, 0.87)
-const LINE := Color(0.16, 0.22, 0.17)
+# THE SCREEN WEARS THE CLUB. Background and lettering come from the club's own
+# two colours, the way Elifoot did it — so when two managers share a screen,
+# whose turn it is is a glance and not a label.
+#
+# TeamColors already guarantees the pair clears WCAG contrast, so plate/ink is
+# readable by construction. The background is darkened from the plate because a
+# full screen of a club's yellow is a different thing from a badge of it, and
+# everything else (panels, rules, muted text) is derived from those two so the
+# palette can never drift out of the club's identity.
+var BG := Color(0.055, 0.078, 0.063)
+var PANEL := Color(0.086, 0.118, 0.094)
+var ACCENT := Color(0.49, 0.78, 0.45)
+var MUTED := Color(0.47, 0.52, 0.48)
+var TEXT := Color(0.87, 0.90, 0.87)
+var LINE := Color(0.16, 0.22, 0.17)
+
+func _wear_club_colours() -> void:
+	var scheme: Dictionary = TeamColors.of(_viewed_club())
+	var plate: Color = scheme["plate"]
+	var ink: Color = scheme["ink"]
+	# A dark ground under a light kit and a light ground under a dark one: the
+	# club keeps its hue and the screen keeps its legibility.
+	BG = plate.darkened(0.82) if plate.get_luminance() > 0.35 else plate.darkened(0.45)
+	PANEL = BG.lightened(0.06)
+	LINE = BG.lightened(0.16)
+	ACCENT = ink if ink.get_luminance() > 0.3 else plate.lightened(0.45)
+	TEXT = ACCENT.lightened(0.55)
+	MUTED = TEXT.darkened(0.45)
 
 const TAB_SQUAD := "squad"
 const TAB_RIVALS := "rivals"
@@ -64,6 +86,7 @@ var _root: VBoxContainer = null
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_wear_club_colours()
 	var bg := ColorRect.new()
 	bg.color = BG
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -82,6 +105,12 @@ func _ready() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
+	# Re-read every rebuild: looking at a rival puts you in THEIR colours, which
+	# is the cheapest possible "you are away from home".
+	_wear_club_colours()
+	for child: Node in get_children():
+		if child is ColorRect and not child.has_meta("card_layer"):
+			(child as ColorRect).color = BG
 	for child: Node in _root.get_children():
 		_root.remove_child(child)
 		child.queue_free()
@@ -562,35 +591,40 @@ func _show_card() -> void:
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 2)
 	left.add_child(_group_caption(UiText.t("manager.attributes")))
+	# Declared head to foot in the JSON, so this loop reads top-down like a
+	# person standing up: mind, eyes, voice, heart, core, hands, hips, feet.
 	for id: String in stats.base_ids():
 		var spec: Dictionary = stats.base_stat(id)
 		left.add_child(StatBar.row(I18n.text(spec.get("label", id), id),
-			_selected.step(id) * 10, I18n.text(spec.get("desc", ""), ""), 96))
+			_selected.step(id) * 10,
+			"%s\n%s" % [stats.chakra_label(id), I18n.text(spec.get("desc", ""), "")],
+			96, stats.chakra_color(id)))
 	columns.add_child(left)
 
-	# Fifteen skills in two columns is what makes the card square rather than
-	# tall: eight rows instead of nineteen.
-	var groups: Array = stats.skill_groups()
+	# Two columns with a MEANING, not just a fold. Left is attack and defence —
+	# what makes an athlete. Right is general and staff — what makes a coach. So
+	# the card answers "player or clipboard" before you read a single number.
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 2)
-	right.add_child(_group_caption(UiText.t("manager.skills")))
 	var pair := HBoxContainer.new()
 	pair.add_theme_constant_override("separation", 18)
 	right.add_child(pair)
-	for half: int in range(2):
+	for half: Array in [["offense", "defense"], ["general", "staff"]]:
 		var column := VBoxContainer.new()
 		column.add_theme_constant_override("separation", 2)
+		column.add_child(_group_caption(UiText.t(
+			"team.as_athlete" if half[0] == "offense" else "team.as_staff")))
 		pair.add_child(column)
-		for i: int in range(groups.size()):
-			if i % 2 != half:
+		for group: Variant in half:
+			var ids: Array = stats.skills_in_group(String(group))
+			if ids.is_empty():
 				continue
-			var group: String = String(groups[i])
-			column.add_child(_group_caption(UiText.t("skillgroup." + group, group)))
-			for id: String in stats.skills_in_group(group):
+			column.add_child(_group_caption(UiText.t("skillgroup." + String(group), String(group))))
+			for id: String in ids:
 				var spec: Dictionary = stats.skill(id)
 				column.add_child(StatBar.row(I18n.text(spec.get("label", id), id),
 					_selected.skill_step(id) * 10,
-					I18n.text(spec.get("desc", ""), ""), 112))
+					I18n.text(spec.get("desc", ""), ""), 112, stats.skill_color(id)))
 	columns.add_child(right)
 
 	box.add_child(_career_log())

@@ -329,7 +329,7 @@ func _attribute_row(stats: StatDef, id: String) -> Control:
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_color", TEXT)
 	row.add_child(label)
-	row.add_child(StatBar.bar(effective * 10))
+	row.add_child(StatBar.bar(effective * 10, stats.chakra_color(id)))
 
 	var mod := Label.new()
 	mod.text = "%+d" % bonus if bonus != 0 else "·"
@@ -375,7 +375,7 @@ func _skill_row(stats: StatDef, id: String) -> Control:
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_color", TEXT)
 	row.add_child(label)
-	row.add_child(StatBar.bar(step_value * 10))
+	row.add_child(StatBar.bar(step_value * 10, stats.skill_color(id)))
 
 	var cost := Label.new()
 	var next_cost: int = _build.cost_to_raise_skill(id)

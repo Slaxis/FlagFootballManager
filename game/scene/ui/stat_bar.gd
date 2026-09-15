@@ -17,7 +17,7 @@ const SLOT_GAP := 2
 # A labelled row: name on the left, bar on the right, full description and the
 # raw value on hover.
 static func row(label_text: String, value: int, tooltip: String = "",
-		label_width: int = 130) -> Control:
+		label_width: int = 130, hue: Color = LIT) -> Control:
 	var row_box := HBoxContainer.new()
 	row_box.add_theme_constant_override("separation", 10)
 	row_box.tooltip_text = _tooltip(tooltip, value)
@@ -25,6 +25,7 @@ static func row(label_text: String, value: int, tooltip: String = "",
 
 	var name_label := Label.new()
 	name_label.text = label_text
+	name_label.add_theme_color_override("font_color", hue.lightened(0.25))
 	name_label.custom_minimum_size = Vector2(label_width, 0)
 	name_label.add_theme_font_size_override("font_size", 14)
 	# Without this a long label ("Chamada de jogada") sets the row's minimum
@@ -32,7 +33,7 @@ static func row(label_text: String, value: int, tooltip: String = "",
 	# that this row already carries.
 	name_label.clip_text = true
 	row_box.add_child(name_label)
-	row_box.add_child(bar(value))
+	row_box.add_child(bar(value, hue))
 	return row_box
 
 # The same 0..100 reading as the bar, as a single colour: dead grey at the
@@ -42,14 +43,16 @@ static func row(label_text: String, value: int, tooltip: String = "",
 static func tint(value: int) -> Color:
 	return UNLIT_TEXT.lerp(LIT, clampf(float(value) / 100.0, 0.0, 1.0))
 
-static func bar(value: int) -> Control:
+static func bar(value: int, hue: Color = LIT) -> Control:
 	var box := HBoxContainer.new()
 	box.add_theme_constant_override("separation", SLOT_GAP)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var lit: int = clampi(int(floor(float(value) / 10.0)), 0, SLOTS)
 	for i: int in range(SLOTS):
 		var slot := ColorRect.new()
-		slot.color = LIT if i < lit else DARK
+		# The unlit half keeps the same hue, dimmed, so a row reads as one
+		# colour at two intensities rather than as two unrelated colours.
+		slot.color = hue if i < lit else hue.darkened(0.72)
 		slot.custom_minimum_size = SLOT_SIZE
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(slot)

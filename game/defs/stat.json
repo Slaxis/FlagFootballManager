@@ -28,47 +28,22 @@
   },
   "base": [
     {
-      "id": "strength",
+      "id": "intelligence",
       "label": {
-        "pt": "Força",
-        "en": "Strength"
+        "pt": "Inteligência",
+        "en": "Intelligence"
       },
       "desc": {
-        "pt": "Força muscular geral",
-        "en": "Overall muscular strength"
-      }
-    },
-    {
-      "id": "stamina",
-      "label": {
-        "pt": "Vitalidade",
-        "en": "Stamina"
+        "pt": "Capacidade cognitiva: aprender jogadas, memória e uso dela",
+        "en": "Cognition: learning plays, memory and using it"
       },
-      "desc": {
-        "pt": "Condicionamento físico",
-        "en": "Physical conditioning"
-      }
-    },
-    {
-      "id": "agility",
-      "label": {
-        "pt": "Agilidade",
-        "en": "Agility"
-      },
-      "desc": {
-        "pt": "Habilidade com as pernas: aceleração, mudança de movimento",
-        "en": "Legs: acceleration, change of direction"
-      }
-    },
-    {
-      "id": "dexterity",
-      "label": {
-        "pt": "Destreza",
-        "en": "Dexterity"
-      },
-      "desc": {
-        "pt": "Habilidade com as mãos: recepção, lançamento",
-        "en": "Hands: catching, throwing"
+      "chakra": {
+        "id": "sahasrara",
+        "color": "#9B6BD6",
+        "label": {
+          "pt": "Coroa",
+          "en": "Crown"
+        }
       }
     },
     {
@@ -80,17 +55,14 @@
       "desc": {
         "pt": "Capacidade visual e leitura de padrões",
         "en": "Vision and pattern reading"
-      }
-    },
-    {
-      "id": "intelligence",
-      "label": {
-        "pt": "Inteligência",
-        "en": "Intelligence"
       },
-      "desc": {
-        "pt": "Capacidade cognitiva: aprender jogadas, memória e uso dela",
-        "en": "Cognition: learning plays, memory and using it"
+      "chakra": {
+        "id": "ajna",
+        "color": "#6B7FD6",
+        "label": {
+          "pt": "Terceiro olho",
+          "en": "Third eye"
+        }
       }
     },
     {
@@ -102,6 +74,14 @@
       "desc": {
         "pt": "Capacidade interpessoal: magnetismo, beleza, oratória",
         "en": "Interpersonal: magnetism, looks, oratory"
+      },
+      "chakra": {
+        "id": "vishuddha",
+        "color": "#4FA8D8",
+        "label": {
+          "pt": "Garganta",
+          "en": "Throat"
+        }
       }
     },
     {
@@ -113,6 +93,90 @@
       "desc": {
         "pt": "Resiliência mental: ir a todo treino no horário, e continuar indo com o time na lanterna",
         "en": "Mental resilience: showing up to every session on time, and still showing up when the club is bottom of the table"
+      },
+      "chakra": {
+        "id": "anahata",
+        "color": "#5FC46A",
+        "label": {
+          "pt": "Coração",
+          "en": "Heart"
+        }
+      }
+    },
+    {
+      "id": "stamina",
+      "label": {
+        "pt": "Vitalidade",
+        "en": "Stamina"
+      },
+      "desc": {
+        "pt": "Condicionamento físico",
+        "en": "Physical conditioning"
+      },
+      "chakra": {
+        "id": "manipura",
+        "color": "#D8C64F",
+        "label": {
+          "pt": "Plexo solar",
+          "en": "Solar plexus"
+        }
+      }
+    },
+    {
+      "id": "dexterity",
+      "label": {
+        "pt": "Destreza",
+        "en": "Dexterity"
+      },
+      "desc": {
+        "pt": "Habilidade com as mãos: recepção, lançamento",
+        "en": "Hands: catching, throwing"
+      },
+      "chakra": {
+        "id": "hasta",
+        "color": "#D8994F",
+        "label": {
+          "pt": "Mãos",
+          "en": "Hands"
+        }
+      }
+    },
+    {
+      "id": "agility",
+      "label": {
+        "pt": "Agilidade",
+        "en": "Agility"
+      },
+      "desc": {
+        "pt": "Habilidade com as pernas: aceleração, mudança de movimento",
+        "en": "Legs: acceleration, change of direction"
+      },
+      "chakra": {
+        "id": "svadhisthana",
+        "color": "#D8704F",
+        "label": {
+          "pt": "Sacral",
+          "en": "Sacral"
+        }
+      }
+    },
+    {
+      "id": "strength",
+      "label": {
+        "pt": "Força",
+        "en": "Strength"
+      },
+      "desc": {
+        "pt": "Força muscular geral",
+        "en": "Overall muscular strength"
+      },
+      "chakra": {
+        "id": "muladhara",
+        "color": "#D85454",
+        "label": {
+          "pt": "Raiz",
+          "en": "Root"
+        }
       }
     }
   ],
