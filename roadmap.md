@@ -188,7 +188,7 @@ Novo Jogo
 
 **Ficha do jogador (MVP):** nome · número da camisa · posição · **força** · perk
 
-**Posições** (5×5 oficial): ataque **QB · C · WR**, defesa **R · CB · S**. Linebacker é 7v7 e NÃO entra no 5×5 — a defesa de flag 5×5 é rusher, cornerbacks e safeties. Cada uma declara `code` (o botão), `side`, `affinity` (polaridade, decisão 31) e `trains` (peso, decisão 26).
+**Posições** (5×5 oficial): ataque **QB · C · WR**, defesa **R · CB · S**. Linebacker é 7v7 e NÃO entra no 5×5 — a defesa de flag 5×5 é rusher, cornerbacks e safeties. Mais 5 **cargos de comissão** com `side: staff`: **HC · OC · DC · PF · OL**. Cargo e posição são a mesma estrutura de propósito — declaram `code` (o botão), `side`, `affinity` (polaridade, decisão 31) e `trains` (peso, decisão 26) — então a mesma função de fit, o mesmo botão e a mesma tela servem para escalar o time e montar a comissão.
 
 **Padrões táticos**
 - *Ataque*: Passe curto · Bomba · Balanceado · Segurar relógio
@@ -267,7 +267,7 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 | **B.4c** | `names-and-perks` | Nome/sobrenome/apelido em campos separados, gerador de apelidos coerente, 10 perks com preço em career point (defeito devolve), 🎲 que sorteia a vida inteira, semente derivada do nome | ✅ |
 | **B.5** | `team-screen` | Seu clube com abas **Elenco** e **Adversários**, e a ficha completa de qualquer um ao clicar. **Paga a dívida de A.2 e A.3**. Elenco = curadoria (`ActorDef`) + geração por cima | ✅ |
 | **B.5b** | `actor-lifecycle` | Elencos que leem certo: clube iniciante cheio de moleque, clube grande com veterano especializado. O actor deixa de ser sorteado e passa a ser **vivido** — ficha de nascimento, posição, ano a ano de carreira, curva de idade | |
-| **B.6** | `role-assignment` | Colunas ordenáveis e uma coluna de botões por posição: marca quem está apto pra quê, e a cor não-marcada é a **afinidade** — o elenco lê como mapa de calor | ✅ |
+| **B.6** | `role-assignment` | Colunas ordenáveis e três blocos: **Perfil · Escalação · Comissão**. Cada vaga é um botão onde a CAIXA É UMA BARRA preenchida pela afinidade — o elenco lê como mapa de calor, e a mesma tela resolve escalação e comissão técnica | ✅ |
 | **B.8** | `pools-and-leader` | Os quatro pools (Health · Stamina · Sanity · Emotional) e os Leader Action Points na ficha e na home do time. **Só exibição** — são derivados, então dá pra ver antes de existir quem gaste. `C.1` consome os pools, `C.4` gasta os LAP | |
 | **B.7** | `perks` | Os ícones `★ ⚡ 🧠 🪨` na lista do elenco — o catálogo e a escolha já saíram em `B.4c`, falta o roster mostrar | |
 
@@ -287,7 +287,7 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 ### Fase D — As outras abas
 | Branch | Entrega |
 |---|---|
-| `D.1-comissao-tecnica` | CRUD de técnicos, buffs/debuffs, chamam jogadas |
+| `D.1-comissao-tecnica` | Buffs/debuffs dos cargos e chamada de jogada. **A ESCOLHA dos cargos já saiu em `B.6`** — os 5 cargos (HC · OC · DC · PF · OL) são posições de `side: staff` e usam a mesma afinidade, o mesmo botão e a mesma tela |
 | `D.2-local-treino` | Campos, custo, buff/debuff no elenco |
 | `D.3-financeiro` | Caixa, mensalidades, patrocínios |
 | `D.4-praca` | Actors sem clube — jogadores e comissão — esperando convite |

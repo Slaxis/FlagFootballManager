@@ -28,11 +28,19 @@ const SORT_PERK := "perk"
 const SORT_STRENGTH := "strength"
 const SORT_AGE := "age"
 
-# Text colour for a position button nobody has ticked: the same grey-to-green
-# gradient the bars use, driven by how well the actor FITS that position. A
-# roster read down this column answers "who could play corner" before anybody
-# clicks anything.
-const FIT_TO_TINT := 150.0
+# Column widths live here and nowhere else: the group header above and the
+# sortable header below are both derived from them, so they cannot drift apart.
+const COL_MARK := 18
+const COL_NAME := 165
+const COL_PERK := 30
+const COL_STRENGTH := 44
+const COL_AGE := 40
+const COL_ROLE := 28
+const COL_GAP := 6
+
+# Measured fits run from about 2% to 88%, so a fit IS the percentage — no
+# scaling. A box filled a third of the way means a third of the way.
+const SIDES_IN_LINEUP: Array[String] = ["offense", "defense"]
 
 const _TIER_COLOR: Dictionary = {
 	1: Color(0.95, 0.82, 0.35),
@@ -217,19 +225,73 @@ func _squad_tab() -> Control:
 	columns.add_child(_sheet_panel())
 	return columns
 
+# Two header rows. The top one says what the block of columns is FOR, which is
+# what makes eleven little buttons legible instead of a wall: profile, who
+# plays, who coaches.
 func _column_headings() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	box.add_child(_group_headings())
+	box.add_child(_sort_headings())
+	return box
+
+func _group_headings() -> Control:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	row.add_child(_spacer_cell(18))
-	row.add_child(_heading(UiText.t("team.name"), SORT_NAME, 190))
-	row.add_child(_heading(UiText.t("team.perk"), SORT_PERK, 34))
-	row.add_child(_heading(UiText.t("team.strength"), SORT_STRENGTH, 48))
-	row.add_child(_heading(UiText.t("team.age"), SORT_AGE, 44))
+	row.add_theme_constant_override("separation", COL_GAP)
+	var positions := Drive.def("position") as PositionDef
+	var lineup: int = 0
+	var staff: int = 0
+	if positions != null:
+		for side: String in SIDES_IN_LINEUP:
+			lineup += positions.ids_on_side(side).size()
+		staff = positions.ids_on_side("staff").size()
+	row.add_child(_group_label(UiText.t("team.profile"),
+		COL_MARK + COL_NAME + COL_PERK + COL_STRENGTH + COL_AGE + COL_GAP * 4))
+	row.add_child(_group_label(UiText.t("team.lineup"), _block_width(lineup)))
+	row.add_child(_group_label(UiText.t("team.staff"), _block_width(staff)))
+	return row
+
+func _block_width(columns: int) -> int:
+	return maxi(columns * COL_ROLE + maxi(columns - 1, 0) * COL_GAP, 0)
+
+func _group_label(text: String, width: int) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 1)
+	box.custom_minimum_size = Vector2(width, 0)
+	var label := Label.new()
+	label.text = text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 10)
+	label.add_theme_color_override("font_color", ACCENT)
+	box.add_child(label)
+	var rule := ColorRect.new()
+	rule.color = LINE
+	rule.custom_minimum_size = Vector2(0, 1)
+	box.add_child(rule)
+	return box
+
+func _sort_headings() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", COL_GAP)
+	row.add_child(_spacer_cell(COL_MARK))
+	row.add_child(_heading(UiText.t("team.name"), SORT_NAME, COL_NAME))
+	row.add_child(_heading(UiText.t("team.perk"), SORT_PERK, COL_PERK))
+	row.add_child(_heading(UiText.t("team.strength"), SORT_STRENGTH, COL_STRENGTH))
+	row.add_child(_heading(UiText.t("team.age"), SORT_AGE, COL_AGE))
 	var positions := Drive.def("position") as PositionDef
 	if positions != null:
-		for id: String in positions.position_ids():
-			row.add_child(_heading(positions.code(id), "fit:" + id, 34))
+		for id: String in _role_order(positions):
+			row.add_child(_heading(positions.code(id), "fit:" + id, COL_ROLE))
 	return row
+
+# Lineup first, then the staff chairs — the same order the rows use, because a
+# header that does not line up with its column is worse than no header.
+func _role_order(positions: PositionDef) -> Array[String]:
+	var out: Array[String] = []
+	for side: String in SIDES_IN_LINEUP:
+		out.append_array(positions.ids_on_side(side))
+	out.append_array(positions.ids_on_side("staff"))
+	return out
 
 func _spacer_cell(width: int) -> Control:
 	var spacer := Control.new()
@@ -258,6 +320,11 @@ func _heading(text: String, key: String, width: int) -> Button:
 
 func _roster_row(person: Actor, is_manager: bool) -> Control:
 	var button := Button.new()
+	# Tagged rather than named: Godot renames duplicate siblings, so a name is
+	# not something a test can match on. The role buttons inside a row are
+	# blank too — their code is a child Label over the fill bar — so text is
+	# no help either.
+	button.set_meta("roster_row", true)
 	button.focus_mode = Control.FOCUS_NONE
 	button.custom_minimum_size = Vector2(0, 26)
 	var chosen: bool = _selected != null and _selected.thing_id == person.thing_id
@@ -271,17 +338,18 @@ func _roster_row(person: Actor, is_manager: bool) -> Control:
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	button.add_child(row)
 
-	row.add_child(_cell("\u2605" if is_manager else "", 18, ACCENT if is_manager else MUTED))
-	row.add_child(_cell(person.display_name(), 190, TEXT))
+	row.add_child(_cell("\u2605" if is_manager else "", COL_MARK,
+		ACCENT if is_manager else MUTED))
+	row.add_child(_cell(person.display_name(), COL_NAME, TEXT))
 	row.add_child(_perk_cell(person))
 	# Elifoot calls this Forca and so does this column: one number for how good
 	# somebody is, tinted so the roster reads before it is read.
 	var strength: int = person.overall()
-	row.add_child(_cell(str(strength), 48, StatBar.tint(strength)))
-	row.add_child(_cell(str(person.age()), 44, MUTED))
+	row.add_child(_cell(str(strength), COL_STRENGTH, StatBar.tint(strength)))
+	row.add_child(_cell(str(person.age()), COL_AGE, MUTED))
 	var positions := Drive.def("position") as PositionDef
 	if positions != null:
-		for id: String in positions.position_ids():
+		for id: String in _role_order(positions):
 			row.add_child(_position_button(person, positions, id))
 	return button
 
@@ -291,7 +359,7 @@ func _perk_cell(person: Actor) -> Control:
 	var perks := Drive.def("perk") as PerkDef
 	var ids: Array = person.perks()
 	var label := Label.new()
-	label.custom_minimum_size = Vector2(34, 0)
+	label.custom_minimum_size = Vector2(COL_PERK, 0)
 	label.add_theme_font_size_override("font_size", 13)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if perks == null or ids.is_empty():
@@ -306,10 +374,12 @@ func _perk_cell(person: Actor) -> Control:
 
 func _cell(text: String, width: int, color: Color) -> Control:
 	var label := Label.new()
+	label.name = "Cell"
 	label.text = text
 	label.custom_minimum_size = Vector2(width, 0)
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_color", color)
+	label.clip_text = true
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
@@ -325,7 +395,7 @@ func _sheet_panel() -> Control:
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
 		style.set("corner_radius_" + corner, 4)
 	panel.add_theme_stylebox_override("panel", style)
-	panel.custom_minimum_size = Vector2(430, 0)
+	panel.custom_minimum_size = Vector2(372, 0)
 
 	# Twenty-three rows and four captions do not fit a window, and a sheet that
 	# runs off the bottom is the same bug as a sheet with rows missing.
@@ -514,31 +584,60 @@ func _on_pick(person: Actor) -> void:
 # One button per position, per player. Ticked means "cleared to play here" and
 # fills in; untouched, the letters are tinted by how well he FITS the position,
 # so the column reads as a heat map before anybody has decided anything.
+# One button per role, per player, and the BOX IS A BAR. A 33% fit fills a
+# third of the box from the left.
+#
+# The first version tinted the letters instead, and the difference between a
+# 40% fit and a 55% one was invisible — a gradient across two characters of
+# text has nowhere to be seen. Filled area reads at a glance down a whole
+# column, which is the point: the roster becomes a heat map of who could play
+# what before the manager has decided anything.
 func _position_button(person: Actor, positions: PositionDef, id: String) -> Button:
+	var chosen: bool = person.plays_position(id)
+	var fit: float = clampf(positions.fit(id, person.stats(), person.skills()), 0.0, 1.0)
+
 	var button := Button.new()
-	button.text = positions.code(id)
-	button.custom_minimum_size = Vector2(34, 22)
+	button.set_meta("role", id)
+	button.text = ""
+	button.custom_minimum_size = Vector2(COL_ROLE, 22)
 	button.focus_mode = Control.FOCUS_NONE
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
-	var chosen: bool = person.plays_position(id)
-	var fit: float = positions.fit(id, person.stats(), person.skills())
-	var tint: Color = StatBar.tint(int(round(fit * FIT_TO_TINT)))
-
+	button.clip_contents = true
 	var style := StyleBoxFlat.new()
-	style.bg_color = tint if chosen else Color(0.09, 0.12, 0.10)
-	style.border_color = tint if chosen else Color(0.16, 0.22, 0.17)
+	style.bg_color = ACCENT if chosen else Color(0.08, 0.11, 0.09)
+	style.border_color = ACCENT if chosen else Color(0.16, 0.22, 0.17)
 	style.set_border_width_all(1)
-	style.set_content_margin_all(2)
-	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
-		style.set("corner_radius_" + corner, 2)
+	style.set_content_margin_all(0)
 	for state: String in ["normal", "hover", "pressed"]:
 		button.add_theme_stylebox_override(state, style)
-	button.add_theme_font_size_override("font_size", 10)
-	button.add_theme_color_override("font_color",
-		Color(0.05, 0.09, 0.05) if chosen else tint)
+
+	# Fractional anchors, so the fill is a real proportion of the box at any
+	# width rather than a pixel count that goes wrong when the column moves.
+	if not chosen and fit > 0.0:
+		var bar := ColorRect.new()
+		bar.color = StatBar.tint(int(round(fit * 100.0)))
+		bar.color.a = 0.42
+		bar.anchor_left = 0.0
+		bar.anchor_top = 0.0
+		bar.anchor_right = fit
+		bar.anchor_bottom = 1.0
+		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(bar)
+
+	var label := Label.new()
+	label.text = positions.code(id)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	label.add_theme_font_size_override("font_size", 10)
+	label.add_theme_color_override("font_color",
+		Color(0.05, 0.09, 0.05) if chosen else TEXT)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(label)
+
 	button.tooltip_text = "%s — %s\n%s: %d%%" % [
 		positions.label(id), positions.desc(id),
-		UiText.t("team.fit"), int(round(maxf(fit, 0.0) * 100.0))]
+		UiText.t("team.fit"), int(round(fit * 100.0))]
 	button.pressed.connect(_on_toggle_position.bind(person, id))
 	return button
 

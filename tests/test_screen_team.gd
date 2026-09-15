@@ -121,10 +121,7 @@ func test_clicking_somebody_opens_their_sheet(t: TestHelper) -> void:
 		t.fail("preciso de duas pessoas para testar a troca"); _close(screen); return
 	# The second one, so it is not whatever the screen picked by default.
 	var wanted: Actor = people[1]
-	var rows: Array = []
-	for node: Variant in _collect(screen, "Button", []):
-		if (node as Button).text == "":
-			rows.append(node)
+	var rows: Array = _tagged(screen, "roster_row")
 	t.check(rows.size() >= people.size(), "linhas clicáveis: %d" % rows.size())
 	(rows[1] as Button).pressed.emit()
 	var shown: String = _texts(screen)
@@ -281,27 +278,32 @@ func test_the_sheet_has_the_same_rows_for_everybody(t: TestHelper) -> void:
 			t.check(shown.contains(label),
 				"a ficha de %s não mostra '%s'" % [person.display_name(), label])
 		# Re-collect: the screen rebuilt itself around the new selection.
-		rows = []
-		for node: Variant in _collect(screen, "Button", []):
-			if (node as Button).text == "":
-				rows.append(node)
+		rows = _tagged(screen, "roster_row")
 	_close(screen)
 
 
-func _row_buttons(screen: Control) -> Array:
-	var rows: Array = []
+# Rows and role buttons are tagged with metadata, because their text is empty
+# and Godot renames duplicate siblings.
+func _tagged(screen: Control, key: String, value: Variant = null) -> Array:
+	var out: Array = []
 	for node: Variant in _collect(screen, "Button", []):
-		if (node as Button).text == "":
-			rows.append(node)
-	return rows
+		var button := node as Button
+		if not button.has_meta(key):
+			continue
+		if value == null or button.get_meta(key) == value:
+			out.append(button)
+	return out
 
-func _names_in_order(screen: Control) -> Array[String]:
-	var out: Array[String] = []
-	for node: Variant in _collect(screen, "Label", []):
-		var label := node as Label
-		# The name cell is the wide one; the numeric cells are narrow.
-		if label.custom_minimum_size.x == 190.0 and label.text != "":
-			out.append(label.text)
+# Reads the AGE CELL of each row in the order the rows are drawn. Looking the
+# age up by display name was wrong: two players can share an apelido, and the
+# dictionary silently kept one of them.
+func _ages_in_order(screen: Control) -> Array[int]:
+	var out: Array[int] = []
+	for node: Variant in _tagged(screen, "roster_row"):
+		var cells: Array = _collect(node as Button, "Label", [])
+		# mark, name, perk, strength, age
+		if cells.size() >= 5:
+			out.append(int(String((cells[4] as Label).text)))
 	return out
 
 # Sorting a roster is how a manager reads it. Clicking the column you are
@@ -315,22 +317,20 @@ func test_columns_sort_both_ways(t: TestHelper) -> void:
 		t.fail("cabeçalho de idade não é clicável"); _close(screen); return
 	header.pressed.emit()
 
-	var rosters := The.board.get("rosters", null) as Rosters
-	var by_name: Dictionary = {}
-	for person: Actor in rosters.squad("flag_kings", Actor.CATEGORY_MASC):
-		by_name[person.display_name()] = person.age()
-	var descending: Array[String] = _names_in_order(screen)
-	t.check(descending.size() >= 5, "só %d nomes na lista" % descending.size())
+	var descending: Array[int] = _ages_in_order(screen)
+	t.check(descending.size() >= 5, "só %d linhas lidas" % descending.size())
 	for i: int in range(descending.size() - 1):
-		t.check(int(by_name[descending[i]]) >= int(by_name[descending[i + 1]]),
-			"fora de ordem decrescente: %s antes de %s" % [descending[i], descending[i + 1]])
+		t.check(descending[i] >= descending[i + 1],
+			"fora de ordem decrescente: %d antes de %d" % [descending[i], descending[i + 1]])
 
-	# Same column again flips it.
+	# Clicking the column you are already on flips it.
 	_button_with(screen, UiText.t("team.age") + "  ▾").pressed.emit()
-	var ascending: Array[String] = _names_in_order(screen)
+	var ascending: Array[int] = _ages_in_order(screen)
+	t.equal(ascending.size(), descending.size(), "linhas depois de inverter")
 	for i: int in range(ascending.size() - 1):
-		t.check(int(by_name[ascending[i]]) <= int(by_name[ascending[i + 1]]),
-			"fora de ordem crescente: %s antes de %s" % [ascending[i], ascending[i + 1]])
+		t.check(ascending[i] <= ascending[i + 1],
+			"fora de ordem crescente: %d antes de %d" % [ascending[i], ascending[i + 1]])
+	t.check(ascending[0] == descending[descending.size() - 1], "a inversão não inverteu")
 	_close(screen)
 
 func test_a_position_can_be_ticked_and_unticked(t: TestHelper) -> void:
@@ -344,14 +344,9 @@ func test_a_position_can_be_ticked_and_unticked(t: TestHelper) -> void:
 		t.check(person.lineup().is_empty(), "alguém já nasceu escalado")
 		break
 
-	var code: String = positions.code("qb")
-	var buttons: Array = []
-	for node: Variant in _collect(screen, "Button", []):
-		if (node as Button).text == code:
-			buttons.append(node)
-	# One heading plus one per player.
-	t.equal(buttons.size(), people.size() + 1, "botões de QB na tela")
-	(buttons[1] as Button).pressed.emit()
+	var buttons: Array = _tagged(screen, "role", "qb")
+	t.equal(buttons.size(), people.size(), "botões de QB na tela, um por atleta")
+	(buttons[0] as Button).pressed.emit()
 	var ticked: int = 0
 	for person: Actor in people:
 		if person.plays_position("qb"):
@@ -359,11 +354,7 @@ func test_a_position_can_be_ticked_and_unticked(t: TestHelper) -> void:
 	t.equal(ticked, 1, "exatamente um atleta deveria ficar escalado de QB")
 
 	# And ticking again releases him.
-	var again: Array = []
-	for node: Variant in _collect(screen, "Button", []):
-		if (node as Button).text == code:
-			again.append(node)
-	(again[1] as Button).pressed.emit()
+	(_tagged(screen, "role", "qb")[0] as Button).pressed.emit()
 	for person: Actor in people:
 		t.check(not person.plays_position("qb"), "clicar de novo não desescalou")
 	_close(screen)
@@ -375,11 +366,15 @@ func test_every_position_has_a_button(t: TestHelper) -> void:
 	var positions := Drive.def("position") as PositionDef
 	if screen == null or positions == null:
 		t.fail("não consegui instanciar a tela"); return
-	t.equal(positions.position_ids().size(), 6, "quantidade de posições")
+	t.equal(positions.position_ids().size(), 11, "posições + cargos")
 	var shown: String = _texts(screen)
 	for id: String in positions.position_ids():
 		t.check(shown.contains(positions.code(id)),
 			"posição '%s' não tem botão" % positions.code(id))
 	t.equal(positions.ids_on_side("offense").size(), 3, "posições de ataque")
 	t.equal(positions.ids_on_side("defense").size(), 3, "posições de defesa")
+	t.equal(positions.ids_on_side("staff").size(), 5, "cargos de comissão")
+	# The three group headers are what make eleven little buttons legible.
+	for key: String in ["team.profile", "team.lineup", "team.staff"]:
+		t.check(shown.contains(UiText.t(key)), "sem cabeçalho de grupo '%s'" % key)
 	_close(screen)
