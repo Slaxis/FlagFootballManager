@@ -1,0 +1,59 @@
+{
+  "positions": [
+    {
+      "id": "qb",
+      "label": {"pt": "QB", "en": "QB"},
+      "desc": {"pt": "Passador. Lê a defesa, decide em dois segundos e acerta a janela", "en": "Passer. Reads the defence, decides in two seconds and hits the window"},
+      "affinity": {
+        "dexterity": 1, "intelligence": 1, "perception": 1, "will": 1,
+        "throwing": 1, "play_calling": 1, "rules": 1, "leadership": 1,
+        "trash_talk": -1, "rush": -1
+      },
+      "trains": {"throwing": 5, "play_calling": 3, "rules": 2, "juke": 1, "leadership": 2}
+    },
+    {
+      "id": "center",
+      "label": {"pt": "Center", "en": "Center"},
+      "desc": {"pt": "Faz o snap e some pra frente. Sem ele a jogada não começa", "en": "Snaps and slips forward. Without him the play never starts"},
+      "affinity": {
+        "strength": 1, "dexterity": 1, "stamina": 1,
+        "snap": 1, "catching": 1, "rush": 1, "tackle": 1,
+        "route": -1
+      },
+      "trains": {"snap": 5, "catching": 2, "rush": 2, "tackle": 2, "route": 1, "rules": 1}
+    },
+    {
+      "id": "receiver",
+      "label": {"pt": "Recebedor", "en": "Receiver"},
+      "desc": {"pt": "Corre a rota, ganha a costura e não derruba", "en": "Runs the route, wins the seam and does not drop it"},
+      "affinity": {
+        "agility": 1, "dexterity": 1, "perception": 1,
+        "route": 1, "catching": 1, "juke": 1, "coverage": 1,
+        "snap": -1, "throwing": -1
+      },
+      "trains": {"route": 4, "catching": 4, "juke": 3, "coverage": 2, "rules": 1}
+    },
+    {
+      "id": "rusher",
+      "label": {"pt": "Rusher", "en": "Rusher"},
+      "desc": {"pt": "Conta os três segundos e chega. Vive de motor e de ângulo", "en": "Counts the three seconds and arrives. Lives on motor and angle"},
+      "affinity": {
+        "agility": 1, "stamina": 1, "strength": 1,
+        "rush": 1, "tackle": 1, "deflection": 1, "juke": 1, "trash_talk": 1,
+        "coverage": -1, "throwing": -1
+      },
+      "trains": {"rush": 5, "tackle": 3, "deflection": 2, "juke": 2, "rules": 1}
+    },
+    {
+      "id": "safety",
+      "label": {"pt": "Safety", "en": "Safety"},
+      "desc": {"pt": "Último homem. Enxerga a jogada inteira e não pode errar", "en": "Last man. Sees the whole play and cannot be wrong"},
+      "affinity": {
+        "perception": 1, "intelligence": 1, "agility": 1, "will": 1,
+        "coverage": 1, "deflection": 1, "tackle": 1, "rules": 1,
+        "rush": -1, "snap": -1
+      },
+      "trains": {"coverage": 4, "deflection": 3, "tackle": 3, "rules": 2, "leadership": 1}
+    }
+  ]
+}

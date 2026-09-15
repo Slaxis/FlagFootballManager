@@ -13,7 +13,7 @@ func tests() -> Array:
 		"test_age_within_range",
 		"test_name_is_filled_and_keeps_its_case",
 		"test_category_changes_the_name_pool",
-		"test_quality_target_moves_overall",
+		"test_reputation_moves_the_squad",
 		"test_actors_are_specialists",
 		"test_defaults_put_actor_in_praca",
 		"test_squad_is_stable_per_index",
@@ -42,8 +42,12 @@ func test_stats_within_range(t: TestHelper) -> void:
 	for actor: Actor in ActorGenerator.squad(SEED, COHORT, 50):
 		for id: String in def.base_ids():
 			var value: int = actor.stat(id)
-			t.check(value >= ActorGenerator.STAT_MIN and value <= ActorGenerator.STAT_MAX,
-				"stat '%s' fora de 1..99: %d" % [id, value])
+			# The bound is the RULER's, not the generator's: training buys stored
+			# points one at a time and a ten-year veteran legitimately tops out
+			# at 100, which the old flat roll could never reach.
+			t.check(value >= StatDef.STORED_MIN and value <= StatDef.STORED_MAX,
+				"stat '%s' fora de %d..%d: %d" % [
+					id, StatDef.STORED_MIN, StatDef.STORED_MAX, value])
 
 func test_age_within_range(t: TestHelper) -> void:
 	for actor: Actor in ActorGenerator.squad(SEED, COHORT, 50):
@@ -69,11 +73,22 @@ func test_category_changes_the_name_pool(t: TestHelper) -> void:
 		"mesma seed em modalidades diferentes deveria puxar de pools diferentes")
 	t.equal(str(fem.plays()), str([Actor.CATEGORY_FEM]), "modalidade gravada em plays")
 
-func test_quality_target_moves_overall(t: TestHelper) -> void:
+# Reputation is the only dial, and it moves TWO things: how long these people
+# have been playing and how much a good week was worth. A club nobody has heard
+# of fields kids with three seasons; an established one fields adults with
+# seven.
+#
+# The bar is deliberately lower than the old model's +20. Back then quality WAS
+# the target, so it moved the whole sheet by construction. Now most of an
+# attribute comes from growing up, which happens to everybody at every club —
+# so reputation moves the part that was earned, and that part is smaller.
+func test_reputation_moves_the_squad(t: TestHelper) -> void:
 	var weak: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 25))
 	var strong: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 70))
-	t.check(strong > weak + 20,
-		"elenco de qualidade 70 deveria ser bem melhor que o de 25 (veio %d vs %d)" % [strong, weak])
+	t.check(strong > weak + 6,
+		"clube de reputação 70 deveria bater o de 25 com folga (veio %d vs %d)" % [strong, weak])
+	var elite: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 92))
+	t.check(elite > strong, "reputação 92 deveria bater 70 (veio %d vs %d)" % [elite, strong])
 
 # The whole point of the two-layer model: an actor is not "good" or "bad", he
 # is good at some things. If this spread collapses, every actor plays the same
@@ -97,7 +112,9 @@ func test_defaults_put_actor_in_praca(t: TestHelper) -> void:
 	t.check(not actor.is_coach(), "actor gerado não nasce técnico")
 	t.equal(actor.team(), Actor.NO_TEAM, "time")
 	t.equal(actor.jersey(), Actor.NO_JERSEY, "camisa")
-	t.equal(actor.perks().size(), 0, "perks")
+	# Not zero: a perk is rolled at a quarter chance, so asserting none was
+	# always a bet on this particular seed. What matters is the cap.
+	t.check(actor.perks().size() <= 1, "no máximo um perk")
 
 # Salted sub-seeds: growing the cohort must not reshuffle the actors already
 # in it, or every roster would churn whenever one player is added.
@@ -126,7 +143,10 @@ func test_body_measures_are_plausible(t: TestHelper) -> void:
 func test_weight_follows_strength(t: TestHelper) -> void:
 	var light: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 20))
 	var heavy: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 85))
-	t.check(heavy > light + 5.0,
+	# Also narrower than before, and for the same reason: the body follows the
+	# sheet the career produced, and a career at a poor club still produces an
+	# adult.
+	t.check(heavy > light + 1.5,
 		"elenco forte deveria ser mais pesado (veio %.1f vs %.1f kg)" % [heavy, light])
 
 func test_measures_format_with_locale_separator(t: TestHelper) -> void:

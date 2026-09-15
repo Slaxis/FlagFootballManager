@@ -33,16 +33,17 @@ const PERK_CHANCE := 0.25
 const BOON_AT_FLOOR := 0.25
 const BOON_AT_CEILING := 0.85
 
+# Reputation is the only dial. Quality (how good the weeks are) and career
+# length (how many of them there were) are BOTH read off it, so they can never
+# disagree — passing them separately let a caller ask for a great squad at a
+# club nobody had heard of and get neither.
 static func generate(
 	seed_value: int,
-	quality: int,
+	reputation: int,
 	category: String = Actor.CATEGORY_MASC,
-	spread: float = SPREAD,
-	age_min: int = AGE_MIN,
-	age_max: int = AGE_MAX,
 ) -> Actor:
 	return _build(SeedRng.make_rng(seed_value), "actor_%d" % seed_value,
-		quality, category, {}, spread, age_min, age_max)
+		quality_from_reputation(reputation), category, {}, reputation)
 
 # Hydrates a CURATED actor: a sparse spec from ActorDef plus whatever the
 # curator did not say. Everything pinned wins; everything absent is rolled.
@@ -51,14 +52,45 @@ static func generate(
 # same person in every career, and only the squad-fillers around them move.
 # Which also means a curator deepening a spec later changes only the numbers
 # they touched: the rest was already a function of the id.
-static func from_spec(spec: Dictionary, club_quality: int,
+static func from_spec(spec: Dictionary, reputation: int,
 		category: String = Actor.CATEGORY_MASC) -> Actor:
 	var id: String = String(spec.get("id", "")).strip_edges()
 	return _build(SeedRng.make_rng(SeedRng.seed_from_string(id)), id,
-		int(spec.get("quality", club_quality)), category, spec,
-		SPREAD, AGE_MIN, AGE_MAX)
+		int(spec.get("quality", quality_from_reputation(reputation))),
+		category, spec, reputation)
 
-# The one construction path. `spec` is empty for a generated actor and holds
+# How long somebody has been playing, by how established the club is. This is
+# the whole of decision 26's first half: an entry club is full of kids because
+# its players have one or two seasons behind them, not because anybody rolled
+# a low age. Lognormal, so the tail is a veteran who stayed rather than a
+# symmetric spread around a mean nobody occupies.
+const YEARS_AT_ENTRY_CLUB := 1.6
+const YEARS_AT_ELITE_CLUB := 9.0
+const YEARS_SPREAD := 0.62
+
+static func career_years(reputation: int, rng: RandomNumberGenerator) -> int:
+	var maturity: float = clampf(float(reputation) / 100.0, 0.0, 1.0)
+	var centre: float = lerpf(YEARS_AT_ENTRY_CLUB, YEARS_AT_ELITE_CLUB, maturity)
+	return clampi(int(round(exp(rng.randfn(log(centre), YEARS_SPREAD)))), 0, 26)
+
+# How good the weeks were. Club quality is not a target any more (decision 26):
+# it lifts what a good week is worth and it cannot rescue a bad one.
+static func _climate(quality: int, will_stored: int) -> Dictionary:
+	var t: float = clampf(
+		float(quality - QUALITY_FLOOR) / float(QUALITY_CEILING - QUALITY_FLOOR), 0.0, 1.0)
+	# Dedication is the xp a person puts in on an ordinary day, before the die
+	# says how the day went. Two is the good week (the gym most days at 75%);
+	# `will` moves it either side, so the driven athlete lives at three and the
+	# one who shows up when he feels like it lives at one.
+	return {
+		"training": lerpf(0.6, 1.35, t),
+		# Floored at one: "corpo mole" is a bad WEEK, and the die already
+		# delivers those. A permanent zero meant a whole decade of career
+		# earning nothing, which is not a lazy athlete, it is a bug.
+		"dedication": clampi(2 + int(floor(float(will_stored) / 10.0)) - 5, 1, 4),
+	}
+
+# The one construction path. `spec` is empty for an invented actor and holds
 # whatever a curator pinned for an authored one, so the two cannot drift apart.
 static func _build(
 	rng: RandomNumberGenerator,
@@ -66,45 +98,81 @@ static func _build(
 	quality: int,
 	category: String,
 	spec: Dictionary,
-	spread: float,
-	age_min: int,
-	age_max: int,
+	reputation: int,
 ) -> Actor:
 	var actor := Actor.new()
-	var stats: Dictionary = _roll_stats(rng, quality, spread)
-	stats.merge(_numbers(spec.get("stats", {})), true)
-	var skills: Dictionary = _roll_skills(rng, quality - SKILL_LAG, spread)
-	skills.merge(_numbers(spec.get("skills", {})), true)
+	var def := Drive.def("stat") as StatDef
+	var positions := Drive.def("position") as PositionDef
+	var birth: Dictionary = ActorLife.birth_sheet(rng)
+	var debut: int = int(spec.get("debut_age", ActorLife.roll_debut_age(rng)))
+	var years: int = int(spec.get("career_years", career_years(reputation, rng)))
 	var payload: Dictionary = {
 		"plays": [category],
 		"manages": [],
-		"age": rng.randi_range(age_min, age_max),
-		"stats": stats,
-		"skills": skills,
+		"age": debut,
+		"debut_age": debut,
+		"potential": ActorLife.roll_potential(rng),
+		"stats": birth,
+		"skills": def.blank_skills(0) if def != null else {},
 		"perks": [],
 		"team": Actor.NO_TEAM,
 		"jersey": Actor.NO_JERSEY,
 	}
-	# The body follows the FINAL sheet, so a curator who pinned 90 strength
-	# gets the heavy build that goes with it rather than one rolled around a
-	# number that was thrown away.
-	payload.merge(_roll_body(rng, stats))
-	# A mixed squad genuinely holds both, so the coin decides which slot this
-	# actor fills — and `plays` records it, because "mixed" on its own would
-	# leave the women's quota uncountable.
+	actor._apply_data(thing_id if thing_id != "" else "actor", "actor", payload)
+
+	# Where this body ends up playing, then that many years of playing there.
+	var position: String = String(spec.get("position", ""))
+	if position == "" and positions != null:
+		position = positions.match_position(birth, {}, rng)
+	actor.data["position"] = position
+	var declared: Array = spec.get("career", [])
+	for year: int in range(years):
+		# Recomputed every season. `will` grows as somebody grows up, and a
+		# fifteen-year-old genuinely does not train like a man of twenty-two —
+		# computing this once before the loop froze everybody at a child's
+		# dedication and left half the squad with a blank sheet.
+		var climate: Dictionary = _climate(quality, actor.stat("will"))
+		var season: Dictionary = declared[year] if year < declared.size() else {}
+		_live_one_year(actor, position, climate, season, rng)
+
+	# Pinned numbers land BEFORE the body, so the body is built around the sheet
+	# the curator actually meant.
+	if spec.has("stats"):
+		actor.data["stats"].merge(_numbers(spec["stats"]), true)
+	if spec.has("skills"):
+		actor.data["skills"].merge(_numbers(spec["skills"]), true)
+	# And the body follows the sheet the career produced, not the one it started
+	# with: a rusher who spent ten years in the gym is not built like the kid
+	# who walked in.
+	actor.data.merge(_roll_body(rng, actor.stats()), true)
 	var pool: String = category
 	if category == Actor.CATEGORY_MISTO:
 		pool = Actor.CATEGORY_FEM if rng.randf() < 0.5 else Actor.CATEGORY_MASC
-		payload["plays"] = [pool, Actor.CATEGORY_MISTO]
-	payload.merge(_roll_name(rng, pool, stats, skills))
-	payload["perks"] = _roll_perks(rng, quality)
-	# Everything the curator stated, last and unconditionally.
+		actor.data["plays"] = [pool, Actor.CATEGORY_MISTO]
+	actor.data.merge(_roll_name(rng, pool, actor.stats(), actor.skills()), true)
+	actor.data["perks"] = _roll_perks(rng, quality)
 	for key: String in ["first_name", "last_name", "nickname", "age", "height",
-			"weight", "plays", "manages", "perks", "team", "jersey"]:
+			"weight", "plays", "manages", "perks", "team", "jersey", "position"]:
 		if spec.has(key):
-			payload[key] = spec[key]
-	actor._apply_data(thing_id if thing_id != "" else "actor", "actor", payload)
+			actor.data[key] = spec[key]
 	return actor
+
+# One season. A curator who knows what somebody did that year says so and it
+# is applied verbatim; a year nobody wrote down is simulated. Same list, same
+# code path — decision 28.
+static func _live_one_year(actor: Actor, fallback_position: String,
+		climate: Dictionary, season: Dictionary, rng: RandomNumberGenerator) -> void:
+	var position: String = String(season.get("position", fallback_position))
+	var gains: Dictionary = season.get("gains", {})
+	if gains.is_empty():
+		ActorLife.advance_year(actor, position, climate, rng)
+		return
+	for id: String in gains.keys():
+		var key: String = String(id).strip_edges().to_lower()
+		var amount: int = int(gains[id]) * int(ActorLife.STORED_PER_STEP)
+		actor.set_skill(key, clampi(actor.skill(key) + amount,
+			StatDef.STORED_MIN, StatDef.STORED_MAX))
+	actor.set_age(actor.age() + 1)
 
 static func _numbers(raw: Variant) -> Dictionary:
 	var out: Dictionary = {}
@@ -120,14 +188,13 @@ static func _numbers(raw: Variant) -> Dictionary:
 static func squad(
 	base_seed: int,
 	count: int,
-	quality: int,
+	reputation: int,
 	category: String = Actor.CATEGORY_MASC,
-	spread: float = SPREAD,
 ) -> Array[Actor]:
 	var out: Array[Actor] = []
 	for i: int in range(count):
 		var sub_seed: int = SeedRng.derive(base_seed, "actor_%d" % i)
-		out.append(generate(sub_seed, quality, category, spread))
+		out.append(generate(sub_seed, reputation, category))
 	return out
 
 # --- Internals ---
