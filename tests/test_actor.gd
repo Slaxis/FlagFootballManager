@@ -13,7 +13,8 @@ func tests() -> Array:
 		"test_age_within_range",
 		"test_name_is_filled_and_keeps_its_case",
 		"test_category_changes_the_name_pool",
-		"test_reputation_moves_the_squad",
+		"test_club_level_moves_the_ceiling",
+		"test_reputation_moves_the_years",
 		"test_actors_are_specialists",
 		"test_defaults_put_actor_in_praca",
 		"test_squad_is_stable_per_index",
@@ -73,22 +74,44 @@ func test_category_changes_the_name_pool(t: TestHelper) -> void:
 		"mesma seed em modalidades diferentes deveria puxar de pools diferentes")
 	t.equal(str(fem.plays()), str([Actor.CATEGORY_FEM]), "modalidade gravada em plays")
 
-# Reputation is the only dial, and it moves TWO things: how long these people
-# have been playing and how much a good week was worth. A club nobody has heard
-# of fields kids with three seasons; an established one fields adults with
-# seven.
+# Reputation and CLUB LEVEL are two different axes now, and conflating them is
+# what this test used to do.
 #
-# The bar is deliberately lower than the old model's +20. Back then quality WAS
-# the target, so it moved the whole sheet by construction. Now most of an
-# attribute comes from growing up, which happens to everybody at every club —
-# so reputation moves the part that was earned, and that part is smaller.
-func test_reputation_moves_the_squad(t: TestHelper) -> void:
-	var weak: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 25))
-	var strong: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 70))
-	t.check(strong > weak + 6,
-		"clube de reputação 70 deveria bater o de 25 com folga (veio %d vs %d)" % [strong, weak])
-	var elite: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 92))
-	t.check(elite > strong, "reputação 92 deveria bater 70 (veio %d vs %d)" % [elite, strong])
+#   reputation   how long these people have been playing and how good the
+#                weeks were. Moves accumulation.
+#   club level   where the club sits on the WORLD ladder (country + division).
+#                Moves the CEILING, via potential.
+#
+# With a hard ceiling, reputation alone cannot lift a squad past its band — a
+# sandlot club with great training still fields city-level players, which is
+# the entire point of decision 33. So level is what has to move the squad, and
+# reputation is what has to move the age.
+func test_club_level_moves_the_ceiling(t: TestHelper) -> void:
+	var city: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 60, Actor.CATEGORY_MASC, 1.0))
+	var world: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 60, Actor.CATEGORY_MASC, 4.0))
+	# +15 and not more, and the reason is `overall()` itself: it averages all
+	# eight attributes, and a specialist only ever trains about three of them.
+	# A world-level ceiling of 85 shows up as an overall in the sixties because
+	# five untrained attributes sit at whatever growing up left them. The gap is
+	# real; the measure dilutes it.
+	t.check(world > city + 15,
+		"clube de nível mundial deveria bater o de bairro com folga (%d vs %d)" % [world, city])
+	var national: int = _mean_overall(
+		ActorGenerator.squad(SEED, COHORT, 60, Actor.CATEGORY_MASC, 3.0))
+	t.check(national > city and world > national,
+		"a escada deveria ser monotônica (%d < %d < %d)" % [city, national, world])
+
+func test_reputation_moves_the_years(t: TestHelper) -> void:
+	var young: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 20)
+	var seasoned: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 85)
+	var young_age: float = 0.0
+	var seasoned_age: float = 0.0
+	for i: int in range(COHORT):
+		young_age += float(young[i].age())
+		seasoned_age += float(seasoned[i].age())
+	t.check(seasoned_age > young_age + float(COHORT) * 2.0,
+		"clube estabelecido deveria ter gente mais velha (%d vs %d anos de média)" % [
+			int(seasoned_age / COHORT), int(young_age / COHORT)])
 
 # The whole point of the two-layer model: an actor is not "good" or "bad", he
 # is good at some things. If this spread collapses, every actor plays the same

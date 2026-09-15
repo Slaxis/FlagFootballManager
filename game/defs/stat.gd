@@ -43,6 +43,8 @@ var _base: Dictionary = {}
 var _measures: Dictionary = {}
 var _skills: Dictionary = {}
 var _anchors: Array = []
+var _quantiles: Array = []
+var _odds_ratio: int = 4
 
 func load_data(raw: Dictionary) -> void:
 	_base.clear()
@@ -52,6 +54,9 @@ func load_data(raw: Dictionary) -> void:
 	stored_per_step = int(scale.get("stored_per_step", DEFAULT_STORED_PER_STEP))
 	average_step = int(scale.get("average_adult", DEFAULT_AVERAGE_STEP))
 	_anchors = scale.get("anchors", [])
+	var quantiles: Dictionary = raw.get("quantiles", {})
+	_quantiles = quantiles.get("bands", [])
+	_odds_ratio = int(quantiles.get("odds_ratio", 4))
 	_ingest(raw.get("base", []), _base)
 	_ingest(raw.get("measures", []), _measures)
 	_ingest(raw.get("skills", []), _skills, "attribute")
@@ -295,3 +300,48 @@ func notable_traits(stat_steps: Dictionary, skill_steps: Dictionary = {}) -> Arr
 	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["distance"]) > int(b["distance"]))
 	return found
+
+
+# --- The quantile ladder ---
+#
+# The ruler is ABSOLUTE: 10 is the best there is, on Earth. So a number needs a
+# second reading that says which league that number belongs to, and the five
+# bands are it:
+#
+#   Q1  city level      plays well on the neighbourhood sandlot
+#   Q2  state level     shows up at the state championship
+#   Q3  national        the Brazil squad IS this
+#   Q4  world, minor    faces Mexico and the USA and holds up
+#   Q5  world, major    an IFAF star; all of Brazil might have three
+#
+# Adjacent bands sit at the declared odds ratio — 4:1, so 80/20 — which is what
+# makes Q5 vanishingly rare instead of merely uncommon. Reading a roster
+# against this is how "a 26-year-old at a Piedade club with international-level
+# coaching" becomes a visible mistake rather than just a big number.
+func quantile_count() -> int:
+	return _quantiles.size()
+
+func odds_ratio() -> int:
+	return _odds_ratio
+
+# 1-based, so quantile_of(72) is 3.
+func quantile_of(stored: int) -> int:
+	for i: int in range(_quantiles.size()):
+		if stored < int((_quantiles[i] as Dictionary).get("max", StatDef.STORED_MAX)):
+			return i + 1
+	return maxi(_quantiles.size(), 1)
+
+func quantile_band(quantile: int) -> Dictionary:
+	var index: int = clampi(quantile, 1, maxi(_quantiles.size(), 1)) - 1
+	return _quantiles[index] if index < _quantiles.size() else {}
+
+func quantile_label(quantile: int) -> String:
+	var band: Dictionary = quantile_band(quantile)
+	return I18n.text(band.get("label", ""), "Q%d" % quantile)
+
+# A value drawn inside a band, so "Q2" becomes an actual number.
+func quantile_value(quantile: int, rng: RandomNumberGenerator) -> int:
+	var band: Dictionary = quantile_band(quantile)
+	if band.is_empty():
+		return 50
+	return rng.randi_range(int(band.get("min", 30)), int(band.get("max", 55)))

@@ -360,5 +360,75 @@
         "en": "One look and you know who can play"
       }
     }
-  ]
+  ],
+  "quantiles": {
+    "odds_ratio": 4,
+    "bands": [
+      {
+        "id": "q1",
+        "min": 30,
+        "max": 55,
+        "label": {
+          "pt": "Nível cidade",
+          "en": "City level"
+        },
+        "desc": {
+          "pt": "Joga bem na várzea do bairro",
+          "en": "Good on the neighbourhood sandlot"
+        }
+      },
+      {
+        "id": "q2",
+        "min": 55,
+        "max": 68,
+        "label": {
+          "pt": "Nível estadual",
+          "en": "State level"
+        },
+        "desc": {
+          "pt": "Aparece no estadual, disputa vaga",
+          "en": "Shows up at state level, competes for a spot"
+        }
+      },
+      {
+        "id": "q3",
+        "min": 68,
+        "max": 80,
+        "label": {
+          "pt": "Nível nacional",
+          "en": "National level"
+        },
+        "desc": {
+          "pt": "Seleção brasileira. O Brasil é isto",
+          "en": "The Brazil squad. This is what Brazil is"
+        }
+      },
+      {
+        "id": "q4",
+        "min": 80,
+        "max": 90,
+        "label": {
+          "pt": "Nível mundial menor",
+          "en": "World level, minor"
+        },
+        "desc": {
+          "pt": "Encara México e EUA e não passa vergonha",
+          "en": "Faces Mexico and the USA and holds up"
+        }
+      },
+      {
+        "id": "q5",
+        "min": 90,
+        "max": 100,
+        "label": {
+          "pt": "Nível mundial maior",
+          "en": "World level, major"
+        },
+        "desc": {
+          "pt": "Estrela da IFAF. O Brasil inteiro talvez tenha três",
+          "en": "An IFAF star. All of Brazil might have three"
+        }
+      }
+    ]
+  }
 }

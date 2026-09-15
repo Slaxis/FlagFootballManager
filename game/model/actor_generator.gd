@@ -41,9 +41,10 @@ static func generate(
 	seed_value: int,
 	reputation: int,
 	category: String = Actor.CATEGORY_MASC,
+	club_level: float = 1.0,
 ) -> Actor:
 	return _build(SeedRng.make_rng(seed_value), "actor_%d" % seed_value,
-		quality_from_reputation(reputation), category, {}, reputation)
+		quality_from_reputation(reputation), category, {}, reputation, club_level)
 
 # Hydrates a CURATED actor: a sparse spec from ActorDef plus whatever the
 # curator did not say. Everything pinned wins; everything absent is rolled.
@@ -53,11 +54,11 @@ static func generate(
 # Which also means a curator deepening a spec later changes only the numbers
 # they touched: the rest was already a function of the id.
 static func from_spec(spec: Dictionary, reputation: int,
-		category: String = Actor.CATEGORY_MASC) -> Actor:
+		category: String = Actor.CATEGORY_MASC, club_level: float = 1.0) -> Actor:
 	var id: String = String(spec.get("id", "")).strip_edges()
 	return _build(SeedRng.make_rng(SeedRng.seed_from_string(id)), id,
 		int(spec.get("quality", quality_from_reputation(reputation))),
-		category, spec, reputation)
+		category, spec, reputation, club_level)
 
 # How long somebody has been playing, by how established the club is. This is
 # the whole of decision 26's first half: an entry club is full of kids because
@@ -99,6 +100,7 @@ static func _build(
 	category: String,
 	spec: Dictionary,
 	reputation: int,
+	club_level: float,
 ) -> Actor:
 	var actor := Actor.new()
 	var def := Drive.def("stat") as StatDef
@@ -111,7 +113,7 @@ static func _build(
 		"manages": [],
 		"age": debut,
 		"debut_age": debut,
-		"potential": ActorLife.roll_potential(rng),
+		"potential": ActorLife.roll_potential(club_level, rng),
 		"stats": birth,
 		"skills": def.blank_skills(0) if def != null else {},
 		"perks": [],
@@ -190,11 +192,12 @@ static func squad(
 	count: int,
 	reputation: int,
 	category: String = Actor.CATEGORY_MASC,
+	club_level: float = 1.0,
 ) -> Array[Actor]:
 	var out: Array[Actor] = []
 	for i: int in range(count):
 		var sub_seed: int = SeedRng.derive(base_seed, "actor_%d" % i)
-		out.append(generate(sub_seed, reputation, category))
+		out.append(generate(sub_seed, reputation, category, club_level))
 	return out
 
 # --- Internals ---

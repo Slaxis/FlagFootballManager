@@ -1,0 +1,21 @@
+{
+  "default": "BR",
+  "division_weight": [
+    {"tier": 1, "weight": 1.2},
+    {"tier": 2, "weight": 0.8},
+    {"tier": 3, "weight": 0.5},
+    {"tier": 4, "weight": 0.0}
+  ],
+  "nations": [
+    {"id": "US", "weight": 1.5, "label": {"pt": "Estados Unidos", "en": "United States"}},
+    {"id": "MX", "weight": 1.5, "label": {"pt": "México", "en": "Mexico"}},
+    {"id": "IT", "weight": 0.75, "label": {"pt": "Itália", "en": "Italy"}},
+    {"id": "AT", "weight": 0.75, "label": {"pt": "Áustria", "en": "Austria"}},
+    {"id": "JP", "weight": 0.75, "label": {"pt": "Japão", "en": "Japan"}},
+    {"id": "PA", "weight": 0.75, "label": {"pt": "Panamá", "en": "Panama"}},
+    {"id": "BR", "weight": 0.0, "label": {"pt": "Brasil", "en": "Brazil"}},
+    {"id": "DE", "weight": 0.0, "label": {"pt": "Alemanha", "en": "Germany"}},
+    {"id": "IL", "weight": 0.0, "label": {"pt": "Israel", "en": "Israel"}},
+    {"id": "DK", "weight": 0.0, "label": {"pt": "Dinamarca", "en": "Denmark"}}
+  ]
+}

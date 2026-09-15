@@ -82,13 +82,17 @@ func _build(team_id: String, category: String) -> Array[Actor]:
 		Log.log(self, "error", "Rosters: no club '%s'" % team_id)
 		return people
 	var reputation: int = int(club.get("reputation", 30))
+	# Where this club stands in the WORLD, not just in its own league. A city
+	# club in Piedade and a city club in Monterrey are not the same sentence.
+	var nations := Drive.def("nation") as NationDef
+	var club_level: float = nations.club_level(club) if nations != null else 1.0
 
 	# Curated first, and all of them.
 	var curated := Drive.def("actor") as ActorDef
 	if curated != null:
 		for id: String in curated.ids_for(team_id, category):
 			var person: Actor = ActorGenerator.from_spec(
-				curated.spec(id), reputation, category)
+				curated.spec(id), reputation, category, club_level)
 			person.set_team(team_id)
 			people.append(person)
 
@@ -100,7 +104,7 @@ func _build(team_id: String, category: String) -> Array[Actor]:
 	while people.size() < target:
 		var sub_seed: int = SeedRng.derive(
 			career_seed, "roster_%s_%s_%d" % [team_id, category, index])
-		var filler: Actor = ActorGenerator.generate(sub_seed, reputation, category)
+		var filler: Actor = ActorGenerator.generate(sub_seed, reputation, category, club_level)
 		filler.set_team(team_id)
 		people.append(filler)
 		index += 1

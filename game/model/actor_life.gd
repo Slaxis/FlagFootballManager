@@ -79,15 +79,29 @@ const DECLINE_PER_YEAR := 1.4
 const DECLINE_ACCELERATION := 0.35
 const PHYSICAL: Array[String] = ["strength", "stamina", "agility", "dexterity"]
 
-# Potential (decision 27): a soft ceiling drawn at birth. Above it a career
-# point buys a quarter of what it would below — work still counts, it just
-# stops being enough.
-const POTENTIAL_BANDS: Array = [
-	{"chance": 0.62, "min": 55, "max": 68},
-	{"chance": 0.31, "min": 68, "max": 82},
-	{"chance": 0.07, "min": 82, "max": 99},
-]
-const OVER_POTENTIAL_COST := 4.0
+# Potential (decision 27), now drawn against the club's place in the WORLD
+# (decision 33). The old version was a flat table that handed 7% of everybody a
+# world-level ceiling, which is how a sandlot club in Piedade ended up fielding
+# somebody with international-level coaching.
+#
+# A player is normally AT his club's level. The drift around it uses the same
+# 4:1 odds the ladder is built on, so one band better is uncommon, two is rare,
+# and nothing else happens. A great player at a poor club exists; a world star
+# there does not.
+const DRIFT_OFFSETS: Array[int] = [-1, 0, 1, 2]
+const DRIFT_WEIGHTS: Array[float] = [0.25, 1.0, 0.25, 0.0625]
+
+# And potential is a CEILING, not a toll. Charging four times the price above it
+# was not a wall at all — a fifteen-year career at fifty-odd points a year
+# walked straight through and came out nineteen points past, which is how a
+# national-level ceiling produced world-level coaching.
+#
+# A hard cap is also what makes the quantile ladder mean anything: if a player
+# can train past his band then the bands describe nothing. The small overshoot
+# is the one honest exception — somebody who worked harder than anyone expected
+# — and it is priced so only a long career reaches it.
+const OVER_POTENTIAL_ALLOWED := 2
+const OVER_POTENTIAL_COST := 9.0
 
 # A run of weeks that goes badly enough eats condition instead of building it.
 const DEFICIT_BEFORE_DECAY := -8.0
@@ -103,7 +117,7 @@ const DECAY_REFUND := 4.0
 # by potential: the talented kid matures past average, the ordinary one lands
 # on it. This is free and it happens to everybody.
 const MATURITY_AGE := 23
-const ADULT_BASELINE := 48.0
+const ADULT_BASELINE := 42.0
 const MATURITY_STEP_MIN := 1
 const MATURITY_STEP_MAX := 4
 
@@ -119,14 +133,30 @@ static func birth_sheet(rng: RandomNumberGenerator) -> Dictionary:
 		stats[id] = clampi(int(round(rng.randfn(34.0, 9.0))), 8, 62)
 	return stats
 
-static func roll_potential(rng: RandomNumberGenerator) -> int:
-	var roll: float = rng.randf()
-	var seen: float = 0.0
-	for band: Dictionary in POTENTIAL_BANDS:
-		seen += float(band["chance"])
-		if roll <= seen:
-			return rng.randi_range(int(band["min"]), int(band["max"]))
-	return 70
+# `club_level` is a float from NationDef: 1.0 is a city club in a mid country,
+# and it climbs with both the country and the division.
+static func roll_potential(club_level: float, rng: RandomNumberGenerator) -> int:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return 55
+	var total: float = 0.0
+	for weight: float in DRIFT_WEIGHTS:
+		total += weight
+	var roll: float = rng.randf() * total
+	var drift: int = 0
+	for i: int in range(DRIFT_OFFSETS.size()):
+		roll -= DRIFT_WEIGHTS[i]
+		if roll <= 0.0:
+			drift = DRIFT_OFFSETS[i]
+			break
+	# The fractional part is a CHANCE of the band above, not a rounding. Level
+	# 2.5 rounded up made Flag Kings a national-level club outright, and the
+	# drift on top of that handed a Brazilian side six world-level stars.
+	var base: int = int(floor(club_level))
+	if rng.randf() < club_level - float(base):
+		base += 1
+	var quantile: int = clampi(base + drift, 1, def.quantile_count())
+	return def.quantile_value(quantile, rng)
 
 static func roll_debut_age(rng: RandomNumberGenerator) -> int:
 	return rng.randi_range(DEBUT_AGE_MIN, DEBUT_AGE_MAX)
@@ -213,6 +243,8 @@ static func _spend(actor: Actor, position: String, rng: RandomNumberGenerator) -
 			if current >= StatDef.STORED_MAX:
 				continue
 			var cost: float = _cost_of_next(current, is_attribute, potential)
+			if is_inf(cost):
+				continue
 			if cost > bank:
 				break
 			bank -= cost
@@ -230,7 +262,11 @@ static func _cost_of_next(current: int, is_attribute: bool, potential: int) -> f
 	var kind: int = SheetBuilder.STAT_POINT_IN_CAREER if is_attribute \
 		else SheetBuilder.SKILL_POINT_IN_CAREER
 	var cost: float = float(step * kind) / STORED_PER_STEP
-	return cost * OVER_POTENTIAL_COST if current >= potential else cost
+	if current < potential:
+		return cost
+	if current >= potential + OVER_POTENTIAL_ALLOWED:
+		return INF
+	return cost * OVER_POTENTIAL_COST
 
 static func _pick_weighted(weights: Dictionary, rng: RandomNumberGenerator) -> String:
 	var total: float = 0.0
@@ -259,8 +295,10 @@ static func _mature(actor: Actor, rng: RandomNumberGenerator) -> void:
 	var def := Drive.def("stat") as StatDef
 	if def == null:
 		return
-	var potential: float = float(actor.data.get("potential", 70))
-	var ceiling: int = int(round(lerpf(ADULT_BASELINE, potential, 0.45)))
+	# Growing up cannot take somebody past what they were ever going to be:
+	# maturation aims BELOW potential, and training covers the rest.
+	var potential: float = float(actor.data.get("potential", 55))
+	var ceiling: int = int(round(minf(lerpf(ADULT_BASELINE, potential, 0.45), potential)))
 	for id: String in def.base_ids():
 		var current: int = actor.stat(id)
 		if current >= ceiling:
