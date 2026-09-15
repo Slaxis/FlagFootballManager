@@ -18,6 +18,12 @@
 - Validacao do elenco curado, rodando na suite: clube inexistente, id
   duplicado, habilidade escrita errado, numero fora de faixa, perk inventado
 - `content/ELENCOS.md` — guia de curadoria
+- Colunas do elenco: **Nome | Perk | Forca | Idade**, com a Forca tingida num
+  gradiente cinza(0) -> verde(100), a mesma leitura das barrinhas
+- **Clicar num adversario abre o elenco dele** — a aba listava clube e parava
+  ali. Com botao de volta pro seu
+- `StatBar` corta rotulo longo em vez de empurrar o painel ("Chamada de
+  jogada" abria a ficha inteira)
 - d5star v0.5.0: o scanner de Things aceita qualquer layout de pasta
 
 ### Added — B.4c: nome, apelido e perks (2026-09-13)

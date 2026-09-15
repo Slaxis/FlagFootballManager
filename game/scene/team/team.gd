@@ -31,6 +31,10 @@ const _TIER_COLOR: Dictionary = {
 }
 
 var _tab: String = TAB_SQUAD
+# Which club the Elenco tab is showing. Empty means your own — clicking a
+# rival points it somewhere else, which is the cheapest possible scouting and
+# the reason the tab is a view and not a fixed page.
+var _viewing: String = ""
 var _selected: Actor = null
 var _root: VBoxContainer = null
 
@@ -88,9 +92,23 @@ func _rosters() -> Rosters:
 
 # Which squad the Elenco tab is showing. Your own category when you play one,
 # otherwise whatever the club actually fields.
+func _viewed_id() -> String:
+	if _viewing != "":
+		return _viewing
+	var career: Career = _career()
+	return career.team_id if career != null else ""
+
+func _viewed_club() -> Dictionary:
+	var teams := Drive.def("team") as TeamDef
+	return teams.get_team(_viewed_id()) if teams != null else {}
+
+func _own_id() -> String:
+	var career: Career = _career()
+	return career.team_id if career != null else ""
+
 func _category() -> String:
 	var career: Career = _career()
-	var club: Dictionary = career.team() if career != null else {}
+	var club: Dictionary = _viewed_club()
 	var squads: Dictionary = club.get("squads", {})
 	if career != null and career.manager != null:
 		for id: Variant in career.manager.plays():
@@ -102,8 +120,7 @@ func _category() -> String:
 	return Actor.CATEGORY_MASC
 
 func _header() -> Control:
-	var career: Career = _career()
-	var club: Dictionary = career.team() if career != null else {}
+	var club: Dictionary = _viewed_club()
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 16)
 
@@ -147,6 +164,8 @@ func _tab_bar() -> Control:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
+	if _viewing != "" and _viewing != _own_id():
+		row.add_child(_flat_button(UiText.t("team.back_to_mine"), _on_view_mine))
 	row.add_child(_flat_button(UiText.t("common.back"), func() -> void: go("back")))
 	return row
 
@@ -158,8 +177,7 @@ func _squad_tab() -> Control:
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var career: Career = _career()
-	var people: Array[Actor] = _rosters().squad(
-		career.team_id if career != null else "", _category())
+	var people: Array[Actor] = _rosters().squad(_viewed_id(), _category())
 
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 2)
@@ -186,8 +204,9 @@ func _squad_tab() -> Control:
 func _column_headings() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	for pair: Array in [["", 22], [UiText.t("team.name"), 260],
-			[UiText.t("team.age"), 54], [UiText.t("team.overall"), 44]]:
+	for pair: Array in [["", 18], [UiText.t("team.name"), 210],
+			[UiText.t("team.perk"), 34], [UiText.t("team.strength"), 48],
+			[UiText.t("team.age"), 44]]:
 		var label := Label.new()
 		label.text = String(pair[0])
 		label.custom_minimum_size = Vector2(int(pair[1]), 0)
@@ -211,11 +230,34 @@ func _roster_row(person: Actor, is_manager: bool) -> Control:
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	button.add_child(row)
 
-	row.add_child(_cell("★" if is_manager else "", 22, ACCENT if is_manager else MUTED))
-	row.add_child(_cell(person.display_name(), 260, TEXT))
-	row.add_child(_cell(str(person.age()), 54, MUTED))
-	row.add_child(_cell(str(person.overall()), 44, ACCENT))
+	row.add_child(_cell("\u2605" if is_manager else "", 18, ACCENT if is_manager else MUTED))
+	row.add_child(_cell(person.display_name(), 210, TEXT))
+	row.add_child(_perk_cell(person))
+	# Elifoot calls this Forca and so does this column: one number for how good
+	# somebody is, tinted so the roster reads before it is read.
+	var strength: int = person.overall()
+	row.add_child(_cell(str(strength), 48, StatBar.tint(strength)))
+	row.add_child(_cell(str(person.age()), 44, MUTED))
 	return button
+
+# The perk is the one thing about a player that is a sentence and not a
+# number, so it earns a column of its own rather than hiding inside the sheet.
+func _perk_cell(person: Actor) -> Control:
+	var perks := Drive.def("perk") as PerkDef
+	var ids: Array = person.perks()
+	var label := Label.new()
+	label.custom_minimum_size = Vector2(34, 0)
+	label.add_theme_font_size_override("font_size", 13)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if perks == null or ids.is_empty():
+		label.text = "\u00b7"
+		label.add_theme_color_override("font_color", Color(0.24, 0.28, 0.25))
+		return label
+	var id: String = String(ids[0])
+	label.text = perks.icon(id)
+	label.tooltip_text = "%s \u2014 %s" % [perks.label(id), perks.desc(id)]
+	label.mouse_filter = Control.MOUSE_FILTER_STOP
+	return label
 
 func _cell(text: String, width: int, color: Color) -> Control:
 	var label := Label.new()
@@ -287,7 +329,7 @@ func _sheet_panel() -> Control:
 		box.add_child(StatBar.row(
 			I18n.text(spec.get("label", id), id),
 			_selected.step(id) * 10,
-			I18n.text(spec.get("desc", ""), ""), 118))
+			I18n.text(spec.get("desc", ""), ""), 132))
 	box.add_child(_section(UiText.t("manager.skills")))
 	for group: String in stats.skill_groups():
 		for id: String in stats.skills_in_group(group):
@@ -299,7 +341,7 @@ func _sheet_panel() -> Control:
 			box.add_child(StatBar.row(
 				I18n.text(spec.get("label", id), id),
 				_selected.skill_step(id) * 10,
-				I18n.text(spec.get("desc", ""), ""), 118))
+				I18n.text(spec.get("desc", ""), ""), 132))
 	return panel
 
 # --- Adversários ---
@@ -324,9 +366,22 @@ func _rivals_tab() -> Control:
 		list.add_child(_rival_row(club))
 	return scroll
 
+# Clickable, because "who else is out there" is only half the question and the
+# other half is "and who plays for them".
 func _rival_row(club: Dictionary) -> Control:
+	var button := Button.new()
+	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size = Vector2(0, 34)
+	for state: String in ["normal", "hover", "pressed", "focus"]:
+		button.add_theme_stylebox_override(state, _row_style(false, state == "hover"))
+	button.pressed.connect(_on_view.bind(String(club.get("id", ""))))
+	button.tooltip_text = UiText.t("team.see_squad") % club.get("name", "?")
+
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	button.add_child(row)
 	var tier: int = int(club.get("tier", 4))
 
 	var badge := Label.new()
@@ -334,6 +389,7 @@ func _rival_row(club: Dictionary) -> Control:
 	badge.custom_minimum_size = Vector2(96, 0)
 	badge.add_theme_font_size_override("font_size", 12)
 	badge.add_theme_color_override("font_color", _TIER_COLOR.get(tier, Color.WHITE))
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(badge)
 
 	var scheme: Dictionary = TeamColors.of(club)
@@ -345,6 +401,7 @@ func _rival_row(club: Dictionary) -> Control:
 	var plate := PanelContainer.new()
 	plate.add_theme_stylebox_override("panel", style)
 	plate.custom_minimum_size = Vector2(230, 0)
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var name_label := Label.new()
 	name_label.text = String(club.get("name", "?"))
 	name_label.add_theme_color_override("font_color", scheme["ink"])
@@ -354,12 +411,26 @@ func _rival_row(club: Dictionary) -> Control:
 	row.add_child(_cell("%s/%s" % [club.get("city", "?"), club.get("state", "?")], 190, MUTED))
 	var reputation: int = int(club.get("reputation", 0))
 	row.add_child(_cell("%s %d" % ["█".repeat(int(reputation / 10.0)), reputation], 130, ACCENT))
-	return row
+	return button
 
 # --- Actions ---
 
 func _on_tab(id: String) -> void:
 	_tab = id
+	_build_ui()
+
+# Looking at a rival is looking at a different squad, so the selected player
+# has to let go — keeping it would show somebody from the previous club under
+# this club's name.
+func _on_view(team_id: String) -> void:
+	_viewing = team_id
+	_selected = null
+	_tab = TAB_SQUAD
+	_build_ui()
+
+func _on_view_mine() -> void:
+	_viewing = ""
+	_selected = null
 	_build_ui()
 
 func _on_pick(person: Actor) -> void:

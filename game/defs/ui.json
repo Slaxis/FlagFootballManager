@@ -292,10 +292,6 @@
       "pt": "Idade",
       "en": "Age"
     },
-    "team.overall": {
-      "pt": "Geral",
-      "en": "Ovr"
-    },
     "team.years": {
       "pt": "%d anos",
       "en": "%d years old"
@@ -307,6 +303,22 @@
     "team.pick_someone": {
       "pt": "escolha alguém do elenco para ver a ficha",
       "en": "pick someone from the squad to see their sheet"
+    },
+    "team.perk": {
+      "pt": "Perk",
+      "en": "Perk"
+    },
+    "team.strength": {
+      "pt": "Força",
+      "en": "Str"
+    },
+    "team.back_to_mine": {
+      "pt": "← meu clube",
+      "en": "← my club"
+    },
+    "team.see_squad": {
+      "pt": "ver o elenco do %s",
+      "en": "see %s's squad"
     }
   }
 }

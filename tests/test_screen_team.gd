@@ -17,6 +17,8 @@ func tests() -> Array:
 		"test_clicking_somebody_opens_their_sheet",
 		"test_the_rivals_tab_leaves_your_own_club_out",
 		"test_the_roster_is_built_once_and_reused",
+		"test_clicking_a_rival_shows_their_squad",
+		"test_the_roster_has_a_perk_column",
 	]
 
 # --- Harness ---
@@ -162,4 +164,61 @@ func test_the_roster_is_built_once_and_reused(t: TestHelper) -> void:
 		if not rosters.has_squad(String(club.get("id", "")), Actor.CATEGORY_MASC):
 			untouched += 1
 	t.check(untouched > 5, "a tela montou elenco de clube que ninguém abriu")
+	_close(screen)
+
+# Half the question is "who else is out there"; the other half is "and who
+# plays for them". The rivals tab listed clubs and stopped there.
+func test_clicking_a_rival_shows_their_squad(t: TestHelper) -> void:
+	var screen: Control = _open()
+	if screen == null:
+		t.fail("não consegui instanciar a tela"); return
+	_button_with(screen, UiText.t("team.rivals")).pressed.emit()
+	var teams := Drive.def("team") as TeamDef
+	var rival: Dictionary = {}
+	for club: Dictionary in teams.by_reputation():
+		if String(club.get("id", "")) != "flag_kings":
+			rival = club
+			break
+	var row: Button = null
+	for node: Variant in _collect(screen, "Button", []):
+		var button := node as Button
+		if button.tooltip_text.contains(String(rival.get("name", "?"))):
+			row = button
+	if row == null:
+		t.fail("a linha do adversário não é clicável"); _close(screen); return
+	row.pressed.emit()
+
+	var shown: String = _texts(screen)
+	t.check(shown.contains(String(rival.get("name", ""))), "o cabeçalho não virou o clube dele")
+	var rosters := The.board.get("rosters", null) as Rosters
+	var their_squad: Array[Actor] = rosters.squad(String(rival["id"]), Actor.CATEGORY_MASC)
+	t.check(their_squad.size() >= 5, "elenco do adversário com %d" % their_squad.size())
+	for person: Actor in their_squad:
+		t.check(shown.contains(person.display_name()),
+			"'%s' não apareceu no elenco do adversário" % person.display_name())
+
+	# And a way home, or the player is stuck looking at somebody else's club.
+	var home: Button = _button_with(screen, UiText.t("team.back_to_mine"))
+	if home == null:
+		t.fail("sem volta para o meu clube"); _close(screen); return
+	home.pressed.emit()
+	t.check(_texts(screen).contains("Chefinho"), "não voltei para o meu elenco")
+	_close(screen)
+
+func test_the_roster_has_a_perk_column(t: TestHelper) -> void:
+	var screen: Control = _open()
+	var perks := Drive.def("perk") as PerkDef
+	if screen == null or perks == null:
+		t.fail("não consegui instanciar a tela"); return
+	t.check(_texts(screen).contains(UiText.t("team.perk")), "sem cabeçalho de perk")
+	var rosters := The.board.get("rosters", null) as Rosters
+	var shown: String = _texts(screen)
+	var with_perk: int = 0
+	for person: Actor in rosters.squad("flag_kings", Actor.CATEGORY_MASC):
+		if person.perks().is_empty():
+			continue
+		with_perk += 1
+		t.check(shown.contains(perks.icon(String(person.perks()[0]))),
+			"o perk de %s não apareceu na lista" % person.display_name())
+	t.check(with_perk > 0, "nenhum jogador do elenco tem perk — o teste não testou nada")
 	_close(screen)
