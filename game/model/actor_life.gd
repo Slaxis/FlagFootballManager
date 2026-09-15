@@ -184,13 +184,61 @@ static func advance_week(actor: Actor, position: String,
 	_spend(actor, position, rng)
 	return xp
 
+# One season, and it WRITES ITSELF DOWN. Decision 28 said a career is a list of
+# years, curated or simulated, and the curated half was reading that list while
+# the simulated half left no trace — so a rolled thirty-year-old had nine years
+# of history and no way to see any of it.
+#
+# The log records what changed, in steps, because steps are what a reader cares
+# about: "Lançamento +2" is a season, "throwing 78 -> 95" is a diff.
+const LOG_TOP_GAINS := 3
+
 static func advance_year(actor: Actor, position: String,
 		climate: Dictionary, rng: RandomNumberGenerator) -> void:
+	var before: Dictionary = _steps_of(actor)
 	for _week: int in range(WEEKS_PER_YEAR):
 		advance_week(actor, position, climate, rng)
 	actor.set_age(actor.age() + 1)
 	_mature(actor, rng)
 	_decline(actor, rng)
+	_log_season(actor, position, before)
+
+static func _steps_of(actor: Actor) -> Dictionary:
+	var def := Drive.def("stat") as StatDef
+	var out: Dictionary = {}
+	if def == null:
+		return out
+	for id: String in def.skill_ids():
+		out[id] = actor.skill_step(id)
+	for id: String in def.base_ids():
+		out[id] = def.step(actor.stat(id))
+	return out
+
+static func _log_season(actor: Actor, position: String, before: Dictionary) -> void:
+	var after: Dictionary = _steps_of(actor)
+	var gains: Dictionary = {}
+	for id: String in after.keys():
+		var delta: int = int(after[id]) - int(before.get(id, 0))
+		if delta != 0:
+			gains[id] = delta
+	# Only the headline: a season where six things moved by one is read as the
+	# two or three that moved most.
+	var ranked: Array[String] = []
+	for id: String in gains.keys():
+		ranked.append(id)
+	ranked.sort_custom(func(a: String, b: String) -> bool:
+		return absi(int(gains[a])) > absi(int(gains[b])))
+	var top: Dictionary = {}
+	for id: String in ranked.slice(0, LOG_TOP_GAINS):
+		top[id] = gains[id]
+	var career: Array = actor.data.get("career", [])
+	career.append({
+		"age": actor.age() - 1,
+		"position": position,
+		"team": actor.team(),
+		"gains": top,
+	})
+	actor.data["career"] = career
 
 static func bank_of(actor: Actor, stream: String) -> float:
 	return float(actor.data.get("bank_" + stream, 0.0))

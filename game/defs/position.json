@@ -30,7 +30,8 @@
         "rules": 2,
         "juke": 1,
         "leadership": 2
-      }
+      },
+      "slots": 1
     },
     {
       "id": "center",
@@ -61,7 +62,8 @@
         "tackle": 2,
         "route": 1,
         "rules": 1
-      }
+      },
+      "slots": 1
     },
     {
       "id": "receiver",
@@ -92,7 +94,8 @@
         "juke": 3,
         "coverage": 2,
         "rules": 1
-      }
+      },
+      "slots": 3
     },
     {
       "id": "rusher",
@@ -124,7 +127,8 @@
         "deflection": 2,
         "juke": 2,
         "rules": 1
-      }
+      },
+      "slots": 1
     },
     {
       "id": "cornerback",
@@ -156,7 +160,8 @@
         "tackle": 2,
         "route": 2,
         "rush": 1
-      }
+      },
+      "slots": 2
     },
     {
       "id": "safety",
@@ -188,7 +193,8 @@
         "tackle": 3,
         "rules": 2,
         "leadership": 1
-      }
+      },
+      "slots": 2
     },
     {
       "id": "head_coach",
@@ -218,7 +224,8 @@
         "leadership": 3,
         "play_calling": 3,
         "rules": 2
-      }
+      },
+      "slots": 1
     },
     {
       "id": "offense_coord",
@@ -246,7 +253,8 @@
         "throwing": 2,
         "route": 2,
         "rules": 2
-      }
+      },
+      "slots": 1
     },
     {
       "id": "defense_coord",
@@ -275,7 +283,8 @@
         "coverage": 2,
         "deflection": 2,
         "rules": 2
-      }
+      },
+      "slots": 1
     },
     {
       "id": "fitness",
@@ -299,7 +308,8 @@
       "trains": {
         "coaching": 5,
         "rules": 1
-      }
+      },
+      "slots": 1
     },
     {
       "id": "scout",
@@ -324,7 +334,12 @@
         "scouting": 5,
         "rules": 2,
         "coaching": 1
-      }
+      },
+      "slots": 1
     }
-  ]
+  ],
+  "squad": {
+    "minimum": 7,
+    "usual": 12
+  }
 }

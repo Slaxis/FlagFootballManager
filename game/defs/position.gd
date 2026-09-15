@@ -16,12 +16,25 @@
 extends Def
 class_name PositionDef
 
+const DEFAULT_MINIMUM := 7
+const DEFAULT_USUAL := 12
+
+# What the competition demands of a squad sheet. There is no maximum: two
+# quarterbacks is not a mistake, it is how a coach finds out which one is
+# better — and most weeks the event IS the coletivo, where both of them take
+# snaps.
+var squad_minimum: int = DEFAULT_MINIMUM
+var squad_usual: int = DEFAULT_USUAL
+
 var _by_id: Dictionary = {}
 var _order: Array[String] = []
 
 func load_data(raw: Dictionary) -> void:
 	_by_id.clear()
 	_order.clear()
+	var squad: Dictionary = raw.get("squad", {})
+	squad_minimum = int(squad.get("minimum", DEFAULT_MINIMUM))
+	squad_usual = int(squad.get("usual", DEFAULT_USUAL))
 	_ingest(raw.get("positions", []))
 
 func add_thing(thing: Dictionary) -> void:
@@ -62,6 +75,17 @@ func desc(id: String) -> String:
 # The two or three letters that fit on a button in a roster row.
 func code(id: String) -> String:
 	return String(position(id).get("code", id.to_upper()))
+
+# How many the formation starts at this position. Anybody marked past that is a
+# RESERVE there, not an error.
+func slots(id: String) -> int:
+	return int(position(id).get("slots", 1))
+
+func slots_on_side(wanted: String) -> int:
+	var total: int = 0
+	for id: String in ids_on_side(wanted):
+		total += slots(id)
+	return total
 
 func side(id: String) -> String:
 	return String(position(id).get("side", ""))

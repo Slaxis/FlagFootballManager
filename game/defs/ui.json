@@ -339,6 +339,50 @@
     "team.staff": {
       "pt": "COMISSÃO",
       "en": "STAFF"
+    },
+    "team.side_offense": {
+      "pt": "ATAQUE",
+      "en": "OFFENSE"
+    },
+    "team.side_defense": {
+      "pt": "DEFESA",
+      "en": "DEFENSE"
+    },
+    "team.reserves": {
+      "pt": "RESERVAS (%d)",
+      "en": "RESERVES (%d)"
+    },
+    "team.empty_slot": {
+      "pt": "vazio",
+      "en": "empty"
+    },
+    "team.registered": {
+      "pt": "%d inscritos de %d no elenco",
+      "en": "%d registered of %d in the squad"
+    },
+    "team.below_minimum": {
+      "pt": "só %d inscritos — a competição exige %d",
+      "en": "only %d registered — the competition demands %d"
+    },
+    "team.career": {
+      "pt": "CARREIRA — %d anos",
+      "en": "CAREER — %d years"
+    },
+    "team.career_years": {
+      "pt": "%d anos de carreira",
+      "en": "%d years in"
+    },
+    "team.no_career": {
+      "pt": "sem temporadas registradas",
+      "en": "no seasons on record"
+    },
+    "team.quiet_season": {
+      "pt": "ano parado",
+      "en": "a quiet year"
+    },
+    "common.close": {
+      "pt": "Fechar",
+      "en": "Close"
     }
   }
 }

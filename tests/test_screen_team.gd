@@ -23,6 +23,9 @@ func tests() -> Array:
 		"test_columns_sort_both_ways",
 		"test_a_position_can_be_ticked_and_unticked",
 		"test_every_position_has_a_button",
+		"test_the_lineup_panel_shows_empty_slots",
+		"test_an_extra_at_a_position_becomes_a_reserve",
+		"test_the_card_shows_the_career",
 	]
 
 # --- Harness ---
@@ -121,9 +124,11 @@ func test_clicking_somebody_opens_their_sheet(t: TestHelper) -> void:
 		t.fail("preciso de duas pessoas para testar a troca"); _close(screen); return
 	# The second one, so it is not whatever the screen picked by default.
 	var wanted: Actor = people[1]
-	var rows: Array = _tagged(screen, "roster_row")
-	t.check(rows.size() >= people.size(), "linhas clicáveis: %d" % rows.size())
-	(rows[1] as Button).pressed.emit()
+	t.equal(_tagged(screen, "roster_row").size(), people.size(), "linhas clicáveis")
+	var row: Button = _row_named(screen, wanted.display_name())
+	if row == null:
+		t.fail("não achei a linha de " + wanted.display_name()); _close(screen); return
+	row.pressed.emit()
 	var shown: String = _texts(screen)
 	t.check(shown.contains(wanted.display_name()), "a ficha não abriu para quem cliquei")
 	# The sheet is the debt A.2/A.3 left: the eight attributes have to be there.
@@ -259,15 +264,11 @@ func test_the_sheet_has_the_same_rows_for_everybody(t: TestHelper) -> void:
 	t.check(untrained > 5,
 		"o manager treinou quase tudo (%d zeradas) — o teste não prova nada" % untrained)
 
-	var rows: Array = []
-	for node: Variant in _collect(screen, "Button", []):
-		if (node as Button).text == "":
-			rows.append(node)
 	for person: Actor in [manager, filler]:
-		for i: int in range(people.size()):
-			if people[i].thing_id == person.thing_id:
-				(rows[i] as Button).pressed.emit()
-				break
+		var row: Button = _row_named(screen, person.display_name())
+		if row == null:
+			t.fail("não achei a linha de " + person.display_name()); continue
+		row.pressed.emit()
 		var shown: String = _texts(screen)
 		for id: String in stats.skill_ids():
 			var label: String = I18n.text(stats.skill(id).get("label", id), id)
@@ -277,8 +278,6 @@ func test_the_sheet_has_the_same_rows_for_everybody(t: TestHelper) -> void:
 			var label: String = I18n.text(stats.base_stat(id).get("label", id), id)
 			t.check(shown.contains(label),
 				"a ficha de %s não mostra '%s'" % [person.display_name(), label])
-		# Re-collect: the screen rebuilt itself around the new selection.
-		rows = _tagged(screen, "roster_row")
 	_close(screen)
 
 
@@ -297,6 +296,15 @@ func _tagged(screen: Control, key: String, value: Variant = null) -> Array:
 # Reads the AGE CELL of each row in the order the rows are drawn. Looking the
 # age up by display name was wrong: two players can share an apelido, and the
 # dictionary silently kept one of them.
+# Found by NAME, because the screen sorts the list and the roster does not — an
+# index into one is somebody else in the other.
+func _row_named(screen: Control, display_name: String) -> Button:
+	for node: Variant in _tagged(screen, "roster_row"):
+		for cell: Variant in _collect(node as Button, "Label", []):
+			if (cell as Label).text == display_name:
+				return node
+	return null
+
 func _ages_in_order(screen: Control) -> Array[int]:
 	var out: Array[int] = []
 	for node: Variant in _tagged(screen, "roster_row"):
@@ -377,4 +385,75 @@ func test_every_position_has_a_button(t: TestHelper) -> void:
 	# The three group headers are what make eleven little buttons legible.
 	for key: String in ["team.profile", "team.lineup", "team.staff"]:
 		t.check(shown.contains(UiText.t(key)), "sem cabeçalho de grupo '%s'" % key)
+	_close(screen)
+
+
+# The complaint that started this: ticking boxes gave no sense of completeness.
+# The panel answers it by drawing the holes, so "am I done" is a look and not a
+# count.
+func test_the_lineup_panel_shows_empty_slots(t: TestHelper) -> void:
+	var screen: Control = _open()
+	var positions := Drive.def("position") as PositionDef
+	if screen == null or positions == null:
+		t.fail("não consegui instanciar a tela"); return
+	var shown: String = _texts(screen)
+	t.check(shown.contains(UiText.t("team.side_offense")), "sem bloco de ataque")
+	t.check(shown.contains(UiText.t("team.side_defense")), "sem bloco de defesa")
+	# Nobody is assigned yet, so every slot in the formation is a hole.
+	var total: int = positions.slots_on_side("offense") 		+ positions.slots_on_side("defense") + positions.slots_on_side("staff")
+	t.equal(shown.count(UiText.t("team.empty_slot")), total,
+		"vagas vazias desenhadas (esperava %d)" % total)
+	t.equal(total, 15, "5 de ataque + 5 de defesa + 5 de comissão")
+	_close(screen)
+
+# Two quarterbacks is not an error, it is how a coach finds out which one is
+# better — and most weeks the event is the coletivo where both take snaps. The
+# extra is depth, listed under RESERVAS with the position he would cover.
+func test_an_extra_at_a_position_becomes_a_reserve(t: TestHelper) -> void:
+	var screen: Control = _open()
+	var positions := Drive.def("position") as PositionDef
+	if screen == null or positions == null:
+		t.fail("não consegui instanciar a tela"); return
+	t.equal(positions.slots("qb"), 1, "o QB é uma vaga")
+	t.check(not _texts(screen).contains(UiText.t("team.reserves") % 1), "reserva antes da hora")
+
+	var qbs: Array = _tagged(screen, "role", "qb")
+	t.check(qbs.size() >= 2, "preciso de dois atletas para testar")
+	(qbs[0] as Button).pressed.emit()
+	t.check(not _texts(screen).contains(UiText.t("team.reserves") % 1),
+		"o primeiro QB deveria ser titular, não reserva")
+	(_tagged(screen, "role", "qb")[1] as Button).pressed.emit()
+	t.check(_texts(screen).contains(UiText.t("team.reserves") % 1),
+		"o segundo QB deveria virar reserva")
+	_close(screen)
+
+# A rolled thirty-year-old has a decade of seasons behind him and the sheet used
+# to show none of it — no way to tell a veteran QB from a kid who throws.
+func test_the_card_shows_the_career(t: TestHelper) -> void:
+	var screen: Control = _open()
+	if screen == null:
+		t.fail("não consegui instanciar a tela"); return
+	var rosters := The.board.get("rosters", null) as Rosters
+	var veteran: Actor = null
+	for person: Actor in rosters.squad("flag_kings", Actor.CATEGORY_MASC):
+		if person.career_years() >= 4 and (veteran == null
+				or person.career_years() > veteran.career_years()):
+			veteran = person
+	if veteran == null:
+		t.fail("ninguém no elenco tem carreira registrada"); _close(screen); return
+	t.check(veteran.career().size() == veteran.career_years(),
+		"o log tem %d temporadas para %d anos de carreira" % [
+			veteran.career().size(), veteran.career_years()])
+
+	var row: Button = _row_named(screen, veteran.display_name())
+	if row == null:
+		t.fail("não achei a linha do veterano"); _close(screen); return
+	row.pressed.emit()
+	var shown: String = _texts(screen)
+	t.check(shown.contains(UiText.t("team.career") % veteran.career_years()),
+		"o card não mostra os anos de carreira")
+	# Every season is a line, and the age it happened at is on it.
+	for entry: Variant in veteran.career():
+		t.check(shown.contains(str(int((entry as Dictionary).get("age", 0)))),
+			"temporada dos %d anos não aparece" % int((entry as Dictionary).get("age", 0)))
 	_close(screen)

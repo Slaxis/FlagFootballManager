@@ -85,6 +85,13 @@ func _build_ui() -> void:
 	for child: Node in _root.get_children():
 		_root.remove_child(child)
 		child.queue_free()
+	# The card is a sibling of the layout and not a child of it, so clearing
+	# `_root` does not clear the card. Without this every click stacked another
+	# one on top of the last and the screen slowly filled with dead sheets.
+	for child: Node in get_children():
+		if child.has_meta("card_layer"):
+			remove_child(child)
+			child.queue_free()
 	_root.add_child(_header())
 	_root.add_child(_tab_bar())
 	_root.add_child(_rule())
@@ -92,6 +99,11 @@ func _build_ui() -> void:
 		_root.add_child(_squad_tab())
 	else:
 		_root.add_child(_rivals_tab())
+	# The card floats over everything rather than living in a column. A sheet is
+	# twenty-three rows plus a career, and squeezed into a side panel it came
+	# out as a long ribbon nobody could read at a glance.
+	if _selected != null:
+		_show_card()
 
 # --- Chrome ---
 
@@ -197,7 +209,7 @@ func _tab_bar() -> Control:
 
 func _squad_tab() -> Control:
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 22)
+	columns.add_theme_constant_override("separation", 18)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var career: Career = _career()
@@ -219,11 +231,134 @@ func _squad_tab() -> Control:
 	for person: Actor in people:
 		list.add_child(_roster_row(person, person.thing_id == manager_id))
 	columns.add_child(left)
-
-	if _selected == null and not people.is_empty():
-		_selected = people[0]
-	columns.add_child(_sheet_panel())
+	# The consolidated view lives beside the table and not behind a tab, because
+	# the whole complaint was that ticking boxes gave no sense of completeness —
+	# and an answer you have to navigate to is not feedback.
+	columns.add_child(_lineup_panel(people))
 	return columns
+
+# --- The lineup ---
+
+# Who is where, with the empty slots drawn as empty. Everybody marked past a
+# position's slots is a RESERVE there, not a mistake: two quarterbacks is how a
+# coach finds out which one is better, and most weeks the event is the coletivo
+# where both take snaps.
+func _lineup_panel(people: Array[Actor]) -> Control:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style())
+	panel.custom_minimum_size = Vector2(300, 0)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(scroll)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(box)
+
+	var positions := Drive.def("position") as PositionDef
+	if positions == null:
+		return panel
+	var assigned: Dictionary = _assignment(people, positions)
+
+	box.add_child(_panel_title(UiText.t("team.lineup"), _squad_note(people, positions)))
+	var reserves: Array = []
+	for side: String in SIDES_IN_LINEUP:
+		box.add_child(_group_caption(UiText.t("team.side_" + side)))
+		for id: String in positions.ids_on_side(side):
+			var picked: Array = assigned.get(id, [])
+			for slot: int in range(positions.slots(id)):
+				var who: Actor = picked[slot] if slot < picked.size() else null
+				box.add_child(_slot_row(positions.code(id) if slot == 0 else "", who))
+			for extra: int in range(positions.slots(id), picked.size()):
+				reserves.append({"position": id, "actor": picked[extra]})
+
+	if not reserves.is_empty():
+		box.add_child(_group_caption(UiText.t("team.reserves") % reserves.size()))
+		for entry: Dictionary in reserves:
+			box.add_child(_slot_row(positions.code(String(entry["position"])),
+				entry["actor"] as Actor))
+
+	box.add_child(_group_caption(UiText.t("team.staff")))
+	for id: String in positions.ids_on_side("staff"):
+		var chairs: Array = assigned.get(id, [])
+		box.add_child(_slot_row(positions.code(id),
+			chairs[0] if not chairs.is_empty() else null))
+		for extra: int in range(1, chairs.size()):
+			box.add_child(_slot_row("", chairs[extra] as Actor))
+	return panel
+
+# Best Forca first, so the starter is the starter and the rest are depth.
+func _assignment(people: Array[Actor], positions: PositionDef) -> Dictionary:
+	var out: Dictionary = {}
+	for id: String in positions.position_ids():
+		var picked: Array[Actor] = []
+		for person: Actor in people:
+			if person.plays_position(id):
+				picked.append(person)
+		picked.sort_custom(func(a: Actor, b: Actor) -> bool:
+			return a.overall() > b.overall())
+		out[id] = picked
+	return out
+
+# The competition wants seven names on the sheet and twelve is the usual, so the
+# header says where this squad stands against both.
+func _squad_note(people: Array[Actor], positions: PositionDef) -> String:
+	var marked: int = 0
+	for person: Actor in people:
+		if not person.lineup().is_empty():
+			marked += 1
+	if marked < positions.squad_minimum:
+		return UiText.t("team.below_minimum") % [marked, positions.squad_minimum]
+	return UiText.t("team.registered") % [marked, people.size()]
+
+func _panel_title(text: String, note: String) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 1)
+	var title := Label.new()
+	title.text = text
+	title.add_theme_font_size_override("font_size", 12)
+	title.add_theme_color_override("font_color", ACCENT)
+	box.add_child(title)
+	var hint := Label.new()
+	hint.text = note
+	hint.add_theme_font_size_override("font_size", 10)
+	hint.add_theme_color_override("font_color", MUTED)
+	box.add_child(hint)
+	box.add_child(_rule())
+	return box
+
+func _slot_row(code: String, who: Actor) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var tag := Label.new()
+	tag.text = code
+	tag.custom_minimum_size = Vector2(26, 0)
+	tag.add_theme_font_size_override("font_size", 11)
+	tag.add_theme_color_override("font_color", ACCENT if code != "" else MUTED)
+	row.add_child(tag)
+
+	var name_label := Label.new()
+	name_label.custom_minimum_size = Vector2(190, 0)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.clip_text = true
+	name_label.add_theme_font_size_override("font_size", 12)
+	if who == null:
+		name_label.text = "\u2b1a " + UiText.t("team.empty_slot")
+		name_label.add_theme_color_override("font_color", Color(0.30, 0.34, 0.31))
+		row.add_child(name_label)
+		return row
+	name_label.text = who.display_name()
+	name_label.add_theme_color_override("font_color", TEXT)
+	row.add_child(name_label)
+	var strength := Label.new()
+	strength.text = str(who.overall())
+	strength.custom_minimum_size = Vector2(26, 0)
+	strength.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	strength.add_theme_font_size_override("font_size", 12)
+	strength.add_theme_color_override("font_color", StatBar.tint(who.overall()))
+	row.add_child(strength)
+	return row
 
 # Two header rows. The top one says what the block of columns is FOR, which is
 # what makes eleven little buttons legible instead of a wall: profile, who
@@ -383,99 +518,185 @@ func _cell(text: String, width: int, color: Color) -> Control:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
-# The whole point of the branch: 8 attributes, 15 skills, a body and a perk,
-# for somebody who is not you.
-func _sheet_panel() -> Control:
-	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = PANEL
-	style.border_color = LINE
-	style.set_border_width_all(1)
-	style.set_content_margin_all(16)
-	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
-		style.set("corner_radius_" + corner, 4)
-	panel.add_theme_stylebox_override("panel", style)
-	panel.custom_minimum_size = Vector2(372, 0)
+# --- The card ---
+#
+# SQUARE, not a ribbon. Attributes on the left, the fifteen skills in two
+# columns on the right, the body and the perk in the header, and the CAREER at
+# the bottom — which was the thing missing entirely: a rolled thirty-year-old
+# had nine seasons of history and the sheet showed none of it, so there was no
+# way to tell a veteran QB from a kid who happens to throw.
+func _show_card() -> void:
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.55)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	shade.gui_input.connect(_on_card_background)
+	shade.set_meta("card_layer", true)
+	add_child(shade)
 
-	# Twenty-three rows and four captions do not fit a window, and a sheet that
-	# runs off the bottom is the same bug as a sheet with rows missing.
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_child(scroll)
+	var centre := CenterContainer.new()
+	centre.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	centre.set_meta("card_layer", true)
+	add_child(centre)
+
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style())
+	panel.custom_minimum_size = Vector2(700, 0)
+	panel.set_meta("athlete_card", true)
+	centre.add_child(panel)
+
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 3)
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(box)
-	if _selected == null:
-		box.add_child(_hint(UiText.t("team.pick_someone")))
-		return panel
+	box.add_theme_constant_override("separation", 6)
+	panel.add_child(box)
+	box.add_child(_card_header())
+	box.add_child(_rule())
 
 	var stats := Drive.def("stat") as StatDef
-	var title := Label.new()
-	title.text = _selected.display_name()
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", TEXT)
-	box.add_child(title)
+	if stats == null:
+		return
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 22)
+	box.add_child(columns)
 
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 2)
+	left.add_child(_group_caption(UiText.t("manager.attributes")))
+	for id: String in stats.base_ids():
+		var spec: Dictionary = stats.base_stat(id)
+		left.add_child(StatBar.row(I18n.text(spec.get("label", id), id),
+			_selected.step(id) * 10, I18n.text(spec.get("desc", ""), ""), 96))
+	columns.add_child(left)
+
+	# Fifteen skills in two columns is what makes the card square rather than
+	# tall: eight rows instead of nineteen.
+	var groups: Array = stats.skill_groups()
+	var right := VBoxContainer.new()
+	right.add_theme_constant_override("separation", 2)
+	right.add_child(_group_caption(UiText.t("manager.skills")))
+	var pair := HBoxContainer.new()
+	pair.add_theme_constant_override("separation", 18)
+	right.add_child(pair)
+	for half: int in range(2):
+		var column := VBoxContainer.new()
+		column.add_theme_constant_override("separation", 2)
+		pair.add_child(column)
+		for i: int in range(groups.size()):
+			if i % 2 != half:
+				continue
+			var group: String = String(groups[i])
+			column.add_child(_group_caption(UiText.t("skillgroup." + group, group)))
+			for id: String in stats.skills_in_group(group):
+				var spec: Dictionary = stats.skill(id)
+				column.add_child(StatBar.row(I18n.text(spec.get("label", id), id),
+					_selected.skill_step(id) * 10,
+					I18n.text(spec.get("desc", ""), ""), 112))
+	columns.add_child(right)
+
+	box.add_child(_career_log())
+	box.add_child(_flat_button(UiText.t("common.close"), _on_close_card))
+
+func _card_header() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	var positions := Drive.def("position") as PositionDef
+	var stats := Drive.def("stat") as StatDef
+
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 12)
+	var name_label := Label.new()
+	name_label.text = _selected.display_name()
+	name_label.add_theme_font_size_override("font_size", 24)
+	name_label.add_theme_color_override("font_color", TEXT)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(name_label)
+	var strength := Label.new()
+	strength.text = "%s %d" % [UiText.t("team.strength"), _selected.overall()]
+	strength.add_theme_font_size_override("font_size", 18)
+	strength.add_theme_color_override("font_color", StatBar.tint(_selected.overall()))
+	strength.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	top.add_child(strength)
+	box.add_child(top)
+
+	var lived: String = ""
+	if positions != null and _selected.position() != "":
+		lived = positions.label(_selected.position())
+	var parts: Array[String] = [_selected.full_name(),
+		UiText.t("team.years") % _selected.age()]
+	if lived != "":
+		parts.append(lived)
+	if _selected.career_years() > 0:
+		parts.append(UiText.t("team.career_years") % _selected.career_years())
+	if stats != null:
+		parts.append("%s  %s" % [stats.format_measure("height", _selected.height()),
+			stats.format_measure("weight", _selected.weight())])
 	var under := Label.new()
-	under.text = "%s   ·   %s" % [_selected.full_name(), UiText.t("team.years") % _selected.age()]
+	under.text = "   \u00b7   ".join(parts)
 	under.add_theme_font_size_override("font_size", 12)
 	under.add_theme_color_override("font_color", MUTED)
 	box.add_child(under)
-
-	if stats != null:
-		var body := Label.new()
-		body.text = "%s   %s" % [
-			stats.format_measure("height", _selected.height()),
-			stats.format_measure("weight", _selected.weight())]
-		body.add_theme_font_size_override("font_size", 12)
-		body.add_theme_color_override("font_color", MUTED)
-		box.add_child(body)
 
 	var perks := Drive.def("perk") as PerkDef
 	if perks != null:
 		for perk_id: Variant in _selected.perks():
 			var perk := Label.new()
-			perk.text = "%s %s" % [perks.icon(String(perk_id)), perks.label(String(perk_id))]
-			perk.tooltip_text = perks.desc(String(perk_id))
-			perk.mouse_filter = Control.MOUSE_FILTER_STOP
+			perk.text = "%s %s — %s" % [perks.icon(String(perk_id)),
+				perks.label(String(perk_id)), perks.desc(String(perk_id))]
+			perk.add_theme_font_size_override("font_size", 11)
 			perk.add_theme_color_override("font_color", ACCENT)
 			box.add_child(perk)
+	return box
 
-	if stats == null:
-		return panel
-	box.add_child(_section(UiText.t("manager.attributes")))
-	for id: String in stats.base_ids():
-		var spec: Dictionary = stats.base_stat(id)
-		box.add_child(StatBar.row(
-			I18n.text(spec.get("label", id), id),
-			_selected.step(id) * 10,
-			I18n.text(spec.get("desc", ""), ""), 132))
-	box.add_child(_section(UiText.t("manager.skills")))
-	# ALL fifteen, trained or not. Hiding the empty ones seemed tidier and was
-	# wrong: a rolled player has every skill above zero and a hand-built
-	# manager has one, so the two sheets grew different rows and stopped being
-	# comparable — which is the only thing a sheet is for. An empty bar already
-	# says "never trained this" perfectly well.
-	for group: String in stats.skill_groups():
-		box.add_child(_group_caption(UiText.t("skillgroup." + group, group)))
-		for id: String in stats.skills_in_group(group):
-			var spec: Dictionary = stats.skill(id)
-			box.add_child(StatBar.row(
-				I18n.text(spec.get("label", id), id),
-				_selected.skill_step(id) * 10,
-				I18n.text(spec.get("desc", ""), ""), 132))
-	return panel
+# The log. One line per season: how old he was, where he played it, and the two
+# or three things that actually moved.
+func _career_log() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 1)
+	var seasons: Array = _selected.career()
+	box.add_child(_group_caption(UiText.t("team.career") % _selected.career_years()))
+	if seasons.is_empty():
+		box.add_child(_hint(UiText.t("team.no_career")))
+		return box
+	var positions := Drive.def("position") as PositionDef
+	var stats := Drive.def("stat") as StatDef
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(0, 108)
+	box.add_child(scroll)
+	var rows := VBoxContainer.new()
+	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(rows)
+	for entry: Variant in seasons:
+		var season: Dictionary = entry as Dictionary
+		var gains: Array[String] = []
+		for id: String in (season.get("gains", {}) as Dictionary).keys():
+			var delta: int = int((season["gains"] as Dictionary)[id])
+			var label: String = id
+			if stats != null:
+				label = I18n.text(stats.skill(id).get("label",
+					stats.base_stat(id).get("label", id)), id)
+			gains.append("%s %+d" % [label, delta])
+		var line := HBoxContainer.new()
+		line.add_theme_constant_override("separation", 10)
+		line.add_child(_cell(str(int(season.get("age", 0))), 26, MUTED))
+		var code: String = String(season.get("position", ""))
+		if positions != null and positions.has_position(code):
+			code = positions.code(code)
+		line.add_child(_cell(code, 30, ACCENT))
+		line.add_child(_cell("   ".join(gains) if not gains.is_empty()
+			else UiText.t("team.quiet_season"), 460, TEXT if not gains.is_empty() else MUTED))
+		rows.add_child(line)
+	return box
 
-func _group_caption(text: String) -> Control:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", 11)
-	label.add_theme_color_override("font_color", MUTED)
-	return label
+func _on_card_background(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		_on_close_card()
 
-# --- Adversários ---
+func _on_close_card() -> void:
+	_selected = null
+	_build_ui()
+
+# --- Adversários ---# --- Adversários ---
 
 func _rivals_tab() -> Control:
 	var career: Career = _career()
@@ -734,6 +955,23 @@ func _section(text: String) -> Control:
 	box.add_child(label)
 	box.add_child(_rule())
 	return box
+
+func _group_caption(text: String) -> Control:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 10)
+	label.add_theme_color_override("font_color", MUTED)
+	return label
+
+func _panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = PANEL
+	style.border_color = LINE
+	style.set_border_width_all(1)
+	style.set_content_margin_all(16)
+	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
+		style.set("corner_radius_" + corner, 4)
+	return style
 
 func _rule() -> Control:
 	var line := ColorRect.new()

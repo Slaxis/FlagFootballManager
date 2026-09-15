@@ -258,6 +258,27 @@ func toggle_position(position_id: String) -> bool:
 	data["lineup"] = current
 	return current.has(id)
 
+# --- Career ---
+#
+# One entry per season lived: {age, position, team, gains}. Written by
+# ActorLife for a simulated actor and declared in JSON by a curator for a real
+# one — the same list either way (decision 28).
+
+func career() -> Array:
+	return data.get("career", [])
+
+func career_years() -> int:
+	var declared: int = career().size()
+	if declared > 0:
+		return declared
+	# Falls back on the arithmetic for an actor whose seasons were never
+	# written down, so the number is never a lie by omission.
+	var debut: int = int(attr("debut_age", 0))
+	return maxi(age() - debut, 0) if debut > 0 else 0
+
+func debut_age() -> int:
+	return int(attr("debut_age", 0))
+
 # --- Perks ---
 
 func perks() -> Array:
