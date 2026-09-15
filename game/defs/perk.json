@@ -1,0 +1,87 @@
+{
+  "max_per_actor": 1,
+
+  "perks": [
+    {
+      "id": "craque",
+      "icon": "★",
+      "cost": 40,
+      "label": {"pt": "Craque", "en": "Star"},
+      "desc": {"pt": "O cara. Puxa o time nos ombros quando o jogo aperta", "en": "The one. Carries the side on his back when it tightens"},
+      "effect": {"kind": "roll_bonus", "scope": "all", "amount": 1}
+    },
+    {
+      "id": "foguete",
+      "icon": "⚡",
+      "cost": 25,
+      "label": {"pt": "Foguete", "en": "Rocket"},
+      "desc": {"pt": "Velocidade fora da curva — ninguém acompanha no campo aberto", "en": "Speed off the chart — nobody keeps up in the open field"},
+      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "route", "amount": 2}
+    },
+    {
+      "id": "cerebro",
+      "icon": "🧠",
+      "cost": 25,
+      "label": {"pt": "Cérebro", "en": "Brain"},
+      "desc": {"pt": "Lê a jogada antes de ela acontecer", "en": "Reads the play before it happens"},
+      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "coverage", "amount": 2}
+    },
+    {
+      "id": "maos_de_cola",
+      "icon": "✋",
+      "cost": 25,
+      "label": {"pt": "Mãos de cola", "en": "Glue Hands"},
+      "desc": {"pt": "O que encosta na mão, fica", "en": "What touches the hand, stays"},
+      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "catching", "amount": 2}
+    },
+    {
+      "id": "ferrolho",
+      "icon": "🎯",
+      "cost": 25,
+      "label": {"pt": "Ferrolho", "en": "Bolt"},
+      "desc": {"pt": "Arranca a flag na primeira, sempre", "en": "Rips the flag on the first try, always"},
+      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "tackle", "amount": 2}
+    },
+    {
+      "id": "capitao",
+      "icon": "📣",
+      "cost": 30,
+      "label": {"pt": "Capitão", "en": "Captain"},
+      "desc": {"pt": "A voz que o elenco inteiro escuta", "en": "The voice the whole squad listens to"},
+      "effect": {"kind": "team_bonus", "scope": "morale", "amount": 1}
+    },
+    {
+      "id": "padrinho",
+      "icon": "💸",
+      "cost": 20,
+      "label": {"pt": "Padrinho", "en": "Godfather"},
+      "desc": {"pt": "Conhece quem paga a conta, e paga a dele em dia", "en": "Knows who foots the bill, and pays his own on time"},
+      "effect": {"kind": "finance_bonus", "scope": "sponsorship", "amount": 1}
+    },
+
+    {
+      "id": "maos_de_pedra",
+      "icon": "🪨",
+      "cost": -25,
+      "label": {"pt": "Mãos de pedra", "en": "Stone Hands"},
+      "desc": {"pt": "Derruba o que não devia, na hora que não devia", "en": "Drops what he shouldn't, when he shouldn't"},
+      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "catching", "amount": -2}
+    },
+    {
+      "id": "sumido",
+      "icon": "👻",
+      "cost": -30,
+      "label": {"pt": "Sumido", "en": "Ghost"},
+      "desc": {"pt": "Falta treino sem avisar, e reaparece como se nada fosse", "en": "Misses sessions without a word, then turns up like nothing happened"},
+      "effect": {"kind": "training_penalty", "scope": "attendance", "amount": -2}
+    },
+    {
+      "id": "vidraca",
+      "icon": "🩹",
+      "cost": -30,
+      "label": {"pt": "Vidraça", "en": "Glass"},
+      "desc": {"pt": "Lesiona no aquecimento, lesiona no jogo, lesiona vendo o jogo", "en": "Gets hurt warming up, playing, and watching"},
+      "effect": {"kind": "injury_risk", "scope": "all", "amount": 2}
+    }
+  ]
+}

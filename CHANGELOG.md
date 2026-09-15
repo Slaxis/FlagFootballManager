@@ -2,7 +2,64 @@
 
 ## [Unreleased]
 
-### Changed — B.4c: a ficha ganha dados, habilidades e idade (2026-09-09)
+### Added — B.4c: nome, apelido e perks (2026-09-13)
+- Nome, sobrenome e apelido em TRES campos separados na criacao do gestor
+- Gerador de apelidos coerente com o actor, quatro fontes:
+  morfologia do nome (Pedro -> Pedrinho, Lucas -> Luquinho, Thiago ->
+  Thiaguinho), do sobrenome (Vasconcelos -> Vasco), do que ele e notavel por
+  (9 de agilidade -> Foguete, 2 de percepcao -> Tapado) e o saco aberto
+- 313 apelidos novos em `name_gen.json`, indexados por stat e direcao
+- `StatDef.notable_traits()`: atributo conta pros dois lados, habilidade so
+  pra cima — um amador tem 12 habilidades zeradas por nunca ter treinado
+- `PerkDef` + `game/defs/perk.json`: os 10 perks aprovados, com preco em
+  career point. Defeito DEVOLVE pontos (Vidraca +30, Sumido +30, Maos de
+  pedra +25), no maximo 1 por actor, e nao pegar nenhum e uma resposta
+- A semente agora e `hash(nome + sobrenome + apelido)` — escreva os tres num
+  papel e voce volta ao mesmo mundo (inverte a decisao 21)
+- Um so 🎲: sorteia nome, sobrenome, apelido, a vida inteira em career points
+  e talvez um perk. `SheetBuilder.roll_random()` gasta tudo com apetites
+  lognormais, entao sai especialista e nao uma linha reta na media
+- `ActorGenerator` usa o mesmo catalogo — um jogador garimpado le igual a um
+  criado. Prepara os elencos aleatorios de B.5
+- 31 testes novos (`test_names`, `test_perk`, `test_screen_create_manager`)
+
+### Changed
+- A tela de criacao **sorteia um moleque de 12 anos** em vez de abrir em 5 em
+  tudo: corpo, os 8 atributos entre 2 e 7 (piso de bebe, teto de crianca
+  excepcional) e as vezes um perk, que sai dos mesmos 12 anos e da um tom ao
+  personagem. **Nao encosta nas habilidades** — como um teste e atributo +
+  habilidade, decidir isso pelo jogador esvaziaria a unica pergunta da tela.
+  Sobram ~130 career points, os 6 anos que fazem dele um adulto
+- O 🎲 sorteia outro moleque, identico a abertura. Um verbo so: os dados
+  escolhem quem voce nasceu, nunca quem voce virou. `roll_random()`, que
+  gastava os 414 e entregava um adulto pronto, saiu — ficou sem chamador
+
+### Changed
+- **Modalidade virou multipla escolha**: masc, fem, masc+misto, fem+misto ou
+  nenhuma. Misto sozinho nao vale — o time misto tem cota de mulheres, entao
+  precisa saber que vaga voce ocupa. `ActorGenerator` passou a gravar isso
+  tambem: um elenco misto sai com `[masc, misto]` / `[fem, misto]`
+
+### Fixed
+- Botao **Sair** nao fazia nada, e o primeiro conserto tambem nao funcionou:
+  `Game` conectava `flow_finished`, mas `Game` E a cena de boot e o primeiro
+  `change_scene_to_packed` libera ela — o sinal chegava num objeto morto antes
+  do jogador ver a tela inicial. Agora o boot DECLARA `Flow.quit_on_finish` e
+  quem executa e o Flow, que e o no feito pra sobreviver a troca de cena.
+  d5star v0.4.2, e `tests/quit_check.tscn` aperta o botao de verdade
+- Voce era sorteado pra um clube **inexistente na lista**: `club_select` chama
+  `League.ensure_filled()` sem semente e o default era uma constante, entao a
+  tela seguinte reconstruia a varzea de outro mundo e o clube que tinha acabado
+  de te chamar sumia. O default agora pergunta pro Blackboard qual carreira
+  esta rodando — tela que nao liga pra semente nao tem como errar
+- `League.ensure_filled()` era idempotente pelo NUMERO de clubes, entao trocar
+  a semente nao trocava a varzea. Agora refaz quando a semente muda, e
+  `TeamDef.remove_generated()` poupa os clubes autorais
+- O runner esperava um frame antes de rodar: dentro de `_ready` a arvore ainda
+  esta montando filhos e `add_child()` e recusado, o que trancava fora
+  qualquer suite que precise montar uma tela
+
+### Changed — B.4b: a ficha ganha dados, habilidades e idade (2026-09-09)
 - D5 na d5star v0.4.0: o dado explodente que da nome a lib
 - 8o atributo: Vontade (resiliencia mental)
 - camada `derived` removida; 15 HABILIDADES no lugar, cada uma regida por um

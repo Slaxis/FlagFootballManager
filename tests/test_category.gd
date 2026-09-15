@@ -11,6 +11,9 @@ func tests() -> Array:
 		"test_mixed_side_needs_two_in_every_format",
 		"test_womens_side_needs_the_whole_field",
 		"test_unknown_ids_do_not_crash",
+		"test_every_legal_modality_combination",
+		"test_mixed_cannot_stand_alone",
+		"test_a_mixed_squad_records_which_slot_each_actor_fills",
 	]
 
 func _def() -> CategoryDef:
@@ -73,3 +76,48 @@ func test_unknown_ids_do_not_crash(t: TestHelper) -> void:
 	t.equal(def.min_women("fem", "nao_existe"), 0, "formato inexistente com regra 'all'")
 	t.equal(def.on_field("nao_existe"), 0, "formato inexistente")
 	t.check(not def.has_category("nao_existe"), "categoria fantasma")
+
+
+# The five answers the creation screen has to be able to express. It used to
+# offer one choice out of the list, which made "misto" read as though it
+# implied a men's slot — it implies nothing at all.
+func test_every_legal_modality_combination(t: TestHelper) -> void:
+	for legal: Array in [
+		[],
+		[Actor.CATEGORY_MASC],
+		[Actor.CATEGORY_FEM],
+		[Actor.CATEGORY_MASC, Actor.CATEGORY_MISTO],
+		[Actor.CATEGORY_FEM, Actor.CATEGORY_MISTO],
+	]:
+		t.check(Actor.plays_is_valid(legal), "%s deveria ser válido" % str(legal))
+		var actor := Actor.new()
+		actor._apply_data("t", "actor", {})
+		actor.set_plays(legal)
+		t.equal(str(actor.plays()), str(legal), "%s não sobreviveu ao set_plays" % str(legal))
+
+func test_mixed_cannot_stand_alone(t: TestHelper) -> void:
+	# A mixed squad carries a women's quota, so the roster has to know which
+	# slot an actor fills. "misto" on its own never says.
+	t.check(not Actor.plays_is_valid([Actor.CATEGORY_MISTO]),
+		"misto sozinho não diz que vaga a pessoa ocupa")
+	t.check(not Actor.plays_is_valid([Actor.CATEGORY_MASC, Actor.CATEGORY_FEM]),
+		"masculino e feminino ao mesmo tempo")
+	var actor := Actor.new()
+	actor._apply_data("t", "actor", {})
+	actor.set_plays([Actor.CATEGORY_MISTO])
+	t.check(not actor.plays().has(Actor.CATEGORY_MISTO),
+		"o actor ficou jogando misto sem base")
+
+func test_a_mixed_squad_records_which_slot_each_actor_fills(t: TestHelper) -> void:
+	var slots: Dictionary = {}
+	for actor: Actor in ActorGenerator.squad(9090, 30, 55, Actor.CATEGORY_MISTO):
+		t.check(Actor.plays_is_valid(actor.plays()),
+			"%s saiu com plays inválido: %s" % [actor.full_name(), str(actor.plays())])
+		t.check(actor.plays().has(Actor.CATEGORY_MISTO), "um jogador do misto não joga misto")
+		for id: String in [Actor.CATEGORY_MASC, Actor.CATEGORY_FEM]:
+			if actor.plays().has(id):
+				slots[id] = int(slots.get(id, 0)) + 1
+	t.equal(int(slots.get(Actor.CATEGORY_MASC, 0)) + int(slots.get(Actor.CATEGORY_FEM, 0)), 30,
+		"algum jogador do misto ficou sem vaga definida")
+	t.check(int(slots.get(Actor.CATEGORY_FEM, 0)) > 0, "elenco misto sem nenhuma mulher")
+	t.check(int(slots.get(Actor.CATEGORY_MASC, 0)) > 0, "elenco misto sem nenhum homem")

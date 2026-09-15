@@ -12,9 +12,11 @@
 # make you throw better — the player picks which, and neither is wrong.
 class_name SheetBuilder
 
-# Nothing is rolled. You are born at zero in everything and allocate the whole
-# eighteen years — which is also why the seed no longer touches the manager:
-# rerolling it changes the world, never you.
+# The dice roll a CHILD, never an adult. Twelve years of childhood come out of
+# `rolled_opening` — the body, a shape across the eight attributes, sometimes a
+# perk — and the six years that turn that child into an adult are the ones you
+# spend. That is true of the sheet the screen opens with and of every press of
+# the 🎲: one verb, not two.
 const START_AGE := 0
 const END_AGE := 18
 # Career points are the only currency. A year of life buys this many.
@@ -47,10 +49,18 @@ const START_WEIGHT := 80.0
 const STAT_POINT_IN_CAREER := 3
 const SKILL_POINT_IN_CAREER := 2
 
+# Roughly how many rolled children come out with a perk, and how many of those
+# are a boon rather than a flaw. Both are tones, not rewards: a flaw hands
+# career points back.
+const OPENING_PERK_CHANCE := 0.55
+const OPENING_BOON_CHANCE := 0.70
+
 var stats: Dictionary = {}    # id -> step
 var skills: Dictionary = {}   # id -> step
 var height: float = 1.78
 var weight: float = 78.0
+
+var perk: String = ""
 
 var _base_stats: Dictionary = {}
 var _base_skills: Dictionary = {}
@@ -83,7 +93,96 @@ static func average_adult() -> SheetBuilder:
 	builder.weight = START_WEIGHT
 	return builder
 
-# --- Spending ---
+# The age the opening roll leaves you at. Twelve years of childhood are rolled
+# FOR you; the six that turn a kid into an adult are the ones you spend, and
+# they are the whole point of the screen.
+const OPENING_AGE := 12
+# How tight the rolled body sits to the centre of its band.
+const OPENING_BODY_TIGHTNESS := 0.55
+# Narrower than the 🎲's appetite. With only eight tracks to spread across
+# instead of twenty-three, the same spread concentrates hard enough to produce
+# a child with 9 in one attribute and 0 in another — and on this ruler 9 is
+# nearly a medal contender and 0 is less than a toddler.
+const OPENING_APPETITE_SPREAD := 0.45
+# Nobody alive is below a toddler. The floor is bought first so the spread has
+# to work with what is left rather than being free to hollow somebody out.
+const OPENING_FLOOR_STEP := 2
+# And nobody is a prodigy yet. Two steps past the average ADULT is already a
+# remarkable child; the ruler puts 10 at an Olympic medal contender, and the
+# appetite will happily buy one at twelve if nothing stops it.
+const OPENING_CEILING_STEP := 7
+
+# Career points the opening roll spends: twelve years of them.
+static func opening_budget() -> int:
+	return OPENING_AGE * CAREER_POINTS_PER_YEAR
+
+# The sheet the screen opens with: a rolled twelve-year-old.
+#
+# Four rules, and each one is there for a reason.
+#
+# ATTRIBUTES ONLY. A child has not specialised. Spending the rolled years on
+# skills too would answer the screen's one interesting question — attribute or
+# skill, since a roll is the sum of both — before the player got to it, and
+# answer it badly: spread thin over fifteen skills it reads as a smear rather
+# than a person.
+#
+# TWELVE YEARS, NOT ALL OF THEM. What is rolled is a childhood, not a career.
+# The remaining six are the question and they stay open.
+#
+# NOBODY IS HOLLOW, AND NOBODY IS A PRODIGY. Every attribute is walked up to
+# the floor before the appetite gets to play favourites, and none may pass the
+# ceiling: on this ruler 0 is below a toddler and 9 is nearly a medal
+# contender, and a twelve-year-old is neither.
+#
+# A PERK IS FAIR GAME. It is paid for out of those same twelve years — a kid
+# who came out with Craque bought it with attribute points he no longer has,
+# and one who came out with Vidraça is stronger for it — so it gives the rolled
+# character a tone before the player has decided anything.
+#
+# This is NOT the 🎲, which spends all 414 and hands you somebody finished.
+static func rolled_opening(rng: RandomNumberGenerator) -> SheetBuilder:
+	var builder: SheetBuilder = average_adult()
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		return builder
+	# average_adult() sets the dictionaries up and opens them on an adult; a
+	# twelve-year-old starts from nothing.
+	for id: String in def.base_ids():
+		builder.stats[id] = MIN_STAT_STEP
+	for id: String in def.skill_ids():
+		builder.skills[id] = MIN_SKILL_STEP
+	builder.perk = ""
+	builder._roll_body(def, rng, OPENING_BODY_TIGHTNESS)
+	builder._roll_perk(rng)
+
+	# The budget is spent by AGE, not down to a remainder. Stopping when the
+	# next step no longer fits under a reserve leaves a tail smaller than the
+	# cheapest purchase — nine career points — and the header then reads eleven
+	# for a childhood that was all but finished. Buying past the birthday by a
+	# few points and stopping is the honest version.
+	var target: int = opening_budget()
+	for id: String in def.base_ids():
+		while int(builder.stats[id]) < OPENING_FLOOR_STEP and builder.can_raise_stat(id):
+			builder.raise_stat(id)
+
+	var appetite: Dictionary = {}
+	for id: String in def.base_ids():
+		appetite[id] = exp(rng.randfn(0.0, OPENING_APPETITE_SPREAD))
+	var guard: int = 0
+	while builder.spent() < target and guard < 400:
+		guard += 1
+		var ids: Array[String] = []
+		var weights: Array[float] = []
+		for id: String in def.base_ids():
+			if int(builder.stats[id]) < OPENING_CEILING_STEP and builder.can_raise_stat(id):
+				ids.append(id)
+				weights.append(float(appetite[id]) / float(int(builder.stats[id]) + 1))
+		if ids.is_empty():
+			break
+		builder.raise_stat(ids[builder._weighted_index(weights, rng)])
+	return builder
+
+# --- Spending ---# --- Spending ---
 
 func spent() -> int:
 	var total: int = 0
@@ -91,7 +190,7 @@ func spent() -> int:
 		total += _cost_between(int(_base_stats.get(id, 0)), int(stats[id])) * STAT_POINT_IN_CAREER
 	for id: String in skills.keys():
 		total += _cost_between(int(_base_skills.get(id, 0)), int(skills[id])) * SKILL_POINT_IN_CAREER
-	return total + body_cost()
+	return total + body_cost() + perk_cost()
 
 # The body is billed at exactly what the swap it performs is worth, so shape
 # costs points and power does not come free. Moving away from the centre gives
@@ -188,6 +287,86 @@ func lower_skill(id: String) -> void:
 	if can_lower_skill(id):
 		skills[id] = int(skills[id]) - 1
 
+# --- Perks ---
+#
+# One sentence about you, priced in career points, and the price can be
+# negative. A flaw hands points back — which is the only reason anybody would
+# ever pick "drops what he shouldn't" — and the cap of one is what keeps the
+# optimal build from being the whole flaw list.
+#
+# Optional on purpose: passing on the perk and putting everything into the
+# sheet is a real answer, not a wasted slot.
+
+func perk_cost() -> int:
+	var def := Drive.def("perk") as PerkDef
+	return def.cost(perk) if def != null and perk != "" else 0
+
+func has_perk() -> bool:
+	return perk != ""
+
+# Swapping counts the difference, so trading a 40-point boon for a 25-point one
+# does not ask you to afford both.
+func can_take_perk(id: String) -> bool:
+	var def := Drive.def("perk") as PerkDef
+	if def == null:
+		return false
+	if id != "" and not def.has_perk(id):
+		return false
+	# Dropping a flaw is a PURCHASE: it costs back the points it paid you, and
+	# without this you could take Vidraça, spend the thirty points, untick it
+	# and walk out thirty points over budget.
+	var wanted: int = def.cost(id) if id != "" else 0
+	return wanted - perk_cost() <= remaining()
+
+# Clicking the perk you already have takes it off: there is no "none" button to
+# hunt for.
+func set_perk(id: String) -> void:
+	var wanted: String = "" if id == perk else id
+	if can_take_perk(wanted):
+		perk = wanted
+
+# --- The dice ---
+
+# Height and weight land near the centre and rarely more than a band out — an
+# extreme body costs most of the budget, and the roll should produce a person,
+# not a stunt.
+func _roll_body(def: StatDef, rng: RandomNumberGenerator, tightness: float = 0.85) -> void:
+	for id: String in def.measure_ids():
+		var spec: Dictionary = def.measure(id)
+		var centre: float = float(spec.get("center", 0.0))
+		var band_width: float = float(spec.get("band", 1.0))
+		var value: float = clampf(
+			rng.randfn(centre, band_width * tightness),
+			float(spec.get("min", centre)), float(spec.get("max", centre)))
+		if id == "height":
+			height = snappedf(value, def.increment(id))
+		else:
+			weight = snappedf(value, def.increment(id))
+
+func _roll_perk(rng: RandomNumberGenerator) -> void:
+	var def := Drive.def("perk") as PerkDef
+	if def == null or rng.randf() >= OPENING_PERK_CHANCE:
+		return
+	var pool: Array[String] = def.boons() if rng.randf() < OPENING_BOON_CHANCE else def.flaws()
+	if pool.is_empty():
+		return
+	# Affordability is checked before the sheet is bought, so a 40-point boon is
+	# always payable here and only the sheet gets thinner.
+	set_perk(pool[rng.randi() % pool.size()])
+
+func _weighted_index(weights: Array[float], rng: RandomNumberGenerator) -> int:
+	var total: float = 0.0
+	for w: float in weights:
+		total += w
+	if total <= 0.0:
+		return rng.randi() % weights.size()
+	var roll: float = rng.randf() * total
+	for i: int in range(weights.size()):
+		roll -= weights[i]
+		if roll <= 0.0:
+			return i
+	return weights.size() - 1
+
 # --- Result ---
 
 # Bakes the build into an Actor, converting steps back into stored units so
@@ -208,7 +387,7 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 		"weight": weight,
 		"stats": stored_stats,
 		"skills": stored_skills,
-		"perks": [],
+		"perks": [perk] if perk != "" else [],
 		"plays": [],
 		"manages": [],
 		"team": Actor.NO_TEAM,

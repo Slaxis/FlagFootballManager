@@ -40,6 +40,17 @@ func add_thing(thing: Dictionary) -> void:
 		return
 	_by_id[id] = thing
 
+# Drops every club TeamGenerator invented, leaving the authored ones alone.
+# Returns how many went.
+func remove_generated() -> int:
+	var doomed: Array[String] = []
+	for id: String in _by_id.keys():
+		if bool((_by_id[id] as Dictionary).get("generated", false)):
+			doomed.append(id)
+	for id: String in doomed:
+		_by_id.erase(id)
+	return doomed.size()
+
 # --- Queries ---
 
 func get_team(id: String) -> Dictionary:
