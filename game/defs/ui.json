@@ -253,24 +253,24 @@
       "en": "roll another"
     },
     "manager.perks": {
-      "pt": "PERK",
-      "en": "PERK"
+      "pt": "TALENTOS",
+      "en": "TALENTS"
     },
     "manager.perks_hint": {
-      "pt": "no máximo 1, e não pegar nenhum é uma resposta — tudo vai para a ficha. Um defeito DEVOLVE career points: você joga pior de um jeito específico e treina mais em troca.",
-      "en": "one at most, and taking none is an answer — it all goes into the sheet. A flaw GIVES career points back: you are worse in one specific way and train more in exchange."
+      "pt": "moeda própria, separada dos career points: treino é uma coisa, o que a carreira fez com você é outra. Pegue quantos quiser — um defeito PAGA por um talento. Saldo: %d",
+      "en": "their own currency, apart from career points: training is one thing, what a career did to you is another. Take as many as you like — a flaw PAYS for a talent. Balance: %d"
     },
     "manager.perk_none": {
       "pt": "nenhum perk escolhido",
       "en": "no perk taken"
     },
     "manager.perk_price": {
-      "pt": "%d cp",
-      "en": "%d cp"
+      "pt": "%d pp",
+      "en": "%d pp"
     },
     "manager.perk_refund": {
-      "pt": "+%d cp",
-      "en": "+%d cp"
+      "pt": "+%d pp",
+      "en": "+%d pp"
     },
     "manager.plays_hint": {
       "pt": "dá para marcar mais de uma: masculino ou feminino, e o misto junto. Misto sozinho não vale — o time misto tem cota de mulheres, então ele precisa saber se você ocupa vaga de homem ou de mulher.",

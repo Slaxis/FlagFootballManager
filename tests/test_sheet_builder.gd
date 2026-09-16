@@ -17,13 +17,13 @@ func tests() -> Array:
 		"test_step_costs_are_linear_and_stats_cost_more",
 		"test_the_top_half_of_the_ladder_costs_far_more",
 		"test_bakes_steps_into_stored_units",
-		"test_an_extreme_body_costs_the_whole_spare_budget",
+		"test_an_extreme_body_is_a_small_price",
 		"test_a_remainder_nothing_costs_still_finishes",
 		"test_the_opening_rolls_a_lived_person",
 		"test_the_manager_is_capped_like_a_squad_player",
 		"test_the_opening_rolls_a_whole_person",
 		"test_each_origin_leans_its_own_way",
-		"test_the_opening_can_always_afford_the_perk_it_picked",
+		"test_the_roll_only_takes_talents_it_can_pay_for",
 		"test_the_opening_is_not_the_same_person_twice",
 	]
 
@@ -211,18 +211,28 @@ func test_a_remainder_nothing_costs_still_finishes(t: TestHelper) -> void:
 	t.check(builder.is_complete(),
 		"com %d ponto(s) e nada comprável o jogador ficou preso na tela" % builder.remaining())
 
-# The body is billed, and at the extreme of both measures the bill is exactly
-# the spare budget — so a wildly shaped manager reaches eighteen with nothing
-# left for skills. Shape or practice, not both.
-func test_an_extreme_body_costs_the_whole_spare_budget(t: TestHelper) -> void:
+# The body is a SMALL price now, and it has to be. It used to be worth three
+# steps in each direction and cost the entire spare budget — which was fine
+# when a good player sat at five steps and absurd once a city-level player
+# lives between one and three. A body that outweighs everything a person ever
+# trained is not a body, it is a cheat code.
+func test_an_extreme_body_is_a_small_price(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
 	var builder: SheetBuilder = _builder()
-	t.equal(builder.body_cost(), 0, "o corpo de abertura deveria ser grátis")
-	var spare: int = builder.remaining()
+	if def == null:
+		t.fail("StatDef ausente"); return
 	builder.height = 2.10
 	builder.weight = 110.0
-	t.equal(builder.body_cost(), spare, "o corpo extremo deveria custar toda a sobra")
-	t.equal(builder.remaining(), 0, "não deveria sobrar nada")
-	t.check(builder.is_complete(), "e ainda assim fecha os 18 anos")
+	t.check(builder.body_cost() > 0, "o corpo extremo saiu de graça")
+	t.check(builder.body_cost() <= SheetBuilder.CAREER_POINTS_PER_YEAR,
+		"o corpo custou %d cp, mais de um ano de vida" % builder.body_cost())
+	# And it still shifts something, or it would be decoration.
+	var effect: Dictionary = def.body_effect({"height": 2.10, "weight": 110})
+	var moved: int = 0
+	for value: int in effect.values():
+		if value != 0:
+			moved += 1
+	t.check(moved >= 2, "o corpo extremo não mexeu em nada")
 
 # There is no seed here at all any more: two newborns are identical, and the
 # career seed builds the world instead of the person.
@@ -330,23 +340,25 @@ func test_the_opening_leaves_nobody_hollow(t: TestHelper) -> void:
 	t.check(peak > StatDef.DEFAULT_AVERAGE_STEP,
 		"em 40 sorteios ninguém passou da média — o espalhamento morreu")
 
-# The perk is picked BEFORE the attributes are bought, precisely so it is
-# always payable. If that order ever flips, a 40-point boon on a sheet with
-# nothing left goes silently unbought and the roll quietly stops giving tones.
-func test_the_opening_can_always_afford_the_perk_it_picked(t: TestHelper) -> void:
+# Talents ride a separate budget now, so the roll can only hand you what the
+# scenario's balance covers. A founder with one point cannot come out wearing
+# Craque.
+func test_the_roll_only_takes_talents_it_can_pay_for(t: TestHelper) -> void:
 	var perks := Drive.def("perk") as PerkDef
-	if perks == null:
-		t.fail("PerkDef ausente"); return
+	var origins := Drive.def("origin") as OriginDef
+	if perks == null or origins == null:
+		t.fail("Defs ausentes"); return
 	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
 	var rolled: int = 0
-	for i: int in range(60):
-		var builder: SheetBuilder = SheetBuilder.rolled_opening(rng)
-		t.check(builder.remaining() >= 0, "a abertura estourou o orçamento")
-		if builder.perk == "":
-			continue
-		rolled += 1
-		t.check(perks.has_perk(builder.perk), "perk inventado: " + builder.perk)
-	t.check(rolled > 0, "nenhuma abertura pegou perk em 60 sorteios")
+	for i: int in range(40):
+		for id: String in origins.origin_ids():
+			var builder: SheetBuilder = SheetBuilder.rolled_opening(rng, id)
+			t.check(builder.perk_points_left() >= 0,
+				"origem %s abriu com saldo de talento negativo" % id)
+			for perk_id: String in builder.perks:
+				t.check(perks.has_perk(perk_id), "talento inventado: " + perk_id)
+			rolled += builder.perks.size()
+	t.check(rolled > 0, "nenhuma abertura pegou talento em 120 sorteios")
 
 func test_the_opening_is_not_the_same_person_twice(t: TestHelper) -> void:
 	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
@@ -357,8 +369,8 @@ func test_the_opening_is_not_the_same_person_twice(t: TestHelper) -> void:
 		# with zero seasons behind him and of course they come out alike — the
 		# scenario is most of what makes two managers different.
 		var builder: SheetBuilder = SheetBuilder.rolled_opening(rng, "player")
-		sheets[str(builder.stats) + str(builder.skills) + builder.perk] = true
-		if builder.has_perk():
+		sheets[str(builder.stats) + str(builder.skills) + str(builder.perks)] = true
+		if not builder.perks.is_empty():
 			with_a_perk += 1
 	# Not twenty of twenty: a city-level sheet lives in three steps across
 	# twenty-three tracks, so two sandlot managers genuinely do look alike.

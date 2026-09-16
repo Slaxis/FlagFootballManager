@@ -36,7 +36,8 @@
         "position": "head_coach",
         "years_min": 0,
         "years_max": 1
-      }
+      },
+      "perk_points": 1
     },
     {
       "id": "player",
@@ -71,7 +72,8 @@
         "position": "receiver",
         "years_min": 1,
         "years_max": 3
-      }
+      },
+      "perk_points": 2
     },
     {
       "id": "student",
@@ -105,7 +107,8 @@
         "position": "offense_coord",
         "years_min": 0,
         "years_max": 0
-      }
+      },
+      "perk_points": 1
     }
   ]
 }

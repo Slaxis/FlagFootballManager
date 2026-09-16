@@ -219,7 +219,7 @@
       "center": 1.8,
       "band": 0.1,
       "increment": 0.01,
-      "cap": 3,
+      "cap": 1,
       "affects": {
         "perception": 1,
         "agility": -1
@@ -242,7 +242,7 @@
       "center": 80,
       "band": 10,
       "increment": 1,
-      "cap": 3,
+      "cap": 1,
       "affects": {
         "strength": 1,
         "stamina": -1

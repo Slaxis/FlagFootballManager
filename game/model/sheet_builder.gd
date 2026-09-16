@@ -60,7 +60,12 @@ var skills: Dictionary = {}   # id -> step
 var height: float = 1.78
 var weight: float = 78.0
 
-var perk: String = ""
+# Perks, plural, and paid for out of their OWN currency (decision 45). Career
+# points are training; a perk is what a career did to you. Keeping them in one
+# pocket meant a talent cost the same as two seasons in the gym, which is not
+# the same kind of thing at all.
+var perks: Array[String] = []
+var perk_points: int = 0
 # Which of the three scenarios this manager came from. It biases the sheet and
 # it decides what kind of club is waiting.
 var origin: String = ""
@@ -191,8 +196,10 @@ static func rolled_opening(rng: RandomNumberGenerator, origin: String = "") -> S
 		builder.stats[id] = def.step(person.stat(id))
 	for id: String in def.skill_ids():
 		builder.skills[id] = def.step(person.skill(id))
-	if not person.perks().is_empty():
-		builder.perk = String(person.perks()[0])
+	builder.perk_points = origins.perk_points(origin) if origins != null and origin != "" else 1
+	for id: Variant in person.perks():
+		if builder.can_take_perk(String(id)):
+			builder.perks.append(String(id))
 	builder._apply_origin(def)
 	# The budget IS what this person cost. You cannot make him bigger, only
 	# different — sell a step here to buy one there.
@@ -232,7 +239,7 @@ func spent() -> int:
 		total += _cost_between(int(_base_stats.get(id, 0)), int(stats[id])) * STAT_POINT_IN_CAREER
 	for id: String in skills.keys():
 		total += _cost_between(int(_base_skills.get(id, 0)), int(skills[id])) * SKILL_POINT_IN_CAREER
-	return total + body_cost() + perk_cost()
+	return total + body_cost()
 
 # The body is billed at exactly what the swap it performs is worth, so shape
 # costs points and power does not come free. Moving away from the centre gives
@@ -352,41 +359,42 @@ func lower_skill(id: String) -> void:
 
 # --- Perks ---
 #
-# One sentence about you, priced in career points, and the price can be
-# negative. A flaw hands points back — which is the only reason anybody would
-# ever pick "drops what he shouldn't" — and the cap of one is what keeps the
-# optimal build from being the whole flaw list.
-#
-# Optional on purpose: passing on the perk and putting everything into the
-# sheet is a real answer, not a wasted slot.
+# Their own budget, spent freely. A flaw PAYS, so Vidraça buys Capitão — take
+# as many as the balance allows and the balance is the only rule. The old cap
+# of one existed because flaws refunded career points and the optimal build was
+# the entire flaw list; on a separate ruler the budget does that job by itself.
 
-func perk_cost() -> int:
-	var def := Drive.def("perk") as PerkDef
-	return def.cost(perk) if def != null and perk != "" else 0
-
-func has_perk() -> bool:
-	return perk != ""
-
-# Swapping counts the difference, so trading a 40-point boon for a 25-point one
-# does not ask you to afford both.
-func can_take_perk(id: String) -> bool:
+func perk_points_spent() -> int:
 	var def := Drive.def("perk") as PerkDef
 	if def == null:
-		return false
-	if id != "" and not def.has_perk(id):
-		return false
-	# Dropping a flaw is a PURCHASE: it costs back the points it paid you, and
-	# without this you could take Vidraça, spend the thirty points, untick it
-	# and walk out thirty points over budget.
-	var wanted: int = def.cost(id) if id != "" else 0
-	return wanted - perk_cost() <= remaining()
+		return 0
+	var total: int = 0
+	for id: String in perks:
+		total += def.cost(id)
+	return total
 
-# Clicking the perk you already have takes it off: there is no "none" button to
-# hunt for.
-func set_perk(id: String) -> void:
-	var wanted: String = "" if id == perk else id
-	if can_take_perk(wanted):
-		perk = wanted
+func perk_points_left() -> int:
+	return perk_points - perk_points_spent()
+
+func has_perk(id: String) -> bool:
+	return perks.has(id)
+
+func can_take_perk(id: String) -> bool:
+	var def := Drive.def("perk") as PerkDef
+	if def == null or not def.has_perk(id):
+		return false
+	if perks.has(id):
+		# Dropping a flaw costs back what it paid you, so it can be refused.
+		return -def.cost(id) <= perk_points_left()
+	return def.cost(id) <= perk_points_left()
+
+func toggle_perk(id: String) -> void:
+	if not can_take_perk(id):
+		return
+	if perks.has(id):
+		perks.erase(id)
+	else:
+		perks.append(id)
 
 # --- The dice ---
 
@@ -413,9 +421,7 @@ func _roll_perk(rng: RandomNumberGenerator) -> void:
 	var pool: Array[String] = def.boons() if rng.randf() < OPENING_BOON_CHANCE else def.flaws()
 	if pool.is_empty():
 		return
-	# Affordability is checked before the sheet is bought, so a 40-point boon is
-	# always payable here and only the sheet gets thinner.
-	set_perk(pool[rng.randi() % pool.size()])
+	toggle_perk(pool[rng.randi() % pool.size()])
 
 func _weighted_index(weights: Array[float], rng: RandomNumberGenerator) -> int:
 	var total: float = 0.0
@@ -450,7 +456,7 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 		"weight": weight,
 		"stats": stored_stats,
 		"skills": stored_skills,
-		"perks": [perk] if perk != "" else [],
+		"perks": perks.duplicate(),
 		"origin": origin,
 		"potential": potential,
 		"plays": [],

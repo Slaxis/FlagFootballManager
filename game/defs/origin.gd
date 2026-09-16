@@ -96,6 +96,12 @@ func career_years(id: String, rng: RandomNumberGenerator) -> int:
 	var career: Dictionary = origin(id).get("career", {})
 	return rng.randi_range(int(career.get("years_min", 0)), int(career.get("years_max", 0)))
 
+# What a career already did to you before the screen opened. The ex-player has
+# two because he has been through more — a season that went right, a shoulder
+# that did not.
+func perk_points(id: String) -> int:
+	return int(origin(id).get("perk_points", 1))
+
 # Whether the club exists already or you are the reason it exists.
 func founds_a_club(id: String) -> bool:
 	return bool(origin(id).get("club", {}).get("founded", false))

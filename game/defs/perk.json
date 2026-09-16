@@ -1,10 +1,9 @@
 {
-  "max_per_actor": 1,
   "perks": [
     {
       "id": "craque",
       "icon": "★",
-      "cost": 20,
+      "cost": 3,
       "label": {
         "pt": "Craque",
         "en": "Star"
@@ -22,7 +21,7 @@
     {
       "id": "foguete",
       "icon": "⚡",
-      "cost": 10,
+      "cost": 2,
       "label": {
         "pt": "Foguete",
         "en": "Rocket"
@@ -41,7 +40,7 @@
     {
       "id": "cerebro",
       "icon": "🧠",
-      "cost": 10,
+      "cost": 2,
       "label": {
         "pt": "Cérebro",
         "en": "Brain"
@@ -60,7 +59,7 @@
     {
       "id": "maos_de_cola",
       "icon": "✋",
-      "cost": 10,
+      "cost": 2,
       "label": {
         "pt": "Mãos de cola",
         "en": "Glue Hands"
@@ -79,7 +78,7 @@
     {
       "id": "ferrolho",
       "icon": "🎯",
-      "cost": 10,
+      "cost": 2,
       "label": {
         "pt": "Ferrolho",
         "en": "Bolt"
@@ -98,7 +97,7 @@
     {
       "id": "capitao",
       "icon": "📣",
-      "cost": 12,
+      "cost": 2,
       "label": {
         "pt": "Capitão",
         "en": "Captain"
@@ -116,7 +115,7 @@
     {
       "id": "padrinho",
       "icon": "💸",
-      "cost": 8,
+      "cost": 1,
       "label": {
         "pt": "Padrinho",
         "en": "Godfather"
@@ -134,7 +133,7 @@
     {
       "id": "maos_de_pedra",
       "icon": "🪨",
-      "cost": -10,
+      "cost": -1,
       "label": {
         "pt": "Mãos de pedra",
         "en": "Stone Hands"
@@ -153,7 +152,7 @@
     {
       "id": "sumido",
       "icon": "👻",
-      "cost": -12,
+      "cost": -2,
       "label": {
         "pt": "Sumido",
         "en": "Ghost"
@@ -171,7 +170,7 @@
     {
       "id": "vidraca",
       "icon": "🩹",
-      "cost": -12,
+      "cost": -2,
       "label": {
         "pt": "Vidraça",
         "en": "Glass"

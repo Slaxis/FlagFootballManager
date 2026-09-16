@@ -128,62 +128,33 @@ func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	var origins := Drive.def("origin") as OriginDef
 	if screen == null or perks == null or origins == null:
 		t.fail("não consegui instanciar a tela"); return
-	# On the ex-player scenario, because a FOUNDER has almost nothing on his
-	# sheet — stats of zero and one — and you cannot trade what is not there.
-	# That is worth knowing about the scenario, but it makes a poor fixture.
+	# The ex-player arrives with two perk points, which is enough to take
+	# something without trading first.
 	_button_starting_with(screen, origins.label("player")).pressed.emit()
 
-	# Sell first. The sheet opens with everything spent, and the talent the dice
-	# handed you may be a DISADVANTAGE — giving one of those back costs the
-	# points it paid you, so there has to be slack before anything moves. That
-	# is the trade, not a bug.
-	# The CHEAPEST talent, not the first. The screen rolls with a randomised
-	# seed, and a founder's whole sheet can cost about what Craque does — so
-	# asking for the dearest one made this a coin flip instead of a test.
-	var wanted: String = ""
+	var cheap: String = ""
 	for id: String in perks.boons():
-		if wanted == "" or perks.cost(id) < perks.cost(wanted):
-			wanted = id
-	var guard: int = 0
-	while guard < 80:
-		var chip: Button = _button_starting_with(screen, perks.icon(wanted))
-		var current: Button = _pressed_chip(screen, perks)
-		if not chip.disabled and (current == null or current.text == chip.text):
-			break
-		var sold: Button = _first_enabled(screen, "−")
-		if sold == null:
-			break
-		sold.pressed.emit()
-		guard += 1
-	t.check(guard > 0, "o talento estava de graça — a ficha não gastou tudo")
+		if cheap == "" or perks.cost(id) < perks.cost(cheap):
+			cheap = id
+	var chip: Button = _button_starting_with(screen, perks.icon(cheap))
+	if chip == null:
+		t.fail("chip do talento não foi desenhado"); _close(screen); return
 
-	var taken: Button = _pressed_chip(screen, perks)
-	if taken != null and taken.text != _button_starting_with(screen, perks.icon(wanted)).text:
-		taken.pressed.emit()
-	t.equal(_pressed_chip(screen, perks), null, "não consegui largar o talento sorteado")
-	t.check(not _button_starting_with(screen, perks.icon(wanted)).disabled,
-		"vender passos não liberou o talento")
+	var was_on: bool = chip.button_pressed
+	chip.pressed.emit()
+	t.check(_button_starting_with(screen, perks.icon(cheap)).button_pressed != was_on,
+		"o talento não mudou de estado")
+	_button_starting_with(screen, perks.icon(cheap)).pressed.emit()
+	t.equal(_button_starting_with(screen, perks.icon(cheap)).button_pressed, was_on,
+		"clicar de novo não voltou ao estado anterior")
 
-	_button_starting_with(screen, perks.icon(wanted)).pressed.emit()
-	t.check(_button_starting_with(screen, perks.icon(wanted)).button_pressed,
-		"o talento não ficou marcado")
-	t.equal(_pressed_chip(screen, perks).text,
-		_button_starting_with(screen, perks.icon(wanted)).text,
-		"mais de um talento marcado ao mesmo tempo")
-
-	_button_starting_with(screen, perks.icon(wanted)).pressed.emit()
-	t.equal(_pressed_chip(screen, perks), null, "clicar de novo não tirou o talento")
+	# A flaw pays, so it is always takeable whatever the balance.
+	var flaw: String = perks.flaws()[0]
+	_button_starting_with(screen, perks.icon(flaw)).pressed.emit()
+	t.check(_button_starting_with(screen, perks.icon(flaw)).button_pressed,
+		"o defeito deveria entrar sempre — ele paga")
 	_close(screen)
 
-func _first_enabled(screen: Control, text: String) -> Button:
-	for node: Variant in _collect(screen, "Button", []):
-		var button := node as Button
-		if button.text == text and not button.disabled:
-			return button
-	return null
-
-# The chip currently ON, or null. Doubles as the cap check: a second pressed
-# chip would mean two perks at once.
 func _pressed_chip(screen: Control, perks: PerkDef) -> Button:
 	var found: Button = null
 	for id: String in perks.perk_ids():

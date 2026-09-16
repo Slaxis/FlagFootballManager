@@ -291,7 +291,7 @@ static func _traits(stats: Dictionary, skills: Dictionary) -> Array:
 # exactly like a created one.
 static func _roll_perks(rng: RandomNumberGenerator, quality: int) -> Array:
 	var def := Drive.def("perk") as PerkDef
-	if def == null or def.max_per_actor <= 0 or rng.randf() >= PERK_CHANCE:
+	if def == null or rng.randf() >= PERK_CHANCE:
 		return []
 	var t: float = clampf(
 		float(quality - QUALITY_FLOOR) / float(QUALITY_CEILING - QUALITY_FLOOR), 0.0, 1.0)

@@ -103,12 +103,16 @@ func test_body_shifts_whole_steps(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
+	# ONE step, not three. On the new ruler a city-level player lives between
+	# one and three steps, so a body worth three of them was worth more than
+	# everything the person ever trained — and it drew a zeroed attribute as a
+	# one that refused to come down.
 	var tall: Dictionary = def.body_effect({"height": 2.10, "weight": 80})
-	t.equal(int(tall.get("perception", 0)), 3, "alto deveria enxergar 3 passos mais")
-	t.equal(int(tall.get("agility", 0)), -3, "alto deveria perder 3 passos de agilidade")
+	t.equal(int(tall.get("perception", 0)), 1, "alto deveria enxergar 1 passo mais")
+	t.equal(int(tall.get("agility", 0)), -1, "alto deveria perder 1 passo de agilidade")
 	var heavy: Dictionary = def.body_effect({"height": 1.80, "weight": 110})
-	t.equal(int(heavy.get("strength", 0)), 3, "pesado deveria ganhar 3 de força")
-	t.equal(int(heavy.get("stamina", 0)), -3, "pesado deveria perder 3 de vitalidade")
+	t.equal(int(heavy.get("strength", 0)), 1, "pesado deveria ganhar 1 de força")
+	t.equal(int(heavy.get("stamina", 0)), -1, "pesado deveria perder 1 de vitalidade")
 	for value: int in def.body_effect({"height": 1.80, "weight": 80}).values():
 		t.equal(value, 0, "o corpo central não deveria mexer em nada")
 
@@ -135,10 +139,11 @@ func test_body_price_matches_the_swap_it_performs(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
+	# Capped at one band, so the price caps with it: the extreme body is worth
+	# a single step and costs a single point.
 	t.equal(def.body_value({"height": 1.90, "weight": 80}), 1, "uma faixa")
-	t.equal(def.body_value({"height": 2.00, "weight": 80}), 4, "duas faixas")
-	t.equal(def.body_value({"height": 2.10, "weight": 80}), 9, "três faixas")
-	t.equal(def.body_value({"height": 2.10, "weight": 110}), 18, "extremo nos dois")
+	t.equal(def.body_value({"height": 2.10, "weight": 80}), 1, "além do teto continua um")
+	t.equal(def.body_value({"height": 2.10, "weight": 110}), 2, "extremo nos dois")
 
 func test_roll_base_sums_aptitude_and_practice(t: TestHelper) -> void:
 	var def := _def()

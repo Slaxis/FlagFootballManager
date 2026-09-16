@@ -97,9 +97,6 @@ func _build_form() -> void:
 	_root.add_child(_seed_row())
 	_root.add_child(_section(UiText.t("manager.body"), UiText.t("manager.body_hint")))
 	_root.add_child(_body_row())
-	_root.add_child(_section(UiText.t("manager.perks"), UiText.t("manager.perks_hint")))
-	_root.add_child(_perk_row())
-	_root.add_child(_perk_detail())
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 40)
@@ -133,6 +130,12 @@ func _build_form() -> void:
 	_root.add_child(_section(UiText.t("manager.modality"), ""))
 	_root.add_child(_plays_row())
 	_root.add_child(_manages_row())
+	# Last, because they are the one thing on this sheet that is not training:
+	# you finish the person, then you say what happened to him.
+	_root.add_child(_section(UiText.t("manager.perks"),
+		UiText.t("manager.perks_hint") % _build.perk_points_left()))
+	_root.add_child(_perk_row())
+	_root.add_child(_spacer(4))
 	_root.add_child(_section(UiText.t("manager.career_type"), ""))
 	_root.add_child(_career_type())
 	_root.add_child(_spacer(4))
@@ -250,7 +253,7 @@ func _perk_chip(perks: PerkDef, id: String) -> Control:
 	var cost: int = perks.cost(id)
 	var price: String = (UiText.t("manager.perk_refund") % -cost) if cost < 0 		else (UiText.t("manager.perk_price") % cost)
 	var chip: Button = _choice("%s %s  %s" % [perks.icon(id), perks.label(id), price],
-		_build.perk == id, _on_perk.bind(id))
+		_build.has_perk(id), _on_perk.bind(id))
 	# Green buys you something, red pays you to accept something. The sign is
 	# the whole decision, so it should not need reading.
 	var hue: Color = TALENT_BAD if cost < 0 else TALENT_GOOD
@@ -260,17 +263,12 @@ func _perk_chip(perks: PerkDef, id: String) -> Control:
 	chip.tooltip_text = perks.desc(id)
 	# Unaffordable is not the same as unchosen: grey it so the player can see
 	# the perk exists and costs more than they have left.
-	if _build.perk != id and not _build.can_take_perk(id):
+	if not _build.has_perk(id) and not _build.can_take_perk(id):
 		chip.disabled = true
 		chip.add_theme_color_override("font_disabled_color", Color(0.30, 0.34, 0.31))
 	return chip
 
-func _perk_detail() -> Control:
-	var perks := Drive.def("perk") as PerkDef
-	if perks == null or not _build.has_perk():
-		return _hint(UiText.t("manager.perk_none"))
-	return _hint("%s %s — %s" % [
-		perks.icon(_build.perk), perks.label(_build.perk), perks.desc(_build.perk)])
+
 
 # Height and weight step through the ranges the JSON declares. They cost no
 # points: the trade they force IS the price.
@@ -359,7 +357,11 @@ func _attribute_row(stats: StatDef, id: String) -> Control:
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_color", TEXT)
 	row.add_child(label)
-	row.add_child(StatBar.bar(effective * 10, stats.chakra_color(id)))
+	# The RAW value, not the effective one. The bar used to include the body
+	# shift while the minus button read the raw number, so an attribute at zero
+	# with a tall body drew as "1" and refused to come down — you were stuck at
+	# a step you never bought.
+	row.add_child(StatBar.bar(step_value * 10, stats.chakra_color(id)))
 
 	var mod := Label.new()
 	mod.text = "%+d" % bonus if bonus != 0 else "·"
@@ -599,7 +601,7 @@ func _on_origin(id: String) -> void:
 	_build_ui()
 
 func _on_perk(id: String) -> void:
-	_build.set_perk(id)
+	_build.toggle_perk(id)
 	_build_ui()
 
 func _on_plays(category: String) -> void:
