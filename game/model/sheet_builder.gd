@@ -80,6 +80,10 @@ var potential: int = StatDef.STORED_MAX
 # you are handed a person, and the points you may move around are HIS.
 var budget: int = 0
 var rolled_age: int = 0
+# What the lived years were spent doing. Carried through to the Actor so the
+# team screen can put him in the right box without re-deriving it.
+var rolled_position: String = ""
+var rolled_track: String = ""
 
 var _base_stats: Dictionary = {}
 var _base_skills: Dictionary = {}
@@ -136,6 +140,9 @@ const OPENING_FLOOR_STEP := 1
 # still fits what an origin promises — a student who cannot reach two steps of
 # rules is not a student.
 const MIN_MANAGER_POTENTIAL := 25
+# The years everybody has just by having been around: playing on Sunday,
+# helping out, watching. The origin's own years sit on top of these.
+const BASE_YEARS := Vector2i(3, 6)
 # And nobody is a prodigy yet. Two steps past the average ADULT is already a
 # remarkable child; the ruler puts 10 at an Olympic medal contender, and the
 # appetite will happily buy one at twelve if nothing stops it.
@@ -184,10 +191,23 @@ static func rolled_opening(rng: RandomNumberGenerator, origin: String = "") -> S
 	# other: a birth sheet, a position his scenario put him in, and the years
 	# that scenario gives him.
 	var level: float = origins.club_level(origin) if origins != null and origin != "" else 1.0
-	var position: String = origins.career_position(origin) if origins != null else "head_coach"
-	var years: int = origins.career_years(origin, rng) if origins != null else 0
-	var person: Actor = ActorGenerator.lived(rng, level, position, years)
+	var track: String = origins.career_track(origin) if origins != null 		else ActorGenerator.TRACK_PLAYER
+	# TWO SPANS, ADDED. The scenario's own years are what makes the three
+	# different from each other — the ex-jogador has one to three years AS a
+	# club player, the founder has none because there was no club. But every
+	# one of them has been around the sport for a few years before that, the
+	# way any adult in the várzea has, and without those years the sheet came
+	# out at nothing: a budget of three career points, an uneditable screen,
+	# and a manager who had never done anything.
+	var years: int = BASE_YEARS.x + rng.randi() % int(BASE_YEARS.y - BASE_YEARS.x + 1)
+	years += origins.career_years(origin, rng) if origins != null else 0
+	var person: Actor = ActorGenerator.lived(rng, level, track, years)
 
+	# Where the career actually happened, which the BODY decided and not the
+	# scenario. This is the line that stopped every ex-player being a
+	# quarterback: the track says "on the field", the matcher says where.
+	builder.rolled_position = person.position()
+	builder.rolled_track = track
 	builder.potential = maxi(int(person.data.get("potential", 25)), MIN_MANAGER_POTENTIAL)
 	builder.rolled_age = person.age()
 	builder.height = person.height()
@@ -458,6 +478,8 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 		"skills": stored_skills,
 		"perks": perks.duplicate(),
 		"origin": origin,
+		"position": rolled_position,
+		"lineup": _opening_lineup(),
 		"potential": potential,
 		"plays": [],
 		"manages": [],
@@ -467,6 +489,21 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 	payload.merge(name_parts)
 	actor._apply_data("manager_%d" % seed_value, "actor", payload)
 	return actor
+
+# Which boxes you are ticked into on day one. The CHAIR always — the club gave
+# you that the moment it took you on — and, if your years were spent playing,
+# your own position too. The ex-jogador's own description promises he will have
+# to carry the side himself early on; standing in the Comissão with nobody able
+# to field him would have made that a lie.
+func _opening_lineup() -> Array[String]:
+	var origins := Drive.def("origin") as OriginDef
+	var out: Array[String] = []
+	if rolled_track == ActorGenerator.TRACK_PLAYER and rolled_position != "":
+		out.append(rolled_position)
+	var chair: String = origins.chair(origin) if origins != null and origin != "" else ""
+	if chair != "" and not out.has(chair):
+		out.append(chair)
+	return out
 
 # --- Internals ---
 

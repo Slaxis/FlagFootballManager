@@ -14,6 +14,8 @@
 class_name TeamGenerator
 
 const TIER_UNAFFILIATED := 4
+# The município every neighbourhood in the shipped module belongs to.
+const DEFAULT_CITY := "Rio de Janeiro"
 # Deliberately below the weakest affiliated club (Nova Friburgo Yetis, 36).
 # That gap is the step the player feels in their first match.
 const REPUTATION_MIN := 12
@@ -43,7 +45,12 @@ static func invent(seed_value: int, state: String = "RJ") -> Dictionary:
 		"id": _slug(team_name, seed_value),
 		"group": "team",
 		"name": team_name,
-		"city": city if city != "" else "Rio de Janeiro",
+		# The bairro and the município are two different answers, and squashing
+		# them into one field meant a founder could not be asked for both.
+		# Everything on screen shows the neighbourhood, because at this level
+		# "Méier" says far more than "Rio de Janeiro" does.
+		"city": DEFAULT_CITY,
+		"neighborhood": city,
 		"state": state,
 		"tier": TIER_UNAFFILIATED,
 		"reputation": rng.randi_range(REPUTATION_MIN, REPUTATION_MAX),
@@ -53,6 +60,30 @@ static func invent(seed_value: int, state: String = "RJ") -> Dictionary:
 		# changes; an authored club must never be caught in that sweep.
 		"generated": true,
 	}
+
+# The Fundador's club. Rolled like any other so the fields open with something
+# plausible in them, then handed to the player to overwrite — he is the only
+# start that gets a vote, because he is the only one where the club did not
+# exist until he said it did.
+#
+# Reputation sits at the FLOOR and nowhere near it by accident: a club founded
+# last week has not beaten anybody. The other sandlot sides rolled theirs.
+static func found(seed_value: int, name: String, neighborhood: String,
+		city: String, colors: Array, state: String = "RJ") -> Dictionary:
+	var club: Dictionary = invent(seed_value, state)
+	var clean: String = name.strip_edges()
+	if clean != "":
+		club["name"] = clean
+		club["id"] = _slug(clean, seed_value)
+	if neighborhood.strip_edges() != "":
+		club["neighborhood"] = neighborhood.strip_edges()
+	if city.strip_edges() != "":
+		club["city"] = city.strip_edges()
+	if colors.size() >= 2:
+		club["colors"] = [String(colors[0]), String(colors[1])]
+	club["reputation"] = REPUTATION_MIN
+	club["founded_by_player"] = true
+	return club
 
 # A batch sharing one base seed. Salted sub-seeds per index, same discipline as
 # ActorGenerator.squad: adding a club must not reshuffle the ones already there.

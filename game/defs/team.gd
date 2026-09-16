@@ -95,6 +95,13 @@ func by_reputation() -> Array:
 
 # Region derived from the club's UF. Resolved lazily so RegionDef does not
 # have to be loaded before TeamDef.
+# Where a club is FROM, as one line. The neighbourhood when there is one,
+# because at this level "Méier" identifies a club and "Rio de Janeiro" does
+# not; the município only when nobody wrote a bairro down.
+func where(team: Dictionary) -> String:
+	var neighborhood: String = String(team.get("neighborhood", "")).strip_edges()
+	return neighborhood if neighborhood != "" else String(team.get("city", "?"))
+
 func region_of(team: Dictionary) -> String:
 	var region_def := Drive.def("region") as RegionDef
 	if region_def == null:

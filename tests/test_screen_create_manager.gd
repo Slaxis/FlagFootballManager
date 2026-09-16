@@ -67,11 +67,15 @@ func test_the_form_builds(t: TestHelper) -> void:
 	var screen: Control = _open()
 	if screen == null:
 		t.fail("não consegui instanciar a tela"); return
+	# Six, not three: the screen opens on the Fundador, and the Fundador names
+	# his own club — nome, bairro e cidade on top of the three identity fields.
+	# Every one of them arrives PRE-FILLED from the seed, because a blank name
+	# box is a wall and a rolled one is a suggestion.
 	var fields: Array = _collect(screen, "LineEdit", [])
-	t.equal(fields.size(), 3, "nome, sobrenome e apelido")
+	t.equal(fields.size(), 6, "3 de identidade + 3 do clube fundado")
 	for field: Variant in fields:
 		t.check((field as LineEdit).text.strip_edges() != "",
-			"um dos campos de identidade abriu vazio")
+			"um dos campos abriu vazio")
 	t.check(_collect(screen, "SpinBox", []).size() == 2, "altura e peso")
 	t.check(_button_starting_with(screen, "🎲") != null, "botão de sortear tudo")
 	t.check(_seed_shown(screen) != "", "semente não apareceu")
@@ -131,6 +135,15 @@ func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	# The ex-player arrives with two perk points, which is enough to take
 	# something without trading first.
 	_button_starting_with(screen, origins.label("player")).pressed.emit()
+
+	# The roll may already have spent the balance on a talent of its own — the
+	# ex-player lives one to three years now, and a career hands out talents.
+	# Give back whatever it took before asking whether a chip can be taken, or
+	# this test is measuring the dice.
+	for id: String in perks.boons():
+		var owned: Button = _button_starting_with(screen, perks.icon(id))
+		if owned != null and owned.button_pressed:
+			owned.pressed.emit()
 
 	var cheap: String = ""
 	for id: String in perks.boons():

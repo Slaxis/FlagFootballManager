@@ -15,7 +15,6 @@
         "en": "There was no club. You rented the pitch, split the cost of the vests and called whoever turned up. The squad is almost all rookies, and what little experience there is came from people who left another side to bet on this one. The hardest of the three, and the only one where the club is genuinely yours."
       },
       "club": {
-        "founded": true,
         "tier": 4,
         "level": 1.0
       },
@@ -33,11 +32,16 @@
         }
       },
       "career": {
-        "position": "head_coach",
+        "track": "player",
         "years_min": 0,
-        "years_max": 1
+        "years_max": 2
       },
-      "perk_points": 1
+      "perk_points": 1,
+      "start": {
+        "founds_club": true,
+        "authors_club": true,
+        "chair": "head_coach"
+      }
     },
     {
       "id": "player",
@@ -54,7 +58,6 @@
         "en": "A career on the pitch before the clipboard. You start knowing how to play, and early on you will have to carry the side yourself — which costs fatigue and gets in the way of the coaching. An ATHLETE sheet: the left half of the card is yours."
       },
       "club": {
-        "founded": false,
         "level": 1.6
       },
       "squad": {},
@@ -69,11 +72,16 @@
         }
       },
       "career": {
-        "position": "receiver",
+        "track": "player",
         "years_min": 1,
         "years_max": 3
       },
-      "perk_points": 2
+      "perk_points": 2,
+      "start": {
+        "founds_club": false,
+        "authors_club": false,
+        "chair": "head_coach"
+      }
     },
     {
       "id": "student",
@@ -90,7 +98,6 @@
         "en": "Loves the sport, never had the body for it, and studied everything: rules, schemes, play calling. It happens more than you would think — an established club sometimes prefers a student to promoting an athlete or a coach from inside. A STAFF sheet."
       },
       "club": {
-        "founded": false,
         "level": 1.4
       },
       "squad": {},
@@ -104,11 +111,16 @@
         }
       },
       "career": {
-        "position": "offense_coord",
-        "years_min": 0,
-        "years_max": 0
+        "track": "staff",
+        "years_min": 1,
+        "years_max": 3
       },
-      "perk_points": 1
+      "perk_points": 1,
+      "start": {
+        "founds_club": false,
+        "authors_club": false,
+        "chair": "offense_coord"
+      }
     }
   ]
 }

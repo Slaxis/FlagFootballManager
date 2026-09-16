@@ -14,12 +14,28 @@ func tests() -> Array:
 		"test_a_curated_actor_is_the_same_in_every_career",
 		"test_a_later_source_merges_instead_of_replacing",
 		"test_curated_actors_all_make_the_squad",
-		"test_the_generator_only_tops_up_what_is_missing",
+		"test_the_draft_seats_a_whole_squad",
 		"test_a_squad_is_stable_once_built",
 		"test_squad_size_follows_the_tier",
 		"test_a_roster_survives_the_round_trip",
 		"test_every_generated_actor_is_legal",
 	]
+
+# One league, built once and shared by every read-only test here. Filling it
+# is ~200 lived careers, and paying for that six times over is most of a
+# minute of suite time for no extra coverage.
+var _cached: Rosters = null
+
+func _world() -> Rosters:
+	if _cached == null:
+		_cached = _fresh_world()
+	return _cached
+
+func _fresh_world() -> Rosters:
+	League.ensure_filled(SEED)
+	var rosters: Rosters = Rosters.make(SEED)
+	LeagueGenerator.fill(rosters, Praca.make(SEED), Actor.CATEGORY_MASC)
+	return rosters
 
 func _actors() -> ActorDef:
 	return Drive.def("actor") as ActorDef
@@ -118,8 +134,11 @@ func test_curated_actors_all_make_the_squad(t: TestHelper) -> void:
 	t.equal(def.ids_for("outro_clube", Actor.CATEGORY_MASC).size(), 0, "vazou de clube")
 	t.equal(def.ids_for(CLUB, Actor.CATEGORY_FEM).size(), 0, "vazou de modalidade")
 
-func test_the_generator_only_tops_up_what_is_missing(t: TestHelper) -> void:
-	var rosters: Rosters = Rosters.make(SEED)
+# Rosters no longer invents anybody — it receives what the draft sent. Which
+# means the interesting question moved: not "did it top up correctly" but "did
+# anybody actually arrive".
+func test_the_draft_seats_a_whole_squad(t: TestHelper) -> void:
+	var rosters: Rosters = _world()
 	var people: Array[Actor] = rosters.squad(CLUB, Actor.CATEGORY_MASC)
 	t.check(people.size() >= 5, "elenco pequeno demais para jogar: %d" % people.size())
 	for person: Actor in people:
@@ -129,7 +148,7 @@ func test_the_generator_only_tops_up_what_is_missing(t: TestHelper) -> void:
 # Built once and owned from then on — a derived roster could not hold a
 # signing, and signing people is the rest of the game.
 func test_a_squad_is_stable_once_built(t: TestHelper) -> void:
-	var rosters: Rosters = Rosters.make(SEED)
+	var rosters: Rosters = _world()
 	var first: Array[Actor] = rosters.squad(CLUB, Actor.CATEGORY_MASC)
 	var size: int = first.size()
 	var newcomer := Actor.new()
@@ -141,17 +160,16 @@ func test_a_squad_is_stable_once_built(t: TestHelper) -> void:
 	t.check(rosters.remove(CLUB, Actor.CATEGORY_MASC, "contratado"), "não consegui dispensar")
 	t.equal(rosters.squad(CLUB, Actor.CATEGORY_MASC).size(), size, "a dispensa não pegou")
 	# Same seed, same league.
-	t.equal(str(Rosters.make(SEED).squad(CLUB, Actor.CATEGORY_MASC).size()), str(size),
+	t.equal(str(_fresh_world().squad(CLUB, Actor.CATEGORY_MASC).size()), str(size),
 		"a mesma semente montou um elenco de outro tamanho")
 
 func test_squad_size_follows_the_tier(t: TestHelper) -> void:
-	var rosters: Rosters = Rosters.make(SEED)
+	var rosters: Rosters = _world()
 	t.check(rosters.size_for_tier(1) > rosters.size_for_tier(4),
 		"a várzea deveria ter elenco menor que a elite")
 	var teams := Drive.def("team") as TeamDef
 	if teams == null:
 		t.fail("TeamDef ausente"); return
-	League.ensure_filled(SEED)
 	var sandlot: Array = teams.by_tier(TeamGenerator.TIER_UNAFFILIATED)
 	if sandlot.is_empty():
 		t.fail("sem clube de várzea"); return
@@ -161,7 +179,7 @@ func test_squad_size_follows_the_tier(t: TestHelper) -> void:
 
 # E.1 is a persistence rewrite and this is the first real state to survive it.
 func test_a_roster_survives_the_round_trip(t: TestHelper) -> void:
-	var rosters: Rosters = Rosters.make(SEED)
+	var rosters: Rosters = _world()
 	var before: Array[Actor] = rosters.squad(CLUB, Actor.CATEGORY_MASC)
 	var restored := Rosters.new()
 	restored.from_snapshot(rosters.to_snapshot())
@@ -176,7 +194,7 @@ func test_every_generated_actor_is_legal(t: TestHelper) -> void:
 	var stats := _stats()
 	if stats == null:
 		t.fail("StatDef ausente"); return
-	var rosters: Rosters = Rosters.make(SEED)
+	var rosters: Rosters = _world()
 	for person: Actor in rosters.squad(CLUB, Actor.CATEGORY_MASC):
 		t.check(Actor.plays_is_valid(person.plays()),
 			"%s: modalidades %s" % [person.full_name(), str(person.plays())])

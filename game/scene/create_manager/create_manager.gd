@@ -40,6 +40,9 @@ var _name: Dictionary = {}
 var _plays: Array[String] = [Actor.CATEGORY_MASC]
 var _origin: String = ""
 var _drafted: Dictionary = {}
+# The Fundador's club, while he is still deciding what it is called. Empty for
+# the other two starts, who walk into something that already existed.
+var _club: Dictionary = {}
 var _seed_label: Label = null
 var _root: VBoxContainer = null
 
@@ -50,6 +53,11 @@ func _ready() -> void:
 	_origin = origins.origin_ids()[0] if origins != null else ""
 	_build = SheetBuilder.rolled_opening(rng, _origin)
 	_name = _roll_name(rng)
+	# The screen opens on the Fundador, and the Fundador's form has a club in
+	# it. Leaving it empty until he touched something meant the first thing he
+	# saw was a nameless colour swatch.
+	if _authors_club():
+		_roll_club()
 
 	var bg := ColorRect.new()
 	bg.color = BG
@@ -95,6 +103,9 @@ func _build_form() -> void:
 	_root.add_child(_origin_row())
 	_root.add_child(_identity_row())
 	_root.add_child(_seed_row())
+	if _authors_club():
+		_root.add_child(_section(UiText.t("manager.club"), UiText.t("manager.club_hint")))
+		_root.add_child(_club_row())
 	_root.add_child(_section(UiText.t("manager.body"), UiText.t("manager.body_hint")))
 	_root.add_child(_body_row())
 
@@ -232,6 +243,104 @@ func _seed_row() -> Control:
 	box.add_child(row)
 	box.add_child(_hint(UiText.t("manager.seed_hint")))
 	return box
+
+# --- The club you are founding ---
+#
+# Only the Fundador sees this. The other two are drafted into somebody else's
+# club and do not get to name it — which is the point of them: picking a
+# scenario picks how much of the world is yours.
+#
+# The fields open PRE-FILLED from the seed rather than blank. A blank name box
+# is a wall; a rolled one is a suggestion you can accept in one click or type
+# over, and either way the club exists.
+
+func _authors_club() -> bool:
+	var origins := Drive.def("origin") as OriginDef
+	return origins != null and _origin != "" and origins.authors_club(_origin)
+
+func _club_row() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	top.add_child(_club_field("name", UiText.t("manager.club_name"), 260))
+	top.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 170))
+	top.add_child(_club_field("city", UiText.t("manager.club_city"), 170))
+	top.add_child(_flat_button("🎲", _on_reroll_club, false))
+	box.add_child(top)
+
+	var colours := HBoxContainer.new()
+	colours.add_theme_constant_override("separation", 8)
+	colours.add_child(_field_label(UiText.t("manager.club_colors")))
+	colours.add_child(_palette_button())
+	colours.add_child(_crest_preview())
+	box.add_child(colours)
+	return box
+
+func _club_field(key: String, caption: String, width: int) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var label := Label.new()
+	label.text = caption
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", MUTED)
+	box.add_child(label)
+	var field := LineEdit.new()
+	field.text = String(_club.get(key, ""))
+	field.custom_minimum_size = Vector2(width, 32)
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	field.text_changed.connect(_on_club_typed.bind(key))
+	box.add_child(field)
+	return box
+
+# A cycle and not a colour picker. Every pair in the palette is authored to
+# clear the contrast floor on its own, so no combination the player can reach
+# produces a roster screen nobody can read.
+func _palette_button() -> Button:
+	var button: Button = _flat_button(UiText.t("manager.club_next_colors"), _on_cycle_colors, false)
+	button.custom_minimum_size = Vector2(150, 30)
+	return button
+
+func _crest_preview() -> Control:
+	var scheme: Dictionary = TeamColors.of(_club)
+	var style := StyleBoxFlat.new()
+	style.bg_color = scheme["plate"]
+	style.set_content_margin_all(6)
+	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
+		style.set("corner_radius_" + corner, 3)
+	var plate := PanelContainer.new()
+	plate.add_theme_stylebox_override("panel", style)
+	var crest := Label.new()
+	crest.text = String(_club.get("name", "?"))
+	crest.add_theme_color_override("font_color", scheme["ink"])
+	crest.add_theme_font_size_override("font_size", 16)
+	plate.add_child(crest)
+	return plate
+
+func _roll_club() -> void:
+	_club = TeamGenerator.found(
+		SeedRng.derive(_career_seed(), "founded"), "", "", "", [])
+
+func _on_club_typed(text: String, key: String) -> void:
+	_club[key] = text
+
+func _on_reroll_club() -> void:
+	_roll_club()
+	_build_ui()
+
+func _on_cycle_colors() -> void:
+	var current: Array = _club.get("colors", [])
+	var head: String = String(current[0]) if not current.is_empty() else ""
+	var index: int = 0
+	for i: int in range(TeamGenerator.PALETTES.size()):
+		if String((TeamGenerator.PALETTES[i] as Array)[0]) == head:
+			index = i + 1
+			break
+	var picked: Array = TeamGenerator.PALETTES[index % TeamGenerator.PALETTES.size()]
+	_club["colors"] = picked.duplicate()
+	_build_ui()
 
 # --- Perks ---
 
@@ -512,7 +621,10 @@ func _build_result() -> void:
 	plate.add_child(club)
 
 	var where := Label.new()
-	where.text = "%s/%s   ·   %s" % [_drafted.get("city", "?"), _drafted.get("state", "?"),
+	var teams := Drive.def("team") as TeamDef
+	where.text = "%s/%s   ·   %s" % [
+		teams.where(_drafted) if teams != null else _drafted.get("city", "?"),
+		_drafted.get("state", "?"),
 		UiText.t("tier.%d" % int(_drafted.get("tier", 4)))]
 	where.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	where.add_theme_color_override("font_color", MUTED)
@@ -591,6 +703,8 @@ func _on_reroll_all() -> void:
 	var rng: RandomNumberGenerator = _free_rng()
 	_build = SheetBuilder.rolled_opening(rng, _origin)
 	_name = _roll_name(rng)
+	if _authors_club():
+		_roll_club()
 	_build_ui()
 
 # Changing the scenario rerolls, because a sheet built as an ex-player is not
@@ -598,6 +712,8 @@ func _on_reroll_all() -> void:
 func _on_origin(id: String) -> void:
 	_origin = id
 	_build = SheetBuilder.rolled_opening(_free_rng(), _origin)
+	if _authors_club() and _club.is_empty():
+		_roll_club()
 	_build_ui()
 
 func _on_perk(id: String) -> void:
@@ -627,6 +743,16 @@ func _on_draw() -> void:
 	var def := Drive.def("team") as TeamDef
 	if def == null:
 		return
+	# A FOUNDER IS NOT DRAFTED. There is no club to be drafted into — that is
+	# the whole scenario — so the club he has been editing IS the answer, and
+	# the sandlot around him is still built, because he needs somebody to play.
+	if _authors_club():
+		League.ensure_filled(_career_seed())
+		if _club.is_empty():
+			_roll_club()
+		_drafted = _club.duplicate(true)
+		_build_ui()
+		return
 	# Built here and not while typing: the sandlot clubs come from the seed the
 	# three fields ended up spelling, and nobody needs six clubs invented per
 	# keystroke.
@@ -642,6 +768,13 @@ func _on_draw() -> void:
 
 func _on_start() -> void:
 	var career_seed: int = _career_seed()
+	# The founded club has to EXIST before the career points at it. Every screen
+	# after this one reads clubs out of TeamDef, and a career whose team_id
+	# resolves to nothing is the same bug that made "Onças da Pista" vanish.
+	var teams := Drive.def("team") as TeamDef
+	if _authors_club() and teams != null \
+			and teams.get_team(String(_drafted.get("id", ""))).is_empty():
+		teams.add_thing(_drafted)
 	var manager: Actor = _build.to_actor(career_seed, _name)
 	manager.set_plays(_plays)
 	manager.set_manages([Actor.CATEGORY_MASC])

@@ -93,14 +93,62 @@ static func _climate(quality: int, will_stored: int) -> Dictionary:
 		"dedication": clampi(2 + int(floor(float(will_stored) / 10.0)) - 5, 1, 4),
 	}
 
-# A person, lived, with no club and no name — what the creation screen needs so
-# the manager comes off the same production line as everybody he will manage.
-static func lived(rng: RandomNumberGenerator, club_level: float,
-		position: String, years: int) -> Actor:
-	return _build(rng, "manager", quality_from_reputation(
-		int(round(club_level * 20.0))), Actor.CATEGORY_MASC,
-		{"position": position, "career_years": years}, int(round(club_level * 20.0)),
-		club_level)
+# --- Spawning ---
+#
+# THE ONLY WAY A PERSON ENTERS THE WORLD. Squads used to conjure their own
+# members, which meant a club invented exactly the people it needed and there
+# was no answer to "where did this man come from" other than "the club needed
+# a center". Now everybody is born into the Praça with no club at all, and the
+# clubs draft out of it — so the same event that fills a roster is the one that
+# starts your career, and the market exists from minute one.
+#
+# A TRACK, NOT A POSITION. What varies between people is not which chair they
+# were assigned but which KIND of life they lived: on the field, or beside it.
+# Where on the field is then a question for the body, answered by the matcher.
+const TRACK_PLAYER := "player"
+const TRACK_STAFF := "staff"
+
+# Level is the world ladder NationDef hands out — 1 is a neighbourhood side, 5
+# is an IFAF star's club. It is the only dial: how good the weeks were and how
+# many of them there have been both come off it, so they can never disagree.
+static func spawn(world_seed: int, actor_seed: int, level: float,
+		category: String = Actor.CATEGORY_MASC,
+		track: String = TRACK_PLAYER, years: int = -1) -> Actor:
+	return _lived(
+		SeedRng.make_rng(SeedRng.derive(world_seed, "praca_%d" % actor_seed)),
+		"actor_%d_%d" % [world_seed, actor_seed], level, category, track, years)
+
+# YOU ARE NOT CREATING A FIFTEEN-YEAR-OLD. Everybody else spawns as a kid and
+# grows up, because that is how a squad gets its age spread — but the person on
+# the creation screen is a grown adult by definition, and rolling him a child's
+# debut produced managers of fifteen with an empty sheet and nothing to edit.
+const MANAGER_DEBUT_MIN := 18
+const MANAGER_DEBUT_MAX := 22
+
+# The creation screen's door into the same production line. It takes an rng
+# rather than a seed because 🎲 has to deal a different person every press —
+# the world seed is what the NAME spells, and the dice are not the world.
+static func lived(rng: RandomNumberGenerator, level: float,
+		track: String, years: int) -> Actor:
+	return _lived(rng, "manager", level, Actor.CATEGORY_MASC, track, years,
+		rng.randi_range(MANAGER_DEBUT_MIN, MANAGER_DEBUT_MAX))
+
+static func _lived(rng: RandomNumberGenerator, thing_id: String, level: float,
+		category: String, track: String, years: int, debut: int = -1) -> Actor:
+	var reputation: int = level_to_reputation(level)
+	var spec: Dictionary = {"track": track}
+	if years >= 0:
+		spec["career_years"] = years
+	if debut >= 0:
+		spec["debut_age"] = debut
+	return _build(rng, thing_id, quality_from_reputation(reputation),
+		category, spec, reputation, level)
+
+# A club at the bottom of the ladder is a reputation-20 club, and one at the
+# top is a hundred. Both dials already existed; this is the sentence that says
+# they are the same dial read twice.
+static func level_to_reputation(level: float) -> int:
+	return clampi(int(round(clampf(level, 0.0, 5.0) * 20.0)), 0, 100)
 
 # The one construction path. `spec` is empty for an invented actor and holds
 # whatever a curator pinned for an authored one, so the two cannot drift apart.
@@ -125,6 +173,11 @@ static func _build(
 		"age": debut,
 		"debut_age": debut,
 		"potential": ActorLife.roll_potential(club_level, rng),
+		# WHERE ON THE LADDER THIS PERSON WAS DRAWN. Carried on the actor
+		# because the draft needs to compare him to a club on the same ruler,
+		# and Geral is not that ruler — it is a 0..100 average of attributes
+		# that, at this tier, never leaves the twenties.
+		"level": club_level,
 		"stats": birth,
 		"skills": def.blank_skills(0) if def != null else {},
 		"perks": [],
@@ -133,10 +186,16 @@ static func _build(
 	}
 	actor._apply_data(thing_id if thing_id != "" else "actor", "actor", payload)
 
-	# Where this body ends up playing, then that many years of playing there.
+	# Where this body ends up, then that many years of being there. The track
+	# says which SIDE of the whitewash the career happened on; the body says
+	# where exactly, because a fast kid with hands ends up catching whether or
+	# not anybody planned it.
 	var position: String = String(spec.get("position", ""))
 	if position == "" and positions != null:
-		position = positions.match_position(birth, {}, rng)
+		var sides: Array[String] = PositionDef.PLAYING_SIDES
+		if String(spec.get("track", TRACK_PLAYER)) == TRACK_STAFF:
+			sides = [PositionDef.SIDE_STAFF]
+		position = positions.match_on_sides(birth, {}, rng, sides)
 	actor.data["position"] = position
 	var declared: Array = spec.get("career", [])
 	for year: int in range(years):

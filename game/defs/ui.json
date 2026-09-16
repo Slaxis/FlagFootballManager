@@ -419,6 +419,34 @@
     "team.admin_hint": {
       "pt": "existe até no menor clube: alguém responde, alguém paga e alguém fala",
       "en": "exists even at the smallest club: somebody answers, somebody pays and somebody talks"
+    },
+    "manager.club": {
+      "pt": "SEU CLUBE",
+      "en": "YOUR CLUB"
+    },
+    "manager.club_hint": {
+      "pt": "o único começo em que o clube é seu: você batiza, escolhe o bairro e as cores. Já vem preenchido pelo seed — aceite, ou escreva por cima.",
+      "en": "the one start where the club is yours: you name it, you pick the neighbourhood and the colours. It arrives filled in from the seed — accept it, or type over it."
+    },
+    "manager.club_name": {
+      "pt": "Nome do time",
+      "en": "Club name"
+    },
+    "manager.club_neighborhood": {
+      "pt": "Bairro",
+      "en": "Neighbourhood"
+    },
+    "manager.club_city": {
+      "pt": "Cidade",
+      "en": "City"
+    },
+    "manager.club_colors": {
+      "pt": "Cores",
+      "en": "Colours"
+    },
+    "manager.club_next_colors": {
+      "pt": "Próxima paleta",
+      "en": "Next palette"
     }
   }
 }

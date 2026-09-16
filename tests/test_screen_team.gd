@@ -38,6 +38,10 @@ func _career() -> Career:
 	manager.set_plays([Actor.CATEGORY_MASC])
 	manager.set_manages([Actor.CATEGORY_MASC])
 	manager.set_team("flag_kings")
+	# He arrives ticked into his own chair in the real game — that claim lives
+	# in test_sheet_builder, where it is the only thing being tested. Here it
+	# would silently occupy a slot in every count on this screen.
+	manager.data["lineup"] = []
 	return Career.make(manager, "flag_kings", SEED)
 
 func _open() -> Control:
@@ -162,19 +166,59 @@ func test_the_rivals_tab_leaves_your_own_club_out(t: TestHelper) -> void:
 
 # Two hundred people invented at career start so the player can look at twelve
 # is the thing the lazy fill exists to avoid.
+# The world is built ONCE, and the whole world at that. It used to be built a
+# club at a time, on first look — which was cheap and meant nobody had come
+# from anywhere: each club invented exactly the people it was short of and no
+# two clubs ever wanted the same man. Now the draft is a single global event,
+# so every club in the championship has a squad the moment you arrive, and the
+# leftovers are standing in the Praça.
 func test_the_roster_is_built_once_and_reused(t: TestHelper) -> void:
 	var screen: Control = _open()
 	if screen == null:
 		t.fail("não consegui instanciar a tela"); return
 	var rosters := The.board.get("rosters", null) as Rosters
+	var praca := The.board.get("praca", null) as Praca
 	t.check(rosters.has_squad("flag_kings", Actor.CATEGORY_MASC), "seu elenco não foi montado")
 	var teams := Drive.def("team") as TeamDef
-	var untouched: int = 0
+	var filled: int = 0
 	for club: Dictionary in teams.by_reputation():
-		if not rosters.has_squad(String(club.get("id", "")), Actor.CATEGORY_MASC):
-			untouched += 1
-	t.check(untouched > 5, "a tela montou elenco de clube que ninguém abriu")
-	_close(screen)
+		if rosters.has_squad(String(club.get("id", "")), Actor.CATEGORY_MASC):
+			filled += 1
+	t.check(filled >= 10, "só %d clubes saíram do draft com elenco" % filled)
+	t.check(praca != null and praca.size() > 0, "a praça ficou vazia — não há mercado")
+
+	# And looking again does not rebuild it. A career that re-rolls its league
+	# every time you open a screen has no state at all.
+	var names: Array[String] = []
+	for person: Actor in rosters.squad("flag_kings", Actor.CATEGORY_MASC):
+		names.append(person.display_name())
+	# Detached, NOT closed: _close wipes the Blackboard, and wiping it is the
+	# one thing that would make this test pass for the wrong reason.
+	_detach(screen)
+	var again: Control = _reopen()
+	if again == null:
+		t.fail("não consegui reabrir a tela"); return
+	var after: Array[String] = []
+	for person: Actor in (The.board.get("rosters", null) as Rosters).squad(
+			"flag_kings", Actor.CATEGORY_MASC):
+		after.append(person.display_name())
+	t.equal(str(after), str(names), "reabrir a tela remontou o elenco")
+	_close(again)
+
+func _detach(screen: Control) -> void:
+	if is_instance_valid(screen) and screen.get_parent() != null:
+		screen.get_parent().remove_child(screen)
+		screen.queue_free()
+
+# Same as _open, minus the wipe: this is what the second visit looks like.
+func _reopen() -> Control:
+	var packed: PackedScene = load(SCENE) as PackedScene
+	var tree := Engine.get_main_loop() as SceneTree
+	if packed == null or tree == null:
+		return null
+	var screen: Control = packed.instantiate() as Control
+	tree.root.add_child(screen)
+	return screen
 
 # Half the question is "who else is out there"; the other half is "and who
 # plays for them". The rivals tab listed clubs and stopped there.

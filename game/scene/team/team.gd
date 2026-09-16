@@ -155,16 +155,29 @@ func _rosters() -> Rosters:
 	var existing := read("rosters") as Rosters
 	if existing != null:
 		return existing
-	# First arrival. The career seed is the world; the rosters are what that
-	# world turned out to contain.
+	# First arrival, and the moment the world is actually populated. The career
+	# seed is the world; LeagueGenerator spawns people into the Praça and lets
+	# the clubs draft out of it until every one of them can field a side.
+	#
+	# It happens HERE rather than at career creation because this is the first
+	# screen that needs it, and doing it any earlier would mean generating two
+	# hundred people behind a menu the player might back out of.
 	var career: Career = _career()
-	var fresh: Rosters = Rosters.make(career.career_seed if career != null else 0)
+	var seed_value: int = career.career_seed if career != null else 0
+	var fresh: Rosters = Rosters.make(seed_value)
+	var praca: Praca = Praca.make(seed_value)
+	# You are in your own squad BEFORE the draft runs, so the club counts you
+	# against its needs and does not sign a second head coach. Standing outside
+	# the roster you manage was the kind of detail that only shows up when you
+	# finally look.
 	if career != null and career.manager != null:
-		# You are in your own squad. Standing outside the roster you manage was
-		# the kind of detail that only shows up when you finally look.
 		for category: String in career.manager.plays():
 			fresh.add(career.team_id, String(category), career.manager)
+		if career.manager.plays().is_empty():
+			fresh.add(career.team_id, Actor.CATEGORY_MASC, career.manager)
+	LeagueGenerator.fill(fresh, praca, Actor.CATEGORY_MASC)
 	write("rosters", fresh)
+	write("praca", praca)
 	return fresh
 
 # Which squad the Elenco tab is showing. Your own category when you play one,
@@ -217,7 +230,10 @@ func _header() -> Control:
 	row.add_child(plate)
 
 	var where := Label.new()
-	where.text = "%s/%s   ·   %s" % [club.get("city", "?"), club.get("state", "?"),
+	var teams := Drive.def("team") as TeamDef
+	where.text = "%s/%s   ·   %s" % [
+		teams.where(club) if teams != null else club.get("city", "?"),
+		club.get("state", "?"),
 		UiText.t("tier.%d" % int(club.get("tier", 4)))]
 	where.add_theme_color_override("font_color", MUTED)
 	where.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -904,7 +920,10 @@ func _rival_row(club: Dictionary) -> Control:
 	plate.add_child(name_label)
 	row.add_child(plate)
 
-	row.add_child(_cell("%s/%s" % [club.get("city", "?"), club.get("state", "?")], 190, MUTED))
+	var teams := Drive.def("team") as TeamDef
+	row.add_child(_cell("%s/%s" % [
+		teams.where(club) if teams != null else club.get("city", "?"),
+		club.get("state", "?")], 190, MUTED))
 	var reputation: int = int(club.get("reputation", 0))
 	row.add_child(_cell("%s %d" % ["█".repeat(int(reputation / 10.0)), reputation], 130, ACCENT))
 	return button

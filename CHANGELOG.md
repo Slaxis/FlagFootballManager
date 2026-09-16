@@ -2,6 +2,53 @@
 
 ## [Unreleased]
 
+### Added — B.5c: a Praca e o draft (2026-09-16)
+- **`LeagueGenerator`** — o mundo inteiro num laco so: `spawn` poe gente na
+  Praca, `draft(actor, teams)` decide quem leva, e isso roda ate todo clube
+  estar cheio. Substitui o elenco montado dentro do clube que precisava dele
+- **`Praca` (Record)** — quem nao tem clube, e a unica origem de gente no jogo.
+  Fica com residuo depois do fill: liga que para de spawnar no instante em que
+  todo clube ficou legal tem mercado vazio no dia um. KPIs: tamanho, idade
+  mediana, geral mediano, nivel mediano
+- **`ActorGenerator.spawn(semente_mundo, semente_actor, nivel)`** — desacoplado
+  de clube. A posicao vem do CORPO, entre as posicoes de quadra
+- **Ninguem nasce preparador fisico.** O matcher escolhia entre as 14 posicoes,
+  5 delas de comissao — dai o elenco com mais prancheta do que jogador. Cadeira
+  de comissao e transicao de fim de carreira: `PositionDef.match_on_sides`
+- **`Rosters` deixa de gerar e passa a receber.** Sobrou o que sempre bastou:
+  uma lista por clube que outro preenche
+- **Estratificacao emergente.** Ninguem atribui qualidade a clube — o draft casa
+  nivel com nivel e a tabela de tier cai sozinha. Federados saem acima da varzea
+  sem que nada diga isso
+- **Origens viram trajetoria, nao cargo.** `track: player | staff` no lugar da
+  posicao fixa. Isso mata os tres sintomas de uma vez: o ex-jogador deixa de ser
+  sempre QB, o fundador deixa de ter so skill de gestao, e o estudado (que tinha
+  `years_max: 0`) passa a variar
+- **O Fundador batiza o proprio clube** — nome, bairro, cidade e cores, com os
+  campos abertos ja preenchidos pela semente. E nao e draftado
+- `city` e `neighborhood` viram campos separados: o bairro e o que identifica um
+  clube nesse nivel, mas o fundador precisa poder escolher os dois
+- `tests/test_league_generator.gd` — 10 testes sobre o campeonato INTEIRO, que e
+  onde o bug morava: cada teste antigo olhava um clube so
+
+### Fixed
+- **O draft comparava duas reguas diferentes.** Reputacao vai de 14 a 90; Geral,
+  nesse tier, vai de 14 a 30 — entao todo jogador parecia de varzea pra
+  subtracao, os clubes fracos ganhavam todo termo de fit e os fortes assinavam
+  so o que sobrou. Flag Kings saia com elenco PIOR que o Madureira. Agora os dois
+  lados usam a escada do mundo, que e a regua que ja compartilham
+- **O laco parava na legalidade em vez da lotacao**, deixando todo mundo no piso
+  de 7 inscritos — clube tier 1 saindo menor que clube tier 4, e a Praca vazia
+- **Ninguem carrega um quarto quarterback.** Sem teto de excedente o melhor clube
+  da liga juntava 6 rushers numa posicao de 1 vaga, porque ganhava no fit e nada
+  dizia nao. Dois alem da formacao e o limite
+- **O manager podia sair com 15 anos e a ficha vazia** — orcamento de 3 career
+  points, tela desenhada e todo botao morto. Voce nao esta criando uma crianca:
+  estreia adulta, mais os anos de quem ja anda pelo esporte
+- `test_the_opening_leaves_nobody_hollow` existia no arquivo e **nunca estava na
+  lista** — nunca rodou
+
+
 ### Added — B.5: a tela do clube (2026-09-15)
 - **Tela do clube** com abas Elenco e Adversarios. Clicar em alguem abre a
   ficha completa — 8 atributos, habilidades treinadas, corpo, perk. E isso que

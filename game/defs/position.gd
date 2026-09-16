@@ -90,6 +90,19 @@ func slots_on_side(wanted: String) -> int:
 func side(id: String) -> String:
 	return String(position(id).get("side", ""))
 
+# The two sides somebody can actually be BORN into. Staff and admin are chairs
+# a club hands out, not things a body is suited for at fifteen.
+const PLAYING_SIDES: Array[String] = ["offense", "defense"]
+const SIDE_STAFF := "staff"
+const SIDE_ADMIN := "admin"
+
+# Every position that puts you on the field, in formation order.
+func playing_ids() -> Array[String]:
+	var out: Array[String] = []
+	for side_id: String in PLAYING_SIDES:
+		out.append_array(ids_on_side(side_id))
+	return out
+
 func ids_on_side(wanted: String) -> Array[String]:
 	var out: Array[String] = []
 	for id: String in _order:
@@ -145,11 +158,24 @@ func fit(id: String, stats: Dictionary, skills: Dictionary = {}) -> float:
 #
 # Best fit wins, with a nudge of noise: without it every quick kid becomes a
 # receiver and a squad comes out with five of them and nobody to snap the ball.
+#
+# PLAYING SIDES ONLY, by default. NOBODY IS BORN A FITNESS COACH. Letting the
+# matcher choose among all fourteen entries meant five of them were staff and a
+# squad came out with more clipboards than players — and worse, it said a
+# sixteen-year-old had been a scout since birth. A staff chair is a LATE-CAREER
+# TRANSITION: you played, you got old, and the club still wanted you around.
+# So the sides are an argument, and spawning simply never passes "staff".
 func match_position(stats: Dictionary, skills: Dictionary,
 		rng: RandomNumberGenerator) -> String:
+	return match_on_sides(stats, skills, rng, PLAYING_SIDES)
+
+func match_on_sides(stats: Dictionary, skills: Dictionary,
+		rng: RandomNumberGenerator, sides: Array[String]) -> String:
 	var best: String = ""
 	var best_score: float = -INF
 	for id: String in _order:
+		if not sides.has(side(id)):
+			continue
 		var score: float = fit(id, stats, skills) + rng.randfn(0.0, MATCH_NOISE)
 		if score > best_score:
 			best_score = score

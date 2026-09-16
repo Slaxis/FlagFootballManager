@@ -23,6 +23,9 @@ func tests() -> Array:
 		"test_the_manager_is_capped_like_a_squad_player",
 		"test_the_opening_rolls_a_whole_person",
 		"test_each_origin_leans_its_own_way",
+		"test_the_scenario_is_a_trajectory_not_a_chair",
+		"test_you_arrive_sitting_in_your_chair",
+		"test_the_rolled_manager_is_an_adult_worth_editing",
 		"test_the_roll_only_takes_talents_it_can_pay_for",
 		"test_the_opening_is_not_the_same_person_twice",
 	]
@@ -251,7 +254,12 @@ func test_the_opening_rolls_a_lived_person(t: TestHelper) -> void:
 			# The age is the LIFE's, not a function of the budget. Deriving it
 			# from spending is what let the header say "12 anos" beside eight
 			# steps of leadership.
-			t.check(builder.age() >= 15 and builder.age() <= 26,
+			# Eighteen to thirty-four. The old band opened at fifteen, from
+			# back when the manager was rolled a child's debut like everybody
+			# else — and a fifteen-year-old running a club was a bug nobody had
+			# written down. The top moved too: a thirty-one-year-old ex-player
+			# taking over a side is the most ordinary case there is.
+			t.check(builder.age() >= 18 and builder.age() <= 34,
 				"origem %s, semente %d: %d anos" % [id, seed_value, builder.age()])
 			# And the roll leaves nothing over: what you may move is HIS points.
 			t.equal(builder.remaining(), 0,
@@ -312,12 +320,24 @@ func test_each_origin_leans_its_own_way(t: TestHelper) -> void:
 			t.check(int(builder.stats.get(stat_id, 0)) >= int(origins.stat_bias(id)[stat_id]),
 				"origem '%s': '%s' abaixo do que ela promete" % [id, stat_id])
 	# The ex-player knows how to catch; the student knows the rulebook.
-	var player: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(11), "player")
-	var student: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(11), "student")
-	t.check(int(player.skills["catching"]) > int(student.skills["catching"]),
-		"o ex-jogador deveria pegar melhor que o estudado")
-	t.check(int(student.skills["rules"]) > int(player.skills["rules"]),
-		"o estudado deveria saber mais regra que o ex-jogador")
+	#
+	# MEASURED OVER TWENTY SEEDS, not one. A single roll used to be enough back
+	# when the origin was a fixed chair and the sheet was a constant — but the
+	# scenario is a TRAJECTORY now, so an ex-player who happened to live three
+	# years at rusher legitimately catches no better than anybody, and a
+	# one-seed comparison was testing the dice.
+	var catch_gap: float = _origin_mean("player", "catching") - _origin_mean("student", "catching")
+	var rules_gap: float = _origin_mean("student", "rules") - _origin_mean("player", "rules")
+	t.check(catch_gap > 0.0, "o ex-jogador deveria pegar melhor que o estudado (%.2f)" % catch_gap)
+	t.check(rules_gap > 0.0, "o estudado deveria saber mais regra que o ex-jogador (%.2f)" % rules_gap)
+
+func _origin_mean(origin: String, skill_id: String) -> float:
+	var total: float = 0.0
+	for seed_value: int in range(11, 31):
+		var build: SheetBuilder = SheetBuilder.rolled_opening(
+			SeedRng.make_rng(seed_value), origin)
+		total += float(int(build.skills.get(skill_id, 0)))
+	return total / 20.0
 
 # 0 on this ruler is below a toddler. A rolled child with a hollow attribute is
 # not a starting point, it is a trap the player has to spend points undoing.
@@ -402,3 +422,85 @@ func _spend_everything(builder: SheetBuilder) -> void:
 					break
 		if not moved:
 			return
+
+# THE SYMPTOM THAT STARTED ALL OF THIS. The origin used to name the exact
+# position the career was spent in — the ex-player was a `receiver`, full stop —
+# so every ex-player came out a receiver, the founder came out with nothing but
+# management skills, and the student was the same two skills every roll.
+#
+# It names a TRACK now: which side of the whitewash the years happened on. The
+# body decides the rest, so rolling twenty ex-players gives you twenty people.
+func test_the_scenario_is_a_trajectory_not_a_chair(t: TestHelper) -> void:
+	var origins := Drive.def("origin") as OriginDef
+	var positions := Drive.def("position") as PositionDef
+	if origins == null or positions == null:
+		t.fail("Defs ausentes"); return
+	var seen: Dictionary = {}
+	for seed_value: int in range(50, 80):
+		var build: SheetBuilder = SheetBuilder.rolled_opening(
+			SeedRng.make_rng(seed_value), "player")
+		seen[build.rolled_position] = true
+		t.check(positions.playing_ids().has(build.rolled_position),
+			"o ex-jogador passou a carreira em '%s', que não é posição de quadra"
+				% build.rolled_position)
+	t.check(seen.size() >= 3,
+		"trinta ex-jogadores e só %d posições distintas — ainda é um cargo fixo" % seen.size())
+
+	# The student went the other way, and never onto the field.
+	var staff: Array[String] = positions.ids_on_side(PositionDef.SIDE_STAFF)
+	for seed_value: int in range(50, 60):
+		var build: SheetBuilder = SheetBuilder.rolled_opening(
+			SeedRng.make_rng(seed_value), "student")
+		t.check(staff.has(build.rolled_position),
+			"o estudado foi parar em '%s'" % build.rolled_position)
+
+# You do not walk into the club and stand in the corridor. The chair is the one
+# thing about the manager that is ASSIGNED rather than lived — it is the club's
+# decision — and if you played, your own position comes with you, because the
+# ex-jogador's own pitch is that early on he has to carry the side himself.
+func test_you_arrive_sitting_in_your_chair(t: TestHelper) -> void:
+	var origins := Drive.def("origin") as OriginDef
+	if origins == null:
+		t.fail("OriginDef ausente"); return
+	for id: String in origins.origin_ids():
+		var build: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(7), id)
+		var person: Actor = build.to_actor(7, {"first_name": "Teste", "last_name": "Um"})
+		t.check(person.plays_position(origins.chair(id)),
+			"origem '%s': ninguém sentou na cadeira '%s'" % [id, origins.chair(id)])
+		t.equal(person.position(), build.rolled_position,
+			"origem '%s': a carreira não chegou no actor" % id)
+		if origins.career_track(id) == ActorGenerator.TRACK_PLAYER:
+			t.check(person.plays_position(build.rolled_position),
+				"origem '%s': quem jogou deveria poder ser escalado" % id)
+
+# The screen's whole proposition is "here is a person, now move his points
+# around". A roll that produces a fifteen-year-old with one step to his name
+# has a budget of three career points and nothing to trade — the form is drawn,
+# every button is dead, and nothing about that reads as a bug from the outside.
+func test_the_rolled_manager_is_an_adult_worth_editing(t: TestHelper) -> void:
+	var origins := Drive.def("origin") as OriginDef
+	var def := Drive.def("stat") as StatDef
+	if origins == null or def == null:
+		t.fail("Defs ausentes"); return
+	for id: String in origins.origin_ids():
+		var youngest: int = 99
+		var thinnest: int = 1 << 30
+		for seed_value: int in range(200, 220):
+			var build: SheetBuilder = SheetBuilder.rolled_opening(
+				SeedRng.make_rng(seed_value), id)
+			youngest = mini(youngest, build.age())
+			thinnest = mini(thinnest, build.budget)
+			t.equal(build.remaining(), 0, "origem '%s': a ficha não abriu quitada" % id)
+		t.check(youngest >= MANAGER_ADULT_AGE,
+			"origem '%s': saiu um manager de %d anos" % [id, youngest])
+		t.check(thinnest >= MANAGER_MIN_BUDGET,
+			"origem '%s': a ficha mais magra tem %d cp para mexer" % [id, thinnest])
+
+# Eighteen is the floor for being in charge of anything, and a sheet worth less
+# than a couple of steps is not a sheet you can edit.
+const MANAGER_ADULT_AGE := 18
+# Eight attributes one step above the ordinary adult is 24 career points, and
+# that is the thinnest sheet the roll actually produces. The number is here to
+# catch the collapse — a budget of three, which is what a child's debut gave —
+# and not to pin the balance.
+const MANAGER_MIN_BUDGET := 24

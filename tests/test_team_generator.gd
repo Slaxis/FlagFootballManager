@@ -82,11 +82,13 @@ func test_city_matches_the_neighbourhood_in_the_name(t: TestHelper) -> void:
 		t.fail("NameGenDef ausente"); return
 	for team: Dictionary in TeamGenerator.batch(SEED, 24):
 		var club_name: String = String(team.get("name", ""))
-		var city: String = String(team.get("city", ""))
+		# The BAIRRO, not the município. They became two fields the day the
+		# Fundador was allowed to choose both.
+		var bairro: String = String(team.get("neighborhood", ""))
 		for neighbourhood: String in names.neighborhoods:
 			if club_name.begins_with(neighbourhood):
-				t.equal(city, neighbourhood,
-					"'%s' diz ser de %s mas a cidade é %s" % [club_name, neighbourhood, city])
+				t.equal(bairro, neighbourhood,
+					"'%s' diz ser de %s mas o bairro é %s" % [club_name, neighbourhood, bairro])
 				break
 
 func test_vocabulary_comes_from_the_module(t: TestHelper) -> void:
@@ -96,9 +98,11 @@ func test_vocabulary_comes_from_the_module(t: TestHelper) -> void:
 	t.check(names.neighborhoods.has("Jacarepaguá"),
 		"o pool carioca do módulo não foi absorvido por add_thing()")
 	for team: Dictionary in TeamGenerator.batch(SEED, BATCH):
-		t.check(names.neighborhoods.has(String(team.get("city", ""))),
+		t.check(names.neighborhoods.has(String(team.get("neighborhood", ""))),
 			"'%s' saiu de um bairro fora do pool do módulo: %s" %
-				[team.get("name", "?"), team.get("city", "?")])
+				[team.get("name", "?"), team.get("neighborhood", "?")])
+		t.equal(String(team.get("city", "")), TeamGenerator.DEFAULT_CITY,
+			"'%s' deveria estar no município padrão" % team.get("name", "?"))
 
 func test_league_fill_is_idempotent(t: TestHelper) -> void:
 	var def := Drive.def("team") as TeamDef

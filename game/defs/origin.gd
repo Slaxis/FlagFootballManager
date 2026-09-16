@@ -85,16 +85,39 @@ func skill_bias(id: String) -> Dictionary:
 func club_level(id: String) -> float:
 	return float(origin(id).get("club", {}).get("level", 1.0))
 
-# What you were doing before the clipboard, and for how long. An ex-player
-# needs three years to be called one at all — a season as a rookie, a season as
-# a rookie who has stopped being one, and a season actually playing — and the
-# student has none, which is the entire point of him.
-func career_position(id: String) -> String:
-	return String(origin(id).get("career", {}).get("position", "head_coach"))
+# A TRACK, NOT A POSITION. This used to name the exact chair you sat in — the
+# founder was a head coach, the ex-player a receiver, the student an offensive
+# coordinator — and all three symptoms came straight out of that one line: the
+# founder came out with nothing but management skills, the ex-player was always
+# a quarterback, and the student had the same two skills no matter how many
+# times you rolled.
+#
+# What actually varies between these three lives is which SIDE of the whitewash
+# it happened on. Where on the field is a question for the body, and the
+# matcher answers it — so the ex-player is a receiver or a rusher or a safety
+# depending on who he turned out to be.
+func career_track(id: String) -> String:
+	return String(origin(id).get("career", {}).get("track", ActorGenerator.TRACK_PLAYER))
 
+# And for how long. The student has one or two years now rather than none: a
+# career of zero years cannot be rolled, so he was the same person every time —
+# which is not a scenario, it is a constant.
 func career_years(id: String, rng: RandomNumberGenerator) -> int:
 	var career: Dictionary = origin(id).get("career", {})
 	return rng.randi_range(int(career.get("years_min", 0)), int(career.get("years_max", 0)))
+
+# The chair the club gives you the day you walk in. The only thing about the
+# manager that IS assigned rather than lived — because it is the club's
+# decision, not your body's.
+func chair(id: String) -> String:
+	return String(origin(id).get("start", {}).get("chair", "head_coach"))
+
+# The Fundador alone. He is not drafted — there is nothing to be drafted into —
+# so the club has to come from somewhere, and the only honest answer is that he
+# names it, picks the neighbourhood and chooses the colours himself. The other
+# two walk into a club that already existed and do not get a vote.
+func authors_club(id: String) -> bool:
+	return bool(origin(id).get("start", {}).get("authors_club", false))
 
 # What a career already did to you before the screen opened. The ex-player has
 # two because he has been through more — a season that went right, a shoulder
@@ -104,7 +127,7 @@ func perk_points(id: String) -> int:
 
 # Whether the club exists already or you are the reason it exists.
 func founds_a_club(id: String) -> bool:
-	return bool(origin(id).get("club", {}).get("founded", false))
+	return bool(origin(id).get("start", {}).get("founds_club", false))
 
 # What the squad looked like before you got there. A founded club is full of
 # people who had never played; an established one is not.

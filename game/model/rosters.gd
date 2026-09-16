@@ -2,20 +2,21 @@
 #
 # Three layers meet here, and each has exactly one job:
 #
-#   ActorDef         the curated truth. Real athletes at real clubs. Immutable.
-#   ActorGenerator   fills the gaps, and feeds the market from here on.
-#   Rosters          the live state. This is the one that CHANGES.
+#   ActorDef          the curated truth. Real athletes at real clubs. Immutable.
+#   LeagueGenerator   spawns people into the Praça and drafts them into clubs.
+#   Rosters           the live state. This is the one that CHANGES.
+#
+# IT NO LONGER GENERATES ANYBODY. It used to: a squad was built on first read,
+# each club inventing exactly the people it was short of. Which quietly made
+# every club a closed world — nobody came from anywhere, nobody was competed
+# for, and the first time a player was signed the whole thing had to stop being
+# a formula anyway. So the invention moved out to LeagueGenerator, and what is
+# left here is the only thing that was ever really needed: a list per club that
+# somebody else fills, and that changes for the rest of the career.
 #
 # It has to be state and not a formula. A roster derived from the career seed
 # would be free and reproducible and completely wrong the moment anybody is
 # signed, injured, trained or retired — which is the entire rest of the game.
-# So it is generated once, on first read, and owned from then on.
-#
-# Filled per club and per category, lazily: sixteen clubs would be roughly two
-# hundred people invented at career start so the player could look at twelve of
-# them. Every club still derives from the career seed, so the same seed builds
-# the same league — what changes is that afterwards it is a thing that happened
-# rather than a thing that is recomputed.
 class_name Rosters
 extends Record
 
@@ -25,18 +26,26 @@ const SIZE_BY_TIER: Dictionary = {1: 15, 2: 13, 3: 11, 4: 9}
 const DEFAULT_SIZE := 10
 const SIZE_JITTER := 2
 
-# How many people are there to COACH rather than play. A sandlot club has one
-# person with a clipboard and he also plays; a tier-1 club can afford chairs.
-const STAFF_BY_TIER: Dictionary = {1: 4, 2: 3, 3: 2, 4: 1}
-
 # Who founded the club. Somebody had to put five people on a field before there
 # was a club at all, and those five are older, they are the reason the place
 # exists, and they were never scouted — they just started it.
+#
+# Which is now settled AFTER the draft instead of before it: the founders are
+# the oldest hands in the room, because an old man at a neighbourhood club is
+# almost always one of the people who started it.
 const FOUNDERS_MIN := 1
 const FOUNDERS_MAX := 5
 
 # team_id -> category -> Array[Actor]
 var _squads: Dictionary = {}
+# "team_id/category" -> true, for squads the draft has already been through.
+#
+# NOT the same question as "is this list non-empty". The player is seated at
+# his own club before the draft runs — so the club counts him against its needs
+# and does not go and sign a second head coach — and reading emptiness would
+# have made that one seated person mean "already done", leaving the player's
+# own club as the only one in the league with a squad of one.
+var _filled: Dictionary = {}
 var career_seed: int = 0
 
 static func make(seed_value: int) -> Rosters:
@@ -44,20 +53,35 @@ static func make(seed_value: int) -> Rosters:
 	rosters.career_seed = seed_value
 	return rosters
 
-# The squad, built on first ask. Curated actors always ALL make it in — a
-# curator who wrote eighteen people meant eighteen — and the generator only
-# tops up when the club is short.
+# The squad AS IT STANDS. An empty list is a real answer — it means nobody has
+# been drafted here yet, which before the Praça existed was not a state a club
+# could be in.
 func squad(team_id: String, category: String) -> Array[Actor]:
 	var key: String = _key(team_id)
 	if not _squads.has(key):
 		_squads[key] = {}
 	var by_category: Dictionary = _squads[key]
 	if not by_category.has(category):
-		by_category[category] = _build(key, category)
+		var empty: Array[Actor] = []
+		by_category[category] = empty
 	return by_category[category]
 
+# Every club this roster knows about, in no particular order.
+func team_ids() -> Array[String]:
+	var out: Array[String] = []
+	for id: String in _squads.keys():
+		out.append(id)
+	return out
+
 func has_squad(team_id: String, category: String) -> bool:
-	return _squads.get(_key(team_id), {}).has(category)
+	var people: Variant = _squads.get(_key(team_id), {}).get(category, null)
+	return people != null and not (people as Array).is_empty()
+
+func is_filled(team_id: String, category: String) -> bool:
+	return bool(_filled.get("%s/%s" % [_key(team_id), category], false))
+
+func mark_filled(team_id: String, category: String) -> void:
+	_filled["%s/%s" % [_key(team_id), category]] = true
 
 # Someone joining a club mid-career: a signing, or the manager walking in on
 # day one.
@@ -77,108 +101,76 @@ func remove(team_id: String, category: String, thing_id: String) -> bool:
 			return true
 	return false
 
+# --- Receiving ---
+
+# The authored athletes, seated at the club their curator wrote them into.
+# They are not drafted: a real person at a real club is a fact about the world,
+# and the draft only decides the invented ones. Returns how many sat down.
+func seat_curated(team_id: String, category: String) -> int:
+	var curated := Drive.def("actor") as ActorDef
+	var teams := Drive.def("team") as TeamDef
+	if curated == null or teams == null:
+		return 0
+	var club: Dictionary = teams.get_team(team_id)
+	if club.is_empty():
+		return 0
+	var nations := Drive.def("nation") as NationDef
+	var level: float = nations.club_level(club) if nations != null else 1.0
+	var seated: int = 0
+	for id: String in curated.ids_for(team_id, category):
+		var person: Actor = ActorGenerator.from_spec(
+			curated.spec(id), int(club.get("reputation", 30)), category, level)
+		add(team_id, category, person)
+		seated += 1
+	return seated
+
+# How many people this club is trying to carry. Jittered off the seed so two
+# tier-4 clubs are not identically sized, which is what makes one of them the
+# side that is always a man short.
+func target_size(team_id: String, tier: int) -> int:
+	var rng: RandomNumberGenerator = SeedRng.make_rng(
+		SeedRng.derive(career_seed, "size_" + _key(team_id)))
+	return maxi(size_for_tier(tier) + rng.randi_range(-SIZE_JITTER, SIZE_JITTER), 5)
+
+# How many people at this club came up at this position. What the draft reads
+# to know whether the club still has a hole there.
+func depth_at(team_id: String, category: String, position_id: String) -> int:
+	var count: int = 0
+	for person: Actor in squad(team_id, category):
+		if person.position() == position_id:
+			count += 1
+	return count
+
+# The oldest hands in the room. Called once the club is full, because until
+# then there is nobody to be oldest.
+func mark_founders(team_id: String, category: String) -> void:
+	var people: Array[Actor] = squad(team_id, category).duplicate()
+	if people.is_empty():
+		return
+	var rng: RandomNumberGenerator = SeedRng.make_rng(
+		SeedRng.derive(career_seed, "founders_" + _key(team_id)))
+	var wanted: int = mini(rng.randi_range(FOUNDERS_MIN, FOUNDERS_MAX), people.size())
+	people.sort_custom(func(a: Actor, b: Actor) -> bool: return a.age() > b.age())
+	for i: int in range(wanted):
+		people[i].data["founder"] = true
+
 func size_for_tier(tier: int) -> int:
 	return int(SIZE_BY_TIER.get(tier, DEFAULT_SIZE))
 
-# --- Building ---
-
-func _build(team_id: String, category: String) -> Array[Actor]:
-	var teams := Drive.def("team") as TeamDef
-	var people: Array[Actor] = []
-	if teams == null:
-		return people
-	var club: Dictionary = teams.get_team(team_id)
-	if club.is_empty():
-		Log.log(self, "error", "Rosters: no club '%s'" % team_id)
-		return people
-	var reputation: int = int(club.get("reputation", 30))
-	# Where this club stands in the WORLD, not just in its own league. A city
-	# club in Piedade and a city club in Monterrey are not the same sentence.
-	var nations := Drive.def("nation") as NationDef
-	var club_level: float = nations.club_level(club) if nations != null else 1.0
-
-	# Curated first, and all of them.
-	var curated := Drive.def("actor") as ActorDef
-	if curated != null:
-		for id: String in curated.ids_for(team_id, category):
-			var person: Actor = ActorGenerator.from_spec(
-				curated.spec(id), reputation, category, club_level)
-			person.set_team(team_id)
-			people.append(person)
-
-	# Then invented — but to a PLAN, not one at a time. Letting each actor pick
-	# his own position from all eleven meant five of the eleven were staff, so a
-	# squad came out with five fitness coaches, two scouts and one center. A
-	# club that cannot field five players is not a club.
-	var target: int = _target_size(team_id, int(club.get("tier", 4)))
-	var plan: Array[String] = _plan(maxi(target - people.size(), 0),
-		int(club.get("tier", 4)))
-	var founders: int = _founder_count(team_id)
-	for index: int in range(plan.size()):
-		var sub_seed: int = SeedRng.derive(
-			career_seed, "roster_%s_%s_%d" % [team_id, category, index])
-		var filler: Actor = ActorGenerator.generate(
-			sub_seed, reputation, category, club_level, plan[index])
-		filler.set_team(team_id)
-		# The founders are the oldest hands in the room, and the club is where
-		# their whole career happened.
-		if index < founders:
-			filler.data["founder"] = true
-		people.append(filler)
-	_hand_out_jerseys(people, team_id)
-	return people
-
 # Numbers, in squad order, skipping nobody. A shirt is how a crowd knows who
 # just caught that, and the roster column is empty without one.
-func _hand_out_jerseys(people: Array[Actor], team_id: String) -> void:
+func hand_out_jerseys(team_id: String, category: String) -> void:
 	var rng: RandomNumberGenerator = SeedRng.make_rng(
-		SeedRng.derive(career_seed, "jersey_" + team_id))
+		SeedRng.derive(career_seed, "jersey_" + _key(team_id)))
 	var pool: Array[int] = []
 	for number: int in range(1, 100):
 		pool.append(number)
-	for person: Actor in people:
+	for person: Actor in squad(team_id, category):
 		if person.jersey() != Actor.NO_JERSEY or pool.is_empty():
 			continue
 		var pick: int = rng.randi() % pool.size()
 		person.set_jersey(pool[pick])
 		pool.remove_at(pick)
-
-# The positions a club would actually recruit for, in the order it would fill
-# them: somebody to coach, then a side that can take the field, then depth.
-func _plan(count: int, tier: int) -> Array[String]:
-	var positions := Drive.def("position") as PositionDef
-	var plan: Array[String] = []
-	if positions == null or count <= 0:
-		return plan
-	var staff_ids: Array[String] = positions.ids_on_side("staff")
-	var wanted_staff: int = mini(int(STAFF_BY_TIER.get(tier, 1)), count / 3)
-	for i: int in range(wanted_staff):
-		plan.append(staff_ids[i % staff_ids.size()])
-
-	# The playing positions, cycled by their slot counts, so a squad covers the
-	# formation before it doubles up anywhere.
-	var playing: Array[String] = []
-	for side: String in ["offense", "defense"]:
-		for id: String in positions.ids_on_side(side):
-			for slot: int in range(positions.slots(id)):
-				playing.append(id)
-	if playing.is_empty():
-		return plan
-	var index: int = 0
-	while plan.size() < count:
-		plan.append(playing[index % playing.size()])
-		index += 1
-	return plan
-
-func _founder_count(team_id: String) -> int:
-	var rng: RandomNumberGenerator = SeedRng.make_rng(
-		SeedRng.derive(career_seed, "founders_" + team_id))
-	return rng.randi_range(FOUNDERS_MIN, FOUNDERS_MAX)
-
-func _target_size(team_id: String, tier: int) -> int:
-	var rng: RandomNumberGenerator = SeedRng.make_rng(
-		SeedRng.derive(career_seed, "size_" + team_id))
-	return maxi(size_for_tier(tier) + rng.randi_range(-SIZE_JITTER, SIZE_JITTER), 5)
 
 func _key(team_id: String) -> String:
 	return String(team_id).strip_edges().to_lower()
@@ -204,11 +196,12 @@ func to_snapshot() -> Dictionary:
 				})
 			by_category[category] = people
 		squads[team_id] = by_category
-	return {"seed": career_seed, "squads": squads}
+	return {"seed": career_seed, "squads": squads, "filled": _filled.duplicate()}
 
 func from_snapshot(state: Dictionary) -> void:
 	career_seed = int(state.get("seed", 0))
 	_squads.clear()
+	_filled = (state.get("filled", {}) as Dictionary).duplicate()
 	var squads: Dictionary = state.get("squads", {})
 	for team_id: String in squads.keys():
 		var by_category: Dictionary = {}
