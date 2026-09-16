@@ -28,6 +28,11 @@ var ACCENT := Color(0.49, 0.78, 0.45)
 var MUTED := Color(0.47, 0.52, 0.48)
 var TEXT := Color(0.87, 0.90, 0.87)
 var LINE := Color(0.16, 0.22, 0.17)
+# The two the widgets used to hardcode: the ground inside a control, and the
+# ink that goes ON the accent when a control is filled with it. Derived like
+# everything else, so a yellow club gets a yellow-black and not a green one.
+var WELL := Color(0.08, 0.11, 0.09)
+var ON_ACCENT := Color(0.05, 0.09, 0.05)
 
 func _wear_club_colours() -> void:
 	var scheme: Dictionary = TeamColors.of(_viewed_club())
@@ -41,6 +46,8 @@ func _wear_club_colours() -> void:
 	ACCENT = ink if ink.get_luminance() > 0.3 else plate.lightened(0.45)
 	TEXT = ACCENT.lightened(0.55)
 	MUTED = TEXT.darkened(0.45)
+	WELL = BG.darkened(0.18)
+	ON_ACCENT = BG.darkened(0.35)
 
 const TAB_SQUAD := "squad"
 const TAB_RIVALS := "rivals"
@@ -155,26 +162,25 @@ func _rosters() -> Rosters:
 	var existing := read("rosters") as Rosters
 	if existing != null:
 		return existing
-	# First arrival, and the moment the world is actually populated. The career
-	# seed is the world; LeagueGenerator spawns people into the Praça and lets
-	# the clubs draft out of it until every one of them can field a side.
+	# THE DRAFT SCREEN BUILDS THE WORLD. It gets here already built, with a bar
+	# and a log the player watched — two hundred lived careers is about nine
+	# seconds, and doing that inside this `_ready` was nine seconds of a window
+	# that looked hung.
 	#
-	# It happens HERE rather than at career creation because this is the first
-	# screen that needs it, and doing it any earlier would mean generating two
-	# hundred people behind a menu the player might back out of.
+	# This branch is the fallback for arriving without passing through it: a
+	# test mounting the scene on its own, or a save restored straight into the
+	# squad. It costs the same nine seconds, silently, which is exactly why it
+	# is not the normal path.
 	var career: Career = _career()
 	var seed_value: int = career.career_seed if career != null else 0
 	var fresh: Rosters = Rosters.make(seed_value)
 	var praca: Praca = Praca.make(seed_value)
-	# You are in your own squad BEFORE the draft runs, so the club counts you
-	# against its needs and does not sign a second head coach. Standing outside
-	# the roster you manage was the kind of detail that only shows up when you
-	# finally look.
 	if career != null and career.manager != null:
-		for category: String in career.manager.plays():
-			fresh.add(career.team_id, String(category), career.manager)
-		if career.manager.plays().is_empty():
-			fresh.add(career.team_id, Actor.CATEGORY_MASC, career.manager)
+		var mine: Array = career.manager.plays()
+		if mine.is_empty():
+			mine = [Actor.CATEGORY_MASC]
+		for entry: Variant in mine:
+			fresh.add(career.team_id, String(entry), career.manager)
 	LeagueGenerator.fill(fresh, praca, Actor.CATEGORY_MASC)
 	write("rosters", fresh)
 	write("praca", praca)
@@ -401,7 +407,7 @@ func _unit_caption(text: String, overall: int) -> Control:
 	value.text = str(overall) if overall > 0 else "—"
 	value.add_theme_font_size_override("font_size", 12)
 	value.add_theme_color_override("font_color",
-		StatBar.tint(overall) if overall > 0 else MUTED)
+		StatBar.tint(overall, ACCENT) if overall > 0 else MUTED)
 	row.add_child(value)
 	return row
 
@@ -449,7 +455,7 @@ func _slot_row(code: String, who: Actor) -> Control:
 	name_label.add_theme_font_size_override("font_size", 12)
 	if who == null:
 		name_label.text = "\u2b1a " + UiText.t("team.empty_slot")
-		name_label.add_theme_color_override("font_color", Color(0.30, 0.34, 0.31))
+		name_label.add_theme_color_override("font_color", MUTED.darkened(0.35))
 		row.add_child(name_label)
 		return row
 	name_label.text = who.display_name()
@@ -460,7 +466,7 @@ func _slot_row(code: String, who: Actor) -> Control:
 	strength.custom_minimum_size = Vector2(26, 0)
 	strength.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	strength.add_theme_font_size_override("font_size", 12)
-	strength.add_theme_color_override("font_color", StatBar.tint(who.overall()))
+	strength.add_theme_color_override("font_color", StatBar.tint(who.overall(), ACCENT))
 	row.add_child(strength)
 	return row
 
@@ -599,7 +605,7 @@ func _roster_row(person: Actor, is_manager: bool) -> Control:
 	# Elifoot calls this Forca and so does this column: one number for how good
 	# somebody is, tinted so the roster reads before it is read.
 	var strength: int = person.overall()
-	row.add_child(_cell(str(strength), COL_STRENGTH, StatBar.tint(strength)))
+	row.add_child(_cell(str(strength), COL_STRENGTH, StatBar.tint(strength, ACCENT)))
 	row.add_child(_cell(str(person.age()), COL_AGE, MUTED))
 	var positions := Drive.def("position") as PositionDef
 	if positions != null:
@@ -637,7 +643,7 @@ func _talent_chip(person: Actor) -> Control:
 	var perks := Drive.def("perk") as PerkDef
 	var ids: Array = person.perks()
 	if perks == null or ids.is_empty():
-		return _cell("\u00b7", COL_PERK, Color(0.24, 0.28, 0.25))
+		return _cell("\u00b7", COL_PERK, MUTED.darkened(0.45))
 	var id: String = String(ids[0])
 	var flaw: bool = perks.is_flaw(id)
 	var hue: Color = TALENT_BAD if flaw else TALENT_GOOD
@@ -773,7 +779,7 @@ func _card_header() -> Control:
 	var strength := Label.new()
 	strength.text = "%s %d" % [UiText.t("team.strength"), _selected.overall()]
 	strength.add_theme_font_size_override("font_size", 18)
-	strength.add_theme_color_override("font_color", StatBar.tint(_selected.overall()))
+	strength.add_theme_color_override("font_color", StatBar.tint(_selected.overall(), ACCENT))
 	strength.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(strength)
 	box.add_child(top)
@@ -994,8 +1000,8 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
 	button.clip_contents = true
 	var style := StyleBoxFlat.new()
-	style.bg_color = ACCENT if chosen else Color(0.08, 0.11, 0.09)
-	style.border_color = ACCENT if chosen else Color(0.16, 0.22, 0.17)
+	style.bg_color = ACCENT if chosen else WELL
+	style.border_color = ACCENT if chosen else LINE
 	style.set_border_width_all(1)
 	style.set_content_margin_all(0)
 	for state: String in ["normal", "hover", "pressed"]:
@@ -1005,7 +1011,10 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 	# width rather than a pixel count that goes wrong when the column moves.
 	if not chosen and fit > 0.0:
 		var bar := ColorRect.new()
-		bar.color = StatBar.tint(int(round(fit * 100.0)))
+		# THE CLUB'S HUE, not the app's green. This box sits on a ground made
+		# from the club's own kit, and a green fill on a yellow ground was two
+		# teams' colours in one cell.
+		bar.color = StatBar.tint(int(round(fit * 100.0)), ACCENT)
 		bar.color.a = 0.42
 		bar.anchor_left = 0.0
 		bar.anchor_top = 0.0
@@ -1021,7 +1030,7 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	label.add_theme_font_size_override("font_size", 10)
 	label.add_theme_color_override("font_color",
-		Color(0.05, 0.09, 0.05) if chosen else TEXT)
+		ON_ACCENT if chosen else TEXT)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(label)
 
@@ -1074,8 +1083,8 @@ func _tab_button(text: String, id: String) -> Button:
 	button.focus_mode = Control.FOCUS_NONE
 	var chosen: bool = _tab == id
 	var style := StyleBoxFlat.new()
-	style.bg_color = ACCENT if chosen else Color(0.10, 0.14, 0.11)
-	style.border_color = ACCENT if chosen else Color(0.20, 0.27, 0.21)
+	style.bg_color = ACCENT if chosen else WELL.lightened(0.05)
+	style.border_color = ACCENT if chosen else LINE
 	style.set_border_width_all(1)
 	style.set_content_margin_all(5)
 	for corner: String in ["top_left", "top_right"]:
@@ -1083,17 +1092,17 @@ func _tab_button(text: String, id: String) -> Button:
 	for state: String in ["normal", "hover", "pressed"]:
 		button.add_theme_stylebox_override(state, style)
 	button.add_theme_color_override("font_color",
-		Color(0.05, 0.09, 0.05) if chosen else MUTED)
+		ON_ACCENT if chosen else MUTED)
 	button.pressed.connect(_on_tab.bind(id))
 	return button
 
 func _row_style(chosen: bool, hovered: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	if chosen:
-		style.bg_color = Color(0.14, 0.22, 0.16)
+		style.bg_color = LINE.lightened(0.05)
 	else:
-		style.bg_color = Color(0.10, 0.14, 0.11) if hovered else Color(0.07, 0.10, 0.08)
-	style.border_color = ACCENT if chosen else Color(0.07, 0.10, 0.08)
+		style.bg_color = WELL.lightened(0.06) if hovered else WELL
+	style.border_color = ACCENT if chosen else WELL
 	style.set_border_width_all(1)
 	style.set_content_margin_all(3)
 	return style
@@ -1104,8 +1113,8 @@ func _flat_button(text: String, on_press: Callable) -> Button:
 	button.custom_minimum_size = Vector2(110, 32)
 	button.focus_mode = Control.FOCUS_NONE
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.11, 0.15, 0.12)
-	style.border_color = Color(0.20, 0.27, 0.21)
+	style.bg_color = WELL.lightened(0.08)
+	style.border_color = LINE
 	style.set_border_width_all(1)
 	style.set_content_margin_all(5)
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:

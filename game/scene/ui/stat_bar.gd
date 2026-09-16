@@ -37,11 +37,17 @@ static func row(label_text: String, value: int, tooltip: String = "",
 	return row_box
 
 # The same 0..100 reading as the bar, as a single colour: dead grey at the
-# bottom, lit green at the top. A column of numbers tinted this way sorts
-# itself — the bad ones read as switched off and the good ones as switched on,
-# without anybody parsing a digit.
-static func tint(value: int) -> Color:
-	return UNLIT_TEXT.lerp(LIT, clampf(float(value) / 100.0, 0.0, 1.0))
+# bottom, LIT AT THE TOP IN WHATEVER HUE YOU ASK FOR. A column of numbers
+# tinted this way sorts itself — the bad ones read as switched off and the good
+# ones as switched on, without anybody parsing a digit.
+#
+# The hue is an argument because the team screen wears the CLUB's colours, and
+# a welded-in green fought every club that is not green: the roster of a yellow
+# side came out with green affinity bars sitting on a yellow ground. Grey stays
+# at the bottom either way — "off" is club-neutral, and it is what makes the
+# gradient read as a gradient instead of as two team colours.
+static func tint(value: int, hue: Color = LIT) -> Color:
+	return UNLIT_TEXT.lerp(hue, clampf(float(value) / 100.0, 0.0, 1.0))
 
 static func bar(value: int, hue: Color = LIT) -> Control:
 	var box := HBoxContainer.new()

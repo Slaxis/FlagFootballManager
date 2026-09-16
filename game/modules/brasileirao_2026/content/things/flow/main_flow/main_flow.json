@@ -26,7 +26,7 @@
         "career"
       ],
       "transitions": {
-        "created": "team",
+        "created": "draft",
         "back": "module_select"
       }
     },
@@ -38,10 +38,26 @@
       }
     },
     {
+      "id": "draft",
+      "scene_file": "draft",
+      "consumes": [
+        "career"
+      ],
+      "produces": [
+        "rosters",
+        "praca"
+      ],
+      "transitions": {
+        "drafted": "team",
+        "back": "start"
+      }
+    },
+    {
       "id": "team",
       "scene_file": "team",
       "consumes": [
-        "career"
+        "career",
+        "rosters"
       ],
       "transitions": {
         "back": "start"

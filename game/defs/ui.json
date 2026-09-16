@@ -447,6 +447,86 @@
     "manager.club_next_colors": {
       "pt": "Próxima paleta",
       "en": "Next palette"
+    },
+    "draft.title": {
+      "pt": "MONTANDO A LIGA",
+      "en": "BUILDING THE LEAGUE"
+    },
+    "draft.subtitle": {
+      "pt": "Ninguém é inventado por um clube. Todo mundo nasce na praça e os clubes vão levando — até todo time estar cheio, e um pouco além, pra sobrar mercado. O log abaixo é quem foi pra onde e por quê.",
+      "en": "Nobody is invented by a club. Everybody is born in the square and the clubs take them — until every side is full, and a little past that, so there is a market left over. The log below is who went where, and why."
+    },
+    "draft.phase_setup": {
+      "pt": "sentando os atletas curados",
+      "en": "seating the curated athletes"
+    },
+    "draft.phase_fill": {
+      "pt": "sorteando gente",
+      "en": "drawing people"
+    },
+    "draft.phase_residue": {
+      "pt": "enchendo a praça",
+      "en": "filling the square"
+    },
+    "draft.phase_settle": {
+      "pt": "fechando os elencos",
+      "en": "closing the squads"
+    },
+    "draft.phase_done": {
+      "pt": "pronto",
+      "en": "done"
+    },
+    "draft.header": {
+      "pt": "⚑  %d clubes  ·  nível médio %.2f",
+      "en": "⚑  %d clubs  ·  average level %.2f"
+    },
+    "draft.curated": {
+      "pt": "—  %d curado(s) sentam no %s",
+      "en": "—  %d curated take their seats at %s"
+    },
+    "draft.signed": {
+      "pt": "▸  %-34s →  %-26s %s",
+      "en": "▸  %-34s →  %-26s %s"
+    },
+    "draft.to_praca": {
+      "pt": "·  %-34s →  praça (ninguém quis)",
+      "en": "·  %-34s →  the square (nobody wanted him)"
+    },
+    "draft.settled": {
+      "pt": "✔  %-26s %2d inscritos · geral %2d · %s",
+      "en": "✔  %-26s %2d registered · overall %2d · %s"
+    },
+    "draft.market": {
+      "pt": "⌂  praça: %d pessoas · idade mediana %d · nível mediano %.2f",
+      "en": "⌂  square: %d people · median age %d · median level %.2f"
+    },
+    "draft.gave_up": {
+      "pt": "⚠  desisti de encher a liga depois de %d sorteios",
+      "en": "⚠  gave up filling the league after %d draws"
+    },
+    "draft.why_hole": {
+      "pt": "(buraco na formação)",
+      "en": "(hole in the formation)"
+    },
+    "draft.why_minimum": {
+      "pt": "(abaixo do mínimo de inscritos)",
+      "en": "(below the registered minimum)"
+    },
+    "draft.why_short": {
+      "pt": "(faltava gente na posição)",
+      "en": "(short at the position)"
+    },
+    "draft.why_depth": {
+      "pt": "(banco)",
+      "en": "(depth)"
+    },
+    "draft.ok": {
+      "pt": "OK — ver o elenco",
+      "en": "OK — see the squad"
+    },
+    "draft.working": {
+      "pt": "montando…",
+      "en": "building…"
     }
   }
 }

@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Added — B.5d: a tela do draft (2026-09-16)
+- **Tela do draft** entre a criacao e o elenco: barra de progresso, legenda de
+  fase e o **log do draft** — quem foi pra onde e POR QUE. Com botao [OK], que
+  espera voce em vez de a tela passar sozinha
+- `LeagueDraft` — o mesmo draft, retomavel. `LeagueGenerator.fill()` virou um
+  `while not is_done(): step()` por cima dele, entao o teste e a tela rodam
+  exatamente o mesmo codigo
+- A tela trabalha por **orcamento de tempo** (25ms/quadro) e nao por contagem de
+  passos: um passo e uma carreira vivida, e elas nao tem o mesmo tamanho — um
+  veterano de quinze anos custa o triplo de um moleque, entao contar passos
+  engasgaria justo onde o trabalho e mais pesado
+- `tests/test_screen_draft.gd` e `test_the_draft_writes_down_what_it_did`: a
+  barra nunca anda pra tras, o log nunca sai com formatacao crua (que e a cara
+  de uma chave de traducao faltando), e os dois caminhos montam o mesmo mundo
+
+### Fixed
+- **A tela do time congelava ~9s montando o mundo** sem repintar nada. Agora a
+  montagem tem tela propria; o caminho sincrono continua existindo como recurso
+  pra teste e save restaurado, e e por isso que ele nao e mais o normal
+- **A barra de afinidade da tabela era verde cravado** e brigava com a cor do
+  clube — elenco de time amarelo com barra verde em cima de fundo amarelo. Agora
+  `StatBar.tint()` recebe a cor, e a tela passa a do clube. Junto foram os
+  outros verdes soltos da tela: fundo dos botoes de posicao, bordas, o chip de
+  escalacao, a linha da tabela e a tinta que vai EM CIMA do accent
+
 ### Added — B.5c: a Praca e o draft (2026-09-16)
 - **`LeagueGenerator`** — o mundo inteiro num laco so: `spawn` poe gente na
   Praca, `draft(actor, teams)` decide quem leva, e isso roda ate todo clube

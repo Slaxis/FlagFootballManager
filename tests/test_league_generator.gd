@@ -28,6 +28,7 @@ func tests() -> Array:
 		"test_a_squad_covers_its_formation_in_depth",
 		"test_somebody_already_seated_is_counted_not_replaced",
 		"test_a_praca_survives_the_round_trip",
+		"test_the_draft_writes_down_what_it_did",
 	]
 
 func _world() -> Rosters:
@@ -231,6 +232,42 @@ func test_a_praca_survives_the_round_trip(t: TestHelper) -> void:
 			"nome na posição %d" % i)
 		t.equal(after.people[i].position(), before.people[i].position(),
 			"posição na posição %d" % i)
+
+# A draft that cannot be read is a draft you have to trust, and every bug this
+# system has had so far was quiet: the club that ended up with six rushers, the
+# fit term comparing two different rulers, the Praça that came out empty. None
+# of them raised anything. The log is the instrument.
+func test_the_draft_writes_down_what_it_did(t: TestHelper) -> void:
+	League.ensure_filled(SEED)
+	var rosters: Rosters = Rosters.make(SEED)
+	var praca: Praca = Praca.make(SEED)
+	var run: LeagueDraft = LeagueDraft.make(rosters, praca, CATEGORY)
+	var last: float = -1.0
+	var steps: int = 0
+	while not run.is_done() and steps < 4000:
+		# The bar never goes backwards. A progress number that retreats is worse
+		# than none: it reads as the thing having gone wrong.
+		t.check(run.progress() >= last, "a barra andou pra trás no passo %d" % steps)
+		last = run.progress()
+		run.step()
+		steps += 1
+	t.check(run.is_done(), "o draft não terminou em %d passos" % steps)
+	t.equal(run.progress(), 1.0, "a barra não fechou")
+	t.check(run.lines.size() > 20, "o log tem só %d linhas" % run.lines.size())
+	t.check(run.headline().strip_edges() != "", "a legenda saiu vazia")
+
+	# Every line is a real sentence, not a format string that never got its
+	# arguments — which is what a missing i18n key looks like from here.
+	for line: String in run.lines:
+		t.check(not line.contains("%"), "linha com formatação crua: %s" % line)
+		t.check(not line.begins_with("draft."), "chave de tradução faltando: %s" % line)
+
+	# And stepping it is the same world the one-shot door builds.
+	var other: Rosters = Rosters.make(SEED)
+	LeagueGenerator.fill(other, Praca.make(SEED), CATEGORY)
+	for id: String in rosters.team_ids():
+		t.equal(other.squad(id, CATEGORY).size(), rosters.squad(id, CATEGORY).size(),
+			"'%s' saiu diferente pelos dois caminhos" % id)
 
 func _mean(values: Array[int]) -> float:
 	if values.is_empty():
