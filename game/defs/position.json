@@ -336,6 +336,86 @@
         "coaching": 1
       },
       "slots": 1
+    },
+    {
+      "id": "president",
+      "code": "PRE",
+      "side": "admin",
+      "slots": 1,
+      "label": {
+        "pt": "Presidente",
+        "en": "President"
+      },
+      "desc": {
+        "pt": "Responde pelo clube. Decide quem senta em cada cadeira e leva a culpa por todas",
+        "en": "Answers for the club. Decides who sits in every chair and takes the blame for all of them"
+      },
+      "affinity": {
+        "charisma": 1,
+        "will": 1,
+        "intelligence": 1,
+        "leadership": 1,
+        "rules": 1,
+        "trash_talk": -1
+      },
+      "trains": {
+        "leadership": 4,
+        "rules": 3,
+        "play_calling": 1
+      }
+    },
+    {
+      "id": "treasurer",
+      "code": "TES",
+      "side": "admin",
+      "slots": 1,
+      "label": {
+        "pt": "Tesoureiro",
+        "en": "Treasurer"
+      },
+      "desc": {
+        "pt": "Cuida do caixa. No amador isso é rateio, colete, aluguel de quadra e a viagem que não cabe",
+        "en": "Minds the money. In the amateur game that is dues, vests, pitch rent and the trip that does not fit"
+      },
+      "affinity": {
+        "intelligence": 1,
+        "will": 1,
+        "perception": 1,
+        "rules": 1,
+        "scouting": 1,
+        "trash_talk": -1
+      },
+      "trains": {
+        "rules": 4,
+        "scouting": 2,
+        "leadership": 1
+      }
+    },
+    {
+      "id": "media",
+      "code": "COM",
+      "side": "admin",
+      "slots": 1,
+      "label": {
+        "pt": "Comunicação",
+        "en": "Media"
+      },
+      "desc": {
+        "pt": "Fala com o mundo. Instagram, patrocinador, convite pro torneio e a treta que não precisava existir",
+        "en": "Talks to the world. Instagram, the sponsor, the tournament invite and the row nobody needed"
+      },
+      "affinity": {
+        "charisma": 1,
+        "perception": 1,
+        "intelligence": 1,
+        "leadership": 1,
+        "trash_talk": 1
+      },
+      "trains": {
+        "leadership": 3,
+        "trash_talk": 3,
+        "rules": 1
+      }
     }
   ],
   "squad": {

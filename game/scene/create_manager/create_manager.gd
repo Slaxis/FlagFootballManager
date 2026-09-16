@@ -38,6 +38,7 @@ const TALENT_BAD := Color(0.85, 0.36, 0.36)
 var _build: SheetBuilder = null
 var _name: Dictionary = {}
 var _plays: Array[String] = [Actor.CATEGORY_MASC]
+var _origin: String = ""
 var _drafted: Dictionary = {}
 var _seed_label: Label = null
 var _root: VBoxContainer = null
@@ -45,7 +46,9 @@ var _root: VBoxContainer = null
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var rng: RandomNumberGenerator = _free_rng()
-	_build = SheetBuilder.rolled_opening(rng)
+	var origins := Drive.def("origin") as OriginDef
+	_origin = origins.origin_ids()[0] if origins != null else ""
+	_build = SheetBuilder.rolled_opening(rng, _origin)
 	_name = _roll_name(rng)
 
 	var bg := ColorRect.new()
@@ -88,6 +91,8 @@ func _build_ui() -> void:
 func _build_form() -> void:
 	_root.add_child(_header())
 	_root.add_child(_rule())
+	_root.add_child(_section(UiText.t("manager.origin"), UiText.t("manager.origin_hint")))
+	_root.add_child(_origin_row())
 	_root.add_child(_identity_row())
 	_root.add_child(_seed_row())
 	_root.add_child(_section(UiText.t("manager.body"), UiText.t("manager.body_hint")))
@@ -163,6 +168,24 @@ func _header() -> Control:
 # Three fields, not one. They are three different things — the surname the
 # league table prints, the apelido everyone at the field actually uses — and
 # the generator needs them apart to make the apelido cohere with the rest.
+# Three scenarios, picked before anything else, because the answer to "why is
+# this kid running the club" has to come from the player and not from a shrug.
+func _origin_row() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 3)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	var origins := Drive.def("origin") as OriginDef
+	for id: String in (origins.origin_ids() if origins != null else []):
+		var chip: Button = _choice(origins.label(id), _origin == id, _on_origin.bind(id))
+		chip.custom_minimum_size = Vector2(150, 34)
+		chip.tooltip_text = origins.desc(id)
+		row.add_child(chip)
+	box.add_child(row)
+	if origins != null and _origin != "":
+		box.add_child(_hint(origins.line(_origin) + " — " + origins.desc(_origin)))
+	return box
+
 func _identity_row() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -564,8 +587,15 @@ func _on_name_typed(text: String, key: String) -> void:
 # years the screen exists to ask about would already be gone.
 func _on_reroll_all() -> void:
 	var rng: RandomNumberGenerator = _free_rng()
-	_build = SheetBuilder.rolled_opening(rng)
+	_build = SheetBuilder.rolled_opening(rng, _origin)
 	_name = _roll_name(rng)
+	_build_ui()
+
+# Changing the scenario rerolls, because a sheet built as an ex-player is not
+# the sheet a student would have. The six spare years survive either way.
+func _on_origin(id: String) -> void:
+	_origin = id
+	_build = SheetBuilder.rolled_opening(_free_rng(), _origin)
 	_build_ui()
 
 func _on_perk(id: String) -> void:
@@ -614,6 +644,7 @@ func _on_start() -> void:
 	manager.set_plays(_plays)
 	manager.set_manages([Actor.CATEGORY_MASC])
 	manager.set_team(String(_drafted.get("id", "")))
+	manager.data["origin"] = _origin
 	write("career", Career.make(manager, String(_drafted.get("id", "")), career_seed))
 	go("created")
 

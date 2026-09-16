@@ -385,12 +385,12 @@
       "en": "Close"
     },
     "team.as_athlete": {
-      "pt": "COMO ATLETA",
-      "en": "AS AN ATHLETE"
+      "pt": "ATLETA",
+      "en": "ATHLETE"
     },
     "team.as_staff": {
-      "pt": "COMO COMISSÃO",
-      "en": "AS STAFF"
+      "pt": "COMISSÃO",
+      "en": "STAFF"
     },
     "team.shirt": {
       "pt": "Camisa",
@@ -403,6 +403,22 @@
     "team.unit_overall": {
       "pt": "%s %d",
       "en": "%s %d"
+    },
+    "manager.origin": {
+      "pt": "DE ONDE VOCÊ VEM",
+      "en": "WHERE YOU COME FROM"
+    },
+    "manager.origin_hint": {
+      "pt": "a resposta para \"por que este é o gestor\". Muda a sua ficha, o clube que te espera e a dificuldade",
+      "en": "the answer to \"why is this the manager\". Changes your sheet, the club waiting for you, and the difficulty"
+    },
+    "team.admin": {
+      "pt": "ADMINISTRAÇÃO",
+      "en": "ADMINISTRATION"
+    },
+    "team.admin_hint": {
+      "pt": "existe até no menor clube: alguém responde, alguém paga e alguém fala",
+      "en": "exists even at the smallest club: somebody answers, somebody pays and somebody talks"
     }
   }
 }

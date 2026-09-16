@@ -303,6 +303,17 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 		return panel
 	var assigned: Dictionary = _assignment(people, positions)
 
+	box.add_child(_panel_title(UiText.t("team.admin"), UiText.t("team.admin_hint")))
+	for id: String in positions.ids_on_side("admin"):
+		var chairs: Array = assigned.get(id, [])
+		box.add_child(_slot_row(positions.code(id),
+			chairs[0] if not chairs.is_empty() else null))
+	box.add_child(_unit_caption(UiText.t("team.staff"),
+		_unit_overall(assigned, positions, "staff")))
+	for id: String in positions.ids_on_side("staff"):
+		var chairs: Array = assigned.get(id, [])
+		box.add_child(_slot_row(positions.code(id),
+			chairs[0] if not chairs.is_empty() else null))
 	box.add_child(_panel_title(UiText.t("team.lineup"), _squad_note(people, positions)))
 	var reserves: Array = []
 	for side: String in SIDES_IN_LINEUP:
@@ -322,14 +333,6 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 			box.add_child(_slot_row(positions.code(String(entry["position"])),
 				entry["actor"] as Actor))
 
-	box.add_child(_unit_caption(UiText.t("team.staff"),
-		_unit_overall(assigned, positions, "staff")))
-	for id: String in positions.ids_on_side("staff"):
-		var chairs: Array = assigned.get(id, [])
-		box.add_child(_slot_row(positions.code(id),
-			chairs[0] if not chairs.is_empty() else null))
-		for extra: int in range(1, chairs.size()):
-			box.add_child(_slot_row("", chairs[extra] as Actor))
 	return panel
 
 # Best Forca first, so the starter is the starter and the rest are depth.
@@ -465,10 +468,12 @@ func _group_headings() -> Control:
 		for side: String in SIDES_IN_LINEUP:
 			lineup += positions.ids_on_side(side).size()
 		staff = positions.ids_on_side("staff").size()
+	var admin: int = positions.ids_on_side("admin").size() if positions != null else 0
 	row.add_child(_group_label(UiText.t("team.profile"),
 		COL_MARK + COL_NAME + COL_SHIRT + COL_PERK + COL_STRENGTH + COL_AGE + COL_GAP * 5))
-	row.add_child(_group_label(UiText.t("team.lineup"), _block_width(lineup)))
+	row.add_child(_group_label(UiText.t("team.admin"), _block_width(admin)))
 	row.add_child(_group_label(UiText.t("team.staff"), _block_width(staff)))
+	row.add_child(_group_label(UiText.t("team.lineup"), _block_width(lineup)))
 	return row
 
 func _block_width(columns: int) -> int:
@@ -507,11 +512,15 @@ func _sort_headings() -> Control:
 
 # Lineup first, then the staff chairs — the same order the rows use, because a
 # header that does not line up with its column is worse than no header.
+# Administration, then the coaching staff, then who takes the field — the order
+# a club is actually built in. Somebody has to answer for the place before
+# anybody picks a quarterback.
 func _role_order(positions: PositionDef) -> Array[String]:
 	var out: Array[String] = []
+	out.append_array(positions.ids_on_side("admin"))
+	out.append_array(positions.ids_on_side("staff"))
 	for side: String in SIDES_IN_LINEUP:
 		out.append_array(positions.ids_on_side(side))
-	out.append_array(positions.ids_on_side("staff"))
 	return out
 
 func _spacer_cell(width: int) -> Control:
@@ -526,6 +535,11 @@ func _heading(text: String, key: String, width: int) -> Button:
 	var active: bool = _sort_key == key
 	button.text = text + ("  \u25be" if active and _sort_desc else ("  \u25b4" if active else ""))
 	button.custom_minimum_size = Vector2(width, 20)
+	# A Button grows past its minimum when the text does not fit, so "Talento"
+	# at forty-five pixels was shoving a thirty-pixel column — and every column
+	# to its right with it. The boxes were always right; the header was the one
+	# sliding.
+	button.clip_text = true
 	button.focus_mode = Control.FOCUS_NONE
 	button.tooltip_text = UiText.t("team.sort_by") % text
 	var style := StyleBoxFlat.new()

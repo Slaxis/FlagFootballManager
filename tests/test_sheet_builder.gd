@@ -22,7 +22,8 @@ func tests() -> Array:
 		"test_an_extreme_body_costs_the_whole_spare_budget",
 		"test_a_remainder_nothing_costs_still_finishes",
 		"test_the_opening_rolls_a_twelve_year_old",
-		"test_the_opening_never_touches_the_skills",
+		"test_the_opening_rolls_a_whole_person",
+		"test_each_origin_leans_its_own_way",
 		"test_the_opening_leaves_nobody_hollow",
 		"test_the_opening_can_always_afford_the_perk_it_picked",
 		"test_the_opening_is_not_the_same_person_twice",
@@ -263,20 +264,50 @@ func test_the_opening_rolls_a_twelve_year_old(t: TestHelper) -> void:
 		t.check(not builder.is_complete(),
 			"semente %d abriu pronta — não sobrou decisão nenhuma" % seed_value)
 
-# The one the player is meant to answer: attribute or skill. A roll is the sum
-# of both, so spending the childhood on skills too would decide it for them.
-func test_the_opening_never_touches_the_skills(t: TestHelper) -> void:
+# The opening now rolls SKILLS TOO, and that is the point: filling fifteen bars
+# from zero is a chore, not a choice — and it got worse once origins existed,
+# because an ex-player with no skills is not an ex-player. You get a whole
+# person and editing him is the game.
+func test_the_opening_rolls_a_whole_person(t: TestHelper) -> void:
 	var def := Drive.def("stat") as StatDef
 	if def == null:
 		t.fail("StatDef ausente"); return
 	for seed_value: int in [3, 77, SEED]:
 		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(seed_value))
+		var trained: int = 0
 		for id: String in def.skill_ids():
-			t.equal(int(builder.skills[id]), 0,
-				"semente %d abriu com '%s' já treinada" % [seed_value, id])
-		# And the six years it leaves are worth spending either way.
+			if int(builder.skills[id]) > 0:
+				trained += 1
+		t.check(trained >= 3,
+			"semente %d abriu com só %d habilidades" % [seed_value, trained])
+		# And the six spare years survive, or there is nothing left to decide.
 		t.check(builder.remaining() > SheetBuilder.CAREER_POINTS_PER_YEAR * 4,
 			"semente %d deixou só %d cp" % [seed_value, builder.remaining()])
+		t.check(not builder.is_complete(), "semente %d abriu pronta" % seed_value)
+
+# Each scenario leans its own way, and the lean is paid for at the normal
+# price — it is the difference between the three and not a rounding error.
+func test_each_origin_leans_its_own_way(t: TestHelper) -> void:
+	var origins := Drive.def("origin") as OriginDef
+	if origins == null:
+		t.fail("OriginDef ausente"); return
+	t.equal(origins.origin_ids().size(), 3, "quantidade de origens")
+	for id: String in origins.origin_ids():
+		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(11), id)
+		t.equal(builder.origin, id, "a origem não ficou registrada")
+		for skill_id: String in origins.skill_bias(id).keys():
+			t.check(int(builder.skills.get(skill_id, 0)) >= int(origins.skill_bias(id)[skill_id]),
+				"origem '%s': '%s' abaixo do que ela promete" % [id, skill_id])
+		for stat_id: String in origins.stat_bias(id).keys():
+			t.check(int(builder.stats.get(stat_id, 0)) >= int(origins.stat_bias(id)[stat_id]),
+				"origem '%s': '%s' abaixo do que ela promete" % [id, stat_id])
+	# The ex-player knows how to catch; the student knows the rulebook.
+	var player: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(11), "player")
+	var student: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(11), "student")
+	t.check(int(player.skills["catching"]) > int(student.skills["catching"]),
+		"o ex-jogador deveria pegar melhor que o estudado")
+	t.check(int(student.skills["rules"]) > int(player.skills["rules"]),
+		"o estudado deveria saber mais regra que o ex-jogador")
 
 # 0 on this ruler is below a toddler. A rolled child with a hollow attribute is
 # not a starting point, it is a trap the player has to spend points undoing.

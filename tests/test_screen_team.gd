@@ -257,12 +257,9 @@ func test_the_sheet_has_the_same_rows_for_everybody(t: TestHelper) -> void:
 	if manager == null or filler == null:
 		t.fail("preciso do manager e de um gerado"); _close(screen); return
 
-	var untrained: int = 0
-	for id: String in stats.skill_ids():
-		if manager.skill_step(id) <= 0:
-			untrained += 1
-	t.check(untrained > 5,
-		"o manager treinou quase tudo (%d zeradas) — o teste não prova nada" % untrained)
+	# No premise about who is untrained: the manager now opens with a rolled
+	# sheet like everybody else. The property is the one that matters — two
+	# different people, the same rows — and it holds whoever they are.
 
 	for person: Actor in [manager, filler]:
 		var row: Button = _row_named(screen, person.display_name())
@@ -374,7 +371,7 @@ func test_every_position_has_a_button(t: TestHelper) -> void:
 	var positions := Drive.def("position") as PositionDef
 	if screen == null or positions == null:
 		t.fail("não consegui instanciar a tela"); return
-	t.equal(positions.position_ids().size(), 11, "posições + cargos")
+	t.equal(positions.position_ids().size(), 14, "posições + cargos + administração")
 	var shown: String = _texts(screen)
 	for id: String in positions.position_ids():
 		t.check(shown.contains(positions.code(id)),
@@ -382,8 +379,11 @@ func test_every_position_has_a_button(t: TestHelper) -> void:
 	t.equal(positions.ids_on_side("offense").size(), 3, "posições de ataque")
 	t.equal(positions.ids_on_side("defense").size(), 3, "posições de defesa")
 	t.equal(positions.ids_on_side("staff").size(), 5, "cargos de comissão")
+	# Somebody answers for the club, somebody pays and somebody talks — three
+	# chairs that exist even at the smallest club in the city.
+	t.equal(positions.ids_on_side("admin").size(), 3, "cargos de administração")
 	# The three group headers are what make eleven little buttons legible.
-	for key: String in ["team.profile", "team.lineup", "team.staff"]:
+	for key: String in ["team.profile", "team.admin", "team.staff", "team.lineup"]:
 		t.check(shown.contains(UiText.t(key)), "sem cabeçalho de grupo '%s'" % key)
 	_close(screen)
 
@@ -400,10 +400,10 @@ func test_the_lineup_panel_shows_empty_slots(t: TestHelper) -> void:
 	t.check(shown.contains(UiText.t("team.side_offense")), "sem bloco de ataque")
 	t.check(shown.contains(UiText.t("team.side_defense")), "sem bloco de defesa")
 	# Nobody is assigned yet, so every slot in the formation is a hole.
-	var total: int = positions.slots_on_side("offense") 		+ positions.slots_on_side("defense") + positions.slots_on_side("staff")
+	var total: int = positions.slots_on_side("admin") + positions.slots_on_side("staff") 		+ positions.slots_on_side("offense") + positions.slots_on_side("defense")
 	t.equal(shown.count(UiText.t("team.empty_slot")), total,
 		"vagas vazias desenhadas (esperava %d)" % total)
-	t.equal(total, 15, "5 de ataque + 5 de defesa + 5 de comissão")
+	t.equal(total, 18, "3 de administração + 5 de comissão + 5 de ataque + 5 de defesa")
 	_close(screen)
 
 # Two quarterbacks is not an error, it is how a coach finds out which one is
