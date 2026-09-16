@@ -2,47 +2,103 @@
   "origins": [
     {
       "id": "founder",
-      "label": {"pt": "Fundador", "en": "Founder"},
-      "line": {"pt": "Você e mais alguns puseram o clube de pé", "en": "You and a few others put the club on its feet"},
+      "label": {
+        "pt": "Fundador",
+        "en": "Founder"
+      },
+      "line": {
+        "pt": "Você e mais alguns puseram o clube de pé",
+        "en": "You and a few others put the club on its feet"
+      },
       "desc": {
         "pt": "Não existia clube. Vocês alugaram a quadra, rateraram o colete e chamaram quem apareceu. O elenco é quase todo novato, e o pouco de experiência que existe é de gente que largou outro time pra apostar neste. O mais difícil dos três — e o único em que o clube é seu de verdade.",
         "en": "There was no club. You rented the pitch, split the cost of the vests and called whoever turned up. The squad is almost all rookies, and what little experience there is came from people who left another side to bet on this one. The hardest of the three, and the only one where the club is genuinely yours."
       },
-      "club": {"founded": true, "tier": 4},
-      "squad": {"max_career_years": 2, "veterans": 2},
+      "club": {
+        "founded": true,
+        "tier": 4,
+        "level": 1.0
+      },
+      "squad": {
+        "max_career_years": 2,
+        "veterans": 2
+      },
       "sheet": {
-        "stats": {"will": 2, "charisma": 1},
-        "skills": {"leadership": 3, "rules": 2, "coaching": 1}
+        "stats": {
+          "will": 2,
+          "charisma": 1
+        },
+        "skills": {
+          "leadership": 3,
+          "rules": 2,
+          "coaching": 1
+        }
       }
     },
     {
       "id": "player",
-      "label": {"pt": "Ex-jogador", "en": "Former player"},
-      "line": {"pt": "Você jogou, e ainda joga", "en": "You played, and you still do"},
+      "label": {
+        "pt": "Ex-jogador",
+        "en": "Former player"
+      },
+      "line": {
+        "pt": "Você jogou, e ainda joga",
+        "en": "You played, and you still do"
+      },
       "desc": {
         "pt": "Carreira em quadra antes da prancheta. Começa sabendo jogar, e no início vai ter que carregar o time em campo — o que custa fadiga e atrapalha o seu trabalho como técnico. Ficha de ATLETA: a ponta esquerda do card é a sua.",
         "en": "A career on the pitch before the clipboard. You start knowing how to play, and early on you will have to carry the side yourself — which costs fatigue and gets in the way of the coaching. An ATHLETE sheet: the left half of the card is yours."
       },
-      "club": {"founded": false},
+      "club": {
+        "founded": false,
+        "level": 1.6
+      },
       "squad": {},
       "sheet": {
-        "stats": {"agility": 2, "dexterity": 2, "stamina": 1},
-        "skills": {"catching": 3, "route": 2, "throwing": 2, "juke": 1}
+        "stats": {
+          "agility": 2,
+          "dexterity": 2,
+          "stamina": 1
+        },
+        "skills": {
+          "catching": 3,
+          "route": 2,
+          "throwing": 2,
+          "juke": 1
+        }
       }
     },
     {
       "id": "student",
-      "label": {"pt": "Estudado", "en": "The student"},
-      "line": {"pt": "Você nunca teve o físico, mas sabe o jogo", "en": "You never had the body, but you know the game"},
+      "label": {
+        "pt": "Estudado",
+        "en": "The student"
+      },
+      "line": {
+        "pt": "Você nunca teve o físico, mas sabe o jogo",
+        "en": "You never had the body, but you know the game"
+      },
       "desc": {
         "pt": "Gosta do esporte, não tem o perfil pra praticar, e estudou tudo: regra, esquema, chamada de jogada. Acontece mais do que parece — um clube pronto às vezes prefere um estudado a promover um atleta ou um técnico do próprio elenco. Ficha de COMISSÃO.",
         "en": "Loves the sport, never had the body for it, and studied everything: rules, schemes, play calling. It happens more than you would think — an established club sometimes prefers a student to promoting an athlete or a coach from inside. A STAFF sheet."
       },
-      "club": {"founded": false},
+      "club": {
+        "founded": false,
+        "level": 1.4
+      },
       "squad": {},
       "sheet": {
-        "stats": {"intelligence": 3, "perception": 2, "will": 1},
-        "skills": {"rules": 4, "play_calling": 3, "scouting": 2, "coaching": 1}
+        "stats": {
+          "intelligence": 3,
+          "perception": 2,
+          "will": 1
+        },
+        "skills": {
+          "rules": 4,
+          "play_calling": 3,
+          "scouting": 2,
+          "coaching": 1
+        }
       }
     }
   ]

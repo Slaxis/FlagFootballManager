@@ -21,10 +21,10 @@ func tests() -> Array:
 		"test_bakes_steps_into_stored_units",
 		"test_an_extreme_body_costs_the_whole_spare_budget",
 		"test_a_remainder_nothing_costs_still_finishes",
-		"test_the_opening_rolls_a_twelve_year_old",
+		"test_the_opening_rolls_a_finished_adult",
+		"test_the_manager_is_capped_like_a_squad_player",
 		"test_the_opening_rolls_a_whole_person",
 		"test_each_origin_leans_its_own_way",
-		"test_the_opening_leaves_nobody_hollow",
 		"test_the_opening_can_always_afford_the_perk_it_picked",
 		"test_the_opening_is_not_the_same_person_twice",
 	]
@@ -247,27 +247,41 @@ func test_an_extreme_body_costs_the_whole_spare_budget(t: TestHelper) -> void:
 
 # There is no seed here at all any more: two newborns are identical, and the
 # career seed builds the world instead of the person.
-# The screen used to open on five-in-everything: the same faceless adult every
-# time, and eight identical bars read as empty. It now opens on a rolled
-# twelve-year-old — and what makes that a starting point rather than an answer
-# is everything it deliberately does NOT decide.
-func test_the_opening_rolls_a_twelve_year_old(t: TestHelper) -> void:
+# The roll hands you a FINISHED ADULT, and that is the fix for the child
+# genius. It used to stop at twelve and leave a hundred and thirty points in
+# your pocket, so the header said "12 anos" while you pumped leadership to
+# eight. An eighteen-year-old with everything spent has no such state to be in.
+func test_the_opening_rolls_a_finished_adult(t: TestHelper) -> void:
+	for seed_value: int in [1, 99, SEED, 20260916]:
+		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(seed_value))
+		t.check(builder.age() >= SheetBuilder.END_AGE - 1,
+			"semente %d abriu com %d anos" % [seed_value, builder.age()])
+		t.check(builder.is_complete(),
+			"semente %d abriu incompleta com %d cp" % [seed_value, builder.remaining()])
+
+# THE SAME RULER AS EVERYBODY ELSE. The manager was the only person on screen
+# without a ceiling, which is why he came out heroic — a squad player is capped
+# at city level and the manager could build ten steps of anything by hand.
+func test_the_manager_is_capped_like_a_squad_player(t: TestHelper) -> void:
 	var def := Drive.def("stat") as StatDef
 	if def == null:
 		t.fail("StatDef ausente"); return
-	for seed_value: int in [1, 99, SEED, 20260914]:
+	for seed_value: int in [1, 99, SEED, 20260916]:
 		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(seed_value))
-		t.equal(builder.age(), SheetBuilder.OPENING_AGE,
-			"semente %d abriu com %d anos" % [seed_value, builder.age()])
-		t.check(builder.spent() >= SheetBuilder.opening_budget(),
-			"semente %d não viveu os doze anos inteiros" % seed_value)
-		t.check(not builder.is_complete(),
-			"semente %d abriu pronta — não sobrou decisão nenhuma" % seed_value)
+		var cap: int = builder.potential_step()
+		t.check(builder.potential >= SheetBuilder.MIN_MANAGER_POTENTIAL,
+			"potencial %d abaixo do piso" % builder.potential)
+		for id: String in def.base_ids():
+			t.check(int(builder.stats[id]) <= cap, "'%s' passou do teto" % id)
+		for id: String in def.skill_ids():
+			t.check(int(builder.skills[id]) <= cap, "'%s' passou do teto" % id)
+		# And the ceiling binds the PLAYER too, or the superhero is one click
+		# away.
+		for id: String in def.base_ids():
+			if int(builder.stats[id]) >= cap:
+				t.check(not builder.can_raise_stat(id),
+					"dava para subir '%s' acima do teto na mão" % id)
 
-# The opening now rolls SKILLS TOO, and that is the point: filling fifteen bars
-# from zero is a chore, not a choice — and it got worse once origins existed,
-# because an ex-player with no skills is not an ex-player. You get a whole
-# person and editing him is the game.
 func test_the_opening_rolls_a_whole_person(t: TestHelper) -> void:
 	var def := Drive.def("stat") as StatDef
 	if def == null:
@@ -280,10 +294,6 @@ func test_the_opening_rolls_a_whole_person(t: TestHelper) -> void:
 				trained += 1
 		t.check(trained >= 3,
 			"semente %d abriu com só %d habilidades" % [seed_value, trained])
-		# And the six spare years survive, or there is nothing left to decide.
-		t.check(builder.remaining() > SheetBuilder.CAREER_POINTS_PER_YEAR * 4,
-			"semente %d deixou só %d cp" % [seed_value, builder.remaining()])
-		t.check(not builder.is_complete(), "semente %d abriu pronta" % seed_value)
 
 # Each scenario leans its own way, and the lean is paid for at the normal
 # price — it is the difference between the three and not a rounding error.

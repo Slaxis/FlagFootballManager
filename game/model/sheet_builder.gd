@@ -64,6 +64,11 @@ var perk: String = ""
 # Which of the three scenarios this manager came from. It biases the sheet and
 # it decides what kind of club is waiting.
 var origin: String = ""
+# The same ceiling every squad player has (decisions 27 and 34), drawn from the
+# world this scenario drops you into. The manager used to be the only person on
+# screen without one, which is why he came out heroic: a squad player is capped
+# at city level and the manager could build ten steps of anything by hand.
+var potential: int = StatDef.STORED_MAX
 
 var _base_stats: Dictionary = {}
 var _base_skills: Dictionary = {}
@@ -110,6 +115,8 @@ const OPENING_APPETITE_SPREAD := 0.45
 # Nobody alive is below a toddler. The floor is bought first so the spread has
 # to work with what is left rather than being free to hollow somebody out.
 const OPENING_FLOOR_STEP := 2
+# Below this the eighteen years do not fit under the ceiling.
+const MIN_MANAGER_POTENTIAL := 45
 # And nobody is a prodigy yet. Two steps past the average ADULT is already a
 # remarkable child; the ruler puts 10 at an Olympic medal contender, and the
 # appetite will happily buy one at twelve if nothing stops it.
@@ -134,13 +141,16 @@ static func opening_budget() -> int:
 # student with the playbook. It is the difference between the three scenarios
 # and it is not a rounding error.
 #
-# TWELVE YEARS, NOT ALL OF THEM. What is rolled is a childhood. The remaining
-# six are the screen's only question and they stay open.
+# THE WHOLE LIFE, NOT A CHILDHOOD. The roll used to stop at twelve and leave a
+# hundred and thirty points in your pocket — so the screen said "12 anos" while
+# you pumped leadership to eight, and out came a child genius. An eighteen-
+# year-old with everything spent has no such state to be in, and editing him is
+# selling something to buy something, which is a decision and not a chore.
 #
-# NOBODY IS HOLLOW, AND NOBODY IS A PRODIGY. Every attribute is walked up to
-# the floor before the appetite plays favourites, and none may pass the
-# ceiling: on this ruler 0 is below a toddler and 9 is nearly a medal
-# contender, and a twelve-year-old is neither.
+# NOBODY IS HOLLOW, AND NOBODY IS A PRODIGY. Every attribute is walked to the
+# floor before the appetite plays favourites, and nothing passes POTENTIAL —
+# the same ceiling a squad player has, drawn from the world the scenario drops
+# you into. The manager was the only person on screen without one.
 static func rolled_opening(rng: RandomNumberGenerator, origin: String = "") -> SheetBuilder:
 	var builder: SheetBuilder = average_adult()
 	var def := Drive.def("stat") as StatDef
@@ -151,12 +161,18 @@ static func rolled_opening(rng: RandomNumberGenerator, origin: String = "") -> S
 	for id: String in def.skill_ids():
 		builder.skills[id] = MIN_SKILL_STEP
 	builder.perk = ""
+	builder.origin = origin
+	var origins := Drive.def("origin") as OriginDef
+	var level: float = origins.club_level(origin) if origins != null and origin != "" else 1.0
+	# Floored so the whole life is spendable: at three steps the eight
+	# attributes and fifteen skills together hold only 324 career points, and a
+	# manager would finish the screen with a hundred he could never spend.
+	# Four steps is an ordinary adult, not a hero.
+	builder.potential = maxi(ActorLife.roll_potential(level, rng), MIN_MANAGER_POTENTIAL)
 	builder._roll_body(def, rng, OPENING_BODY_TIGHTNESS)
 	builder._roll_perk(rng)
-	builder.origin = origin
 	builder._apply_origin(def)
 
-	var target: int = opening_budget()
 	for id: String in def.base_ids():
 		while int(builder.stats[id]) < OPENING_FLOOR_STEP and builder.can_raise_stat(id):
 			builder.raise_stat(id)
@@ -166,16 +182,16 @@ static func rolled_opening(rng: RandomNumberGenerator, origin: String = "") -> S
 	for id: String in def.base_ids() + def.skill_ids():
 		appetite[id] = exp(rng.randfn(0.0, OPENING_APPETITE_SPREAD))
 	var guard: int = 0
-	while builder.spent() < target and guard < 600:
+	while guard < 900:
 		guard += 1
 		var ids: Array[String] = []
 		var weights: Array[float] = []
 		for id: String in def.base_ids():
-			if int(builder.stats[id]) < OPENING_CEILING_STEP and builder.can_raise_stat(id):
+			if builder.can_raise_stat(id):
 				ids.append(id)
 				weights.append(float(appetite[id]) / float(int(builder.stats[id]) + 1))
 		for id: String in def.skill_ids():
-			if int(builder.skills[id]) < OPENING_CEILING_STEP and builder.can_raise_skill(id):
+			if builder.can_raise_skill(id):
 				ids.append("skill:" + id)
 				weights.append(float(appetite[id]) / float(int(builder.skills[id]) + 2))
 		if ids.is_empty():
@@ -257,11 +273,20 @@ func is_complete() -> bool:
 # maxed out.
 func cheapest_purchase() -> int:
 	var best: int = -1
+	# Only what the sheet would actually ALLOW. Reading the raw price meant a
+	# manager whose every track sat at his ceiling still had a "cheapest
+	# purchase" he could never make, so `is_complete()` never came true and the
+	# start button never opened — the one-career-point deadlock again, wearing
+	# a different hat.
 	for id: String in stats.keys():
+		if int(stats[id]) >= potential_step():
+			continue
 		var cost: int = cost_to_raise_stat(id)
 		if cost >= 0 and (best < 0 or cost < best):
 			best = cost
 	for id: String in skills.keys():
+		if int(skills[id]) >= potential_step():
+			continue
 		var cost: int = cost_to_raise_skill(id)
 		if cost >= 0 and (best < 0 or cost < best):
 			best = cost
@@ -280,11 +305,20 @@ func cost_to_raise_skill(id: String) -> int:
 	var next_step: int = int(skills.get(id, 0)) + 1
 	return -1 if next_step > StatDef.MAX_STEP else next_step * SKILL_POINT_IN_CAREER
 
+# Potential binds the PLAYER's own spending too, not just the roll. Capping
+# only the dice would have left the superhero one click away.
+func potential_step() -> int:
+	return clampi(int(floor(float(potential) / 10.0)), 1, StatDef.MAX_STEP)
+
 func can_raise_stat(id: String) -> bool:
+	if int(stats.get(id, 0)) >= potential_step():
+		return false
 	var cost: int = cost_to_raise_stat(id)
 	return cost >= 0 and cost <= remaining()
 
 func can_raise_skill(id: String) -> bool:
+	if int(skills.get(id, 0)) >= potential_step():
+		return false
 	var cost: int = cost_to_raise_skill(id)
 	return cost >= 0 and cost <= remaining()
 
@@ -413,6 +447,7 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 		"skills": stored_skills,
 		"perks": [perk] if perk != "" else [],
 		"origin": origin,
+		"potential": potential,
 		"plays": [],
 		"manages": [],
 		"team": Actor.NO_TEAM,

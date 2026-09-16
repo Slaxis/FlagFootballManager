@@ -78,6 +78,13 @@ func stat_bias(id: String) -> Dictionary:
 func skill_bias(id: String) -> Dictionary:
 	return sheet(id).get("skills", {})
 
+# Where on the world ladder this scenario drops you. A founder is starting a
+# club in his own neighbourhood; a student was picked up by somebody who
+# already had one. It is the same dial NationDef gives a club, so the manager
+# is drawn against the same ruler as everybody he will manage.
+func club_level(id: String) -> float:
+	return float(origin(id).get("club", {}).get("level", 1.0))
+
 # Whether the club exists already or you are the reason it exists.
 func founds_a_club(id: String) -> bool:
 	return bool(origin(id).get("club", {}).get("founded", false))

@@ -111,14 +111,17 @@ func test_the_dice_button_changes_the_person_and_the_world(t: TestHelper) -> voi
 	t.check(changed_seed > 0, "o dado nunca trocou o mundo")
 	# And what it rolls is a CHILD: the six years that make an adult are still
 	# the player's to spend, so the draft stays shut until they do.
+	# The roll now finishes the sheet, so the draft opens immediately: what you
+	# edit is a whole person, not a blank one.
 	var draw: Button = _button_starting_with(screen, UiText.t("manager.random"))
 	t.check(draw != null, "o botão de sortear clube sumiu depois do dado")
-	t.check(draw.disabled, "o dado entregou uma ficha já pronta — sobrou o quê para decidir?")
+	t.check(not draw.disabled, "o dado deveria entregar uma ficha pronta para começar")
 	_close(screen)
 
-# The screen opens on a rolled person, so it may already have taken a perk.
-# The chips have to survive that: clear whatever came up, take one by hand,
-# and put it back down.
+# The screen opens on a FINISHED adult, talent included. Swapping to a dearer
+# one is a real trade now: you give back the one the dice handed you and, if
+# that is not enough, you sell a step to cover the difference. That IS the edit
+# loop, so the test walks it instead of pretending the points are free.
 func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	var perks := Drive.def("perk") as PerkDef
 	var screen: Control = _open()
@@ -128,19 +131,37 @@ func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	var taken: Button = _pressed_chip(screen, perks)
 	if taken != null:
 		taken.pressed.emit()
-	t.equal(_pressed_chip(screen, perks), null, "não consegui largar o perk sorteado")
+	t.equal(_pressed_chip(screen, perks), null, "não consegui largar o talento sorteado")
 
 	var wanted: String = perks.boons()[0]
-	_button_starting_with(screen, perks.icon(wanted)).pressed.emit()
-	t.check(_button_starting_with(screen, perks.icon(wanted)).button_pressed,
-		"o perk não ficou marcado")
-	t.equal(_pressed_chip(screen, perks).text,
-		_button_starting_with(screen, perks.icon(wanted)).text,
-		"mais de um perk marcado ao mesmo tempo")
+	var guard: int = 0
+	while _button_starting_with(screen, perks.icon(wanted)).disabled and guard < 60:
+		guard += 1
+		var sold: Button = _first_enabled(screen, "−")
+		if sold == null:
+			break
+		sold.pressed.emit()
+	t.check(guard > 0, "o talento estava de graça — a ficha não gastou tudo")
+	t.check(not _button_starting_with(screen, perks.icon(wanted)).disabled,
+		"vender passos não liberou o talento")
 
 	_button_starting_with(screen, perks.icon(wanted)).pressed.emit()
-	t.equal(_pressed_chip(screen, perks), null, "clicar de novo não tirou o perk")
+	t.check(_button_starting_with(screen, perks.icon(wanted)).button_pressed,
+		"o talento não ficou marcado")
+	t.equal(_pressed_chip(screen, perks).text,
+		_button_starting_with(screen, perks.icon(wanted)).text,
+		"mais de um talento marcado ao mesmo tempo")
+
+	_button_starting_with(screen, perks.icon(wanted)).pressed.emit()
+	t.equal(_pressed_chip(screen, perks), null, "clicar de novo não tirou o talento")
 	_close(screen)
+
+func _first_enabled(screen: Control, text: String) -> Button:
+	for node: Variant in _collect(screen, "Button", []):
+		var button := node as Button
+		if button.text == text and not button.disabled:
+			return button
+	return null
 
 # The chip currently ON, or null. Doubles as the cap check: a second pressed
 # chip would mean two perks at once.
@@ -156,11 +177,9 @@ func test_drafting_a_club_reaches_the_result(t: TestHelper) -> void:
 	var screen: Control = _open()
 	if screen == null:
 		t.fail("não consegui instanciar a tela"); return
-	var spent: int = _spend_the_six_years(screen)
-	t.check(spent > 0, "não consegui gastar nada clicando")
 	var draw: Button = _button_starting_with(screen, UiText.t("manager.random"))
 	if draw == null or draw.disabled:
-		t.fail("o botão de sortear clube não abriu depois de gastar tudo"); _close(screen); return
+		t.fail("a ficha sorteada deveria abrir o sorteio de clube na hora"); _close(screen); return
 	draw.pressed.emit()
 	t.check(_button_starting_with(screen, UiText.t("manager.start")) != null,
 		"não cheguei na tela do clube sorteado")
