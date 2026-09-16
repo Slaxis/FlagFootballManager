@@ -42,9 +42,11 @@ static func generate(
 	reputation: int,
 	category: String = Actor.CATEGORY_MASC,
 	club_level: float = 1.0,
+	position: String = "",
 ) -> Actor:
+	var spec: Dictionary = {"position": position} if position != "" else {}
 	return _build(SeedRng.make_rng(seed_value), "actor_%d" % seed_value,
-		quality_from_reputation(reputation), category, {}, reputation, club_level)
+		quality_from_reputation(reputation), category, spec, reputation, club_level)
 
 # Hydrates a CURATED actor: a sparse spec from ActorDef plus whatever the
 # curator did not say. Everything pinned wins; everything absent is rolled.
@@ -193,11 +195,12 @@ static func squad(
 	reputation: int,
 	category: String = Actor.CATEGORY_MASC,
 	club_level: float = 1.0,
+	position: String = "",
 ) -> Array[Actor]:
 	var out: Array[Actor] = []
 	for i: int in range(count):
 		var sub_seed: int = SeedRng.derive(base_seed, "actor_%d" % i)
-		out.append(generate(sub_seed, reputation, category, club_level))
+		out.append(generate(sub_seed, reputation, category, club_level, position))
 	return out
 
 # --- Internals ---

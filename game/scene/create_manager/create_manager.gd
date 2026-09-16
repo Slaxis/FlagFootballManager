@@ -32,6 +32,8 @@ const MUTED := Color(0.47, 0.52, 0.48)
 const TEXT := Color(0.87, 0.90, 0.87)
 const LINE := Color(0.16, 0.22, 0.17)
 const WARN := Color(0.85, 0.72, 0.45)
+const TALENT_GOOD := Color(0.42, 0.78, 0.45)
+const TALENT_BAD := Color(0.85, 0.36, 0.36)
 
 var _build: SheetBuilder = null
 var _name: Dictionary = {}
@@ -226,6 +228,11 @@ func _perk_chip(perks: PerkDef, id: String) -> Control:
 	var price: String = (UiText.t("manager.perk_refund") % -cost) if cost < 0 		else (UiText.t("manager.perk_price") % cost)
 	var chip: Button = _choice("%s %s  %s" % [perks.icon(id), perks.label(id), price],
 		_build.perk == id, _on_perk.bind(id))
+	# Green buys you something, red pays you to accept something. The sign is
+	# the whole decision, so it should not need reading.
+	var hue: Color = TALENT_BAD if cost < 0 else TALENT_GOOD
+	chip.add_theme_color_override("font_color", hue)
+	chip.add_theme_color_override("font_hover_color", hue.lightened(0.3))
 	chip.custom_minimum_size = Vector2(0, 32)
 	chip.tooltip_text = perks.desc(id)
 	# Unaffordable is not the same as unchosen: grey it so the player can see

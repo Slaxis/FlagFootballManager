@@ -25,6 +25,16 @@ const SIZE_BY_TIER: Dictionary = {1: 15, 2: 13, 3: 11, 4: 9}
 const DEFAULT_SIZE := 10
 const SIZE_JITTER := 2
 
+# How many people are there to COACH rather than play. A sandlot club has one
+# person with a clipboard and he also plays; a tier-1 club can afford chairs.
+const STAFF_BY_TIER: Dictionary = {1: 4, 2: 3, 3: 2, 4: 1}
+
+# Who founded the club. Somebody had to put five people on a field before there
+# was a club at all, and those five are older, they are the reason the place
+# exists, and they were never scouted — they just started it.
+const FOUNDERS_MIN := 1
+const FOUNDERS_MAX := 5
+
 # team_id -> category -> Array[Actor]
 var _squads: Dictionary = {}
 var career_seed: int = 0
@@ -96,19 +106,74 @@ func _build(team_id: String, category: String) -> Array[Actor]:
 			person.set_team(team_id)
 			people.append(person)
 
-	# Then invented, only as many as the club is short. Salted per club and per
-	# index so adding a curated athlete tomorrow does not reshuffle the people
-	# already around them — the same discipline ActorGenerator.squad uses.
+	# Then invented — but to a PLAN, not one at a time. Letting each actor pick
+	# his own position from all eleven meant five of the eleven were staff, so a
+	# squad came out with five fitness coaches, two scouts and one center. A
+	# club that cannot field five players is not a club.
 	var target: int = _target_size(team_id, int(club.get("tier", 4)))
-	var index: int = 0
-	while people.size() < target:
+	var plan: Array[String] = _plan(maxi(target - people.size(), 0),
+		int(club.get("tier", 4)))
+	var founders: int = _founder_count(team_id)
+	for index: int in range(plan.size()):
 		var sub_seed: int = SeedRng.derive(
 			career_seed, "roster_%s_%s_%d" % [team_id, category, index])
-		var filler: Actor = ActorGenerator.generate(sub_seed, reputation, category, club_level)
+		var filler: Actor = ActorGenerator.generate(
+			sub_seed, reputation, category, club_level, plan[index])
 		filler.set_team(team_id)
+		# The founders are the oldest hands in the room, and the club is where
+		# their whole career happened.
+		if index < founders:
+			filler.data["founder"] = true
 		people.append(filler)
-		index += 1
+	_hand_out_jerseys(people, team_id)
 	return people
+
+# Numbers, in squad order, skipping nobody. A shirt is how a crowd knows who
+# just caught that, and the roster column is empty without one.
+func _hand_out_jerseys(people: Array[Actor], team_id: String) -> void:
+	var rng: RandomNumberGenerator = SeedRng.make_rng(
+		SeedRng.derive(career_seed, "jersey_" + team_id))
+	var pool: Array[int] = []
+	for number: int in range(1, 100):
+		pool.append(number)
+	for person: Actor in people:
+		if person.jersey() != Actor.NO_JERSEY or pool.is_empty():
+			continue
+		var pick: int = rng.randi() % pool.size()
+		person.set_jersey(pool[pick])
+		pool.remove_at(pick)
+
+# The positions a club would actually recruit for, in the order it would fill
+# them: somebody to coach, then a side that can take the field, then depth.
+func _plan(count: int, tier: int) -> Array[String]:
+	var positions := Drive.def("position") as PositionDef
+	var plan: Array[String] = []
+	if positions == null or count <= 0:
+		return plan
+	var staff_ids: Array[String] = positions.ids_on_side("staff")
+	var wanted_staff: int = mini(int(STAFF_BY_TIER.get(tier, 1)), count / 3)
+	for i: int in range(wanted_staff):
+		plan.append(staff_ids[i % staff_ids.size()])
+
+	# The playing positions, cycled by their slot counts, so a squad covers the
+	# formation before it doubles up anywhere.
+	var playing: Array[String] = []
+	for side: String in ["offense", "defense"]:
+		for id: String in positions.ids_on_side(side):
+			for slot: int in range(positions.slots(id)):
+				playing.append(id)
+	if playing.is_empty():
+		return plan
+	var index: int = 0
+	while plan.size() < count:
+		plan.append(playing[index % playing.size()])
+		index += 1
+	return plan
+
+func _founder_count(team_id: String) -> int:
+	var rng: RandomNumberGenerator = SeedRng.make_rng(
+		SeedRng.derive(career_seed, "founders_" + team_id))
+	return rng.randi_range(FOUNDERS_MIN, FOUNDERS_MAX)
 
 func _target_size(team_id: String, tier: int) -> int:
 	var rng: RandomNumberGenerator = SeedRng.make_rng(

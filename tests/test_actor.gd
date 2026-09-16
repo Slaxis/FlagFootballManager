@@ -94,7 +94,11 @@ func test_club_level_moves_the_ceiling(t: TestHelper) -> void:
 	# A world-level ceiling of 85 shows up as an overall in the sixties because
 	# five untrained attributes sit at whatever growing up left them. The gap is
 	# real; the measure dilutes it.
-	t.check(world > city + 15,
+	# Narrower again after maturation stopped delivering people almost to their
+	# ceiling: more of an attribute is now EARNED, and a city-level club earns
+	# less of it — but `overall()` still averages five attributes nobody trains,
+	# which is what keeps diluting a gap that is real.
+	t.check(world > city + 12,
 		"clube de nível mundial deveria bater o de bairro com folga (%d vs %d)" % [world, city])
 	var national: int = _mean_overall(
 		ActorGenerator.squad(SEED, COHORT, 60, Actor.CATEGORY_MASC, 3.0))

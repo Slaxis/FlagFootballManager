@@ -45,9 +45,18 @@ const STREAM_SKILL := "skill"
 # Most of the gym is about the position, but not all of it. A safety still
 # squats, and general conditioning lifts whatever it lifts — modelling the stat
 # stream as position-only left five of the eight attributes frozen at whatever
-# growing up handed out, which made club quality almost invisible in a player's
-# overall.
-const GENERAL_CONDITIONING := 0.32
+# growing up handed out, which made club quality almost invisible.
+const GENERAL_CONDITIONING := 0.22
+
+# THE ACTOR IS TRYING. He is not a random walk: he notices when his hands have
+# fallen behind what he is asking them to do, and he goes to the gym about it.
+#
+# Skills cost 2 career points and attributes cost 3, and both streams earn the
+# same, so practice outruns aptitude on its own — year after year the skills
+# climbed and the attributes sat there. A real athlete trains the thing that is
+# holding him back, so the stat stream buys the attribute with the widest gap
+# under the skills it governs, and only wanders when nothing is lagging.
+const LAG_TO_CHASE := 1
 
 # Career points buy STORED points, not steps: the sheet is stored 0..100 so
 # training can move somebody three points and be felt before the bar lights up.
@@ -116,8 +125,15 @@ const DECAY_REFUND := 4.0
 # So up to MATURITY_AGE every attribute drifts toward an adult baseline, bent
 # by potential: the talented kid matures past average, the ordinary one lands
 # on it. This is free and it happens to everybody.
+#
+# And it deliberately stops WELL SHORT of potential. Growing up used to deliver
+# an attribute almost to its ceiling, which left the gym seven points of work
+# for an entire career — so year after year the skills climbed and the
+# attributes sat still, eleven skill points for every stat point. Adulthood
+# hands you a body; what you do with it is the rest of the career.
 const MATURITY_AGE := 23
-const ADULT_BASELINE := 42.0
+const ADULT_BASELINE := 34.0
+const MATURITY_REACH := 0.30
 const MATURITY_STEP_MIN := 1
 const MATURITY_STEP_MAX := 4
 
@@ -281,10 +297,7 @@ static func _spend(actor: Actor, position: String, rng: RandomNumberGenerator) -
 				break
 			var stat_id: String = target
 			if is_attribute:
-				stat_id = def.skill_attribute(target)
-				if rng.randf() < GENERAL_CONDITIONING:
-					var all_ids: Array = def.base_ids()
-					stat_id = String(all_ids[rng.randi() % all_ids.size()])
+				stat_id = _attribute_to_train(actor, def, weights, target, rng)
 			if stat_id == "":
 				continue
 			var current: int = actor.stat(stat_id) if is_attribute else actor.skill(stat_id)
@@ -316,6 +329,26 @@ static func _cost_of_next(current: int, is_attribute: bool, potential: int) -> f
 		return INF
 	return cost * OVER_POTENTIAL_COST
 
+# The attribute that is holding this actor back, or a wandering one when
+# nothing is. "Holding back" is a whole step of skill above the attribute under
+# it — you cannot keep throwing better than your hands are.
+static func _attribute_to_train(actor: Actor, def: StatDef, weights: Dictionary,
+		target: String, rng: RandomNumberGenerator) -> String:
+	if rng.randf() < GENERAL_CONDITIONING:
+		var all_ids: Array = def.base_ids()
+		return String(all_ids[rng.randi() % all_ids.size()])
+	var worst: String = ""
+	var worst_lag: int = LAG_TO_CHASE
+	for skill_id: String in weights.keys():
+		var attribute: String = def.skill_attribute(skill_id)
+		if attribute == "":
+			continue
+		var lag: int = actor.skill_step(skill_id) - def.step(actor.stat(attribute))
+		if lag > worst_lag:
+			worst_lag = lag
+			worst = attribute
+	return worst if worst != "" else def.skill_attribute(target)
+
 static func _pick_weighted(weights: Dictionary, rng: RandomNumberGenerator) -> String:
 	var total: float = 0.0
 	for key: String in weights.keys():
@@ -346,7 +379,7 @@ static func _mature(actor: Actor, rng: RandomNumberGenerator) -> void:
 	# Growing up cannot take somebody past what they were ever going to be:
 	# maturation aims BELOW potential, and training covers the rest.
 	var potential: float = float(actor.data.get("potential", 55))
-	var ceiling: int = int(round(minf(lerpf(ADULT_BASELINE, potential, 0.45), potential)))
+	var ceiling: int = int(round(minf(lerpf(ADULT_BASELINE, potential, MATURITY_REACH), potential)))
 	for id: String in def.base_ids():
 		var current: int = actor.stat(id)
 		if current >= ceiling:

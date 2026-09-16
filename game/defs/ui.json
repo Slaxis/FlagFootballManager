@@ -309,8 +309,8 @@
       "en": "Perk"
     },
     "team.strength": {
-      "pt": "Força",
-      "en": "Str"
+      "pt": "Geral",
+      "en": "Ovr"
     },
     "team.back_to_mine": {
       "pt": "← meu clube",
@@ -391,6 +391,18 @@
     "team.as_staff": {
       "pt": "COMO COMISSÃO",
       "en": "AS STAFF"
+    },
+    "team.shirt": {
+      "pt": "Camisa",
+      "en": "Shirt"
+    },
+    "team.talent": {
+      "pt": "Talento",
+      "en": "Talent"
+    },
+    "team.unit_overall": {
+      "pt": "%s %d",
+      "en": "%s %d"
     }
   }
 }

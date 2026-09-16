@@ -46,6 +46,7 @@ const TAB_SQUAD := "squad"
 const TAB_RIVALS := "rivals"
 
 const SORT_NAME := "name"
+const SORT_SHIRT := "shirt"
 const SORT_PERK := "perk"
 const SORT_STRENGTH := "strength"
 const SORT_AGE := "age"
@@ -53,7 +54,8 @@ const SORT_AGE := "age"
 # Column widths live here and nowhere else: the group header above and the
 # sortable header below are both derived from them, so they cannot drift apart.
 const COL_MARK := 18
-const COL_NAME := 165
+const COL_NAME := 150
+const COL_SHIRT := 128
 const COL_PERK := 30
 const COL_STRENGTH := 44
 const COL_AGE := 40
@@ -80,6 +82,16 @@ var _selected: Actor = null
 # Which column the roster is ordered by, and which way. Sorting a roster is
 # how a manager actually reads it: who is oldest, who is best, who can play
 # corner.
+# Green is a talent, red is a disadvantage, and both are FIXED — they read the
+# same against every club's kit, so a liability never disguises itself as a
+# strength because the shirt happened to be red.
+const TALENT_GOOD := Color(0.42, 0.78, 0.45)
+const TALENT_BAD := Color(0.85, 0.36, 0.36)
+
+# The best fit at each position among the people currently shown, so every
+# column is scaled to its own column.
+var _fit_ceilings: Dictionary = {}
+
 var _sort_key: String = SORT_STRENGTH
 var _sort_desc: bool = true
 var _root: VBoxContainer = null
@@ -243,6 +255,7 @@ func _squad_tab() -> Control:
 
 	var career: Career = _career()
 	var people: Array[Actor] = _sorted(_rosters().squad(_viewed_id(), _category()))
+	_measure_fit_ceilings(people)
 
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 2)
@@ -293,7 +306,8 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 	box.add_child(_panel_title(UiText.t("team.lineup"), _squad_note(people, positions)))
 	var reserves: Array = []
 	for side: String in SIDES_IN_LINEUP:
-		box.add_child(_group_caption(UiText.t("team.side_" + side)))
+		box.add_child(_unit_caption(UiText.t("team.side_" + side),
+			_unit_overall(assigned, positions, side)))
 		for id: String in positions.ids_on_side(side):
 			var picked: Array = assigned.get(id, [])
 			for slot: int in range(positions.slots(id)):
@@ -308,7 +322,8 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 			box.add_child(_slot_row(positions.code(String(entry["position"])),
 				entry["actor"] as Actor))
 
-	box.add_child(_group_caption(UiText.t("team.staff")))
+	box.add_child(_unit_caption(UiText.t("team.staff"),
+		_unit_overall(assigned, positions, "staff")))
 	for id: String in positions.ids_on_side("staff"):
 		var chairs: Array = assigned.get(id, [])
 		box.add_child(_slot_row(positions.code(id),
@@ -340,6 +355,47 @@ func _squad_note(people: Array[Actor], positions: PositionDef) -> String:
 	if marked < positions.squad_minimum:
 		return UiText.t("team.below_minimum") % [marked, positions.squad_minimum]
 	return UiText.t("team.registered") % [marked, people.size()]
+
+# The number that moves as you shuffle the pieces. Only the STARTERS count —
+# depth on the bench does not take the field — so swapping a reserve in changes
+# it and that is the whole feedback loop of building a side.
+func _unit_overall(assigned: Dictionary, positions: PositionDef, side: String) -> int:
+	var total: int = 0
+	var counted: int = 0
+	for id: String in positions.ids_on_side(side):
+		var picked: Array = assigned.get(id, [])
+		for slot: int in range(mini(positions.slots(id), picked.size())):
+			total += (picked[slot] as Actor).overall()
+			counted += 1
+	return int(round(float(total) / float(counted))) if counted > 0 else 0
+
+func _unit_caption(text: String, overall: int) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var label := Label.new()
+	label.text = text
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.add_theme_font_size_override("font_size", 10)
+	label.add_theme_color_override("font_color", MUTED)
+	row.add_child(label)
+	var value := Label.new()
+	value.text = str(overall) if overall > 0 else "—"
+	value.add_theme_font_size_override("font_size", 12)
+	value.add_theme_color_override("font_color",
+		StatBar.tint(overall) if overall > 0 else MUTED)
+	row.add_child(value)
+	return row
+
+func _measure_fit_ceilings(people: Array[Actor]) -> void:
+	_fit_ceilings.clear()
+	var positions := Drive.def("position") as PositionDef
+	if positions == null:
+		return
+	for id: String in positions.position_ids():
+		var best: float = 0.0
+		for person: Actor in people:
+			best = maxf(best, positions.fit(id, person.stats(), person.skills()))
+		_fit_ceilings[id] = maxf(best, 0.01)
 
 func _panel_title(text: String, note: String) -> Control:
 	var box := VBoxContainer.new()
@@ -410,7 +466,7 @@ func _group_headings() -> Control:
 			lineup += positions.ids_on_side(side).size()
 		staff = positions.ids_on_side("staff").size()
 	row.add_child(_group_label(UiText.t("team.profile"),
-		COL_MARK + COL_NAME + COL_PERK + COL_STRENGTH + COL_AGE + COL_GAP * 4))
+		COL_MARK + COL_NAME + COL_SHIRT + COL_PERK + COL_STRENGTH + COL_AGE + COL_GAP * 5))
 	row.add_child(_group_label(UiText.t("team.lineup"), _block_width(lineup)))
 	row.add_child(_group_label(UiText.t("team.staff"), _block_width(staff)))
 	return row
@@ -439,7 +495,8 @@ func _sort_headings() -> Control:
 	row.add_theme_constant_override("separation", COL_GAP)
 	row.add_child(_spacer_cell(COL_MARK))
 	row.add_child(_heading(UiText.t("team.name"), SORT_NAME, COL_NAME))
-	row.add_child(_heading(UiText.t("team.perk"), SORT_PERK, COL_PERK))
+	row.add_child(_heading(UiText.t("team.shirt"), SORT_SHIRT, COL_SHIRT))
+	row.add_child(_heading(UiText.t("team.talent"), SORT_PERK, COL_PERK))
 	row.add_child(_heading(UiText.t("team.strength"), SORT_STRENGTH, COL_STRENGTH))
 	row.add_child(_heading(UiText.t("team.age"), SORT_AGE, COL_AGE))
 	var positions := Drive.def("position") as PositionDef
@@ -504,8 +561,11 @@ func _roster_row(person: Actor, is_manager: bool) -> Control:
 
 	row.add_child(_cell("\u2605" if is_manager else "", COL_MARK,
 		ACCENT if is_manager else MUTED))
-	row.add_child(_cell(person.display_name(), COL_NAME, TEXT))
-	row.add_child(_perk_cell(person))
+	# Full name and the name on the shirt are different things, and a manager
+	# reads the second one far more often.
+	row.add_child(_cell(person.full_name(), COL_NAME, TEXT))
+	row.add_child(_shirt_cell(person))
+	row.add_child(_talent_chip(person))
 	# Elifoot calls this Forca and so does this column: one number for how good
 	# somebody is, tinted so the roster reads before it is read.
 	var strength: int = person.overall()
@@ -514,27 +574,63 @@ func _roster_row(person: Actor, is_manager: bool) -> Control:
 	var positions := Drive.def("position") as PositionDef
 	if positions != null:
 		for id: String in _role_order(positions):
-			row.add_child(_position_button(person, positions, id))
+			row.add_child(_position_button(person, positions, id,
+				float(_fit_ceilings.get(id, 1.0))))
 	return button
 
-# The perk is the one thing about a player that is a sentence and not a
-# number, so it earns a column of its own rather than hiding inside the sheet.
-func _perk_cell(person: Actor) -> Control:
+func _shirt_cell(person: Actor) -> Control:
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 5)
+	box.custom_minimum_size = Vector2(COL_SHIRT, 0)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var nick := Label.new()
+	nick.text = person.nickname() if person.nickname() != "" else person.first_name()
+	nick.clip_text = true
+	nick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nick.add_theme_font_size_override("font_size", 13)
+	nick.add_theme_color_override("font_color", TEXT)
+	nick.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(nick)
+	var number := Label.new()
+	number.text = "#%d" % person.jersey() if person.jersey() != Actor.NO_JERSEY else ""
+	number.add_theme_font_size_override("font_size", 11)
+	number.add_theme_color_override("font_color", MUTED)
+	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(number)
+	return box
+
+# A chip, and the colour carries the sign: green is a talent, red is a
+# disadvantage. Fixed hues on purpose — they read the same on every club's
+# palette, so "that one is a liability" never depends on whose kit you are
+# wearing.
+func _talent_chip(person: Actor) -> Control:
 	var perks := Drive.def("perk") as PerkDef
 	var ids: Array = person.perks()
-	var label := Label.new()
-	label.custom_minimum_size = Vector2(COL_PERK, 0)
-	label.add_theme_font_size_override("font_size", 13)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if perks == null or ids.is_empty():
-		label.text = "\u00b7"
-		label.add_theme_color_override("font_color", Color(0.24, 0.28, 0.25))
-		return label
+		return _cell("\u00b7", COL_PERK, Color(0.24, 0.28, 0.25))
 	var id: String = String(ids[0])
+	var flaw: bool = perks.is_flaw(id)
+	var hue: Color = TALENT_BAD if flaw else TALENT_GOOD
+	var chip := PanelContainer.new()
+	chip.custom_minimum_size = Vector2(COL_PERK, 0)
+	chip.tooltip_text = "%s \u2014 %s" % [perks.label(id), perks.desc(id)]
+	chip.mouse_filter = Control.MOUSE_FILTER_STOP
+	var style := StyleBoxFlat.new()
+	style.bg_color = hue.darkened(0.55)
+	style.border_color = hue
+	style.set_border_width_all(1)
+	style.set_content_margin_all(1)
+	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
+		style.set("corner_radius_" + corner, 3)
+	chip.add_theme_stylebox_override("panel", style)
+	var label := Label.new()
 	label.text = perks.icon(id)
-	label.tooltip_text = "%s \u2014 %s" % [perks.label(id), perks.desc(id)]
-	label.mouse_filter = Control.MOUSE_FILTER_STOP
-	return label
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", hue.lightened(0.3))
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chip.add_child(label)
+	return chip
 
 func _cell(text: String, width: int, color: Color) -> Control:
 	var label := Label.new()
@@ -847,9 +943,15 @@ func _on_pick(person: Actor) -> void:
 # text has nowhere to be seen. Filled area reads at a glance down a whole
 # column, which is the point: the roster becomes a heat map of who could play
 # what before the manager has decided anything.
-func _position_button(person: Actor, positions: PositionDef, id: String) -> Button:
+func _position_button(person: Actor, positions: PositionDef, id: String,
+		ceiling: float) -> Button:
 	var chosen: bool = person.plays_position(id)
-	var fit: float = clampf(positions.fit(id, person.stats(), person.skills()), 0.0, 1.0)
+	# NORMALISED to the best in this column, not to an absolute scale. You never
+	# pick a quarterback against the world, you pick him against the eleven
+	# other people in the room — so the fullest box in a column is the club's
+	# best option there, and the rest read as fractions of him.
+	var raw: float = maxf(positions.fit(id, person.stats(), person.skills()), 0.0)
+	var fit: float = clampf(raw / ceiling, 0.0, 1.0) if ceiling > 0.0 else 0.0
 
 	var button := Button.new()
 	button.set_meta("role", id)
@@ -892,7 +994,7 @@ func _position_button(person: Actor, positions: PositionDef, id: String) -> Butt
 
 	button.tooltip_text = "%s — %s\n%s: %d%%" % [
 		positions.label(id), positions.desc(id),
-		UiText.t("team.fit"), int(round(fit * 100.0))]
+		UiText.t("team.fit"), int(round(raw * 100.0))]
 	button.pressed.connect(_on_toggle_position.bind(person, id))
 	return button
 
@@ -919,8 +1021,14 @@ func _sort_value(person: Actor, key: String, positions: PositionDef) -> float:
 			return float(person.overall())
 		SORT_AGE:
 			return float(person.age())
+		SORT_SHIRT:
+			return float(person.jersey())
 		SORT_PERK:
-			return 1.0 if not person.perks().is_empty() else 0.0
+			var perks := Drive.def("perk") as PerkDef
+			if person.perks().is_empty() or perks == null:
+				return 0.0
+			# Talents above, disadvantages below, nothing in between.
+			return 1.0 if not perks.is_flaw(String(person.perks()[0])) else -1.0
 	# By name the comparator falls through to the tie-break, which IS the name.
 	return 0.0
 

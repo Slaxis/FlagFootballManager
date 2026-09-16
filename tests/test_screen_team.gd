@@ -220,7 +220,7 @@ func test_the_roster_has_a_perk_column(t: TestHelper) -> void:
 	var perks := Drive.def("perk") as PerkDef
 	if screen == null or perks == null:
 		t.fail("não consegui instanciar a tela"); return
-	t.check(_texts(screen).contains(UiText.t("team.perk")), "sem cabeçalho de perk")
+	t.check(_texts(screen).contains(UiText.t("team.talent")), "sem cabeçalho de talento")
 	var rosters := The.board.get("rosters", null) as Rosters
 	var shown: String = _texts(screen)
 	var with_perk: int = 0
