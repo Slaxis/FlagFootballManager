@@ -4,24 +4,45 @@
     "average_adult": 5,
     "anchors": [
       {
-        "step": 1,
+        "step": 0,
         "label": {
-          "pt": "criança pequena",
-          "en": "toddler"
+          "pt": "adulto comum, nunca treinou — e a criança de 12",
+          "en": "an ordinary adult who never trained — and the twelve-year-old"
         }
       },
       {
-        "step": 5,
+        "step": 2,
         "label": {
-          "pt": "adulto mediano",
-          "en": "average adult"
+          "pt": "joga na várzea do bairro",
+          "en": "plays on the neighbourhood sandlot"
+        }
+      },
+      {
+        "step": 4,
+        "label": {
+          "pt": "disputa o estadual",
+          "en": "competes at state level"
+        }
+      },
+      {
+        "step": 6,
+        "label": {
+          "pt": "seleção brasileira",
+          "en": "the Brazil squad"
+        }
+      },
+      {
+        "step": 8,
+        "label": {
+          "pt": "encara México e Estados Unidos",
+          "en": "faces Mexico and the United States"
         }
       },
       {
         "step": 10,
         "label": {
-          "pt": "atleta olímpico, candidato a medalha",
-          "en": "Olympic athlete, medal contender"
+          "pt": "estrela da IFAF",
+          "en": "an IFAF star"
         }
       }
     ]
@@ -430,8 +451,8 @@
     "bands": [
       {
         "id": "q1",
-        "min": 30,
-        "max": 55,
+        "min": 10,
+        "max": 30,
         "label": {
           "pt": "Nível cidade",
           "en": "City level"
@@ -443,8 +464,8 @@
       },
       {
         "id": "q2",
-        "min": 55,
-        "max": 68,
+        "min": 30,
+        "max": 50,
         "label": {
           "pt": "Nível estadual",
           "en": "State level"
@@ -456,8 +477,8 @@
       },
       {
         "id": "q3",
-        "min": 68,
-        "max": 80,
+        "min": 50,
+        "max": 70,
         "label": {
           "pt": "Nível nacional",
           "en": "National level"
@@ -469,7 +490,7 @@
       },
       {
         "id": "q4",
-        "min": 80,
+        "min": 70,
         "max": 90,
         "label": {
           "pt": "Nível mundial menor",

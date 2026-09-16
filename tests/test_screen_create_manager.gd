@@ -125,23 +125,42 @@ func test_the_dice_button_changes_the_person_and_the_world(t: TestHelper) -> voi
 func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	var perks := Drive.def("perk") as PerkDef
 	var screen: Control = _open()
-	if screen == null or perks == null:
+	var origins := Drive.def("origin") as OriginDef
+	if screen == null or perks == null or origins == null:
 		t.fail("não consegui instanciar a tela"); return
+	# On the ex-player scenario, because a FOUNDER has almost nothing on his
+	# sheet — stats of zero and one — and you cannot trade what is not there.
+	# That is worth knowing about the scenario, but it makes a poor fixture.
+	_button_starting_with(screen, origins.label("player")).pressed.emit()
 
-	var taken: Button = _pressed_chip(screen, perks)
-	if taken != null:
-		taken.pressed.emit()
-	t.equal(_pressed_chip(screen, perks), null, "não consegui largar o talento sorteado")
-
-	var wanted: String = perks.boons()[0]
+	# Sell first. The sheet opens with everything spent, and the talent the dice
+	# handed you may be a DISADVANTAGE — giving one of those back costs the
+	# points it paid you, so there has to be slack before anything moves. That
+	# is the trade, not a bug.
+	# The CHEAPEST talent, not the first. The screen rolls with a randomised
+	# seed, and a founder's whole sheet can cost about what Craque does — so
+	# asking for the dearest one made this a coin flip instead of a test.
+	var wanted: String = ""
+	for id: String in perks.boons():
+		if wanted == "" or perks.cost(id) < perks.cost(wanted):
+			wanted = id
 	var guard: int = 0
-	while _button_starting_with(screen, perks.icon(wanted)).disabled and guard < 60:
-		guard += 1
+	while guard < 80:
+		var chip: Button = _button_starting_with(screen, perks.icon(wanted))
+		var current: Button = _pressed_chip(screen, perks)
+		if not chip.disabled and (current == null or current.text == chip.text):
+			break
 		var sold: Button = _first_enabled(screen, "−")
 		if sold == null:
 			break
 		sold.pressed.emit()
+		guard += 1
 	t.check(guard > 0, "o talento estava de graça — a ficha não gastou tudo")
+
+	var taken: Button = _pressed_chip(screen, perks)
+	if taken != null and taken.text != _button_starting_with(screen, perks.icon(wanted)).text:
+		taken.pressed.emit()
+	t.equal(_pressed_chip(screen, perks), null, "não consegui largar o talento sorteado")
 	t.check(not _button_starting_with(screen, perks.icon(wanted)).disabled,
 		"vender passos não liberou o talento")
 

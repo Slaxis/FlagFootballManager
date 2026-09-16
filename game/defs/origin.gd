@@ -85,6 +85,17 @@ func skill_bias(id: String) -> Dictionary:
 func club_level(id: String) -> float:
 	return float(origin(id).get("club", {}).get("level", 1.0))
 
+# What you were doing before the clipboard, and for how long. An ex-player
+# needs three years to be called one at all — a season as a rookie, a season as
+# a rookie who has stopped being one, and a season actually playing — and the
+# student has none, which is the entire point of him.
+func career_position(id: String) -> String:
+	return String(origin(id).get("career", {}).get("position", "head_coach"))
+
+func career_years(id: String, rng: RandomNumberGenerator) -> int:
+	var career: Dictionary = origin(id).get("career", {})
+	return rng.randi_range(int(career.get("years_min", 0)), int(career.get("years_max", 0)))
+
 # Whether the club exists already or you are the reason it exists.
 func founds_a_club(id: String) -> bool:
 	return bool(origin(id).get("club", {}).get("founded", false))

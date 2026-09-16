@@ -83,9 +83,13 @@ const LEARNING_BY_AGE: Array = [
 # After the peak the body goes, and ONLY the body. Skills never decay: he still
 # knows how to read a route, he just cannot get there any more — which is the
 # whole reason a veteran should read differently from a kid.
+# Scaled to the new ruler. Losing 1.4 stored points a year mattered little when
+# a good player sat at 80; against a city-level 25 it is a catastrophe, so the
+# decline is proportional to what there is to lose.
 const DECLINE_FROM_AGE := 30
-const DECLINE_PER_YEAR := 1.4
-const DECLINE_ACCELERATION := 0.35
+const DECLINE_RATE := 0.035
+const DECLINE_ACCELERATION := 0.009
+const DECLINE_FLOOR := 2
 const PHYSICAL: Array[String] = ["strength", "stamina", "agility", "dexterity"]
 
 # Potential (decision 27), now drawn against the club's place in the WORLD
@@ -112,9 +116,20 @@ const DRIFT_WEIGHTS: Array[float] = [0.25, 1.0, 0.25, 0.0625]
 const OVER_POTENTIAL_ALLOWED := 2
 const OVER_POTENTIAL_COST := 9.0
 
+# YOU ARE NOT A Q3 EVERYTHING, YOU ARE A Q3 RECEIVER. One ceiling across all
+# twenty-three tracks meant a long career pushed every one of them to the same
+# number and the sheet came out perfectly flat — 44444444, eight attributes
+# indistinguishable. What the position asks of you reaches your potential; the
+# rest of you tops out lower, which is what gives a veteran a shape instead of
+# a plateau.
+const OFF_POSITION_CEILING := 0.68
+
 # A run of weeks that goes badly enough eats condition instead of building it.
 const DEFICIT_BEFORE_DECAY := -8.0
 const DECAY_REFUND := 4.0
+# Nobody who plays is at a literal zero in everything: the floor is the price
+# of showing up at all.
+const TRAINING_FLOOR := 6
 
 # GROWING UP IS NOT TRAINING. A fifteen-year-old becomes an adult whether or
 # not anybody coaches him: he gets taller, stronger, steadier, and he learns
@@ -131,22 +146,29 @@ const DECAY_REFUND := 4.0
 # for an entire career — so year after year the skills climbed and the
 # attributes sat still, eleven skill points for every stat point. Adulthood
 # hands you a body; what you do with it is the rest of the career.
+# And it barely lifts anybody now. On the old ruler "becoming an adult" was
+# worth thirty-odd points because the scale started below a child; on this one
+# zero IS the untrained adult, so growing up gets you to the floor and no
+# further. Everything above that is training, which is the point.
 const MATURITY_AGE := 23
-const ADULT_BASELINE := 34.0
-const MATURITY_REACH := 0.30
+const ADULT_BASELINE := 8.0
+const MATURITY_REACH := 0.22
 const MATURITY_STEP_MIN := 1
 const MATURITY_STEP_MAX := 4
 
 # --- Birth ---
 
-# A thirteen-year-old: a body with some shape to it and no idea how to play.
+# A thirteen-year-old, which on this ruler is very nearly ZERO — that is the
+# definition of the floor: below a step nobody is taking a field. A kid has a
+# body and no development in it, and the small spread is the difference between
+# the one who was always quick and the one who was not.
 static func birth_sheet(rng: RandomNumberGenerator) -> Dictionary:
 	var def := Drive.def("stat") as StatDef
 	var stats: Dictionary = {}
 	if def == null:
 		return stats
 	for id: String in def.base_ids():
-		stats[id] = clampi(int(round(rng.randfn(34.0, 9.0))), 8, 62)
+		stats[id] = clampi(int(round(rng.randfn(4.0, 3.5))), 0, 14)
 	return stats
 
 # `club_level` is a float from NationDef: 1.0 is a city club in a mid country,
@@ -303,7 +325,8 @@ static func _spend(actor: Actor, position: String, rng: RandomNumberGenerator) -
 			var current: int = actor.stat(stat_id) if is_attribute else actor.skill(stat_id)
 			if current >= StatDef.STORED_MAX:
 				continue
-			var cost: float = _cost_of_next(current, is_attribute, potential)
+			var cost: float = _cost_of_next(current, is_attribute,
+				_ceiling_for(def, weights, stat_id, is_attribute, potential))
 			if is_inf(cost):
 				continue
 			if cost > bank:
@@ -314,6 +337,18 @@ static func _spend(actor: Actor, position: String, rng: RandomNumberGenerator) -
 			else:
 				actor.set_skill(stat_id, current + 1)
 		actor.data["bank_" + stream] = bank
+
+# What this particular track can reach. Full potential if the position trains
+# it — directly, or through the attribute under a skill it trains — and a good
+# deal less otherwise.
+static func _ceiling_for(def: StatDef, weights: Dictionary, stat_id: String,
+		is_attribute: bool, potential: int) -> int:
+	if not is_attribute:
+		return potential if weights.has(stat_id) else int(round(float(potential) * OFF_POSITION_CEILING))
+	for skill_id: String in weights.keys():
+		if def.skill_attribute(skill_id) == stat_id:
+			return potential
+	return int(round(float(potential) * OFF_POSITION_CEILING))
 
 # What one stored point costs right now: the step it sits in, times its kind's
 # rate, spread over that step's ten points. Above potential it costs four times
@@ -392,7 +427,8 @@ static func _decline(actor: Actor, rng: RandomNumberGenerator) -> void:
 	var over: int = actor.age() - DECLINE_FROM_AGE
 	if over <= 0:
 		return
-	var loss: float = DECLINE_PER_YEAR + float(over) * DECLINE_ACCELERATION
+	var rate: float = DECLINE_RATE + float(over) * DECLINE_ACCELERATION
 	for id: String in PHYSICAL:
-		var drop: int = int(round(maxf(loss + rng.randfn(0.0, 0.6), 0.0)))
-		actor.set_stat(id, maxi(actor.stat(id) - drop, 5))
+		var current: int = actor.stat(id)
+		var drop: int = int(round(maxf(float(current) * rate + rng.randfn(0.0, 0.4), 0.0)))
+		actor.set_stat(id, maxi(current - drop, DECLINE_FLOOR))

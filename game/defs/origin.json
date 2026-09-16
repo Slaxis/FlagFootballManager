@@ -25,14 +25,17 @@
       },
       "sheet": {
         "stats": {
-          "will": 2,
-          "charisma": 1
+          "will": 1
         },
         "skills": {
-          "leadership": 3,
-          "rules": 2,
-          "coaching": 1
+          "leadership": 1,
+          "rules": 1
         }
+      },
+      "career": {
+        "position": "head_coach",
+        "years_min": 0,
+        "years_max": 1
       }
     },
     {
@@ -56,16 +59,18 @@
       "squad": {},
       "sheet": {
         "stats": {
-          "agility": 2,
-          "dexterity": 2,
-          "stamina": 1
+          "agility": 1,
+          "dexterity": 1
         },
         "skills": {
-          "catching": 3,
-          "route": 2,
-          "throwing": 2,
-          "juke": 1
+          "catching": 2,
+          "route": 1
         }
+      },
+      "career": {
+        "position": "receiver",
+        "years_min": 1,
+        "years_max": 3
       }
     },
     {
@@ -89,16 +94,17 @@
       "squad": {},
       "sheet": {
         "stats": {
-          "intelligence": 3,
-          "perception": 2,
-          "will": 1
+          "intelligence": 1
         },
         "skills": {
-          "rules": 4,
-          "play_calling": 3,
-          "scouting": 2,
-          "coaching": 1
+          "rules": 2,
+          "play_calling": 1
         }
+      },
+      "career": {
+        "position": "offense_coord",
+        "years_min": 0,
+        "years_max": 0
       }
     }
   ]

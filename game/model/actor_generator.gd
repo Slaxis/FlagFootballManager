@@ -93,6 +93,15 @@ static func _climate(quality: int, will_stored: int) -> Dictionary:
 		"dedication": clampi(2 + int(floor(float(will_stored) / 10.0)) - 5, 1, 4),
 	}
 
+# A person, lived, with no club and no name — what the creation screen needs so
+# the manager comes off the same production line as everybody he will manage.
+static func lived(rng: RandomNumberGenerator, club_level: float,
+		position: String, years: int) -> Actor:
+	return _build(rng, "manager", quality_from_reputation(
+		int(round(club_level * 20.0))), Actor.CATEGORY_MASC,
+		{"position": position, "career_years": years}, int(round(club_level * 20.0)),
+		club_level)
+
 # The one construction path. `spec` is empty for an invented actor and holds
 # whatever a curator pinned for an authored one, so the two cannot drift apart.
 static func _build(

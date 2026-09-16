@@ -4,9 +4,22 @@
 # THE SCALE. Everything is stored 0..100 but read in STEPS of ten, and the
 # steps are what the game actually uses:
 #
-#     1 step   a toddler
-#     5 steps  an average adult          ← the anchor, and the zero of every modifier
-#    10 steps  an Olympic medal contender
+#     0 steps  an ordinary adult who never trained — and the twelve-year-old
+#     2 steps  plays on the neighbourhood sandlot     Q1
+#     4 steps  competes at state level                Q2
+#     6 steps  the Brazil squad                       Q3
+#     8 steps  faces Mexico and the United States     Q4
+#    10 steps  an IFAF star                           Q5
+#
+# ZERO IS THE TWENTIETH PERCENTILE OF PEOPLE, not the bottom of them. Below it
+# nobody is taking a field at all — children, and adults who never did this. So
+# the ruler measures athletic development ABOVE that floor, which is why "good
+# for the sandlot" is two steps and not five.
+#
+# THE ANCHOR IS THE QUANTILE. There used to be two systems stacked on each
+# other — a ruler anchored on "average adult" and a quantile ladder laid over
+# it — and they disagreed about what a number meant. Now every other step names
+# a band and there is one answer.
 #
 # Storing at ten times the resolution is what lets weekly training move someone
 # by three points: you feel the progress before the bar lights up. Rolls, team
@@ -28,13 +41,23 @@ extends Def
 class_name StatDef
 
 const DEFAULT_STORED_PER_STEP := 10
+# The neutral point of the leader modifier (decision 20) — NOT "the average
+# adult" any more. On the new ruler five steps is the Brazil squad, so a
+# sandlot manager leads at minus two and actively costs his side until he
+# learns better. That is the intended shape: America Red Lions lost a Carioca
+# Bowl because the bench forgot to stop the clock, with the better athletes on
+# the field.
 const DEFAULT_AVERAGE_STEP := 5
 const MAX_STEP := 10
 const STORED_MIN := 0
 const STORED_MAX := 100
-# Where "notable" begins, in steps, on either side of the average adult.
+# Where "notable" begins, in steps. High is world level and stayed put. Low had
+# to fall to the floor: on the new ruler a city-level player sits at one or two
+# steps in everything, so "three or below" would have called every amateur in
+# the game a cripple and flooded the nickname generator with mockery again.
+# Only an actual zero — the thing he plainly cannot do — is worth a name.
 const NOTABLE_HIGH := 7
-const NOTABLE_LOW := 3
+const NOTABLE_LOW := 0
 
 var stored_per_step: int = DEFAULT_STORED_PER_STEP
 var average_step: int = DEFAULT_AVERAGE_STEP
@@ -79,7 +102,7 @@ func _ingest(entries: Variant, into: Dictionary, required_field: String = "") ->
 # --- Scale ---
 
 # Stored value to the step the game reads. Everything above 100 clamps: 10 is
-# the medal contender and there is nothing past it.
+# the IFAF star and there is nothing past it.
 func step(stored: int) -> int:
 	return clampi(int(floor(float(stored) / float(stored_per_step))), 0, MAX_STEP)
 

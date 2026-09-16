@@ -69,6 +69,12 @@ var origin: String = ""
 # screen without one, which is why he came out heroic: a squad player is capped
 # at city level and the manager could build ten steps of anything by hand.
 var potential: int = StatDef.STORED_MAX
+# What the rolled life actually cost. The budget is not a constant any more:
+# 414 was calibrated against a ruler where an average adult sat at five steps,
+# and on the new one a city-level person cannot absorb anywhere near that. So
+# you are handed a person, and the points you may move around are HIS.
+var budget: int = 0
+var rolled_age: int = 0
 
 var _base_stats: Dictionary = {}
 var _base_skills: Dictionary = {}
@@ -99,6 +105,10 @@ static func average_adult() -> SheetBuilder:
 		builder.skills[id] = 0
 	builder.height = START_HEIGHT
 	builder.weight = START_WEIGHT
+	# The hand-built path keeps the classic allowance: a whole life to allocate.
+	# Only the ROLLED path takes its budget from what the roll cost.
+	builder.budget = total_points()
+	builder.rolled_age = END_AGE
 	return builder
 
 # The age the opening roll leaves you at. Twelve years of childhood are rolled
@@ -114,13 +124,17 @@ const OPENING_BODY_TIGHTNESS := 0.55
 const OPENING_APPETITE_SPREAD := 0.45
 # Nobody alive is below a toddler. The floor is bought first so the spread has
 # to work with what is left rather than being free to hollow somebody out.
-const OPENING_FLOOR_STEP := 2
-# Below this the eighteen years do not fit under the ceiling.
-const MIN_MANAGER_POTENTIAL := 45
+# One step: enough that nobody is a literal zero across the board, which on
+# this ruler would mean somebody who cannot take a field.
+const OPENING_FLOOR_STEP := 1
+# Q1 runs from ten to thirty. Twenty-five is two steps, which is the least that
+# still fits what an origin promises — a student who cannot reach two steps of
+# rules is not a student.
+const MIN_MANAGER_POTENTIAL := 25
 # And nobody is a prodigy yet. Two steps past the average ADULT is already a
 # remarkable child; the ruler puts 10 at an Olympic medal contender, and the
 # appetite will happily buy one at twelve if nothing stops it.
-const OPENING_CEILING_STEP := 7
+const OPENING_CEILING_STEP := 10
 
 # Career points the opening roll spends: twelve years of them.
 static func opening_budget() -> int:
@@ -154,57 +168,41 @@ static func opening_budget() -> int:
 static func rolled_opening(rng: RandomNumberGenerator, origin: String = "") -> SheetBuilder:
 	var builder: SheetBuilder = average_adult()
 	var def := Drive.def("stat") as StatDef
+	var origins := Drive.def("origin") as OriginDef
 	if def == null:
 		return builder
-	for id: String in def.base_ids():
-		builder.stats[id] = MIN_STAT_STEP
-	for id: String in def.skill_ids():
-		builder.skills[id] = MIN_SKILL_STEP
-	builder.perk = ""
 	builder.origin = origin
-	var origins := Drive.def("origin") as OriginDef
+
+	# LIVED, NOT ALLOCATED. The manager used to come out of a second generator
+	# with its own appetite, and two generators drift — which is exactly how he
+	# ended up heroic next to the squad he manages. Now he is an Actor like any
+	# other: a birth sheet, a position his scenario put him in, and the years
+	# that scenario gives him.
 	var level: float = origins.club_level(origin) if origins != null and origin != "" else 1.0
-	# Floored so the whole life is spendable: at three steps the eight
-	# attributes and fifteen skills together hold only 324 career points, and a
-	# manager would finish the screen with a hundred he could never spend.
-	# Four steps is an ordinary adult, not a hero.
-	builder.potential = maxi(ActorLife.roll_potential(level, rng), MIN_MANAGER_POTENTIAL)
-	builder._roll_body(def, rng, OPENING_BODY_TIGHTNESS)
-	builder._roll_perk(rng)
-	builder._apply_origin(def)
+	var position: String = origins.career_position(origin) if origins != null else "head_coach"
+	var years: int = origins.career_years(origin, rng) if origins != null else 0
+	var person: Actor = ActorGenerator.lived(rng, level, position, years)
 
+	builder.potential = maxi(int(person.data.get("potential", 25)), MIN_MANAGER_POTENTIAL)
+	builder.rolled_age = person.age()
+	builder.height = person.height()
+	builder.weight = person.weight()
 	for id: String in def.base_ids():
-		while int(builder.stats[id]) < OPENING_FLOOR_STEP and builder.can_raise_stat(id):
-			builder.raise_stat(id)
-
-	# Two appetites, so a rolled sheet has practice on it as well as aptitude.
-	var appetite: Dictionary = {}
-	for id: String in def.base_ids() + def.skill_ids():
-		appetite[id] = exp(rng.randfn(0.0, OPENING_APPETITE_SPREAD))
-	var guard: int = 0
-	while guard < 900:
-		guard += 1
-		var ids: Array[String] = []
-		var weights: Array[float] = []
-		for id: String in def.base_ids():
-			if builder.can_raise_stat(id):
-				ids.append(id)
-				weights.append(float(appetite[id]) / float(int(builder.stats[id]) + 1))
-		for id: String in def.skill_ids():
-			if builder.can_raise_skill(id):
-				ids.append("skill:" + id)
-				weights.append(float(appetite[id]) / float(int(builder.skills[id]) + 2))
-		if ids.is_empty():
-			break
-		var chosen: String = ids[builder._weighted_index(weights, rng)]
-		if chosen.begins_with("skill:"):
-			builder.raise_skill(chosen.substr(6))
-		else:
-			builder.raise_stat(chosen)
+		builder.stats[id] = def.step(person.stat(id))
+	for id: String in def.skill_ids():
+		builder.skills[id] = def.step(person.skill(id))
+	if not person.perks().is_empty():
+		builder.perk = String(person.perks()[0])
+	builder._apply_origin(def)
+	# The budget IS what this person cost. You cannot make him bigger, only
+	# different — sell a step here to buy one there.
+	builder.budget = builder.spent()
 	return builder
 
-# The origin's own allocation, bought at the normal price so it costs the same
-# years it would have cost by hand.
+# The origin's own allocation, on top of the lived sheet: the founder brought
+# leadership, the ex-player brought hands, the student brought a rulebook. It
+# is applied before the budget is measured, so it is part of who he is rather
+# than something he has to pay for twice.
 func _apply_origin(def: StatDef) -> void:
 	var origins := Drive.def("origin") as OriginDef
 	if origins == null or origin == "" or not origins.has_origin(origin):
@@ -213,14 +211,18 @@ func _apply_origin(def: StatDef) -> void:
 		if not def.has_base(id):
 			continue
 		var wanted: int = int(origins.stat_bias(origin)[id])
-		while int(stats.get(id, 0)) < wanted and can_raise_stat(id):
-			raise_stat(id)
+		while int(stats.get(id, 0)) < wanted \
+				and int(stats.get(id, 0)) < potential_step() \
+				and int(stats.get(id, 0)) < StatDef.MAX_STEP:
+			stats[id] = int(stats[id]) + 1
 	for id: String in origins.skill_bias(origin).keys():
 		if not def.has_skill(id):
 			continue
 		var wanted: int = int(origins.skill_bias(origin)[id])
-		while int(skills.get(id, 0)) < wanted and can_raise_skill(id):
-			raise_skill(id)
+		while int(skills.get(id, 0)) < wanted \
+				and int(skills.get(id, 0)) < potential_step() \
+				and int(skills.get(id, 0)) < StatDef.MAX_STEP:
+			skills[id] = int(skills[id]) + 1
 
 # --- Spending ---# --- Spending ---# --- Spending ---
 
@@ -254,7 +256,7 @@ func can_move_body(id: String, value: float) -> bool:
 	return after - body_cost() <= remaining()
 
 func remaining() -> int:
-	return total_points() - spent()
+	return budget - spent()
 
 # You leave this screen when there is nothing left to buy — which is not the
 # same as leaving with zero.
@@ -292,9 +294,12 @@ func cheapest_purchase() -> int:
 			best = cost
 	return best
 
-# The whole point: your age IS how much you spent.
+# The age the life produced, not a function of the budget. Deriving it from
+# spending was what let the header say "12 anos" while the sheet said eight
+# steps of leadership — and with the manager now lived like everybody else,
+# there is a real number to show instead of an inference.
 func age() -> int:
-	return START_AGE + int(floor(float(spent()) / float(CAREER_POINTS_PER_YEAR)))
+	return rolled_age
 
 # In career points, which is the only number the player ever spends.
 func cost_to_raise_stat(id: String) -> int:

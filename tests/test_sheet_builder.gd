@@ -7,8 +7,6 @@ const SEED := 424242
 func tests() -> Array:
 	return [
 		"test_starts_as_an_average_adult",
-		"test_age_climbs_as_you_spend",
-		"test_age_goes_back_when_you_take_points_back",
 		"test_full_budget_reaches_eighteen",
 		"test_everything_can_be_given_back",
 		"test_lowering_refunds_exactly_what_raising_cost",
@@ -21,7 +19,7 @@ func tests() -> Array:
 		"test_bakes_steps_into_stored_units",
 		"test_an_extreme_body_costs_the_whole_spare_budget",
 		"test_a_remainder_nothing_costs_still_finishes",
-		"test_the_opening_rolls_a_finished_adult",
+		"test_the_opening_rolls_a_lived_person",
 		"test_the_manager_is_capped_like_a_squad_player",
 		"test_the_opening_rolls_a_whole_person",
 		"test_each_origin_leans_its_own_way",
@@ -41,31 +39,12 @@ func test_starts_as_an_average_adult(t: TestHelper) -> void:
 		t.equal(step, SheetBuilder.START_STAT_STEP, "atributo deveria abrir no adulto mediano")
 	for step: int in builder.skills.values():
 		t.equal(step, 0, "habilidade deveria abrir em zero")
-	t.equal(builder.age(), 15, "idade de abertura")
+	# The hand-built sheet is a finished adult by definition: it is the whole
+	# allowance already laid out.
+	t.equal(builder.age(), SheetBuilder.END_AGE, "idade de abertura")
 	t.equal(builder.remaining(), 54, "career points restantes")
 	if def != null:
 		t.equal(int(builder.stats.size()) * 45, builder.spent(), "custo pré-pago")
-
-func test_age_climbs_as_you_spend(t: TestHelper) -> void:
-	var builder: SheetBuilder = _builder()
-	var id: String = String(builder.stats.keys()[0])
-	var before: int = builder.age()
-	for i: int in range(20):
-		builder.raise_stat(id)
-	t.check(builder.age() > before,
-		"gastar não envelheceu (%d -> %d, gasto %d)" % [before, builder.age(), builder.spent()])
-
-func test_age_goes_back_when_you_take_points_back(t: TestHelper) -> void:
-	var builder: SheetBuilder = _builder()
-	var opening: int = builder.age()
-	var id: String = String(builder.stats.keys()[0])
-	for i: int in range(3):
-		builder.raise_stat(id)
-	var older: int = builder.age()
-	t.check(older > opening, "subir não envelheceu")
-	for i: int in range(3):
-		builder.lower_stat(id)
-	t.equal(builder.age(), opening, "desfazer deveria voltar à idade de abertura")
 
 func test_full_budget_reaches_eighteen(t: TestHelper) -> void:
 	var builder: SheetBuilder = _builder()
@@ -251,13 +230,23 @@ func test_an_extreme_body_costs_the_whole_spare_budget(t: TestHelper) -> void:
 # genius. It used to stop at twelve and leave a hundred and thirty points in
 # your pocket, so the header said "12 anos" while you pumped leadership to
 # eight. An eighteen-year-old with everything spent has no such state to be in.
-func test_the_opening_rolls_a_finished_adult(t: TestHelper) -> void:
-	for seed_value: int in [1, 99, SEED, 20260916]:
-		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(seed_value))
-		t.check(builder.age() >= SheetBuilder.END_AGE - 1,
-			"semente %d abriu com %d anos" % [seed_value, builder.age()])
-		t.check(builder.is_complete(),
-			"semente %d abriu incompleta com %d cp" % [seed_value, builder.remaining()])
+func test_the_opening_rolls_a_lived_person(t: TestHelper) -> void:
+	var origins := Drive.def("origin") as OriginDef
+	if origins == null:
+		t.fail("OriginDef ausente"); return
+	for id: String in origins.origin_ids():
+		for seed_value: int in [1, SEED, 20260916]:
+			var builder: SheetBuilder = SheetBuilder.rolled_opening(
+				SeedRng.make_rng(seed_value), id)
+			# The age is the LIFE's, not a function of the budget. Deriving it
+			# from spending is what let the header say "12 anos" beside eight
+			# steps of leadership.
+			t.check(builder.age() >= 15 and builder.age() <= 26,
+				"origem %s, semente %d: %d anos" % [id, seed_value, builder.age()])
+			# And the roll leaves nothing over: what you may move is HIS points.
+			t.equal(builder.remaining(), 0,
+				"origem %s abriu com %d cp livres" % [id, builder.remaining()])
+			t.check(builder.is_complete(), "origem %s abriu incompleta" % id)
 
 # THE SAME RULER AS EVERYBODY ELSE. The manager was the only person on screen
 # without a ceiling, which is why he came out heroic — a squad player is capped
@@ -287,7 +276,8 @@ func test_the_opening_rolls_a_whole_person(t: TestHelper) -> void:
 	if def == null:
 		t.fail("StatDef ausente"); return
 	for seed_value: int in [3, 77, SEED]:
-		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(seed_value))
+		var builder: SheetBuilder = SheetBuilder.rolled_opening(
+			SeedRng.make_rng(seed_value), "player")
 		var trained: int = 0
 		for id: String in def.skill_ids():
 			if int(builder.skills[id]) > 0:
@@ -363,11 +353,16 @@ func test_the_opening_is_not_the_same_person_twice(t: TestHelper) -> void:
 	var sheets: Dictionary = {}
 	var with_a_perk: int = 0
 	for i: int in range(20):
-		var builder: SheetBuilder = SheetBuilder.rolled_opening(rng)
-		sheets[str(builder.stats) + builder.perk] = true
+		# WITH an origin. Rolled without one, everybody is a thirteen-year-old
+		# with zero seasons behind him and of course they come out alike — the
+		# scenario is most of what makes two managers different.
+		var builder: SheetBuilder = SheetBuilder.rolled_opening(rng, "player")
+		sheets[str(builder.stats) + str(builder.skills) + builder.perk] = true
 		if builder.has_perk():
 			with_a_perk += 1
-	t.equal(sheets.size(), 20, "só %d aberturas distintas em 20" % sheets.size())
+	# Not twenty of twenty: a city-level sheet lives in three steps across
+	# twenty-three tracks, so two sandlot managers genuinely do look alike.
+	t.check(sheets.size() >= 14, "só %d aberturas distintas em 20" % sheets.size())
 	# The perk is what gives a rolled character a tone, so some have one and
 	# some do not — neither extreme is a roll.
 	t.check(with_a_perk > 0, "ninguém abriu com perk em 20 sorteios")

@@ -126,8 +126,12 @@ func test_untrained_skills_are_never_flaws(t: TestHelper) -> void:
 		stats.blank_sheet(5), {"throwing": 8})
 	t.equal(trained.size(), 1, "uma habilidade treinada deveria contar")
 	t.equal(String((trained[0] as Dictionary)["dir"]), "high", "direção")
-	# Attributes still count downward: everybody is born with all eight.
-	var weak: Array = stats.notable_traits({"strength": 1}, {})
+	# Attributes still count downward, but only at the floor: on the new ruler a
+	# city-level player sits at one or two steps in everything, so calling that
+	# a flaw would have every amateur in the game nicknamed after a weakness.
+	t.equal(stats.notable_traits({"strength": 1}, {}).size(), 0,
+		"um passo é nível várzea, não defeito")
+	var weak: Array = stats.notable_traits({"strength": 0}, {})
 	t.equal(weak.size(), 1, "um atributo baixo deveria contar")
 	t.equal(String((weak[0] as Dictionary)["dir"]), "low", "direção")
 
