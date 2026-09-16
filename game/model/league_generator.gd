@@ -1,53 +1,45 @@
 # LeagueGenerator — how a world comes to exist.
 #
-# The whole of worldbuilding is one loop:
+# The shape of it, and it is deliberately not a marketplace:
 #
-#     clubs = TeamGenerator.generate() × N        empty, just names and colours
-#     while some club cannot field a side:
-#         actor = ActorGenerator.spawn(...)        born into the Praça
-#         draft(actor, clubs)                      somebody takes him, or nobody
-#     ... and it keeps going a while after that, so the Praça has residue
+#     clubs = TeamGenerator × N                    empty, just names and colours
+#     repeat, best club first, until everybody is full:
+#         · each club holds a TRYOUT for what it lacks, and picks from it
+#         · whoever was not picked walks to the Praça
+#         · one INDIE turnout — the people nobody called — into the Praça
+#         · each club, best first, picks what it still needs out of the Praça
 #
-# That is the entire architecture of decision 46, and it replaces the thing that
-# was there before: each club inventing exactly the people it was short of, on
-# first read, in isolation. Which produced squads that were individually fine
-# and collectively impossible — nobody competed for anybody, every club got its
-# ideal formation, and there was no such thing as a person without a club.
+# WHY TRYOUTS AND NOT A POOL. The first version spawned a stream of people with
+# a fixed distribution over positions and let clubs refuse them. That is not
+# where flag players come from, and it broke exactly where you would expect: a
+# league short of centers sat there rolling receivers and turning them away,
+# a hundred lines of "ninguém quis" while the loop waited for the dice. Supply
+# is created BY the club, FOR the gap, because that is what actually happens —
+# you do not wait for a center to wander past, you announce a tryout.
 #
-# The loop gets three things for free that the old version had to fake:
+# The two real doors into the sport are both here: the gridiron player who also
+# plays flag and simply turns up (the indie turnout), and the person a club went
+# out and called (the tryout). Neither of them is a world pool being shopped.
 #
-#   · stratification. Nobody assigns quality to a club. The draft matches level
-#     to level, so the good ones accumulate at the good clubs because that is
-#     who signs them, and the tier table falls out instead of being declared.
-#   · a market. There is residue in the Praça at kickoff, so there is somebody
-#     to sign in week one. A pool that starts empty is a transfer system that
-#     starts dead.
-#   · the player. You are a spawn like any other, and the scenario you picked is
-#     a rule about how you get drafted. Nothing special happens for you, which
-#     is exactly why the club that takes you is believable.
+# BEST CLUB FIRST, every phase. Flag Kings fills before Estácio Marrecos and
+# what is left over is what Estácio gets, which is both how it works and why
+# the tier table does not need anybody to declare it.
 #
 # ⚠️ `draft`, NOT `match`: `match` is GDScript's pattern-matching keyword, so
-# `self.match(actor, teams)` is a parse error. It is also the better word —
-# this is a club deciding to take somebody, not a similarity score.
+# `self.match(actor, teams)` is a parse error. The draft is the Praça phase —
+# `pick()` is its unit operation, asking which person a club takes rather than
+# which club takes a person. That inversion is the fix: a club shopping never
+# has nothing to do, while a person being offered around can be refused by
+# everybody, forever.
 class_name LeagueGenerator
 
-# The world the module ships is Rio's sandlot, so the ambient level is the
-# bottom of the ladder. The spread is what makes the pool worth drafting from:
-# without it every club would fill with the same person and the tier table
-# would be noise. Half a level of sigma puts the odd Q2 in a Q1 pool, which is
-# the guy a good club fights for.
-const LEVEL_SPREAD := 0.55
-const LEVEL_FLOOR := 0.6
-const LEVEL_CEILING := 5.0
-
-# How many spawns the fill loop is allowed before it gives up. A cap and not a
-# `while true`: if a formation hole can never be filled — a module that
-# declares a position nothing matches into — this has to end in a log line and
-# a short squad, not a hung boot.
-const MAX_SPAWNS := 900
-# And the same guard on the one-shot driver, counting phase steps rather than
-# spawns: setup and settle are one step per club on top of the spawning.
-const MAX_STEPS := 2000
+# How many rounds of tryouts before giving up. A cap and not a `while true`: a
+# module declaring a position nothing can match into has to end in a log line
+# and a short squad, not a hung boot. Each round gives every unfinished club a
+# targeted tryout, so a club needing nine people is normally done in three.
+const MAX_ROUNDS := 40
+# And the same guard on the one-shot driver, counting phase steps.
+const MAX_STEPS := 4000
 
 # How many people are left standing in the Praça once every club is playable.
 # Proportional to the field, because a sixteen-club league needs a bigger
@@ -79,6 +71,12 @@ const MAX_SURPLUS := 2
 # still outranks a perfect match: a club that cannot snap the ball takes the
 # center who turned up, and worries about his level afterwards.
 const FIT_WEIGHT := 2.5
+# An empty chair on the sideline. Between a formation hole and being short at a
+# position: a club without a head coach is in trouble, but not the kind of
+# trouble that stops it taking the field.
+const NEED_STAFF_CHAIR := 2.2
+# How many positions a tryout calls for at once.
+const ADVERTISED := 4
 # The span of the world ladder, from a neighbourhood side to an IFAF club.
 const LEVEL_SPAN := 4.0
 
@@ -124,45 +122,118 @@ static func ambient_level(clubs: Array) -> float:
 		total += nations.club_level(club)
 	return total / float(clubs.size())
 
-# One person into the world, at a level drawn around the league's own.
-static func spawn_one(world_seed: int, index: int, level: float, category: String) -> Actor:
-	var rng: RandomNumberGenerator = SeedRng.make_rng(
-		SeedRng.derive(world_seed, "level_%d" % index))
-	return ActorGenerator.spawn(world_seed, index,
-		clampf(rng.randfn(level, LEVEL_SPREAD), LEVEL_FLOOR, LEVEL_CEILING), category)
-
 # --- The draft ---
 
-# Which club takes this person, or "" when nobody does and he stays in the
-# Praça. The one line the whole architecture hangs off.
-static func draft(actor: Actor, clubs: Array, rosters: Rosters,
-		category: String, positions: PositionDef) -> String:
-	var best: String = ""
+# WHICH OF THESE PEOPLE THIS CLUB TAKES, or null when it wants none of them.
+# The one line the whole architecture hangs off, and it points the way round it
+# does on purpose: a club shopping a pool always has something to do, whereas a
+# person offered around club by club can be refused by all of them and come
+# back next turn to be refused again.
+static func pick(club: Dictionary, pool: Array, rosters: Rosters,
+		category: String, positions: PositionDef) -> Actor:
+	var best: Actor = null
 	var best_score: float = 0.0
-	for club: Dictionary in clubs:
-		var score: float = wants(club, actor, rosters, category, positions)
+	for person: Actor in pool:
+		var score: float = wants(club, person, rosters, category, positions)
 		if score > best_score:
 			best_score = score
-			best = String(club.get("id", ""))
+			best = person
 	return best
 
-# How badly this club wants this person. Zero or less means it does not.
+# Clubs strongest first. Every phase runs in this order, which is the whole of
+# the stratification: the best side picks from a full tryout and a full Praça,
+# and what is left over is what the bottom of the table gets.
+static func by_standing(clubs: Array) -> Array:
+	var out: Array = clubs.duplicate()
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a.get("reputation", 0)) > int(b.get("reputation", 0)))
+	return out
+
+# What this club would hold a tryout FOR, most urgent first. This is the line
+# that conditions supply on demand — the club advertises its holes, and the
+# bodies that turn up lean that way.
+static func gaps(club: Dictionary, rosters: Rosters, category: String,
+		positions: PositionDef) -> Array[String]:
+	var id: String = String(club.get("id", ""))
+	var tier: int = int(club.get("tier", 4))
+	var scored: Array = []
+	for pid: String in positions.playing_ids():
+		var room: int = positions.slots(pid) + MAX_SURPLUS - rosters.depth_at(id, category, pid)
+		if room <= 0:
+			continue
+		var short: int = positions.slots(pid) - rosters.depth_at(id, category, pid)
+		scored.append({"id": pid, "want": maxi(short, 0) * 2 + 1})
+	# A club also goes looking for a coach, and for the same reason: the chair
+	# is empty and somebody has to call the plays.
+	if rosters.staff_count(id, category) < rosters.staff_target(tier):
+		for pid: String in positions.ids_on_side(PositionDef.SIDE_STAFF):
+			if rosters.depth_at(id, category, pid) == 0:
+				scored.append({"id": pid, "want": 2})
+	scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["want"]) > int(b["want"]))
+	# ONLY THE FEW THAT MATTER. A tryout advertising all eleven positions steers
+	# nothing — the candidates get spread one per position and the hole the club
+	# actually has gets one body out of eleven. Four is a real call for help,
+	# and it is also what the flyer would say.
+	var out: Array[String] = []
+	for entry: Variant in scored:
+		if out.size() >= ADVERTISED:
+			break
+		out.append(String((entry as Dictionary)["id"]))
+	return out
+
+# Has this club finished building? Its squad AND its staff, because they are
+# two budgets: a side with twelve athletes and nobody on the sideline is not
+# done, and neither is one with a full technical staff and six players.
+static func is_built(club: Dictionary, rosters: Rosters, category: String,
+		positions: PositionDef) -> bool:
+	var id: String = String(club.get("id", ""))
+	var tier: int = int(club.get("tier", 4))
+	if rosters.athlete_count(id, category) < rosters.target_size(id, tier):
+		return false
+	if rosters.staff_count(id, category) < rosters.staff_target(tier):
+		return false
+	return playable(rosters, id, category, positions)
+
+# How badly this club wants this person. Zero means it does not.
 static func wants(club: Dictionary, actor: Actor, rosters: Rosters,
 		category: String, positions: PositionDef) -> float:
 	var id: String = String(club.get("id", ""))
-	var people: Array[Actor] = rosters.squad(id, category)
 	var tier: int = int(club.get("tier", 4))
-	if people.size() >= rosters.target_size(id, tier):
+	var position: String = actor.position()
+
+	# A CLIPBOARD IS NOT A ROSTER SPOT. Staff has its own small budget and one
+	# person per chair — you do not carry a spare head coach — and it must not
+	# come out of the squad's count, which is what once produced a club with
+	# five fitness coaches and one center.
+	if positions.side(position) == PositionDef.SIDE_STAFF:
+		if rosters.staff_count(id, category) >= rosters.staff_target(tier):
+			return 0.0
+		if rosters.depth_at(id, category, position) > 0:
+			return 0.0
+		return NEED_STAFF_CHAIR + _fit(club, actor) * FIT_WEIGHT
+
+	# A FORMATION HOLE BEATS THE SQUAD CAP. A club that has reached its target
+	# size and still has nobody at center cannot take the field, and being one
+	# over target is nothing next to that — so the cap stops applying to the
+	# person who plugs the hole.
+	#
+	# Without this the two rules deadlocked: `is_built` demands playability, so
+	# a full-but-unplayable club kept holding tryouts, and `wants` refused
+	# everybody who turned up because the squad was full. The round signed
+	# nobody, the stall guard fired, and the league shipped with five sides that
+	# could not field five players.
+	var depth: int = rosters.depth_at(id, category, position)
+	var plugs_a_hole: bool = positions.has_position(position) and depth == 0
+	if rosters.athlete_count(id, category) >= rosters.target_size(id, tier) 			and not plugs_a_hole:
 		return 0.0
 
-	var position: String = actor.position()
 	# NOBODY CARRIES A FOURTH QUARTERBACK. Two deep past the formation is a
 	# coach keeping his options open; six rushers at a one-rusher position is
 	# the best club in the league hoovering up whatever the market spat out,
 	# because it out-bid everybody on fit and no rule said no. A refusal and
 	# not a weak preference: the draft asks which club wants THIS man most, so
 	# a mild dislike still wins when the alternatives are milder.
-	var depth: int = rosters.depth_at(id, category, position)
 	if positions.has_position(position) and depth >= positions.slots(position) + MAX_SURPLUS:
 		return 0.0
 
@@ -185,7 +256,7 @@ static func _need(club: Dictionary, actor: Actor, rosters: Rosters,
 		# Nobody here plays his position at all. This is the term that ends the
 		# fill loop, and it is the biggest one on purpose.
 		return {"value": NEED_FORMATION_HOLE, "reason": "draft.why_hole"}
-	if rosters.squad(String(club.get("id", "")), category).size() < positions.squad_minimum:
+	if rosters.athlete_count(String(club.get("id", "")), category) < positions.squad_minimum:
 		# Below the competition's own floor, a body is a body.
 		return {"value": NEED_UNDER_MINIMUM, "reason": "draft.why_minimum"}
 	if positions.has_position(position) and depth < positions.slots(position):
@@ -231,8 +302,9 @@ static func playable(rosters: Rosters, team_id: String, category: String,
 	var def: PositionDef = positions if positions != null else Drive.def("position") as PositionDef
 	if def == null:
 		return false
-	var people: Array[Actor] = rosters.squad(team_id, category)
-	if people.size() < def.squad_minimum:
+	# Athletes, not bodies. Seven REGISTERED is a rule about who can take the
+	# field, and a head coach cannot.
+	if rosters.athlete_count(team_id, category) < def.squad_minimum:
 		return false
 	for id: String in def.playing_ids():
 		if rosters.depth_at(team_id, category, id) <= 0:

@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+### Changed — B.5e: peneiras no lugar do pool mundial (2026-09-16)
+- **`Tryout`** — de onde jogador de flag realmente vem. Duas portas: o jogador de
+  FA que tambem joga flag e aparece sozinho (o turnout indie), e quem o clube foi
+  la e CHAMOU. A peneira gera **2d5* + alcance** candidatos **no nivel do proprio
+  clube** — Bangu Castores peneira um pool Q1, Flag Kings peneira outro
+- **A rodada**: peneiras → indies → draft da praca, sempre **do melhor clube pro
+  pior**. Os melhores enchem primeiro e quem sobra fica com os piores, que e como
+  funciona e e por que a tabela de tier nao precisa que ninguem a declare
+- `LeagueGenerator.pick(clube, pool)` aponta pro lado CONTRARIO do antigo
+  `draft(actor, times)`, de proposito: clube que faz compras sempre tem o que
+  fazer, enquanto pessoa oferecida de clube em clube pode ser recusada por todos
+  e voltar na rodada seguinte pra ser recusada de novo
+- A peneira orienta o **CORPO**, nunca a posicao — decisao 47 intacta: uma peneira
+  de center pode revelar um safety, ele so apareceu porque viu o cartaz
+- **Comissao tecnica entra no elenco**, com orcamento separado e uma pessoa por
+  cadeira. Quem e contratado como tecnico ja senta na cadeira (atleta nao:
+  escolher os titulares e trabalho do player) e nao usa camisa
+
+### Fixed
+- **O "ninguem quis" de dezenas de linhas seguidas.** O gerador tinha PDF de
+  posicao fixa e a condicao de parada dependia de posicoes especificas: liga sem
+  center ficava rolando recebedor e recusando, esperando o dado. Agora a oferta e
+  criada pelo clube para o buraco dele
+- **Deadlock entre o teto de elenco e a jogabilidade.** Clube batia no
+  `target_size` ainda com buraco na formacao: `is_built` exigia jogabilidade,
+  entao ele seguia peneirando, e `wants` recusava todo mundo porque o elenco
+  estava cheio. A rodada nao assinava ninguem, a guarda de estagnacao disparava,
+  e a liga embarcava com cinco times que nao conseguiam escalar cinco. Buraco na
+  formacao agora vence o teto
+- **Peneira anunciando as onze posicoes nao orienta nada** — os candidatos se
+  espalhavam um por posicao e o buraco real recebia um corpo em onze. Quatro
+- **A orientacao vazava pro QB.** O clube pedia recebedor, o corpo era escolhido
+  pra recebedor, e o matcher dizia "quarterback" — as duas posicoes querem coisas
+  parecidas e QB e o vetor mais facil de pontuar. Todo clube encostava no teto de
+  QB ainda faltando recebedor. Peneira agora te testa na posicao que anunciou
+
 ### Added — B.5d: a tela do draft (2026-09-16)
 - **Tela do draft** entre a criacao e o elenco: barra de progresso, legenda de
   fase e o **log do draft** — quem foi pra onde e POR QUE. Com botao [OK], que

@@ -443,11 +443,23 @@ func test_the_lineup_panel_shows_empty_slots(t: TestHelper) -> void:
 	var shown: String = _texts(screen)
 	t.check(shown.contains(UiText.t("team.side_offense")), "sem bloco de ataque")
 	t.check(shown.contains(UiText.t("team.side_defense")), "sem bloco de defesa")
-	# Nobody is assigned yet, so every slot in the formation is a hole.
-	var total: int = positions.slots_on_side("admin") + positions.slots_on_side("staff") 		+ positions.slots_on_side("offense") + positions.slots_on_side("defense")
+	# THE ESCALAÇÃO IS ALL HOLES AND THE COMISSÃO IS NOT, and that difference is
+	# the design: picking the starting five is your job, so nobody arrives ticked
+	# — but a club that went out and held a tryout for a defensive coordinator
+	# HAS one, and drawing "Vazio" beside him would be a lie.
+	#
+	# Administração stays empty too: those three chairs are yours to hand out.
+	var rosters := The.board.get("rosters", null) as Rosters
+	var hired: int = rosters.staff_count("flag_kings", Actor.CATEGORY_MASC)
+	var open_chairs: int = maxi(positions.slots_on_side("staff") - hired, 0)
+	var total: int = positions.slots_on_side("admin") + open_chairs 		+ positions.slots_on_side("offense") + positions.slots_on_side("defense")
+	t.check(hired > 0, "o clube não contratou comissão nenhuma")
 	t.equal(shown.count(UiText.t("team.empty_slot")), total,
-		"vagas vazias desenhadas (esperava %d)" % total)
-	t.equal(total, 18, "3 de administração + 5 de comissão + 5 de ataque + 5 de defesa")
+		"vagas vazias desenhadas (esperava %d, com %d da comissão já ocupadas)"
+			% [total, hired])
+	t.equal(positions.slots_on_side("admin") + positions.slots_on_side("staff")
+		+ positions.slots_on_side("offense") + positions.slots_on_side("defense"), 18,
+		"3 de administração + 5 de comissão + 5 de ataque + 5 de defesa")
 	_close(screen)
 
 # Two quarterbacks is not an error, it is how a coach finds out which one is

@@ -136,6 +136,18 @@ func trains(id: String) -> Dictionary:
 # and B.6's role assignment can therefore ask the same function.
 const MATCH_NOISE := 0.14
 
+# A TRYOUT PUTS YOU AT THE POSITION IT ADVERTISED. It is a nudge and not an
+# assignment — about the size of the noise, so a body that is obviously
+# something else still comes out as that something else.
+#
+# Without it the steering leaked: a club calling for receivers drew bodies
+# chosen to fit receiver, and the matcher then read the same body and said
+# "quarterback", because the two positions want overlapping things and QB is
+# the easier vector to score well on. Every club in the league ended up at the
+# quarterback surplus cap while still short at receiver — the club asked for
+# one thing and the machine kept handing it another.
+const TRYOUT_PULL := 0.12
+
 # Roughly -1..+1. Normalised by how many terms the position actually declares,
 # so a position with ten opinions is not automatically favoured over one with
 # six.
@@ -170,13 +182,16 @@ func match_position(stats: Dictionary, skills: Dictionary,
 	return match_on_sides(stats, skills, rng, PLAYING_SIDES)
 
 func match_on_sides(stats: Dictionary, skills: Dictionary,
-		rng: RandomNumberGenerator, sides: Array[String]) -> String:
+		rng: RandomNumberGenerator, sides: Array[String],
+		advertised: String = "") -> String:
 	var best: String = ""
 	var best_score: float = -INF
 	for id: String in _order:
 		if not sides.has(side(id)):
 			continue
 		var score: float = fit(id, stats, skills) + rng.randfn(0.0, MATCH_NOISE)
+		if advertised != "" and id == _key(advertised):
+			score += TRYOUT_PULL
 		if score > best_score:
 			best_score = score
 			best = id

@@ -453,20 +453,12 @@
       "en": "BUILDING THE LEAGUE"
     },
     "draft.subtitle": {
-      "pt": "Ninguém é inventado por um clube. Todo mundo nasce na praça e os clubes vão levando — até todo time estar cheio, e um pouco além, pra sobrar mercado. O log abaixo é quem foi pra onde e por quê.",
-      "en": "Nobody is invented by a club. Everybody is born in the square and the clubs take them — until every side is full, and a little past that, so there is a market left over. The log below is who went where, and why."
+      "pt": "Ninguém é inventado por um clube. Cada time faz peneira pelas posições que faltam — o alcance dele decide quantos aparecem — e quem não passa fica na praça, junto com quem apareceu sozinho. Depois os times pegam da praça, do melhor pro pior. O log abaixo é quem foi pra onde e por quê.",
+      "en": "Nobody is invented by a club. Each side holds a tryout for the positions it lacks — its reach decides how many turn up — and whoever is not picked stays in the square, alongside the people who simply showed up. Then the clubs shop the square, best first. The log below is who went where, and why."
     },
     "draft.phase_setup": {
       "pt": "sentando os atletas curados",
       "en": "seating the curated athletes"
-    },
-    "draft.phase_fill": {
-      "pt": "sorteando gente",
-      "en": "drawing people"
-    },
-    "draft.phase_residue": {
-      "pt": "enchendo a praça",
-      "en": "filling the square"
     },
     "draft.phase_settle": {
       "pt": "fechando os elencos",
@@ -488,21 +480,13 @@
       "pt": "▸  %-34s →  %-26s %s",
       "en": "▸  %-34s →  %-26s %s"
     },
-    "draft.to_praca": {
-      "pt": "·  %-34s →  praça (ninguém quis)",
-      "en": "·  %-34s →  the square (nobody wanted him)"
-    },
     "draft.settled": {
-      "pt": "✔  %-26s %2d inscritos · geral %2d · %s",
-      "en": "✔  %-26s %2d registered · overall %2d · %s"
-    },
-    "draft.market": {
-      "pt": "⌂  praça: %d pessoas · idade mediana %d · nível mediano %.2f",
-      "en": "⌂  square: %d people · median age %d · median level %.2f"
+      "pt": "✔  %-26s %2d atletas + %d comissão · geral %2d · %s",
+      "en": "✔  %-26s %2d athletes + %d staff · overall %2d · %s"
     },
     "draft.gave_up": {
-      "pt": "⚠  desisti de encher a liga depois de %d sorteios",
-      "en": "⚠  gave up filling the league after %d draws"
+      "pt": "⚠  desisti depois de %d rodadas",
+      "en": "⚠  gave up after %d rounds"
     },
     "draft.why_hole": {
       "pt": "(buraco na formação)",
@@ -527,6 +511,50 @@
     "draft.working": {
       "pt": "montando…",
       "en": "building…"
+    },
+    "draft.phase_tryouts": {
+      "pt": "peneiras",
+      "en": "tryouts"
+    },
+    "draft.phase_indie": {
+      "pt": "quem apareceu sozinho",
+      "en": "the ones who just turned up"
+    },
+    "draft.phase_market": {
+      "pt": "draft da praça",
+      "en": "drafting from the square"
+    },
+    "draft.phase_topup": {
+      "pt": "deixando mercado pra trás",
+      "en": "leaving a market behind"
+    },
+    "draft.round": {
+      "pt": "— rodada %d",
+      "en": "— round %d"
+    },
+    "draft.tryout": {
+      "pt": "⚐  %s abre peneira  ·  %d apareceram  ·  procurando %s",
+      "en": "⚐  %s holds a tryout  ·  %d turned up  ·  looking for %s"
+    },
+    "draft.passed_over": {
+      "pt": "·  %-34s não passou → praça",
+      "en": "·  %-34s not picked → the square"
+    },
+    "draft.indie": {
+      "pt": "⚑  %d apareceram por conta própria",
+      "en": "⚑  %d turned up on their own"
+    },
+    "draft.from_market": {
+      "pt": "◂  %-34s ←  %-26s %s",
+      "en": "◂  %-34s ←  %-26s %s"
+    },
+    "draft.market_left": {
+      "pt": "⌂  praça: %d pessoas · idade mediana %d · nível mediano %.2f",
+      "en": "⌂  square: %d people · median age %d · median level %.2f"
+    },
+    "draft.stalled": {
+      "pt": "⚠  a rodada %d não trouxe ninguém — encerrando com elencos curtos",
+      "en": "⚠  round %d signed nobody — closing with short squads"
     }
   }
 }

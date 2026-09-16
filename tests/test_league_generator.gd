@@ -29,6 +29,7 @@ func tests() -> Array:
 		"test_somebody_already_seated_is_counted_not_replaced",
 		"test_a_praca_survives_the_round_trip",
 		"test_the_draft_writes_down_what_it_did",
+		"test_a_club_hires_a_bench_and_seats_it",
 	]
 
 func _world() -> Rosters:
@@ -268,6 +269,46 @@ func test_the_draft_writes_down_what_it_did(t: TestHelper) -> void:
 	for id: String in rosters.team_ids():
 		t.equal(other.squad(id, CATEGORY).size(), rosters.squad(id, CATEGORY).size(),
 			"'%s' saiu diferente pelos dois caminhos" % id)
+
+# Every club has somebody on the sideline, sized by tier — and the ones it hired
+# are SITTING IN THEIR CHAIRS. A club that went out and held a tryout for a
+# defensive coordinator has one, and the Comissão panel reading "Vazio" beside
+# him is just untrue.
+#
+# Athletes are the opposite and deliberately so: they arrive un-ticked, because
+# picking the starting five is the manager's job.
+func test_a_club_hires_a_bench_and_seats_it(t: TestHelper) -> void:
+	var rosters: Rosters = _world()
+	var positions := Drive.def("position") as PositionDef
+	var teams := Drive.def("team") as TeamDef
+	if positions == null or teams == null:
+		t.fail("Defs ausentes"); return
+	var checked: int = 0
+	for club: Dictionary in _clubs():
+		var id: String = String(club.get("id", ""))
+		if not rosters.has_squad(id, CATEGORY):
+			continue
+		checked += 1
+		var tier: int = int(club.get("tier", 4))
+		t.equal(rosters.staff_count(id, CATEGORY), rosters.staff_target(tier),
+			"'%s' (tier %d) não fechou a comissão" % [club.get("name", id), tier])
+		# One per chair. Nobody carries a spare head coach.
+		for pid: String in positions.ids_on_side(PositionDef.SIDE_STAFF):
+			t.check(rosters.depth_at(id, CATEGORY, pid) <= 1,
+				"'%s' tem %d em %s" % [club.get("name", id),
+					rosters.depth_at(id, CATEGORY, pid), positions.code(pid)])
+		for person: Actor in rosters.squad(id, CATEGORY):
+			if positions.side(person.position()) == PositionDef.SIDE_STAFF:
+				t.check(person.plays_position(person.position()),
+					"%s foi contratado como %s e ficou de fora da comissão" %
+						[person.display_name(), positions.code(person.position())])
+				t.equal(person.jersey(), Actor.NO_JERSEY,
+					"%s é comissão e saiu de camisa %d" %
+						[person.display_name(), person.jersey()])
+			else:
+				t.check(person.jersey() != Actor.NO_JERSEY or person.thing_id == "o_player",
+					"%s é atleta e saiu sem camisa" % person.display_name())
+	t.check(checked >= 10, "só %d clubes montados" % checked)
 
 func _mean(values: Array[int]) -> float:
 	if values.is_empty():

@@ -36,6 +36,14 @@ const SIZE_JITTER := 2
 const FOUNDERS_MIN := 1
 const FOUNDERS_MAX := 5
 
+# How many people are there to COACH rather than play, by tier. A sandlot club
+# has one person with a clipboard and he also plays; a tier-1 club can afford
+# chairs. A SEPARATE budget from the squad, because a coach is not somebody you
+# could have fielded — counting them together is what once produced a club with
+# five fitness coaches and one center.
+const STAFF_BY_TIER: Dictionary = {1: 4, 2: 3, 3: 2, 4: 1}
+const DEFAULT_STAFF := 1
+
 # team_id -> category -> Array[Actor]
 var _squads: Dictionary = {}
 # "team_id/category" -> true, for squads the draft has already been through.
@@ -157,6 +165,34 @@ func mark_founders(team_id: String, category: String) -> void:
 func size_for_tier(tier: int) -> int:
 	return int(SIZE_BY_TIER.get(tier, DEFAULT_SIZE))
 
+func staff_target(tier: int) -> int:
+	return int(STAFF_BY_TIER.get(tier, DEFAULT_STAFF))
+
+# How many of this club's people are on a given side of the operation. The
+# squad target counts ATHLETES; a head coach must not eat a receiver's place.
+func count_on_side(team_id: String, category: String, side: String) -> int:
+	var positions := Drive.def("position") as PositionDef
+	if positions == null:
+		return 0
+	var total: int = 0
+	for person: Actor in squad(team_id, category):
+		if positions.side(person.position()) == side:
+			total += 1
+	return total
+
+func athlete_count(team_id: String, category: String) -> int:
+	var positions := Drive.def("position") as PositionDef
+	if positions == null:
+		return squad(team_id, category).size()
+	var total: int = 0
+	for person: Actor in squad(team_id, category):
+		if PositionDef.PLAYING_SIDES.has(positions.side(person.position())):
+			total += 1
+	return total
+
+func staff_count(team_id: String, category: String) -> int:
+	return count_on_side(team_id, category, PositionDef.SIDE_STAFF)
+
 # Numbers, in squad order, skipping nobody. A shirt is how a crowd knows who
 # just caught that, and the roster column is empty without one.
 func hand_out_jerseys(team_id: String, category: String) -> void:
@@ -165,7 +201,14 @@ func hand_out_jerseys(team_id: String, category: String) -> void:
 	var pool: Array[int] = []
 	for number: int in range(1, 100):
 		pool.append(number)
+	var positions := Drive.def("position") as PositionDef
 	for person: Actor in squad(team_id, category):
+		# A COACH DOES NOT WEAR A NUMBER. The shirt is how a crowd knows who
+		# just caught that, and nobody is going to catch anything with a
+		# clipboard in his hands.
+		if positions != null and not PositionDef.PLAYING_SIDES.has(
+				positions.side(person.position())):
+			continue
 		if person.jersey() != Actor.NO_JERSEY or pool.is_empty():
 			continue
 		var pick: int = rng.randi() % pool.size()

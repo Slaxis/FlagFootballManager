@@ -113,10 +113,11 @@ const TRACK_STAFF := "staff"
 # many of them there have been both come off it, so they can never disagree.
 static func spawn(world_seed: int, actor_seed: int, level: float,
 		category: String = Actor.CATEGORY_MASC,
-		track: String = TRACK_PLAYER, years: int = -1) -> Actor:
+		track: String = TRACK_PLAYER, years: int = -1, toward: String = "") -> Actor:
 	return _lived(
 		SeedRng.make_rng(SeedRng.derive(world_seed, "praca_%d" % actor_seed)),
-		"actor_%d_%d" % [world_seed, actor_seed], level, category, track, years)
+		"actor_%d_%d" % [world_seed, actor_seed], level, category, track, years,
+		-1, toward)
 
 # YOU ARE NOT CREATING A FIFTEEN-YEAR-OLD. Everybody else spawns as a kid and
 # grows up, because that is how a squad gets its age spread — but the person on
@@ -134,15 +135,48 @@ static func lived(rng: RandomNumberGenerator, level: float,
 		rng.randi_range(MANAGER_DEBUT_MIN, MANAGER_DEBUT_MAX))
 
 static func _lived(rng: RandomNumberGenerator, thing_id: String, level: float,
-		category: String, track: String, years: int, debut: int = -1) -> Actor:
+		category: String, track: String, years: int, debut: int = -1,
+		toward: String = "") -> Actor:
 	var reputation: int = level_to_reputation(level)
 	var spec: Dictionary = {"track": track}
 	if years >= 0:
 		spec["career_years"] = years
 	if debut >= 0:
 		spec["debut_age"] = debut
+	if toward != "":
+		spec["toward"] = toward
 	return _build(rng, thing_id, quality_from_reputation(reputation),
 		category, spec, reputation, level)
+
+# NOBODY IS A SCOUT AT FIFTEEN. A player starts as a kid and grows up, which is
+# how a squad gets its age spread — but a staff chair is something you reach
+# after being around the sport a while, so a coaching tryout draws grown men.
+# The rule from decision 47 holds either way: a plain spawn is never offered a
+# clipboard at all, and the ones who are had to be old enough to hold it.
+const STAFF_DEBUT_MIN := 22
+const STAFF_DEBUT_MAX := 30
+
+static func _debut_for(rng: RandomNumberGenerator, track: String) -> int:
+	if track == TRACK_STAFF:
+		return rng.randi_range(STAFF_DEBUT_MIN, STAFF_DEBUT_MAX)
+	return ActorLife.roll_debut_age(rng)
+
+# How many bodies a tryout looks at before keeping one. Four, because one is no
+# steering at all and ten would make every candidate the platonic center — the
+# point is to bend the distribution, not to replace it.
+const BODY_TRIES := 4
+
+static func _body_toward(rng: RandomNumberGenerator, positions: PositionDef,
+		wanted: String, first: Dictionary) -> Dictionary:
+	var best: Dictionary = first
+	var best_fit: float = positions.fit(wanted, first, {})
+	for i: int in range(BODY_TRIES - 1):
+		var other: Dictionary = ActorLife.birth_sheet(rng)
+		var score: float = positions.fit(wanted, other, {})
+		if score > best_fit:
+			best_fit = score
+			best = other
+	return best
 
 # A club at the bottom of the ladder is a reputation-20 club, and one at the
 # top is a hundred. Both dials already existed; this is the sentence that says
@@ -164,8 +198,17 @@ static func _build(
 	var actor := Actor.new()
 	var def := Drive.def("stat") as StatDef
 	var positions := Drive.def("position") as PositionDef
+	# WHO TURNED UP, and it is the body that gets steered — never the position.
+	# A tryout advertising for centers rolls a few bodies and keeps the one that
+	# leans that way; the matcher below then does exactly what it always did, so
+	# the tryout can still turn up somebody who is obviously a safety. He came
+	# because he saw the flyer, not because anybody assigned him a chair.
 	var birth: Dictionary = ActorLife.birth_sheet(rng)
-	var debut: int = int(spec.get("debut_age", ActorLife.roll_debut_age(rng)))
+	var toward: String = String(spec.get("toward", ""))
+	if toward != "" and positions != null:
+		birth = _body_toward(rng, positions, toward, birth)
+	var debut: int = int(spec.get("debut_age",
+		_debut_for(rng, String(spec.get("track", TRACK_PLAYER)))))
 	var years: int = int(spec.get("career_years", career_years(reputation, rng)))
 	var payload: Dictionary = {
 		"plays": [category],
@@ -195,7 +238,7 @@ static func _build(
 		var sides: Array[String] = PositionDef.PLAYING_SIDES
 		if String(spec.get("track", TRACK_PLAYER)) == TRACK_STAFF:
 			sides = [PositionDef.SIDE_STAFF]
-		position = positions.match_on_sides(birth, {}, rng, sides)
+		position = positions.match_on_sides(birth, {}, rng, sides, toward)
 	actor.data["position"] = position
 	var declared: Array = spec.get("career", [])
 	for year: int in range(years):
