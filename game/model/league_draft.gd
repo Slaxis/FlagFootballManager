@@ -283,16 +283,19 @@ func _step_settle() -> void:
 		int(float(total) / maxf(float(people.size()), 1.0)), _shape(id)])
 	_cursor += 1
 
-# A COACH HIRED AS A COACH IS THE COACH. Athletes arrive un-ticked on purpose —
-# choosing the starting five is the manager's job and the whole point of B.6 —
-# but a club that went out and held a tryout for a defensive coordinator has one
-# now, and leaving the chair reading "Vazio" beside him is just untrue.
+# ⚠️ HIRING SOMEBODY IS NOT GIVING HIM THE CHAIR. Staff used to be seated the
+# moment they were signed, and since `head_coach` is the first chair a tryout
+# advertises, EVERY club in the league opened with a head coach already in post —
+# a decision made for you, silently, before you had seen the roster.
 #
-# Administration stays empty: those three chairs are yours to hand out.
+# Athletes arrive un-ticked because picking the starting five is the manager's
+# job. A coaching staff is the same job. The people are there, on the roster,
+# with the staff affinities to prove it; which of them sits where is yours.
+#
+# The presidency is the one exception, and it is not an exception to this rule —
+# it is a different rule. You do not appoint yourself, you already are it.
 func _seat(target: Rosters, team_id: String, who: Actor) -> void:
 	target.add(team_id, category, who)
-	if _positions.side(who.position()) == PositionDef.SIDE_STAFF 			and not who.plays_position(who.position()):
-		who.toggle_position(who.position())
 
 # --- Reading ---
 

@@ -29,7 +29,7 @@ func tests() -> Array:
 		"test_somebody_already_seated_is_counted_not_replaced",
 		"test_a_praca_survives_the_round_trip",
 		"test_the_draft_writes_down_what_it_did",
-		"test_a_club_hires_a_bench_and_seats_it",
+		"test_a_club_hires_a_bench_but_the_chairs_are_yours",
 	]
 
 func _world() -> Rosters:
@@ -270,20 +270,22 @@ func test_the_draft_writes_down_what_it_did(t: TestHelper) -> void:
 		t.equal(other.squad(id, CATEGORY).size(), rosters.squad(id, CATEGORY).size(),
 			"'%s' saiu diferente pelos dois caminhos" % id)
 
-# Every club has somebody on the sideline, sized by tier — and the ones it hired
-# are SITTING IN THEIR CHAIRS. A club that went out and held a tryout for a
-# defensive coordinator has one, and the Comissão panel reading "Vazio" beside
-# him is just untrue.
+# Every club has somebody on the sideline, sized by tier — and NOBODY IS SEATED.
 #
-# Athletes are the opposite and deliberately so: they arrive un-ticked, because
-# picking the starting five is the manager's job.
-func test_a_club_hires_a_bench_and_seats_it(t: TestHelper) -> void:
+# Staff used to be put in their chair the moment they were signed, and since
+# `head_coach` is the first chair a tryout advertises, every club in the league
+# opened with a head coach already in post. That is a decision made for the
+# manager, silently, before he has seen the roster.
+#
+# Athletes arrive un-ticked because picking the starting five is his job. A
+# coaching staff is the same job.
+func test_a_club_hires_a_bench_but_the_chairs_are_yours(t: TestHelper) -> void:
 	var rosters: Rosters = _world()
 	var positions := Drive.def("position") as PositionDef
-	var teams := Drive.def("team") as TeamDef
-	if positions == null or teams == null:
-		t.fail("Defs ausentes"); return
+	if positions == null:
+		t.fail("PositionDef ausente"); return
 	var checked: int = 0
+	var staff_seen: int = 0
 	for club: Dictionary in _clubs():
 		var id: String = String(club.get("id", ""))
 		if not rosters.has_squad(id, CATEGORY):
@@ -291,16 +293,16 @@ func test_a_club_hires_a_bench_and_seats_it(t: TestHelper) -> void:
 		checked += 1
 		var tier: int = int(club.get("tier", 4))
 		t.equal(rosters.staff_count(id, CATEGORY), rosters.staff_target(tier),
-			"'%s' (tier %d) não fechou a comissão" % [club.get("name", id), tier])
-		# One per chair. Nobody carries a spare head coach.
+			"'%s' (tier %d) não contratou a comissão" % [club.get("name", id), tier])
 		for pid: String in positions.ids_on_side(PositionDef.SIDE_STAFF):
 			t.check(rosters.depth_at(id, CATEGORY, pid) <= 1,
-				"'%s' tem %d em %s" % [club.get("name", id),
+				"'%s' contratou %d para %s" % [club.get("name", id),
 					rosters.depth_at(id, CATEGORY, pid), positions.code(pid)])
 		for person: Actor in rosters.squad(id, CATEGORY):
 			if positions.side(person.position()) == PositionDef.SIDE_STAFF:
-				t.check(person.plays_position(person.position()),
-					"%s foi contratado como %s e ficou de fora da comissão" %
+				staff_seen += 1
+				t.check(person.lineup().is_empty(),
+					"%s já chegou sentado em %s — a cadeira é do manager" %
 						[person.display_name(), positions.code(person.position())])
 				t.equal(person.jersey(), Actor.NO_JERSEY,
 					"%s é comissão e saiu de camisa %d" %
@@ -309,6 +311,7 @@ func test_a_club_hires_a_bench_and_seats_it(t: TestHelper) -> void:
 				t.check(person.jersey() != Actor.NO_JERSEY or person.thing_id == "o_player",
 					"%s é atleta e saiu sem camisa" % person.display_name())
 	t.check(checked >= 10, "só %d clubes montados" % checked)
+	t.check(staff_seen >= 10, "só %d contratados de comissão na liga inteira" % staff_seen)
 
 func _mean(values: Array[int]) -> float:
 	if values.is_empty():

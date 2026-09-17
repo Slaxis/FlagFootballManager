@@ -1157,9 +1157,11 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 	# answers to, and that is what being the player means — you cannot resign it
 	# and you cannot give it to a receiver. Every other chair on this row is a
 	# job, and jobs are exactly what this screen is for.
-	if id == OriginDef.CHAIR_OF_THE_CLUB:
-		button.disabled = true
-		button.tooltip_text = UiText.t("team.president_fixed")
+	# ⚠️ LOCKED, NOT DISABLED. `disabled` greys a control out, and grey means "not
+	# available" — which is the opposite of what this cell says. The presidency is
+	# HELD: the box is filled, in the club's own lettering, exactly like every
+	# other chair somebody holds. It simply does not answer the mouse.
+	var locked: bool = id == OriginDef.CHAIR_OF_THE_CLUB
 	var style := StyleBoxFlat.new()
 	style.bg_color = ACCENT if chosen else WELL
 	style.border_color = ACCENT if chosen else LINE
@@ -1212,10 +1214,12 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(label)
 
-	button.tooltip_text = "%s — %s\n%s: %d%%" % [
+	button.tooltip_text = "%s — %s\n%s: %d%%%s" % [
 		positions.label(id), positions.desc(id),
-		UiText.t("team.fit"), shown]
-	button.pressed.connect(_on_toggle_position.bind(person, id))
+		UiText.t("team.fit"), shown,
+		"\n" + UiText.t("team.president_fixed") if locked else ""]
+	if not locked:
+		button.pressed.connect(_on_toggle_position.bind(person, id))
 	return button
 
 # Sorting is stable on the name, so two players with the same Forca keep a

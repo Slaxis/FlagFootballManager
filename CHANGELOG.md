@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed - B.6o: a cadeira e sua (2026-09-17)
+- **Todo clube abria com um HC ja em posto.** A comissao era sentada no instante
+  em que era assinada, e como `head_coach` e a primeira cadeira que uma peneira
+  anuncia, isso valia pra liga inteira — uma decisao tomada pelo manager, em
+  silencio, antes de ele ter visto o elenco. Atleta chega sem marcacao porque
+  escalar os cinco e trabalho dele; comissao tecnica e o mesmo trabalho
+- **Travado nao e desabilitado.** `disabled` acinzenta o controle, e cinza quer
+  dizer "indisponivel" — o oposto do que a celula do presidente diz. Agora ela
+  fica preenchida na letra do clube, igual a toda cadeira ocupada; so nao responde
+  ao mouse, e o tooltip diz por que
+
 ### Fixed - B.6n: alto contraste literal (2026-09-17)
 - **A escolha do player estava sendo sobreposta de duas maneiras.** `colors[0]`
   era lido como a TINTA (nao como o fundo), e o par ainda era TROCADO quando
