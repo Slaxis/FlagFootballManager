@@ -43,7 +43,7 @@ func _wear_club_colours() -> void:
 	BG = plate.darkened(0.82) if plate.get_luminance() > 0.35 else plate.darkened(0.45)
 	PANEL = BG.lightened(0.06)
 	LINE = BG.lightened(0.16)
-	ACCENT = ink if ink.get_luminance() > 0.3 else plate.lightened(0.45)
+	ACCENT = TeamColors.accent(scheme)
 	TEXT = ACCENT.lightened(0.55)
 	MUTED = TEXT.darkened(0.45)
 	WELL = BG.darkened(0.18)
@@ -113,6 +113,10 @@ const TALENT_BAD := Color(0.85, 0.36, 0.36)
 # The best fit at each position among the people currently shown, so every
 # column is scaled to its own column.
 var _fit_ceilings: Dictionary = {}
+# The Geral span of whoever is on screen, so the colour ramp covers the numbers
+# that exist instead of the numbers the scale allows.
+var _worst_overall: int = 0
+var _best_overall: int = 0
 
 var _sort_key: String = SORT_STRENGTH
 var _sort_desc: bool = true
@@ -419,9 +423,14 @@ func _fill_row(grid: GridContainer, person: Actor, positions: PositionDef,
 	_put(grid, person, "talent", _talent_chip(person), chosen, index)
 	# Elifoot calls this Geral and so does this column: one number for how good
 	# somebody is, tinted so the roster reads before it is read.
+	# ⚠️ TINTED AGAINST THE SQUAD, NOT AGAINST 0..100. Geral at this tier runs
+	# from about 14 to 30, so a ramp calibrated on a hundred put every number
+	# fourteen to thirty per cent of the way from grey to the club's colour —
+	# which is to say grey. The club's hue was there the whole time and no value
+	# ever reached far enough along the ramp to show it.
 	var strength: int = person.overall()
 	_put(grid, person, "strength", _cell(str(strength), COL_STRENGTH,
-		StatBar.tint(strength, ACCENT)), chosen, index)
+		StatBar.tint(_in_squad(strength), ACCENT)), chosen, index)
 	_put(grid, person, "age", _cell(str(person.age()), COL_AGE, MUTED), chosen, index)
 	for step: Dictionary in _column_plan(positions):
 		if step.has("rule"):
@@ -565,8 +574,10 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 		var chairs: Array = assigned.get(id, [])
 		box.add_child(_slot_row(positions.code(id),
 			chairs[0] if not chairs.is_empty() else null))
+	var short: bool = _squad_is_short(people, positions)
 	box.add_child(_panel_title(UiText.t("team.lineup"), _squad_note(people, positions),
-		UiText.t("team.lineup_hint")))
+		UiText.t("team.below_minimum") % positions.squad_minimum if short
+			else UiText.t("team.lineup_hint"), short))
 	var reserves: Array = []
 	for side: String in SIDES_IN_LINEUP:
 		box.add_child(_unit_caption(UiText.t("team.side_" + side),
@@ -607,9 +618,19 @@ func _squad_note(people: Array[Actor], positions: PositionDef) -> String:
 	for person: Actor in people:
 		if not person.lineup().is_empty():
 			marked += 1
-	if marked < positions.squad_minimum:
-		return UiText.t("team.below_minimum") % [marked, positions.squad_minimum]
-	return UiText.t("team.registered") % [marked, people.size()]
+	# JUST THE NUMBERS. "abaixo do mínimo" is four more words of explanation in a
+	# three-hundred-pixel column, and it was widening the whole panel to say what
+	# the colour beside it already says — the sentence is on the tooltip.
+	return UiText.t("team.registered") % [marked, positions.squad_minimum] \
+		if marked < positions.squad_minimum \
+		else UiText.t("team.registered") % [marked, people.size()]
+
+func _squad_is_short(people: Array[Actor], positions: PositionDef) -> bool:
+	var marked: int = 0
+	for person: Actor in people:
+		if not person.lineup().is_empty():
+			marked += 1
+	return marked < positions.squad_minimum
 
 # The number that moves as you shuffle the pieces. Only the STARTERS count —
 # depth on the bench does not take the field — so swapping a reserve in changes
@@ -641,8 +662,25 @@ func _unit_caption(text: String, overall: int) -> Control:
 	row.add_child(value)
 	return row
 
+# Where a Geral sits between the worst and the best in this squad, as 0..100.
+# A flat squad still spreads across the ramp, which is right: the question the
+# column answers is "who here is good", and "here" is the squad.
+func _in_squad(value: int) -> int:
+	var span: int = _best_overall - _worst_overall
+	if span <= 0:
+		return 50
+	return clampi(int(round(float(value - _worst_overall) * 100.0 / float(span))), 0, 100)
+
 func _measure_fit_ceilings(people: Array[Actor]) -> void:
 	_fit_ceilings.clear()
+	_worst_overall = 0
+	_best_overall = 0
+	for person: Actor in people:
+		var mark: int = person.overall()
+		if _best_overall == 0 or mark > _best_overall:
+			_best_overall = mark
+		if _worst_overall == 0 or mark < _worst_overall:
+			_worst_overall = mark
 	var positions := Drive.def("position") as PositionDef
 	if positions == null:
 		return
@@ -660,7 +698,8 @@ func _measure_fit_ceilings(people: Array[Actor]) -> void:
 #
 # `note` is the difference: it is state, not explanation ("9/12 inscritos"), so
 # it stays on screen and stays short.
-func _panel_title(text: String, note: String, tip: String = "") -> Control:
+func _panel_title(text: String, note: String, tip: String = "",
+		alarm: bool = false) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 1)
 	var row := HBoxContainer.new()
@@ -676,8 +715,10 @@ func _panel_title(text: String, note: String, tip: String = "") -> Control:
 		state.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		state.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		state.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		state.clip_text = true
 		Look.wear_body(state, Look.TEXT)
-		state.add_theme_color_override("font_color", MUTED)
+		# The colour is the alarm, so the words do not have to be.
+		state.add_theme_color_override("font_color", Look.WARN if alarm else MUTED)
 		row.add_child(state)
 	if tip != "":
 		row.tooltip_text = tip
@@ -1159,7 +1200,10 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	Look.wear_body(label, Look.TEXT)
 	label.add_theme_color_override("font_color",
-		ON_ACCENT if chosen else StatBar.tint(shown, ACCENT))
+		# The RELATIVE value colours it and the absolute one is written in it:
+		# affinities run from about 2 to 88, so tinting by the raw number would
+		# leave most of the table grey for the same reason Geral was.
+		ON_ACCENT if chosen else StatBar.tint(int(round(fit * 100.0)), ACCENT))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(label)
 

@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed - B.6m: a cor do clube nao aparecia (2026-09-17)
+- **O accent era "a mais clara das duas" cores do clube**, que e a pergunta
+  errada: clube de vinho e branco tem tinta branca, entao o accent saia BRANCO e
+  o vinho que e a identidade inteira do lugar nao aparecia alem do escudo. Tres
+  clubes seguidos renderizavam como a mesma tela cinza-esbranquicada. Agora
+  `TeamColors.accent()` escolhe a que carrega o MATIZ (saturacao), e levanta so o
+  valor — vinho escuro vira vinho claro, nao um nada palido. Estacio virou
+  vermelho, America vermelho, Dark Owls roxo
+- **A rampa do tint corria de 0 a 100 e os dados vivem entre 14 e 30.** Todo
+  numero ficava 14 a 30% do caminho entre cinza e a cor do clube — cinza. Agora
+  Geral normaliza contra a faixa do proprio elenco e a afinidade contra o teto da
+  coluna, entao a rampa cobre os numeros que existem
+- **`%d/%d — abaixo do minimo` alargava o painel inteiro.** Quatro palavras de
+  explicacao numa coluna de 300px, dizendo o que a cor ao lado ja diz. Ficaram os
+  numeros, em ambar, com a regra no tooltip
+
 ### Changed - B.6l: a tabela do elenco vira uma tabela (2026-09-17)
 - **Um GridContainer so, cabecalho incluido.** Cabecalho e linhas eram
   HBoxContainers separados que concordavam sobre larguras por serem escritos das

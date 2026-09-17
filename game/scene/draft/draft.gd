@@ -117,7 +117,7 @@ func _wear_club_colours() -> void:
 	BG = plate.darkened(0.82) if plate.get_luminance() > 0.35 else plate.darkened(0.45)
 	PANEL = BG.lightened(0.06)
 	LINE = BG.lightened(0.16)
-	ACCENT = ink if ink.get_luminance() > 0.3 else plate.lightened(0.45)
+	ACCENT = TeamColors.accent(scheme)
 	TEXT = ACCENT.lightened(0.55)
 	MUTED = TEXT.darkened(0.45)
 

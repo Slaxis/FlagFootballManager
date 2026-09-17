@@ -357,8 +357,8 @@
       "en": "%d/%d registered"
     },
     "team.below_minimum": {
-      "pt": "%d/%d — abaixo do mínimo",
-      "en": "%d/%d — below the minimum"
+      "pt": "A competição exige %d inscritos. Abaixo disso o clube não entra em quadra.",
+      "en": "The competition demands %d registered. Below that the club does not take the field."
     },
     "team.career": {
       "pt": "CARREIRA — %d anos",
