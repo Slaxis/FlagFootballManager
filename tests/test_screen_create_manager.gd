@@ -77,7 +77,7 @@ func test_the_form_builds(t: TestHelper) -> void:
 		t.check((field as LineEdit).text.strip_edges() != "",
 			"um dos campos abriu vazio")
 	t.check(_collect(screen, "SpinBox", []).size() == 2, "altura e peso")
-	t.check(_button_starting_with(screen, "🎲") != null, "botão de sortear tudo")
+	t.check(_button_starting_with(screen, Look.GLYPH_ROLL) != null, "botão de sortear tudo")
 	t.check(_seed_shown(screen) != "", "semente não apareceu")
 	_close(screen)
 
@@ -106,7 +106,7 @@ func test_the_dice_button_changes_the_person_and_the_world(t: TestHelper) -> voi
 	var changed_name: int = 0
 	var changed_seed: int = 0
 	for i: int in range(8):
-		_button_starting_with(screen, "🎲").pressed.emit()
+		_button_starting_with(screen, Look.GLYPH_ROLL).pressed.emit()
 		if (_collect(screen, "LineEdit", [])[0] as LineEdit).text != before_name:
 			changed_name += 1
 		if _seed_shown(screen) != before_seed:
@@ -136,12 +136,15 @@ func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	# something without trading first.
 	_button_starting_with(screen, origins.label("player")).pressed.emit()
 
+	# BY NAME, not by glyph: the chip stopped carrying one, because the colour
+	# already says quality or defect and the name is right beside it.
+	#
 	# The roll may already have spent the balance on a talent of its own — the
 	# ex-player lives one to three years now, and a career hands out talents.
 	# Give back whatever it took before asking whether a chip can be taken, or
 	# this test is measuring the dice.
 	for id: String in perks.boons():
-		var owned: Button = _button_starting_with(screen, perks.icon(id))
+		var owned: Button = _button_starting_with(screen, perks.label(id))
 		if owned != null and owned.button_pressed:
 			owned.pressed.emit()
 
@@ -149,29 +152,29 @@ func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	for id: String in perks.boons():
 		if cheap == "" or perks.cost(id) < perks.cost(cheap):
 			cheap = id
-	var chip: Button = _button_starting_with(screen, perks.icon(cheap))
+	var chip: Button = _button_starting_with(screen, perks.label(cheap))
 	if chip == null:
 		t.fail("chip do talento não foi desenhado"); _close(screen); return
 
 	var was_on: bool = chip.button_pressed
 	chip.pressed.emit()
-	t.check(_button_starting_with(screen, perks.icon(cheap)).button_pressed != was_on,
+	t.check(_button_starting_with(screen, perks.label(cheap)).button_pressed != was_on,
 		"o talento não mudou de estado")
-	_button_starting_with(screen, perks.icon(cheap)).pressed.emit()
-	t.equal(_button_starting_with(screen, perks.icon(cheap)).button_pressed, was_on,
+	_button_starting_with(screen, perks.label(cheap)).pressed.emit()
+	t.equal(_button_starting_with(screen, perks.label(cheap)).button_pressed, was_on,
 		"clicar de novo não voltou ao estado anterior")
 
 	# A flaw pays, so it is always takeable whatever the balance.
 	var flaw: String = perks.flaws()[0]
-	_button_starting_with(screen, perks.icon(flaw)).pressed.emit()
-	t.check(_button_starting_with(screen, perks.icon(flaw)).button_pressed,
+	_button_starting_with(screen, perks.label(flaw)).pressed.emit()
+	t.check(_button_starting_with(screen, perks.label(flaw)).button_pressed,
 		"o defeito deveria entrar sempre — ele paga")
 	_close(screen)
 
 func _pressed_chip(screen: Control, perks: PerkDef) -> Button:
 	var found: Button = null
 	for id: String in perks.perk_ids():
-		var chip: Button = _button_starting_with(screen, perks.icon(id))
+		var chip: Button = _button_starting_with(screen, perks.label(id))
 		if chip != null and chip.button_pressed:
 			found = chip
 	return found

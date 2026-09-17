@@ -192,6 +192,13 @@ Do not start implementing before the plan is approved.
   in a 940px column, with two thirds of the monitor empty beside it — and
   nothing about that looks wrong in a screenshot or in a passing test.
 
+- **Glyph check** (`tests/test_glyphs.gd`, inside the unit suite) — every
+  character in every content JSON must exist in the game's own body font. A
+  glyph the face does not have is not an error and does not warn: Godot draws it
+  from a system fallback, so it arrives in a different shape and weight in the
+  middle of a pixel screen. The suite proves the instrument first
+  (`has_char` must REFUSE an emoji) before trusting its answers.
+
 - **Screen smoke tests** are the third check. UI is otherwise invisible to the
   loop: GDScript has no exceptions, so a screen that dies halfway through
   building its own form leaves a half-drawn panel and a green run — which is

@@ -20,7 +20,7 @@ func _ready() -> void:
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = Color(0.07, 0.10, 0.08)
+	bg.color = Look.BG
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
@@ -41,7 +41,7 @@ func _build_ui() -> void:
 	scale_note.offset_right = -16
 	scale_note.offset_bottom = -12
 	scale_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	scale_note.add_theme_color_override("font_color", Color(0.32, 0.38, 0.33))
+	scale_note.add_theme_color_override("font_color", Look.MUTED.darkened(0.3))
 	Look.wear_body(scale_note, Look.TEXT)
 	add_child(scale_note)
 
@@ -59,7 +59,7 @@ func _build_ui() -> void:
 	tagline.text = UiText.t("start.tagline")
 	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tagline.add_theme_font_size_override("font_size", 20)
-	tagline.add_theme_color_override("font_color", Color(0.58, 0.70, 0.60))
+	tagline.add_theme_color_override("font_color", Look.MUTED)
 	box.add_child(tagline)
 
 	box.add_child(_spacer(32))
@@ -74,7 +74,7 @@ func _build_ui() -> void:
 		hint.text = UiText.t("start.continue_hint")
 		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		hint.add_theme_font_size_override("font_size", 13)
-		hint.add_theme_color_override("font_color", Color(0.45, 0.47, 0.45))
+		hint.add_theme_color_override("font_color", Look.MUTED.darkened(0.2))
 		box.add_child(hint)
 
 	var new_game := _menu_button(UiText.t("start.new_game"))

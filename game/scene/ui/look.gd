@@ -119,6 +119,58 @@ static func _font_slot(control: Control) -> String:
 static func _size_slot(control: Control) -> String:
 	return "normal_font_size" if control is RichTextLabel else "font_size"
 
+# --- The palette before you have a club ---
+#
+# VERY DARK NAVY AND WHITE, and the point is what it does NOT say. The screens
+# used to be green — Elifoot's green, which is a lovely reference and also a
+# whole screen of saturated colour carrying no information at all. A background
+# hue you look at for an hour is a background hue you stop seeing and start
+# being tired by, and it competes with every coloured thing drawn on top of it.
+#
+# So the chrome goes neutral and the colour goes where it MEANS something:
+#
+#   verde / vermelho   a talent or a flaw. The one comparison a player makes
+#                      constantly, and now the only green on the screen
+#   âmbar              caution: you overspent, the club does not field your
+#                      category
+#   os chakras         one hue per attribute, and the skills inherit their
+#                      attribute's — the only other colour on a sheet
+#   as cores do clube  from the team screen onwards everything modulates to
+#                      them, and against a neutral run-up that lands as an
+#                      arrival rather than as one more green
+const BG := Color(0.031, 0.043, 0.075)
+const PANEL := Color(0.055, 0.071, 0.110)
+# Insets: a field, a well, the ground inside a control.
+const WELL := Color(0.020, 0.028, 0.051)
+const LINE := Color(0.110, 0.141, 0.204)
+# ⚠️ `INK` and not `TEXT`: this class already owns a `TEXT`, and it is a font
+# SIZE. One namespace, two meanings of the same word, and the parser is right to
+# refuse it.
+const INK := Color(0.902, 0.925, 0.961)
+# White, for headings and for anything the eye should land on first. It is the
+# accent precisely because it is not a colour.
+const ACCENT := Color(1.0, 1.0, 1.0)
+const MUTED := Color(0.435, 0.498, 0.588)
+# What goes ON a white fill.
+const ON_ACCENT := Color(0.031, 0.043, 0.075)
+
+# --- Glyphs ---
+#
+# ASCII, NEVER AN EMOJI. An emoji is a colour bitmap out of somebody else's font:
+# it ignores the face, ignores the palette, and lands in a pixel screen looking
+# like a sticker somebody put there. `[*]` is a wildcard in every terminal there
+# has ever been, and it is drawn by the same font as everything around it.
+const GLYPH_ROLL := "[*]"
+const GLYPH_LOCKED := "[-]"
+
+# --- The three that carry meaning ---
+#
+# FIXED, and they never modulate to a club. A liability must not disguise itself
+# as a strength because the shirt happened to be red.
+const GOOD := Color(0.42, 0.78, 0.45)
+const BAD := Color(0.85, 0.36, 0.36)
+const WARN := Color(0.85, 0.72, 0.45)
+
 # --- Making the window the canvas ---
 #
 # ONE TO ONE, AND NO SCALING AT ALL. The canvas is whatever the monitor is, one

@@ -186,21 +186,30 @@ func test_generated_actors_only_take_what_exists(t: TestHelper) -> void:
 	t.check(with_perk > 0, "ninguém em 40 jogadores tirou um talento")
 	t.check(with_perk < 40, "todo mundo tirou um talento")
 
-# THE ICON IS AN IDENTITY, not decoration. It is the whole of the Talento column
-# on the roster — a 26px box with one glyph in it — so two talents sharing one
-# means the column lies, and anything that looks a talent up by its glyph finds
-# the wrong one. Which is exactly what happened: two of the thirteen talents
-# added at once reused glyphs already in the catalogue, and the screen test that
+# THE CODE IS AN IDENTITY, not decoration. It is the whole of the Talento column
+# on the roster — one small box, no room for a name — so two talents sharing one
+# means the column lies, and anything that looks a talent up by it finds the
+# wrong one. Which is exactly what happened once: two of thirteen talents added
+# at a stroke reused glyphs already in the catalogue, and the screen test that
 # gives a talent back started giving back somebody else's.
+#
+# THREE ASCII LETTERS, not an emoji. An emoji is a colour bitmap out of somebody
+# else's font: it ignores the face, ignores the palette, and lands in a pixel
+# screen looking like a sticker.
 func test_every_talent_has_its_own_icon(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("PerkDef ausente"); return
 	var owner_of: Dictionary = {}
 	for id: String in def.perk_ids():
-		var icon: String = def.icon(id)
-		t.check(icon.strip_edges() != "", "'%s' sem ícone" % id)
-		if owner_of.has(icon):
-			t.fail("ícone '%s' repetido entre '%s' e '%s'" % [icon, owner_of[icon], id])
-		owner_of[icon] = id
-	t.equal(owner_of.size(), def.perk_ids().size(), "ícones distintos")
+		var code: String = def.icon(id)
+		t.equal(code.length(), 3, "'%s' tem o código '%s'" % [id, code])
+		t.equal(code, code.to_upper(), "'%s' não está em maiúsculas" % id)
+		for i: int in range(code.length()):
+			var ch: String = code[i]
+			t.check(ch >= "A" and ch <= "Z",
+				"'%s' tem '%s', que não é letra ASCII" % [id, ch])
+		if owner_of.has(code):
+			t.fail("código '%s' repetido entre '%s' e '%s'" % [code, owner_of[code], id])
+		owner_of[code] = id
+	t.equal(owner_of.size(), def.perk_ids().size(), "códigos distintos")

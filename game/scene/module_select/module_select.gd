@@ -16,7 +16,7 @@ func _ready() -> void:
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = Color(0.07, 0.10, 0.08)
+	bg.color = Look.BG
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
@@ -40,7 +40,7 @@ func _build_ui() -> void:
 
 	var subtitle := Label.new()
 	subtitle.text = UiText.t("module.subtitle") % modules.size()
-	subtitle.add_theme_color_override("font_color", Color(0.58, 0.70, 0.60))
+	subtitle.add_theme_color_override("font_color", Look.MUTED)
 	box.add_child(subtitle)
 
 	box.add_child(_spacer(12))
@@ -48,7 +48,7 @@ func _build_ui() -> void:
 	if modules.is_empty():
 		var empty := Label.new()
 		empty.text = UiText.t("module.none")
-		empty.add_theme_color_override("font_color", Color(0.85, 0.55, 0.55))
+		empty.add_theme_color_override("font_color", Look.BAD)
 		box.add_child(empty)
 	else:
 		var first: Button = null
@@ -98,14 +98,14 @@ func _module_card(info: ModuleInfo) -> Button:
 	var badge := Label.new()
 	badge.text = "[%s]" % UiText.t("module.user" if is_user else "module.native")
 	badge.add_theme_color_override("font_color",
-		Color(0.58, 0.70, 0.60) if is_user else Color(0.55, 0.57, 0.55))
+		Look.MUTED if is_user else Look.MUTED.darkened(0.2))
 	head.add_child(badge)
 
 	var description := Label.new()
 	description.text = info.description
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.add_theme_font_size_override("font_size", 13)
-	description.add_theme_color_override("font_color", Color(0.62, 0.62, 0.62))
+	description.add_theme_color_override("font_color", Look.MUTED)
 	rows.add_child(description)
 
 	return card

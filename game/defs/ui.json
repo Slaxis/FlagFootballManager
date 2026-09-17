@@ -436,14 +436,6 @@
       "pt": "Cidade",
       "en": "City"
     },
-    "manager.club_colors": {
-      "pt": "Cores",
-      "en": "Colours"
-    },
-    "manager.club_next_colors": {
-      "pt": "Próxima paleta",
-      "en": "Next palette"
-    },
     "draft.title": {
       "pt": "MONTANDO A LIGA",
       "en": "BUILDING THE LEAGUE"
@@ -465,24 +457,24 @@
       "en": "done"
     },
     "draft.header": {
-      "pt": "⚑  %d clubes  ·  nível médio %.2f",
-      "en": "⚑  %d clubs  ·  average level %.2f"
+      "pt": "#  %d clubes  ·  nível médio %.2f",
+      "en": "#  %d clubs  ·  average level %.2f"
     },
     "draft.curated": {
       "pt": "—  %d curado(s) sentam no %s",
       "en": "—  %d curated take their seats at %s"
     },
     "draft.signed": {
-      "pt": "▸  %-34s →  %-26s %s",
-      "en": "▸  %-34s →  %-26s %s"
+      "pt": ">  %-34s ->  %-26s %s",
+      "en": ">  %-34s ->  %-26s %s"
     },
     "draft.settled": {
-      "pt": "✔  %-26s %2d atletas + %d comissão · geral %2d · %s",
-      "en": "✔  %-26s %2d athletes + %d staff · overall %2d · %s"
+      "pt": "=  %-26s %2d atletas + %d comissão · geral %2d · %s",
+      "en": "=  %-26s %2d athletes + %d staff · overall %2d · %s"
     },
     "draft.gave_up": {
-      "pt": "⚠  desisti depois de %d rodadas",
-      "en": "⚠  gave up after %d rounds"
+      "pt": "!  desisti depois de %d rodadas",
+      "en": "!  gave up after %d rounds"
     },
     "draft.why_hole": {
       "pt": "(buraco na formação)",
@@ -529,28 +521,28 @@
       "en": "— round %d"
     },
     "draft.tryout": {
-      "pt": "⚐  %s abre peneira  ·  %d apareceram  ·  procurando %s",
-      "en": "⚐  %s holds a tryout  ·  %d turned up  ·  looking for %s"
+      "pt": "?  %s abre peneira  ·  %d apareceram  ·  procurando %s",
+      "en": "?  %s holds a tryout  ·  %d turned up  ·  looking for %s"
     },
     "draft.passed_over": {
-      "pt": "·  %-34s não passou → praça",
-      "en": "·  %-34s not picked → the square"
+      "pt": ".  %-34s não passou -> praça",
+      "en": ".  %-34s not picked -> the square"
     },
     "draft.indie": {
-      "pt": "⚑  %d apareceram por conta própria",
-      "en": "⚑  %d turned up on their own"
+      "pt": "+  %d apareceram por conta própria",
+      "en": "+  %d turned up on their own"
     },
     "draft.from_market": {
-      "pt": "◂  %-34s ←  %-26s %s",
-      "en": "◂  %-34s ←  %-26s %s"
+      "pt": "<  %-34s <-  %-26s %s",
+      "en": "<  %-34s <-  %-26s %s"
     },
     "draft.market_left": {
-      "pt": "⌂  praça: %d pessoas · idade mediana %d · nível mediano %.2f",
-      "en": "⌂  square: %d people · median age %d · median level %.2f"
+      "pt": "~  praça: %d pessoas · idade mediana %d · nível mediano %.2f",
+      "en": "~  square: %d people · median age %d · median level %.2f"
     },
     "draft.stalled": {
-      "pt": "⚠  a rodada %d não trouxe ninguém — encerrando com elencos curtos",
-      "en": "⚠  round %d signed nobody — closing with short squads"
+      "pt": "!  a rodada %d não trouxe ninguém — encerrando com elencos curtos",
+      "en": "!  round %d signed nobody — closing with short squads"
     },
     "manager.club_reroll": {
       "pt": "Sorteia outro clube — nome, bairro e cores",
@@ -567,10 +559,6 @@
     "manager.identity_hint": {
       "pt": "Nome, sobrenome e apelido. Os três viram a semente do mundo.",
       "en": "First name, surname, nickname. The three of them become the world seed."
-    },
-    "manager.club_colors_hint": {
-      "pt": "Troca o par de cores. Todos passam no contraste mínimo.",
-      "en": "Cycles the colour pair. Every one clears the contrast floor."
     },
     "manager.club_crest_hint": {
       "pt": "O clube como ele vai aparecer na tabela.",
@@ -595,6 +583,14 @@
     "manager.step_down": {
       "pt": "Devolve um passo",
       "en": "Hand a step back"
+    },
+    "manager.club_colour_main": {
+      "pt": "Cor principal do clube. O contraste é corrigido se o par ficar ilegível.",
+      "en": "The club’s main colour. The pair is repaired if it comes out unreadable."
+    },
+    "manager.club_colour_second": {
+      "pt": "Cor secundária — é ela que escreve por cima da principal.",
+      "en": "Secondary colour — it is the one that writes over the main one."
     }
   }
 }

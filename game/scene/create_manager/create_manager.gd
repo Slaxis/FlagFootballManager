@@ -8,7 +8,7 @@
 # The screen deals you a rolled twelve-year-old — body, attributes, sometimes a
 # perk — and never touches the skills: whether the six years left go into being
 # faster or into knowing how to run a route is the question, and answering it
-# for the player would empty the screen. 🎲 deals another child, identically:
+# for the player would empty the screen. [*] deals another child, identically:
 # the dice pick who you were born as, never who you became.
 #
 # Attributes and skills share one pocket because a roll is
@@ -18,22 +18,26 @@
 # The seed is a HASH of the three name fields. Editing them is how you fix a
 # world: the same nome + sobrenome + apelido always draws the same sandlot
 # clubs and the same club calls you. Rerolling is therefore never separate from
-# renaming — there is one 🎲 and it changes the person and the world together.
+# renaming — there is one [*] and it changes the person and the world together.
 #
 # Produces the `career` Record onto the Blackboard; the Flow gates every later
 # step on it. Deliberately never asks your gender — it asks which CATEGORY you
 # play (decision 17).
 extends Menu
 
-const BG := Color(0.055, 0.078, 0.063)
-const PANEL := Color(0.086, 0.118, 0.094)
-const ACCENT := Color(0.49, 0.78, 0.45)
-const MUTED := Color(0.47, 0.52, 0.48)
-const TEXT := Color(0.87, 0.90, 0.87)
-const LINE := Color(0.16, 0.22, 0.17)
-const WARN := Color(0.85, 0.72, 0.45)
-const TALENT_GOOD := Color(0.42, 0.78, 0.45)
-const TALENT_BAD := Color(0.85, 0.36, 0.36)
+# The neutral palette, from Look. Before you have a club there is nothing on
+# screen that a hue could honestly stand for, so the chrome says nothing and the
+# colour is saved for the things that mean something.
+const BG := Look.BG
+const PANEL := Look.PANEL
+const WELL := Look.WELL
+const ACCENT := Look.ACCENT
+const MUTED := Look.MUTED
+const TEXT := Look.INK
+const LINE := Look.LINE
+const WARN := Look.WARN
+const TALENT_GOOD := Look.GOOD
+const TALENT_BAD := Look.BAD
 
 # ONE PAGE, THREE COLUMNS. The canvas is the monitor now (2560x1440, one logical
 # pixel per screen pixel), so the whole sheet fits side by side again and the
@@ -66,10 +70,7 @@ const FLAW_COLUMNS := 2
 # one, so they get five columns and the defects two.
 const BOON_SHARE := 440
 const PERK_GAP := 6
-# The colours row, capped part by part so a typed club name cannot widen it.
-const CREST_CAPTION := 90
-const CREST_BUTTON := 130
-const CREST_PLATE := 220
+
 
 var _build: SheetBuilder = null
 var _name: Dictionary = {}
@@ -79,6 +80,11 @@ var _drafted: Dictionary = {}
 # The Fundador's club, while he is still deciding what it is called. Empty for
 # the other two starts, who walk into something that already existed.
 var _club: Dictionary = {}
+# Which roll of the club we are on. Without it the dice was a no-op — see
+# `_roll_club`.
+var _club_roll: int = 0
+var _crest_plate: PanelContainer = null
+var _crest_label: Label = null
 var _seed_label: Label = null
 var _root: VBoxContainer = null
 
@@ -352,7 +358,7 @@ func _identity_row() -> Control:
 # A die, and the sentence goes on the tooltip. It is the one control on this
 # screen that needs no label at all.
 func _dice(tip_key: String, on_press: Callable) -> Button:
-	var button: Button = _flat_button("🎲", on_press, false)
+	var button: Button = _flat_button(Look.GLYPH_ROLL, on_press, false)
 	button.custom_minimum_size = Vector2(46, 32)
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.tooltip_text = UiText.t(tip_key)
@@ -416,31 +422,25 @@ func _authors_club() -> bool:
 	var origins := Drive.def("origin") as OriginDef
 	return origins != null and _origin != "" and origins.authors_club(_origin)
 
+# THE NAME GETS THE WHOLE ROW. It is typed by the player and "Associação
+# Atlética Padre Miguel Piranhas" is a real length; sharing a line with the dice
+# button meant the field and the crest below it both cropped it.
 func _club_row() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
+	box.add_child(_club_field("name", UiText.t("manager.club_name"), COL_LEFT))
 
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 8)
-	top.add_child(_club_field("name", UiText.t("manager.club_name"), 420))
-	top.add_child(_dice("manager.club_reroll", _on_reroll_club))
-	box.add_child(top)
 	var where := HBoxContainer.new()
 	where.add_theme_constant_override("separation", 8)
-	where.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 240))
-	where.add_child(_club_field("city", UiText.t("manager.club_city"), 240))
+	where.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 230))
+	where.add_child(_club_field("city", UiText.t("manager.club_city"), 230))
+	where.add_child(_dice("manager.club_reroll", _on_reroll_club))
 	box.add_child(where)
 
-	# Every width here is CAPPED, because the club name is player-typed and a
-	# long one pushed this row two pixels past the column — which is all it took
-	# for the panel to measure differently for the Fundador than for the other
-	# two scenarios and jump as you clicked between them.
 	var colours := HBoxContainer.new()
 	colours.add_theme_constant_override("separation", 8)
-	var caption: Control = _field_label(UiText.t("manager.club_colors"))
-	caption.custom_minimum_size = Vector2(CREST_CAPTION, 0)
-	colours.add_child(caption)
-	colours.add_child(_palette_button())
+	colours.add_child(_colour_pick(0, UiText.t("manager.club_colour_main")))
+	colours.add_child(_colour_pick(1, UiText.t("manager.club_colour_second")))
 	colours.add_child(_crest_preview())
 	box.add_child(colours)
 	return box
@@ -449,41 +449,65 @@ func _club_field(key: String, caption: String, width: int) -> Control:
 	return _text_field(caption, width, String(_club.get(key, "")),
 		_on_club_typed.bind(key))
 
-# A cycle and not a colour picker. Every pair in the palette is authored to
-# clear the contrast floor on its own, so no combination the player can reach
-# produces a roster screen nobody can read.
-func _palette_button() -> Button:
-	var button: Button = _flat_button(UiText.t("manager.club_next_colors"), _on_cycle_colors, false)
-	button.custom_minimum_size = Vector2(CREST_BUTTON, 30)
-	button.clip_text = true
-	button.tooltip_text = UiText.t("manager.club_colors_hint")
+# A SWATCH YOU CLICK, not a palette you cycle. Cycling meant hunting for the
+# pair you had in mind by pressing a button twelve times, which is not choosing.
+#
+# The authored palettes each cleared the contrast floor on their own; a free
+# pick does not, so `TeamColors.of()` is what keeps the roster readable — it
+# repairs the pair when it has to, which is exactly what it was written for.
+func _colour_pick(index: int, tip: String) -> Control:
+	var button := ColorPickerButton.new()
+	button.custom_minimum_size = Vector2(52, 30)
+	button.color = _club_colour(index)
+	button.edit_alpha = false
+	button.tooltip_text = tip
+	button.color_changed.connect(_on_club_colour.bind(index))
 	return button
 
+func _club_colour(index: int) -> Color:
+	var colours: Array = _club.get("colors", [])
+	if index >= colours.size():
+		return Color.WHITE if index == 0 else Color.BLACK
+	return Color.from_string(String(colours[index]), Color.WHITE)
+
 func _crest_preview() -> Control:
+	_crest_plate = PanelContainer.new()
+	_crest_plate.tooltip_text = UiText.t("manager.club_crest_hint")
+	_crest_plate.mouse_filter = Control.MOUSE_FILTER_STOP
+	_crest_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_crest_label = Label.new()
+	# Clipped, because the name is the player's and the row is not: a long one
+	# must not be allowed to set the column width.
+	_crest_label.clip_text = true
+	Look.wear_body(_crest_label, Look.TINY)
+	_crest_plate.add_child(_crest_label)
+	_paint_crest()
+	return _crest_plate
+
+# Repainted in place rather than by rebuilding the form: `color_changed` fires
+# continuously while the picker is being dragged, and a rebuild would tear the
+# picker out from under the cursor on the first pixel of movement.
+func _paint_crest() -> void:
+	if not is_instance_valid(_crest_plate) or not is_instance_valid(_crest_label):
+		return
 	var scheme: Dictionary = TeamColors.of(_club)
 	var style := StyleBoxFlat.new()
 	style.bg_color = scheme["plate"]
 	style.set_content_margin_all(6)
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
 		style.set("corner_radius_" + corner, 3)
-	var plate := PanelContainer.new()
-	plate.add_theme_stylebox_override("panel", style)
-	plate.tooltip_text = UiText.t("manager.club_crest_hint")
-	plate.mouse_filter = Control.MOUSE_FILTER_STOP
-	var crest := Label.new()
-	crest.text = String(_club.get("name", "?"))
-	crest.add_theme_color_override("font_color", scheme["ink"])
-	# Clipped and capped: the name is typed by the player, and "Associação
-	# Atlética Padre Miguel Piranhas" must not be allowed to set a column width.
-	crest.clip_text = true
-	crest.custom_minimum_size = Vector2(CREST_PLATE, 0)
-	Look.wear_body(crest, Look.TINY)
-	plate.add_child(crest)
-	return plate
+	_crest_plate.add_theme_stylebox_override("panel", style)
+	_crest_label.text = String(_club.get("name", "?"))
+	_crest_label.add_theme_color_override("font_color", scheme["ink"])
 
+# ⚠️ THE COUNTER IS WHY THE DICE WORKS. The seed was derived from the career
+# seed alone, and the career seed is a hash of the three name fields — so every
+# press rolled the identical club and the button looked dead. The founded club
+# is a CHOICE and not world state, so it is allowed its own counter.
 func _roll_club() -> void:
+	_club_roll += 1
 	_club = TeamGenerator.found(
-		SeedRng.derive(_career_seed(), "founded"), "", "", "", [])
+		SeedRng.derive(_career_seed(), "founded_%d" % _club_roll), "", "", "", [])
 
 func _on_club_typed(text: String, key: String) -> void:
 	_club[key] = text
@@ -492,17 +516,13 @@ func _on_reroll_club() -> void:
 	_roll_club()
 	_build_ui()
 
-func _on_cycle_colors() -> void:
-	var current: Array = _club.get("colors", [])
-	var head: String = String(current[0]) if not current.is_empty() else ""
-	var index: int = 0
-	for i: int in range(TeamGenerator.PALETTES.size()):
-		if String((TeamGenerator.PALETTES[i] as Array)[0]) == head:
-			index = i + 1
-			break
-	var picked: Array = TeamGenerator.PALETTES[index % TeamGenerator.PALETTES.size()]
-	_club["colors"] = picked.duplicate()
-	_build_ui()
+func _on_club_colour(colour: Color, index: int) -> void:
+	var colours: Array = _club.get("colors", []).duplicate()
+	while colours.size() <= index:
+		colours.append("#ffffff")
+	colours[index] = "#" + colour.to_html(false)
+	_club["colors"] = colours
+	_paint_crest()
 
 # --- Perks ---
 
@@ -556,7 +576,10 @@ func _perk_chip_width(columns: int) -> int:
 func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
 	var cost: int = perks.cost(id)
 	var price: String = (UiText.t("manager.perk_refund") % -cost) if cost < 0 		else (UiText.t("manager.perk_price") % cost)
-	var chip: Button = _choice("%s %s  %s" % [perks.icon(id), perks.label(id), price],
+	# NO GLYPH ON THE CHIP. The colour already says quality or defect and the name
+	# is right there — the three-letter code exists for the roster column, where
+	# there is no room for a name at all.
+	var chip: Button = _choice("%s  %s" % [perks.label(id), price],
 		_build.has_perk(id), _on_perk.bind(id))
 	# Green buys you something, red pays you to accept something. The sign is
 	# the whole decision, so it should not need reading.
@@ -573,7 +596,7 @@ func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
 	# the perk exists and costs more than they have left.
 	if not _build.has_perk(id) and not _build.can_take_perk(id):
 		chip.disabled = true
-		chip.add_theme_color_override("font_disabled_color", Color(0.30, 0.34, 0.31))
+		chip.add_theme_color_override("font_disabled_color", MUTED.darkened(0.35))
 	return chip
 
 
@@ -1020,7 +1043,7 @@ func _traits() -> Array:
 func _measure_value(id: String) -> float:
 	return _build.height if id == "height" else _build.weight
 
-# The one RNG on this screen that is NOT seeded: pressing 🎲 must give you
+# The one RNG on this screen that is NOT seeded: pressing [*] must give you
 # something new, and seeding it from the thing it is about to overwrite would
 # make the button a fixed point.
 func _free_rng() -> RandomNumberGenerator:
@@ -1088,8 +1111,8 @@ func _step_button(text: String, on_press: Callable, enabled: bool,
 	button.focus_mode = Control.FOCUS_NONE
 	button.disabled = not enabled
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.11, 0.16, 0.12)
-	style.border_color = Color(0.20, 0.27, 0.21)
+	style.bg_color = WELL.lightened(0.06)
+	style.border_color = LINE
 	style.set_border_width_all(1)
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
 		style.set("corner_radius_" + corner, 2)
@@ -1098,7 +1121,7 @@ func _step_button(text: String, on_press: Callable, enabled: bool,
 	button.add_theme_stylebox_override("pressed", style)
 	button.add_theme_stylebox_override("disabled", style)
 	button.add_theme_color_override("font_color", ACCENT)
-	button.add_theme_color_override("font_disabled_color", Color(0.24, 0.28, 0.25))
+	button.add_theme_color_override("font_disabled_color", MUTED.darkened(0.45))
 	if on_press.is_valid():
 		button.pressed.connect(on_press)
 	return button
@@ -1117,7 +1140,7 @@ func _choice(text: String, selected: bool, on_press: Callable) -> Button:
 	button.add_theme_stylebox_override("pressed", _chip_style(true))
 	button.add_theme_stylebox_override("hover_pressed", _chip_style(true))
 	button.add_theme_color_override("font_color", MUTED)
-	button.add_theme_color_override("font_pressed_color", Color(0.05, 0.09, 0.05))
+	button.add_theme_color_override("font_pressed_color", Look.ON_ACCENT)
 	button.add_theme_color_override("font_hover_color", TEXT)
 	if on_press.is_valid():
 		button.pressed.connect(on_press)
@@ -1128,8 +1151,8 @@ func _chip_style(selected: bool, hovered: bool = false) -> StyleBoxFlat:
 	if selected:
 		style.bg_color = ACCENT
 	else:
-		style.bg_color = Color(0.13, 0.18, 0.14) if hovered else Color(0.10, 0.14, 0.11)
-	style.border_color = ACCENT if selected else Color(0.20, 0.27, 0.21)
+		style.bg_color = WELL.lightened(0.10) if hovered else WELL
+	style.border_color = ACCENT if selected else LINE
 	style.set_border_width_all(1)
 	style.set_content_margin_all(5)
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
@@ -1140,10 +1163,10 @@ func _flat_button(text: String, on_press: Callable, primary: bool) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(0, 38 if primary else 30)
-	button.add_theme_color_override("font_color", Color(0.05, 0.09, 0.05) if primary else TEXT)
+	button.add_theme_color_override("font_color", Look.ON_ACCENT if primary else TEXT)
 	var style := StyleBoxFlat.new()
-	style.bg_color = ACCENT if primary else Color(0.11, 0.15, 0.12)
-	style.border_color = ACCENT if primary else Color(0.20, 0.27, 0.21)
+	style.bg_color = ACCENT if primary else WELL.lightened(0.06)
+	style.border_color = ACCENT if primary else LINE
 	style.set_border_width_all(1)
 	style.set_content_margin_all(7)
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:

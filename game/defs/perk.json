@@ -2,7 +2,7 @@
   "perks": [
     {
       "id": "craque",
-      "icon": "★",
+      "icon": "CRQ",
       "cost": 3,
       "label": {
         "pt": "Craque",
@@ -20,7 +20,7 @@
     },
     {
       "id": "foguete",
-      "icon": "⚡",
+      "icon": "FOG",
       "cost": 2,
       "label": {
         "pt": "Foguete",
@@ -39,7 +39,7 @@
     },
     {
       "id": "cerebro",
-      "icon": "🧠",
+      "icon": "CER",
       "cost": 2,
       "label": {
         "pt": "Cérebro",
@@ -58,7 +58,7 @@
     },
     {
       "id": "maos_de_cola",
-      "icon": "✋",
+      "icon": "COL",
       "cost": 2,
       "label": {
         "pt": "Mãos de cola",
@@ -77,7 +77,7 @@
     },
     {
       "id": "ferrolho",
-      "icon": "🎯",
+      "icon": "FER",
       "cost": 2,
       "label": {
         "pt": "Ferrolho",
@@ -96,7 +96,7 @@
     },
     {
       "id": "capitao",
-      "icon": "📣",
+      "icon": "CAP",
       "cost": 2,
       "label": {
         "pt": "Capitão",
@@ -114,7 +114,7 @@
     },
     {
       "id": "padrinho",
-      "icon": "💸",
+      "icon": "PAD",
       "cost": 1,
       "label": {
         "pt": "Padrinho",
@@ -132,7 +132,7 @@
     },
     {
       "id": "maos_de_pedra",
-      "icon": "🪨",
+      "icon": "PED",
       "cost": -1,
       "label": {
         "pt": "Mãos de pedra",
@@ -151,7 +151,7 @@
     },
     {
       "id": "sumido",
-      "icon": "👻",
+      "icon": "SUM",
       "cost": -2,
       "label": {
         "pt": "Sumido",
@@ -169,7 +169,7 @@
     },
     {
       "id": "vidraca",
-      "icon": "🩹",
+      "icon": "VID",
       "cost": -2,
       "label": {
         "pt": "Vidraça",
@@ -187,7 +187,7 @@
     },
     {
       "id": "braco_de_ouro",
-      "icon": "🏹",
+      "icon": "BRC",
       "cost": 2,
       "label": {
         "pt": "Braço de ouro",
@@ -206,7 +206,7 @@
     },
     {
       "id": "arrancada",
-      "icon": "💨",
+      "icon": "ARR",
       "cost": 2,
       "label": {
         "pt": "Arrancada",
@@ -225,7 +225,7 @@
     },
     {
       "id": "leitura_de_jogo",
-      "icon": "👁",
+      "icon": "LEI",
       "cost": 2,
       "label": {
         "pt": "Leitura de jogo",
@@ -244,7 +244,7 @@
     },
     {
       "id": "snap_de_relogio",
-      "icon": "⏱",
+      "icon": "SNR",
       "cost": 1,
       "label": {
         "pt": "Snap de relógio",
@@ -263,7 +263,7 @@
     },
     {
       "id": "rato_de_regra",
-      "icon": "📖",
+      "icon": "RAT",
       "cost": 1,
       "label": {
         "pt": "Rato de regra",
@@ -282,7 +282,7 @@
     },
     {
       "id": "olho_clinico",
-      "icon": "🔍",
+      "icon": "OLC",
       "cost": 2,
       "label": {
         "pt": "Olho clínico",
@@ -301,7 +301,7 @@
     },
     {
       "id": "prancheta",
-      "icon": "📋",
+      "icon": "PRA",
       "cost": 2,
       "label": {
         "pt": "Prancheta",
@@ -320,7 +320,7 @@
     },
     {
       "id": "ferro",
-      "icon": "🛡",
+      "icon": "FRR",
       "cost": 2,
       "label": {
         "pt": "Ferro",
@@ -338,7 +338,7 @@
     },
     {
       "id": "motorista",
-      "icon": "🚐",
+      "icon": "MOT",
       "cost": 1,
       "label": {
         "pt": "Motorista",
@@ -356,7 +356,7 @@
     },
     {
       "id": "pavio_curto",
-      "icon": "🔥",
+      "icon": "PAV",
       "cost": -2,
       "label": {
         "pt": "Pavio curto",
@@ -374,7 +374,7 @@
     },
     {
       "id": "so_no_ataque",
-      "icon": "🙅",
+      "icon": "SNA",
       "cost": -1,
       "label": {
         "pt": "Só no ataque",
@@ -393,7 +393,7 @@
     },
     {
       "id": "dono_da_bola",
-      "icon": "🏈",
+      "icon": "DON",
       "cost": -2,
       "label": {
         "pt": "Dono da bola",
@@ -411,7 +411,7 @@
     },
     {
       "id": "sem_condicao",
-      "icon": "🫁",
+      "icon": "SEM",
       "cost": -1,
       "label": {
         "pt": "Sem condição",
@@ -429,7 +429,7 @@
     },
     {
       "id": "quebra_de_cintura",
-      "icon": "🌀",
+      "icon": "QBC",
       "cost": 2,
       "label": {
         "pt": "Quebra de cintura",
@@ -448,7 +448,7 @@
     },
     {
       "id": "voz_de_comando",
-      "icon": "🎙",
+      "icon": "VOZ",
       "cost": 1,
       "label": {
         "pt": "Voz de comando",
@@ -467,7 +467,7 @@
     },
     {
       "id": "dentro_da_cabeca",
-      "icon": "🗣",
+      "icon": "DTC",
       "cost": 1,
       "label": {
         "pt": "Dentro da cabeça",
@@ -486,7 +486,7 @@
     },
     {
       "id": "didatico",
-      "icon": "🎓",
+      "icon": "DID",
       "cost": 2,
       "label": {
         "pt": "Didático",

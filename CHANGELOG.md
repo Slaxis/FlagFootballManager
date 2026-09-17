@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Changed - B.6j: paleta neutra e glifos ASCII (2026-09-17)
+- **A moldura vira azul-marinho muito escuro e branco** ate a tela do time. O
+  verde do Elifoot e uma bela referencia e tambem uma tela inteira de cor
+  saturada carregando informacao nenhuma — fundo que voce olha por uma hora e
+  fundo que voce para de ver e passa a cansar
+- A cor fica reservada pra onde significa: **verde/vermelho** (talento ou
+  defeito), **ambar** (atencao), **os chakras** (um tom por atributo, herdado
+  pelas habilidades) e **as cores do clube**, que a partir da tela do time
+  modulam tudo. Contra uma aproximacao neutra a chegada no clube le como chegada
+- A paleta mora em `Look` e as quatro telas de antes do clube leem de la. Zero
+  literais de cor sobraram nelas
+- **Emoji vira ASCII**: `[*]` pro dado, `[-]` pro cadeado, e prefixos de uma
+  letra no log do draft (`#` `?` `>` `<` `.` `=` `~` `!`)
+- **Talentos ganham codigo de tres letras** (CRQ, FOG, CER...) como o resto da
+  ficha, e o chip solta o glifo: a cor ja diz qualidade ou defeito e o nome esta
+  do lado. O codigo existe pra coluna do elenco, onde nao cabe nome
+- **Seletor de cor do clube**: dois quadradinhos que abrem picker, no lugar de
+  uma paleta que se percorria com um botao. `TeamColors.of()` continua
+  corrigindo o contraste se o par sair ilegivel
+- **O nome do clube ganha a linha inteira** — e digitado pelo player e estava
+  sendo cortado no campo e na previa do escudo
+- `tests/test_glyphs.gd`: todo caractere de todo JSON de conteudo tem que existir
+  na fonte do jogo, com o instrumento provado antes (`has_char` precisa RECUSAR
+  um emoji)
+
+### Fixed
+- **O dado do clube nao sorteava nada.** A semente vinha do career seed, que e um
+  hash dos tres campos de nome — entao toda pressionada devolvia o clube
+  identico e o botao parecia morto. O clube fundado e uma ESCOLHA e nao estado do
+  mundo, entao ganhou contador proprio
+- Quatro simbolos do log do draft (⌂ ⚐ ⚑ ⚠) nao existiam em nenhuma das duas
+  fontes e estavam sendo desenhados por fallback. Num log monoespacado, glifo de
+  outra largura quebra a coluna que faz o log ser legivel
+- `const TEXT` colidia em `Look`: ja era um tamanho de fonte. A cor virou `INK`
+
 ### Changed - B.6i: codigos de tres letras e tooltips (2026-09-17)
 - **Todo atributo e habilidade tem um codigo de tres letras**, e e ele que
   aparece: INT, PER, CAR, VON, VIT, DES, AGI, FOR e os quinze das habilidades.
