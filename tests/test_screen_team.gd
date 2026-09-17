@@ -356,20 +356,51 @@ func _tagged(screen: Control, key: String, value: Variant = null) -> Array:
 # dictionary silently kept one of them.
 # Found by NAME, because the screen sorts the list and the roster does not — an
 # index into one is somebody else in the other.
+# The table is a GridContainer now, so a row is not a node — it is every cell
+# tagged with the same `row_of`. Matching on the person's id instead of on text
+# is both simpler and no longer a lie: two athletes may share a nickname.
 func _row_named(screen: Control, display_name: String) -> Button:
-	for node: Variant in _tagged(screen, "roster_row"):
-		for cell: Variant in _collect(node as Button, "Label", []):
-			if (cell as Label).text == display_name:
-				return node
+	for node: Variant in _collect(screen, "Control", []):
+		var cell := node as Control
+		if not cell.has_meta("row_of"):
+			continue
+		for inner: Variant in _collect(cell, "Control", []):
+			if _text_of(inner as Control) == display_name:
+				return _row_button(screen, String(cell.get_meta("row_of")))
 	return null
+
+func _row_button(screen: Control, thing_id: String) -> Button:
+	for node: Variant in _tagged(screen, "roster_row"):
+		var button := node as Button
+		var shell: Node = button.get_parent()
+		if shell != null and shell.has_meta("row_of") \
+				and String(shell.get_meta("row_of")) == thing_id:
+			return button
+	return null
+
+# Every cell of one column, in the order the grid holds them — which is row
+# order, because that is how a grid is filled.
+func _column(screen: Control, kind: String) -> Array:
+	var out: Array = []
+	for node: Variant in _collect(screen, "Control", []):
+		var cell := node as Control
+		if cell.has_meta("cell") and String(cell.get_meta("cell")) == kind:
+			out.append(cell)
+	return out
+
+func _text_of(control: Control) -> String:
+	if control is Label:
+		return (control as Label).text
+	if control is Button:
+		return (control as Button).text
+	return ""
 
 func _ages_in_order(screen: Control) -> Array[int]:
 	var out: Array[int] = []
-	for node: Variant in _tagged(screen, "roster_row"):
-		var cells: Array = _collect(node as Button, "Label", [])
-		# mark, name, perk, strength, age
-		if cells.size() >= 5:
-			out.append(int(String((cells[4] as Label).text)))
+	for cell: Variant in _column(screen, "age"):
+		for inner: Variant in _collect(cell as Control, "Label", []):
+			out.append(int(_text_of(inner as Control)))
+			break
 	return out
 
 # Sorting a roster is how a manager reads it. Clicking the column you are
@@ -443,9 +474,21 @@ func test_every_position_has_a_button(t: TestHelper) -> void:
 	# Somebody answers for the club, somebody pays and somebody talks — three
 	# chairs that exist even at the smallest club in the city.
 	t.equal(positions.ids_on_side("admin").size(), 3, "cargos de administração")
-	# The three group headers are what make eleven little buttons legible.
-	for key: String in ["team.profile", "team.admin", "team.staff", "team.lineup"]:
-		t.check(shown.contains(UiText.t(key)), "sem cabeçalho de grupo '%s'" % key)
+	# THE GROUP HEADER ROW IS GONE. Three words spanning eighteen columns cannot
+	# be expressed in a grid without a span, and it was not earning the row: the
+	# codes are unambiguous, a hairline marks each boundary, and the panel on the
+	# left already says Administração / Comissão / Escalação over the actual
+	# assignments — which is where those words do work rather than decorate.
+	#
+	# What has to survive is that the grouping is still SAYABLE, so each heading
+	# carries its own position on the tooltip.
+	for key: String in ["team.admin", "team.staff", "team.lineup"]:
+		t.check(shown.contains(UiText.t(key)),
+			"o painel de escalação perdeu '%s'" % key)
+	var tips: String = _tooltips(screen)
+	for id: String in positions.playing_ids():
+		t.check(tips.contains(positions.label(id)),
+			"o cabeçalho '%s' não diz que posição é" % positions.code(id))
 	_close(screen)
 
 

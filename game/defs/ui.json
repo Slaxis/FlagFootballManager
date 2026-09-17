@@ -353,12 +353,12 @@
       "en": "empty"
     },
     "team.registered": {
-      "pt": "%d inscritos de %d no elenco",
-      "en": "%d registered of %d in the squad"
+      "pt": "%d/%d inscritos",
+      "en": "%d/%d registered"
     },
     "team.below_minimum": {
-      "pt": "só %d inscritos — a competição exige %d",
-      "en": "only %d registered — the competition demands %d"
+      "pt": "%d/%d — abaixo do mínimo",
+      "en": "%d/%d — below the minimum"
     },
     "team.career": {
       "pt": "CARREIRA — %d anos",
@@ -413,8 +413,8 @@
       "en": "ADMINISTRATION"
     },
     "team.admin_hint": {
-      "pt": "existe até no menor clube: alguém responde, alguém paga e alguém fala",
-      "en": "exists even at the smallest club: somebody answers, somebody pays and somebody talks"
+      "pt": "Existe até no menor clube: alguém responde, alguém paga e alguém fala.",
+      "en": "Even the smallest club has one: somebody answers, somebody pays, somebody speaks."
     },
     "manager.club": {
       "pt": "SEU CLUBE",
@@ -595,6 +595,14 @@
     "team.president_fixed": {
       "pt": "A presidência é sua e não se troca. Todo outro cargo, sim.",
       "en": "The presidency is yours and does not change hands. Every other chair does."
+    },
+    "team.open_sheet": {
+      "pt": "Abrir a ficha de %s",
+      "en": "Open %s’s sheet"
+    },
+    "team.lineup_hint": {
+      "pt": "Clique numa caixa da tabela para escalar. O número é a afinidade; o preenchimento compara com o resto do elenco.",
+      "en": "Click a box in the table to field somebody. The number is the affinity; the fill compares him with the rest of the squad."
     }
   }
 }

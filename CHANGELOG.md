@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Changed - B.6l: a tabela do elenco vira uma tabela (2026-09-17)
+- **Um GridContainer so, cabecalho incluido.** Cabecalho e linhas eram
+  HBoxContainers separados que concordavam sobre larguras por serem escritos das
+  mesmas constantes — e sobre mais nada. Num grid a coluna e dimensionada pela
+  celula mais larga DAQUELA coluna, cabecalho e linhas juntos, porque sao o mesmo
+  container
+- Custa a linha-como-botao: grid tem celula, nao linha. Selecao e **zebra** sao
+  pintadas por celula (zebra nao e enfeite numa tabela de 27 colunas: e o que
+  segura o olho na linha em que ele comecou), e **a celula do nome e a que se
+  clica**, que e o idioma de tabela em todo lugar
+- **A celula mostra a afinidade**, nao o codigo da propria coluna. O
+  preenchimento e RELATIVO (contra o resto do elenco naquela posicao) e o numero
+  e ABSOLUTO, entao respondem perguntas diferentes em vez de repetir. Tingido pelo
+  proprio valor: coluna de afinidade baixa some e o olho cai em quem serve
+- **A linha de nomes de grupo saiu.** Tres palavras cobrindo dezoito colunas nao
+  se expressam num grid sem span, e ela nao pagava a linha: os codigos sao
+  inequivocos, um fio marca cada fronteira, e o painel da esquerda ja diz
+  Administracao / Comissao / Escalacao sobre as atribuicoes de verdade. Cada
+  cabecalho carrega a posicao no tooltip
+- O painel para de se explicar na tela: `admin_hint` (69 caracteres, permanentes,
+  numa coluna de 300px) virou tooltip, e `%d inscritos de %d no elenco` virou
+  `%d/%d inscritos` — estado fica, explicacao vai pro hover
+
+### Fixed
+- **O desalinhamento entre cabecalho e marcacoes.** O cabecalho separava as
+  celulas por `COL_GAP` (6) e as linhas por `8`: dois pixels por coluna, 48px de
+  deriva na vigesima quarta. Ja tinha sido "consertado" uma vez clipando um
+  titulo que crescia alem do minimo — a largura nunca foi o problema, o arranjo
+  era
+- E o primeiro grid caiu na MESMA armadilha um nivel acima: as fronteiras eram
+  contadas a mao (tres) e emitidas por um laco que produzia duas, porque ataque e
+  defesa sao um bloco so. O grid recebia 27 colunas e cada linha preenchia 26, e
+  tudo escorregava uma celula — 5706px de largura. Virou uma LISTA SO
+  (`_column_plan`) que cabecalho e linhas percorrem
+
 ### Fixed - B.6k: presidente, corpo e o nome do clube (2026-09-17)
 - **O player estava sendo sentado como HEAD COACH.** Era `head_coach` em dois dos
   tres cenarios, e isso silenciosamente o punha como membro da propria comissao

@@ -70,6 +70,9 @@ const COL_ROLE := 36
 const COL_GAP := 6
 # The three-letter code column on the athlete card.
 const CARD_CODE := 52
+# Mark, name, shirt, talent, Geral, age.
+const PROFILE_COLUMNS := 6
+# Hairlines are counted by `_column_plan`, not declared — see the warning there.
 
 # ⚠️ THE ROLE COLUMNS ARE THE BUDGET. There are EIGHTEEN of them — three
 # administration chairs, five on the technical staff and ten in the formation —
@@ -293,36 +296,239 @@ func _squad_tab() -> Control:
 	columns.add_theme_constant_override("separation", 18)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-	var career: Career = _career()
 	var people: Array[Actor] = _sorted(_rosters().squad(_viewed_id(), _category()))
 	_measure_fit_ceilings(people)
 
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 2)
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.add_child(_column_headings())
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 1)
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-	left.add_child(scroll)
-	var manager_id: String = career.manager.thing_id if career != null and career.manager != null else ""
-	for person: Actor in people:
-		list.add_child(_roster_row(person, person.thing_id == manager_id))
 	# ESCALAÇÃO ON THE LEFT, table on the right. You read left to right, and the
 	# question you arrive with is "who is on my team and what is still empty" —
 	# the answer to that is the panel, so it goes first. The table is what you
 	# reach for to change the answer, which is a second move.
-	#
-	# It lives beside the table and not behind a tab because the whole complaint
-	# was that ticking boxes gave no sense of completeness, and an answer you
-	# have to navigate to is not feedback.
 	columns.add_child(_lineup_panel(people))
-	columns.add_child(left)
+	columns.add_child(_roster_table(people))
 	return columns
+
+# ⚠️ ONE GRID, HEADER INCLUDED. The header and the rows used to be separate
+# HBoxContainers that agreed about widths by being written from the same
+# constants — and agreed about nothing else. The header separated its cells by
+# COL_GAP and the rows by 8, so every column drifted two pixels and by the
+# twenty-fourth the header was forty-eight pixels off the boxes it named. That
+# had been "fixed" once already, by clipping a heading that was growing past its
+# minimum; the widths were never the problem, the arrangement was.
+#
+# A GridContainer sizes each column to the widest cell IN THAT COLUMN, header
+# and rows alike, because they are the same container. Alignment stops being
+# something to get right and becomes something that cannot go wrong.
+#
+# It costs the row-as-a-Button: a grid has cells, not rows. So selection and the
+# zebra stripe are painted per cell (`_shell`), and the name cell is the one you
+# click — which is the ordinary table idiom anyway, and honest about the fact
+# that the position boxes were never part of "click the row" either.
+func _roster_table(people: Array[Actor]) -> Control:
+	var positions := Drive.def("position") as PositionDef
+	var career: Career = _career()
+	var manager_id: String = career.manager.thing_id if career != null and career.manager != null else ""
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(scroll)
+
+	var grid := GridContainer.new()
+	grid.columns = _table_columns(positions)
+	grid.add_theme_constant_override("h_separation", COL_GAP)
+	grid.add_theme_constant_override("v_separation", 2)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(grid)
+
+	_fill_header(grid, positions)
+	var index: int = 0
+	for person: Actor in people:
+		_fill_row(grid, person, positions, person.thing_id == manager_id, index)
+		index += 1
+	return box
+
+# ⚠️ THE COLUMN PLAN IS ONE LIST, and the header and the rows both walk it.
+#
+# The first attempt counted the hairlines by hand — three, one per boundary —
+# and emitted them from a loop that produced two, because offence and defence
+# share a block. So the grid was told twenty-seven columns while each row filled
+# twenty-six, and every row after the first slid one cell left: the table came
+# out 5706px wide and nothing lined up with anything.
+#
+# That is the SAME class of bug the grid was brought in to kill, one level up.
+# The fix is the same shape too: not "count more carefully" but "have one source
+# and make both readers use it".
+func _column_plan(positions: PositionDef) -> Array:
+	var plan: Array = []
+	if positions == null:
+		return plan
+	# A hairline between who you are and what you can do.
+	plan.append({"rule": true})
+	var side_of: String = ""
+	for id: String in _role_order(positions):
+		var side: String = positions.side(id)
+		if side_of != "" and side != side_of and not _same_block(side_of, side):
+			plan.append({"rule": true})
+		side_of = side
+		plan.append({"role": id})
+	return plan
+
+func _table_columns(positions: PositionDef) -> int:
+	return PROFILE_COLUMNS + _column_plan(positions).size()
+
+func _fill_header(grid: GridContainer, positions: PositionDef) -> void:
+	grid.add_child(_spacer_cell(COL_MARK))
+	grid.add_child(_heading(UiText.t("team.name"), SORT_NAME, COL_NAME))
+	grid.add_child(_heading(UiText.t("team.shirt"), SORT_SHIRT, COL_SHIRT))
+	grid.add_child(_heading(UiText.t("team.talent"), SORT_PERK, COL_PERK))
+	grid.add_child(_heading(UiText.t("team.strength"), SORT_STRENGTH, COL_STRENGTH))
+	grid.add_child(_heading(UiText.t("team.age"), SORT_AGE, COL_AGE))
+	# The group NAMES are gone. Three words spanning eighteen columns cannot be
+	# expressed in a grid without a span, and they were not earning the row: the
+	# codes are unambiguous, the hairlines mark the boundaries, and the panel on
+	# the left already says Administração / Comissão / Escalação over the actual
+	# assignments. Each heading carries its group on the tooltip.
+	for step: Dictionary in _column_plan(positions):
+		if step.has("rule"):
+			grid.add_child(_rule_cell())
+			continue
+		var id: String = String(step["role"])
+		grid.add_child(_heading(positions.code(id), "fit:" + id, COL_ROLE))
+
+# Offence and defence are one block on this screen: they are the side that takes
+# the field, and a hairline between them would say they are different kinds of
+# thing.
+func _same_block(a: String, b: String) -> bool:
+	return SIDES_IN_LINEUP.has(a) and SIDES_IN_LINEUP.has(b)
+
+# ⚠️ EVERY CELL SAYS WHICH ROW AND WHICH COLUMN IT IS. A grid has neither — it
+# has a flat list of children — so anything that wants to read "this person's
+# age" has to be told, and the two metas are that telling. Without them the only
+# way back to a row is counting children, which is the arithmetic this whole
+# rewrite exists to stop doing.
+func _fill_row(grid: GridContainer, person: Actor, positions: PositionDef,
+		is_manager: bool, index: int) -> void:
+	var chosen: bool = _selected != null and _selected.thing_id == person.thing_id
+	_put(grid, person, "mark", _cell("\u2605" if is_manager else "", COL_MARK,
+		ACCENT if is_manager else MUTED), chosen, index)
+	_put(grid, person, "name", _name_button(person, chosen), chosen, index)
+	_put(grid, person, "shirt", _shirt_cell(person), chosen, index)
+	_put(grid, person, "talent", _talent_chip(person), chosen, index)
+	# Elifoot calls this Geral and so does this column: one number for how good
+	# somebody is, tinted so the roster reads before it is read.
+	var strength: int = person.overall()
+	_put(grid, person, "strength", _cell(str(strength), COL_STRENGTH,
+		StatBar.tint(strength, ACCENT)), chosen, index)
+	_put(grid, person, "age", _cell(str(person.age()), COL_AGE, MUTED), chosen, index)
+	for step: Dictionary in _column_plan(positions):
+		if step.has("rule"):
+			grid.add_child(_rule_cell())
+			continue
+		var id: String = String(step["role"])
+		_put(grid, person, "fit:" + id, _position_button(person, positions, id,
+			float(_fit_ceilings.get(id, 1.0))), chosen, index)
+
+# THE ROW BACKGROUND, one cell at a time. A grid cannot paint a row, so the row
+# paints itself — and since every cell is wrapped anyway, the odd ones get a
+# shade for free. Zebra is not decoration in a table twenty-seven columns wide:
+# it is the only thing keeping your eye on the line it started on.
+func _put(grid: GridContainer, person: Actor, kind: String, inner: Control,
+		chosen: bool, index: int) -> void:
+	var shell: Control = _shell(inner, chosen, index)
+	shell.set_meta("row_of", person.thing_id)
+	shell.set_meta("cell", kind)
+	grid.add_child(shell)
+
+func _shell(inner: Control, chosen: bool, index: int) -> Control:
+	var shell := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	if chosen:
+		style.bg_color = LINE.lightened(0.05)
+		style.border_color = ACCENT
+		style.set_border_width_all(1)
+	else:
+		style.bg_color = WELL.lightened(0.05) if index % 2 == 1 else WELL
+	style.set_content_margin_all(2)
+	shell.add_theme_stylebox_override("panel", style)
+	shell.add_child(inner)
+	return shell
+
+# The name is the click target. A grid has no row to press, and pressing a name
+# to open a record is what a table does everywhere else anyway.
+func _name_button(person: Actor, chosen: bool) -> Button:
+	var button := Button.new()
+	button.set_meta("roster_row", true)
+	button.text = person.full_name()
+	button.clip_text = true
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.custom_minimum_size = Vector2(COL_NAME, 22)
+	button.focus_mode = Control.FOCUS_NONE
+	Look.wear_body(button, Look.TEXT)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0)
+	style.set_content_margin_all(0)
+	for state: String in ["normal", "hover", "pressed"]:
+		button.add_theme_stylebox_override(state, style)
+	button.add_theme_color_override("font_color", ACCENT if chosen else TEXT)
+	button.add_theme_color_override("font_hover_color", ACCENT)
+	button.tooltip_text = UiText.t("team.open_sheet") % person.display_name()
+	button.pressed.connect(_on_pick.bind(person))
+	return button
+
+# Lineup first, then the staff chairs — the same order the rows use, because a
+# header that does not line up with its column is worse than no header.
+# Administration, then the coaching staff, then who takes the field — the order
+# a club is actually built in. Somebody has to answer for the place before
+# anybody picks a quarterback.
+func _role_order(positions: PositionDef) -> Array[String]:
+	var out: Array[String] = []
+	out.append_array(positions.ids_on_side("admin"))
+	out.append_array(positions.ids_on_side("staff"))
+	for side: String in SIDES_IN_LINEUP:
+		out.append_array(positions.ids_on_side(side))
+	return out
+
+func _spacer_cell(width: int) -> Control:
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(width, 0)
+	return spacer
+
+# A header is a button. The arrow says which way, and clicking the column you
+# are already on flips it.
+func _heading(text: String, key: String, width: int) -> Button:
+	var button := Button.new()
+	var active: bool = _sort_key == key
+	button.text = text + ("  \u25be" if active and _sort_desc else ("  \u25b4" if active else ""))
+	button.custom_minimum_size = Vector2(width, 20)
+	# A Button grows past its minimum when the text does not fit, so "Talento"
+	# at forty-five pixels was shoving a thirty-pixel column — and every column
+	# to its right with it. The boxes were always right; the header was the one
+	# sliding.
+	button.clip_text = true
+	button.focus_mode = Control.FOCUS_NONE
+	button.tooltip_text = UiText.t("team.sort_by") % text
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0)
+	style.set_content_margin_all(0)
+	for state: String in ["normal", "hover", "pressed"]:
+		button.add_theme_stylebox_override(state, style)
+	Look.wear_body(button, Look.TEXT)
+	button.add_theme_color_override("font_color", ACCENT if active else MUTED)
+	button.add_theme_color_override("font_hover_color", TEXT)
+	button.pressed.connect(_on_sort.bind(key))
+	return button
+
+# A hairline between one side of the club and the next.
+func _rule_cell() -> Control:
+	var rule := ColorRect.new()
+	rule.color = LINE
+	rule.custom_minimum_size = Vector2(1, 0)
+	rule.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rule
 
 # --- The lineup ---
 
@@ -348,7 +554,7 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 		return panel
 	var assigned: Dictionary = _assignment(people, positions)
 
-	box.add_child(_panel_title(UiText.t("team.admin"), UiText.t("team.admin_hint")))
+	box.add_child(_panel_title(UiText.t("team.admin"), "", UiText.t("team.admin_hint")))
 	for id: String in positions.ids_on_side("admin"):
 		var chairs: Array = assigned.get(id, [])
 		box.add_child(_slot_row(positions.code(id),
@@ -359,7 +565,8 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 		var chairs: Array = assigned.get(id, [])
 		box.add_child(_slot_row(positions.code(id),
 			chairs[0] if not chairs.is_empty() else null))
-	box.add_child(_panel_title(UiText.t("team.lineup"), _squad_note(people, positions)))
+	box.add_child(_panel_title(UiText.t("team.lineup"), _squad_note(people, positions),
+		UiText.t("team.lineup_hint")))
 	var reserves: Array = []
 	for side: String in SIDES_IN_LINEUP:
 		box.add_child(_unit_caption(UiText.t("team.side_" + side),
@@ -445,20 +652,37 @@ func _measure_fit_ceilings(people: Array[Actor]) -> void:
 			best = maxf(best, positions.fit(id, person.stats(), person.skills()))
 		_fit_ceilings[id] = maxf(best, 0.01)
 
-func _panel_title(text: String, note: String) -> Control:
+# A heading, and whatever STATE goes with it. The sentence explaining what the
+# block is for moved to the tooltip — "existe até no menor clube: alguém
+# responde, alguém paga e alguém fala" is a nice line and it was sixty-nine
+# characters of a three-hundred-pixel column, permanently, saying something you
+# need told once.
+#
+# `note` is the difference: it is state, not explanation ("9/12 inscritos"), so
+# it stays on screen and stays short.
+func _panel_title(text: String, note: String, tip: String = "") -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 1)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
 	var title := Label.new()
 	title.text = text
-	Look.wear_body(title, Look.TEXT)
 	title.add_theme_color_override("font_color", ACCENT)
 	Look.wear_display(title, Look.HEADING)
-	box.add_child(title)
-	var hint := Label.new()
-	hint.text = note
-	Look.wear_body(hint, Look.TEXT)
-	hint.add_theme_color_override("font_color", MUTED)
-	box.add_child(hint)
+	row.add_child(title)
+	if note != "":
+		var state := Label.new()
+		state.text = note
+		state.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		state.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		state.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		Look.wear_body(state, Look.TEXT)
+		state.add_theme_color_override("font_color", MUTED)
+		row.add_child(state)
+	if tip != "":
+		row.tooltip_text = tip
+		row.mouse_filter = Control.MOUSE_FILTER_STOP
+	box.add_child(row)
 	box.add_child(_rule())
 	return box
 
@@ -497,148 +721,6 @@ func _slot_row(code: String, who: Actor) -> Control:
 # Two header rows. The top one says what the block of columns is FOR, which is
 # what makes eleven little buttons legible instead of a wall: profile, who
 # plays, who coaches.
-func _column_headings() -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
-	box.add_child(_group_headings())
-	box.add_child(_sort_headings())
-	return box
-
-func _group_headings() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", COL_GAP)
-	var positions := Drive.def("position") as PositionDef
-	var lineup: int = 0
-	var staff: int = 0
-	if positions != null:
-		for side: String in SIDES_IN_LINEUP:
-			lineup += positions.ids_on_side(side).size()
-		staff = positions.ids_on_side("staff").size()
-	var admin: int = positions.ids_on_side("admin").size() if positions != null else 0
-	row.add_child(_group_label(UiText.t("team.profile"),
-		COL_MARK + COL_NAME + COL_SHIRT + COL_PERK + COL_STRENGTH + COL_AGE + COL_GAP * 5))
-	row.add_child(_group_label(UiText.t("team.admin"), _block_width(admin)))
-	row.add_child(_group_label(UiText.t("team.staff"), _block_width(staff)))
-	row.add_child(_group_label(UiText.t("team.lineup"), _block_width(lineup)))
-	return row
-
-func _block_width(columns: int) -> int:
-	return maxi(columns * COL_ROLE + maxi(columns - 1, 0) * COL_GAP, 0)
-
-func _group_label(text: String, width: int) -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 1)
-	box.custom_minimum_size = Vector2(width, 0)
-	var label := Label.new()
-	label.text = text
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.clip_text = true
-	Look.wear_body(label, Look.TINY)
-	label.add_theme_color_override("font_color", ACCENT)
-	box.add_child(label)
-	var rule := ColorRect.new()
-	rule.color = LINE
-	rule.custom_minimum_size = Vector2(0, 1)
-	box.add_child(rule)
-	return box
-
-func _sort_headings() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", COL_GAP)
-	row.add_child(_spacer_cell(COL_MARK))
-	row.add_child(_heading(UiText.t("team.name"), SORT_NAME, COL_NAME))
-	row.add_child(_heading(UiText.t("team.shirt"), SORT_SHIRT, COL_SHIRT))
-	row.add_child(_heading(UiText.t("team.talent"), SORT_PERK, COL_PERK))
-	row.add_child(_heading(UiText.t("team.strength"), SORT_STRENGTH, COL_STRENGTH))
-	row.add_child(_heading(UiText.t("team.age"), SORT_AGE, COL_AGE))
-	var positions := Drive.def("position") as PositionDef
-	if positions != null:
-		for id: String in _role_order(positions):
-			row.add_child(_heading(positions.code(id), "fit:" + id, COL_ROLE))
-	return row
-
-# Lineup first, then the staff chairs — the same order the rows use, because a
-# header that does not line up with its column is worse than no header.
-# Administration, then the coaching staff, then who takes the field — the order
-# a club is actually built in. Somebody has to answer for the place before
-# anybody picks a quarterback.
-func _role_order(positions: PositionDef) -> Array[String]:
-	var out: Array[String] = []
-	out.append_array(positions.ids_on_side("admin"))
-	out.append_array(positions.ids_on_side("staff"))
-	for side: String in SIDES_IN_LINEUP:
-		out.append_array(positions.ids_on_side(side))
-	return out
-
-func _spacer_cell(width: int) -> Control:
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(width, 0)
-	return spacer
-
-# A header is a button. The arrow says which way, and clicking the column you
-# are already on flips it.
-func _heading(text: String, key: String, width: int) -> Button:
-	var button := Button.new()
-	var active: bool = _sort_key == key
-	button.text = text + ("  \u25be" if active and _sort_desc else ("  \u25b4" if active else ""))
-	button.custom_minimum_size = Vector2(width, 20)
-	# A Button grows past its minimum when the text does not fit, so "Talento"
-	# at forty-five pixels was shoving a thirty-pixel column — and every column
-	# to its right with it. The boxes were always right; the header was the one
-	# sliding.
-	button.clip_text = true
-	button.focus_mode = Control.FOCUS_NONE
-	button.tooltip_text = UiText.t("team.sort_by") % text
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0)
-	style.set_content_margin_all(0)
-	for state: String in ["normal", "hover", "pressed"]:
-		button.add_theme_stylebox_override(state, style)
-	Look.wear_body(button, Look.TEXT)
-	button.add_theme_color_override("font_color", ACCENT if active else MUTED)
-	button.add_theme_color_override("font_hover_color", TEXT)
-	button.pressed.connect(_on_sort.bind(key))
-	return button
-
-func _roster_row(person: Actor, is_manager: bool) -> Control:
-	var button := Button.new()
-	# Tagged rather than named: Godot renames duplicate siblings, so a name is
-	# not something a test can match on. The role buttons inside a row are
-	# blank too — their code is a child Label over the fill bar — so text is
-	# no help either.
-	button.set_meta("roster_row", true)
-	button.focus_mode = Control.FOCUS_NONE
-	button.custom_minimum_size = Vector2(0, 26)
-	var chosen: bool = _selected != null and _selected.thing_id == person.thing_id
-	for state: String in ["normal", "hover", "pressed", "focus"]:
-		button.add_theme_stylebox_override(state, _row_style(chosen, state == "hover"))
-	button.pressed.connect(_on_pick.bind(person))
-
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	button.add_child(row)
-
-	row.add_child(_cell("\u2605" if is_manager else "", COL_MARK,
-		ACCENT if is_manager else MUTED))
-	# Full name and the name on the shirt are different things, and a manager
-	# reads the second one far more often.
-	row.add_child(_cell(person.full_name(), COL_NAME, TEXT))
-	row.add_child(_shirt_cell(person))
-	row.add_child(_talent_chip(person))
-	# Elifoot calls this Forca and so does this column: one number for how good
-	# somebody is, tinted so the roster reads before it is read.
-	var strength: int = person.overall()
-	row.add_child(_cell(str(strength), COL_STRENGTH, StatBar.tint(strength, ACCENT)))
-	row.add_child(_cell(str(person.age()), COL_AGE, MUTED))
-	var positions := Drive.def("position") as PositionDef
-	if positions != null:
-		for id: String in _role_order(positions):
-			row.add_child(_position_button(person, positions, id,
-				float(_fit_ceilings.get(id, 1.0))))
-	return button
-
 func _shirt_cell(person: Actor) -> Control:
 	var box := HBoxContainer.new()
 	box.add_theme_constant_override("separation", 5)
@@ -1016,6 +1098,7 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 	# best option there, and the rest read as fractions of him.
 	var raw: float = maxf(positions.fit(id, person.stats(), person.skills()), 0.0)
 	var fit: float = clampf(raw / ceiling, 0.0, 1.0) if ceiling > 0.0 else 0.0
+	var shown: int = int(round(raw * 100.0))
 
 	var button := Button.new()
 	button.set_meta("role", id)
@@ -1055,20 +1138,34 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(bar)
 
+	# ⚠️ THE AFFINITY, NOT THE CODE. Every cell in the president column used to
+	# read "PRE", twelve times, under a heading that already said PRE — two
+	# hundred and sixteen repetitions of eighteen words the column had already
+	# named. It was not information, it was texture, and it made the table
+	# unreadable by being loud about nothing.
+	#
+	# What a cell of (person, position) actually knows is how well this person
+	# suits this job, and that was only ever encoded as the width of the fill
+	# behind it. Now it is a number as well: the fill is RELATIVE (how he ranks
+	# against the rest of this squad at this position) and the number is
+	# ABSOLUTE, so the two answer different questions rather than repeat.
+	#
+	# Tinted by its own value, so a column of low fits fades out and the eye
+	# lands on the two people who can actually do the job.
 	var label := Label.new()
-	label.text = positions.code(id)
+	label.text = str(shown)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	Look.wear_body(label, Look.TINY)
+	Look.wear_body(label, Look.TEXT)
 	label.add_theme_color_override("font_color",
-		ON_ACCENT if chosen else TEXT)
+		ON_ACCENT if chosen else StatBar.tint(shown, ACCENT))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(label)
 
 	button.tooltip_text = "%s — %s\n%s: %d%%" % [
 		positions.label(id), positions.desc(id),
-		UiText.t("team.fit"), int(round(raw * 100.0))]
+		UiText.t("team.fit"), shown]
 	button.pressed.connect(_on_toggle_position.bind(person, id))
 	return button
 
