@@ -32,7 +32,22 @@ window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=3
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
+window/stretch/aspect="keep"
+; INTEGER, not fractional. This is the half of "not pixel perfect" that has
+; nothing to do with the fonts: the default fractional mode scales the canvas by
+; whatever the window happens to need — 1.333x on a 1440p monitor — and every
+; glyph, bar and swatch gets re-rasterised at a fraction of a pixel. Integer
+; snaps to 1x, 2x, 3x and letterboxes the remainder, which is the only way a
+; pixel is a pixel.
+;
+; The cost is real and it is a trade: at 2560x1440 the base 1920x1080 only fits
+; once, so you get 1x with a border instead of a slightly soft full screen. At
+; 3840x2160 it is exactly 2x and looks like it was drawn for the monitor.
+;
+; And `aspect` moves from "expand" to "keep" because expand hands the game
+; whatever aspect the window has, which is the other way a whole pixel stops
+; being one.
+window/stretch/scale_mode="integer"
 
 [gui]
 

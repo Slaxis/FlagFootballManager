@@ -559,6 +559,14 @@
     "manager.club_reroll": {
       "pt": "Sorteia outro clube — nome, bairro e cores",
       "en": "Roll another club — name, neighbourhood and colours"
+    },
+    "manager.perk_boons": {
+      "pt": "QUALIDADES — custam",
+      "en": "QUALITIES — they cost"
+    },
+    "manager.perk_flaws": {
+      "pt": "DEFEITOS — pagam",
+      "en": "FLAWS — they pay"
     }
   }
 }

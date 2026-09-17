@@ -27,18 +27,40 @@ class_name Look
 const DISPLAY_PATH := "res://game/asset/font/vt323.ttf"
 const BODY_PATH := "res://game/asset/font/pixel_code.ttf"
 
-# VT323 is drawn tall and reads a size or two smaller than it measures, which is
-# why the display rungs sit above the body ones.
-const TITLE := 40
-const HEADING := 28
-const PLATE := 32
-const BIG := 22
+# ⚠️ THESE NUMBERS COME OUT OF THE FONT FILES, NOT OUT OF TASTE. Both ladders
+# were measured by reading the glyph outlines: the greatest common divisor of
+# every glyph's bounding box is the size of one DESIGN PIXEL, and a font size
+# where that does not land on a whole screen pixel renders with stems that
+# alternate between one and two pixels wide. That is the mush.
+#
+# Pixel Code: 112 font units per design pixel on a 1008 em, so nine design
+# pixels per em, so the crisp sizes are 9, 18, 27, 36. The first ladder here
+# used 12, 14 and 16 — every one of them off the grid, and 16 in particular put
+# a design pixel at 1.78 screen pixels, which is the worst case.
+#
+# So THE BODY HAS ONE SIZE. There is no crisp rung between 9 (too small to read
+# at 1x) and 18, and inventing one is inventing the blur back. Hierarchy comes
+# from colour instead, which is how these screens were already doing most of it.
+const TEXT := 18
+const SMALL := 18
+const TINY := 18
+# Available, and currently unused: the native cell. Legible at 2x on a 4K
+# monitor and a squint at 1x, so reach for it only for something genuinely dense.
+const MICRO := 9
+const LEAD := 27
 
-# Pixel Code at 16 is one glyph cell; 12 is the smallest that still has a
-# readable cedilla, which is the real floor in Portuguese.
-const TEXT := 16
-const SMALL := 14
-const TINY := 12
+# VT323 is NOT grid-aligned — its outlines have a divisor of 4 on a 1000 em, so
+# it is a smooth face imitating a CRT rather than a pixel font. No size makes its
+# stems perfectly even; with antialiasing off it still renders hard-edged, and at
+# display sizes the unevenness is what a CRT looked like anyway.
+#
+# What it does have is a metric constraint: ascent 800 and descent -200 on a 1000
+# em, so only MULTIPLES OF 5 put the baseline on a whole pixel. Off a multiple of
+# five the whole line shifts half a pixel and every glyph in it softens.
+const TITLE := 40
+const PLATE := 30
+const HEADING := 25
+const BIG := 20
 
 static var _display: FontFile = null
 static var _body: FontFile = null

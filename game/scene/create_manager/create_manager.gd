@@ -39,13 +39,24 @@ const TALENT_BAD := Color(0.85, 0.36, 0.36)
 # hints know what to wrap against. An autowrapping Label with no width reports
 # its minimum as the whole unwrapped line and quietly blows the layout open.
 const PANEL_WIDTH := 1840
+# Tall enough for the Fundador, who has the most in his column, so switching
+# scenarios never moves the frame.
+const PANEL_HEIGHT := 1040
 const COL_LEFT := 520
 const COL_MID := 400
 const COL_RIGHT := 830
 # Twenty-seven talents in four columns is seven rows, which the right column has
 # room for under the skills.
-const PERK_COLUMNS := 4
+const BOON_COLUMNS := 3
+const FLAW_COLUMNS := 1
+# How much of the right column the qualities take. They outnumber the defects
+# three to one, so they get three columns and the defects get a tall one.
+const BOON_SHARE := 600
 const PERK_GAP := 6
+# The colours row, capped part by part so a typed club name cannot widen it.
+const CREST_CAPTION := 90
+const CREST_BUTTON := 130
+const CREST_PLATE := 220
 
 var _build: SheetBuilder = null
 var _name: Dictionary = {}
@@ -94,7 +105,14 @@ func _ready() -> void:
 	# one column that measured 1743px against a 1080 viewport — so two thirds of
 	# the monitor sat empty while the player scrolled past the thing they were
 	# trying to compare against.
-	panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
+	# PINNED IN BOTH AXES. The Fundador's form carries a club block the other two
+	# scenarios do not, so the panel grew and shrank as you clicked between them
+	# and the whole screen jumped under the cursor. A frame that moves while you
+	# are comparing three things is a frame that makes comparing them harder.
+	#
+	# It is a MINIMUM, so content that outgrows it still pushes through and
+	# tests/fit_check.tscn still sees it.
+	panel.custom_minimum_size = Vector2(PANEL_WIDTH, PANEL_HEIGHT)
 	# Tagged for tests/fit_check.tscn: THIS is the node that has to fit on the
 	# screen. The check cannot guess it — a ScrollContainer reports a tiny
 	# minimum by design, so measuring the outermost thing would hide exactly the
@@ -291,8 +309,11 @@ func _origin_row() -> Control:
 		chip.tooltip_text = origins.desc(id)
 		row.add_child(chip)
 	box.add_child(row)
+	# The one-line pitch, and nothing else. The full paragraph is already the
+	# chip's tooltip, and drawn here it was ten wrapped lines — on its own most
+	# of the reason the form did not fit.
 	if origins != null and _origin != "":
-		box.add_child(_hint(origins.line(_origin) + " — " + origins.desc(_origin)))
+		box.add_child(_hint(origins.line(_origin), COL_LEFT))
 	return box
 
 # TWO ROWS. Three fields plus a labelled dice button measured 769px against a
@@ -387,9 +408,15 @@ func _club_row() -> Control:
 	where.add_child(_club_field("city", UiText.t("manager.club_city"), 240))
 	box.add_child(where)
 
+	# Every width here is CAPPED, because the club name is player-typed and a
+	# long one pushed this row two pixels past the column — which is all it took
+	# for the panel to measure differently for the Fundador than for the other
+	# two scenarios and jump as you clicked between them.
 	var colours := HBoxContainer.new()
 	colours.add_theme_constant_override("separation", 8)
-	colours.add_child(_field_label(UiText.t("manager.club_colors")))
+	var caption: Control = _field_label(UiText.t("manager.club_colors"))
+	caption.custom_minimum_size = Vector2(CREST_CAPTION, 0)
+	colours.add_child(caption)
 	colours.add_child(_palette_button())
 	colours.add_child(_crest_preview())
 	box.add_child(colours)
@@ -417,7 +444,8 @@ func _club_field(key: String, caption: String, width: int) -> Control:
 # produces a roster screen nobody can read.
 func _palette_button() -> Button:
 	var button: Button = _flat_button(UiText.t("manager.club_next_colors"), _on_cycle_colors, false)
-	button.custom_minimum_size = Vector2(150, 30)
+	button.custom_minimum_size = Vector2(CREST_BUTTON, 30)
+	button.clip_text = true
 	return button
 
 func _crest_preview() -> Control:
@@ -432,7 +460,11 @@ func _crest_preview() -> Control:
 	var crest := Label.new()
 	crest.text = String(_club.get("name", "?"))
 	crest.add_theme_color_override("font_color", scheme["ink"])
-	crest.add_theme_font_size_override("font_size", 16)
+	# Clipped and capped: the name is typed by the player, and "Associação
+	# Atlética Padre Miguel Piranhas" must not be allowed to set a column width.
+	crest.clip_text = true
+	crest.custom_minimum_size = Vector2(CREST_PLATE, 0)
+	Look.wear_body(crest, Look.TINY)
 	plate.add_child(crest)
 	return plate
 
@@ -464,26 +496,51 @@ func _on_cycle_colors() -> void:
 # One sentence about you, and you may take none. A defect is a perk with a
 # negative price: it hands career points back, which is the only reason anybody
 # would ever choose to drop passes on purpose.
-# A GRID, NOT A FLOW. HFlowContainer reports a minimum width that depends on the
-# width it has been given, so with twenty-seven chips it came back 81px over the
+# TWO BLOCKS, AND THE SIGN IS THE SPLIT: what you buy on the left, what pays you
+# on the right. They are different decisions — one spends your balance and one
+# funds it — and mixed into one grid in catalogue order you had to read the price
+# on every chip to tell which was which.
+#
+# Grids and not flows. HFlowContainer reports a minimum width that depends on the
+# width it was given, so with twenty-seven chips it came back 81px over the
 # column's budget and pushed the whole panel past the screen. A grid's minimum is
 # the sum of its columns, which is a number that does not argue.
 func _perk_row() -> Control:
-	var grid := GridContainer.new()
-	grid.columns = PERK_COLUMNS
-	grid.add_theme_constant_override("h_separation", PERK_GAP)
-	grid.add_theme_constant_override("v_separation", 4)
 	var perks := Drive.def("perk") as PerkDef
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", PERK_GAP * 3)
 	if perks == null:
-		return grid
-	for id: String in perks.perk_ids():
-		grid.add_child(_perk_chip(perks, id))
-	return grid
+		return row
+	row.add_child(_perk_block(perks, perks.boons(), UiText.t("manager.perk_boons"),
+		BOON_COLUMNS, TALENT_GOOD))
+	row.add_child(_perk_block(perks, perks.flaws(), UiText.t("manager.perk_flaws"),
+		FLAW_COLUMNS, TALENT_BAD))
+	return row
 
-func _perk_chip_width() -> int:
-	return (COL_RIGHT - PERK_GAP * (PERK_COLUMNS - 1)) / PERK_COLUMNS
+func _perk_block(perks: PerkDef, ids: Array[String], caption: String,
+		columns: int, hue: Color) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 3)
+	var label := Label.new()
+	label.text = caption
+	label.add_theme_color_override("font_color", hue)
+	Look.wear_body(label, Look.TINY)
+	box.add_child(label)
+	var grid := GridContainer.new()
+	grid.columns = columns
+	grid.add_theme_constant_override("h_separation", PERK_GAP)
+	grid.add_theme_constant_override("v_separation", 3)
+	for id: String in ids:
+		grid.add_child(_perk_chip(perks, id, columns))
+	box.add_child(grid)
+	return box
 
-func _perk_chip(perks: PerkDef, id: String) -> Control:
+# The two blocks share the right column, split by how many chips each carries.
+func _perk_chip_width(columns: int) -> int:
+	var share: int = BOON_SHARE if columns == BOON_COLUMNS else COL_RIGHT - BOON_SHARE
+	return (share - PERK_GAP * (columns + 1)) / columns
+
+func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
 	var cost: int = perks.cost(id)
 	var price: String = (UiText.t("manager.perk_refund") % -cost) if cost < 0 		else (UiText.t("manager.perk_price") % cost)
 	var chip: Button = _choice("%s %s  %s" % [perks.icon(id), perks.label(id), price],
@@ -493,7 +550,7 @@ func _perk_chip(perks: PerkDef, id: String) -> Control:
 	var hue: Color = TALENT_BAD if cost < 0 else TALENT_GOOD
 	chip.add_theme_color_override("font_color", hue)
 	chip.add_theme_color_override("font_hover_color", hue.lightened(0.3))
-	chip.custom_minimum_size = Vector2(_perk_chip_width(), 30)
+	chip.custom_minimum_size = Vector2(_perk_chip_width(columns), 30)
 	# Clipped, because a long name must not be allowed to set the column width —
 	# the whole label is on the tooltip that already carries the description.
 	chip.clip_text = true
@@ -1001,10 +1058,22 @@ func _field_label(text: String) -> Control:
 # reports its minimum size as the entire unwrapped line, so one long hint drags
 # the column it lives in as wide as its own sentence and the three-column layout
 # silently becomes one very wide one.
+#
+# AND IT IS CAPPED AT TWO LINES, with the whole thing on the tooltip. Once the
+# body font went to its grid size of 18, these paragraphs were most of the
+# screen: six explanatory hints at four or five lines each pushed the form to
+# 1329px against a 1080 viewport. A hint is a nudge — if it needs five lines it
+# is documentation, and documentation belongs on hover.
+const HINT_LINES := 2
+
 func _hint(text: String, width: int = 0) -> Control:
 	var label := Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.max_lines_visible = HINT_LINES
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.tooltip_text = text
+	label.mouse_filter = Control.MOUSE_FILTER_STOP
 	if width > 0:
 		label.custom_minimum_size = Vector2(width, 0)
 	label.add_theme_color_override("font_color", MUTED)

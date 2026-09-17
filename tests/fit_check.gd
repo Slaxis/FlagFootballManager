@@ -38,6 +38,7 @@ func _ready() -> void:
 	await _check("create_manager", "res://game/scene/create_manager/create_manager.tscn")
 	await _check("draft", "res://game/scene/draft/draft.tscn")
 	await _check("team", "res://game/scene/team/team.tscn")
+	await _check_steady()
 
 	print("\n———————————————————————")
 	if _failures.is_empty():
@@ -68,6 +69,42 @@ func _seed_board() -> void:
 	LeagueGenerator.fill(rosters, praca, Actor.CATEGORY_MASC)
 	The.board["rosters"] = rosters
 	The.board["praca"] = praca
+
+# AND THE FRAME MUST NOT MOVE WHEN THE SCENARIO DOES. The Fundador carries a
+# club block the other two do not, so the panel grew and shrank as you clicked
+# between them and the whole screen jumped under the cursor — which is worst
+# exactly when you are trying to compare the three.
+func _check_steady() -> void:
+	var packed: PackedScene = load(
+		"res://game/scene/create_manager/create_manager.tscn") as PackedScene
+	var screen: Control = packed.instantiate() as Control
+	get_tree().root.add_child(screen)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var origins := Drive.def("origin") as OriginDef
+	var sizes: Dictionary = {}
+	for id: String in (origins.origin_ids() if origins != null else []):
+		screen.call("_on_origin", id)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var panel: Control = _panel(screen)
+		sizes[id] = panel.get_combined_minimum_size() if panel != null else Vector2.ZERO
+	var first: Vector2 = Vector2.ZERO
+	var moved: bool = false
+	for id: String in sizes.keys():
+		if first == Vector2.ZERO:
+			first = sizes[id]
+		elif sizes[id] != first:
+			moved = true
+	if moved:
+		var report: Array[String] = []
+		for id: String in sizes.keys():
+			report.append("%s %.0fx%.0f" % [id, (sizes[id] as Vector2).x, (sizes[id] as Vector2).y])
+		_failures.append("o painel muda de tamanho entre cenários: " + ", ".join(report))
+	print("%-16s %5.0f x %5.0f   %s" % ["cenários", first.x, first.y,
+		"MUDA" if moved else "estável"])
+	screen.get_parent().remove_child(screen)
+	screen.queue_free()
 
 func _check(label: String, path: String) -> void:
 	var packed: PackedScene = load(path) as PackedScene

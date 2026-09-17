@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Fixed - B.6c: pixel perfect de verdade (2026-09-16)
+- **`scale_mode="integer"`.** Metade do "nao esta pixel perfect" nao era fonte: o
+  modo padrao escala o canvas por quanto a janela precisar (1,333x num 1440p) e
+  rasteriza cada glifo, barra e retangulo numa fracao de pixel. Custo assumido e
+  documentado: 1080p -> 1x, 2160p -> 2x, **1440p -> 1x com borda**
+- **A escada de corpos foi MEDIDA nos arquivos, nao escolhida.** O mdc das caixas
+  de todos os glifos e o tamanho de um pixel de design: Pixel Code tem 112
+  unidades por pixel num em de 1008, entao os corpos nitidos sao 9/18/27/36. A
+  escada anterior usava 12, 14 e 16 - todos fora, e o 16 punha um pixel de design
+  em 1,78 pixels de tela. **O corpo agora tem um tamanho so** (18), porque nao
+  existe degrau nitido entre 9 e 18; hierarquia sai da cor
+- VT323 nao e fonte de pixel (mdc 4 num em de 1000), e outline imitando CRT. O
+  que ela tem e metrica que so fecha em multiplo de 5 - display virou 20/25/30/40
+- **O painel parou de mudar de tamanho entre cenarios.** Pinado nos dois eixos, e
+  toda largura da linha de cores capada: o nome do clube e digitado pelo player e
+  um nome longo movia o painel dois pixels
+- **Talentos em duas colunas**: qualidades a esquerda (3 colunas), defeitos a
+  direita. O sinal e a divisao - sao decisoes diferentes, uma gasta o saldo e a
+  outra o financia, e misturadas em ordem de catalogo obrigava a ler o preco de
+  cada chip
+- Corpo em 18 fez a tela ir a 1329px, e o culpado eram os textos de ajuda: seis
+  paragrafos de quatro ou cinco linhas. **Hint agora tem no maximo duas linhas** e
+  carrega o resto no tooltip - e a descricao inteira do cenario, que estava
+  desenhada em dez linhas, saiu (ja era o tooltip do chip)
+- `fit_check` tambem verifica que o painel **nao muda de tamanho** entre os tres
+  cenarios
+
 ### Added — B.6b: pixel art, layout e talentos (2026-09-16)
 - **Duas fontes de terminal**, e as duas de proposito: o Elifoot era um jogo de
   DOS, e um simulador 100% painel nao tem sprite pra carregar o clima — a fonte
