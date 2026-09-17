@@ -13,6 +13,9 @@ const _SAVE_EXISTS := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# The window may have changed since the last screen, and the canvas has to
+	# follow it on a whole-pixel boundary or nothing drawn here lands on one.
+	Look.fit_window()
 	_build_ui()
 
 func _build_ui() -> void:

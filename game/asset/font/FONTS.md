@@ -100,31 +100,51 @@ Essa é a conta que decide tudo, e não tem como fugir dela:
 
 ```
 tamanho aparente = corpo lógico × escala inteira
-escala inteira   = floor(resolução da tela / viewport base)
+escala inteira   = floor(resolução da tela / canvas de projeto)
+canvas           = resolução da tela / escala      (o resto vira canvas)
 ```
 
-Num monitor 3840x2160:
+A escala é calculada em `Look.fit_window()` e **não** no project.godot, porque a
+configuração não consegue expressar a regra: `scale_mode="integer"` arredonda a
+escala pra baixo e põe tarja na sobra, e `aspect="expand"` não devolve essa sobra.
+Num monitor 2560x1440 com base 1920x1080 isso desenhava um canvas de 1920x1080 a
+1x no meio da tela, com 320px de borda em volta — um quadrado pequeno.
 
-| viewport base | escala | corpo 18 | corpo 27 | espaço lógico |
-|---|---|---|---|---|
-| **1920x1080** | **2x** | **36 px reais** | 54 px reais | 1920x1080 |
-| 1280x720 | 3x | 54 px reais | 81 px reais | 1280x720 |
+`Look` calcula `canvas = janela / escala`, então a sobra vira canvas usável e a
+imagem preenche a tela em pixel inteiro em qualquer resolução.
 
-Com `aspect="expand"` só a escala importa: qualquer base entre 1281 e 1920 dá 2x
-e entrega 1920 lógicos; entre 961 e 1280 dá 3x e entrega 1280.
+`DESIGN_MIN` é o contrato: 1920x1080. Toda tela é construída pra caber nele
+(`tests/fit_check.tscn` verifica), então a escala nunca sobe ao ponto de o canvas
+ficar menor que isso.
 
-O formulário de criação precisa de **1850x1040 lógicos** com o corpo em 18. Então
-`1920x1080 @ 2x` é o ponto de projeto, e **36 pixels reais de corpo é o que a
-densidade dessa tela compra**.
+| monitor | escala | canvas | corpo 18 |
+|---|---|---|---|
+| 1920x1080 | 1x | 1920x1080 | 18 px reais |
+| **2560x1440** | **1x** | **2560x1440** | **18 px reais** |
+| 3840x2160 | 2x | 1920x1080 | 36 px reais |
 
-Querer letra maior é a mesma decisão vista duas vezes: **menos coisa por tela.**
-Corpo 27 ou base 1280 só fecham se o formulário passar a caber em ~1280x720 — o
-que significa abas, ou tirar habilidades e talentos do mesmo painel. É decisão de
-design, não de constante.
+**2x num 2560 de largura exigiria um canvas de 1280**, porque 2x de 1280 é 2560.
+Não existe escala inteira entre 1x e 2x.
+
+### Logo: letra maior é sempre "menos coisa por tela"
+
+Num 2560x1440 as únicas duas opções em pixel inteiro são:
+
+| canvas | escala | corpo 18 | espaço de projeto |
+|---|---|---|---|
+| 2560x1440 | 1x | 18 px reais | 2560x1440 — folgado |
+| **1280x720** | **2x** | **36 px reais** | 1280x720 — aperta |
+
+O formulário de criação precisa hoje de **1850x1040**. Pra ele caber em 1280x720,
+habilidades e talentos têm que sair do mesmo painel (aba), e o elenco (1647 de
+largura) e o draft (767 de altura) também precisam de um passe.
+
+Se o canvas de projeto virar 1280x720, aí **todo** monitor ganha o degrau que
+merece: 1080p → 1x, 1440p → 2x, 4K → 3x. É o ponto de projeto clássico de pixel
+art, e é uma decisão de design — não de constante.
 
 ## O número está na tela
 
 O canto inferior direito do menu inicial mostra
-`3840x2160 · canvas 1920x1080 · 2x · corpo 36px`. Se disser **1x**, a janela não
-é múltiplo do canvas e nada mais na imagem vai parecer certo — foi assim que o
-"quadrado no meio" apareceu.
+`2560x1440 · canvas 2560x1440 · 1x · corpo 18px`. O primeiro par é a janela, o
+segundo é o canvas, e se os dois forem iguais a escala é 1x.

@@ -119,6 +119,51 @@ static func _font_slot(control: Control) -> String:
 static func _size_slot(control: Control) -> String:
 	return "normal_font_size" if control is RichTextLabel else "font_size"
 
+# --- Making the window fill, and stay on whole pixels ---
+#
+# THE PROJECT SETTING CANNOT DO THIS ON ITS OWN. `scale_mode="integer"` floors
+# the scale and letterboxes the remainder, and `aspect="expand"` does not hand
+# that remainder back — so a 2560x1440 monitor with a 1920x1080 base drew a
+# 1920x1080 canvas at 1x in the middle of the screen with a 320px border all the
+# way round. A small square, exactly as reported.
+#
+# The arithmetic nobody can dodge: 2x needs 3840 pixels of width, because 2x of a
+# 1920 canvas IS 3840. On a 2560-wide screen the only whole-pixel scale that fills
+# anything is 1x — so the fix is not a bigger scale, it is to let the canvas GROW
+# to the window at that scale. 2560x1440 logical pixels, one screen pixel each.
+#
+# So the scale is computed from the window that actually exists:
+#
+#   scale  = the largest whole number that still leaves DESIGN_MIN of room
+#   canvas = window / scale        ← the leftover becomes usable canvas
+#
+#   2560x1440  ->  1x, canvas 2560x1440   fills, crisp, body 18px real
+#   3840x2160  ->  2x, canvas 1920x1080   fills, crisp, body 36px real
+#   1920x1080  ->  1x, canvas 1920x1080   fills, crisp
+#
+# ⚠️ DESIGN_MIN IS A CONTRACT. Every screen is built to fit inside it (see
+# tests/fit_check.tscn), so the scale may never rise to the point where the canvas
+# drops below it — a crisper picture you cannot read the forms on is not a better
+# picture.
+const DESIGN_MIN := Vector2i(1920, 1080)
+
+static func fit_window() -> void:
+	var window: Window = Engine.get_main_loop().get_root() as Window
+	if window == null:
+		return
+	var have: Vector2i = DisplayServer.window_get_size()
+	if have.x <= 0 or have.y <= 0:
+		return
+	var scale: int = maxi(mini(have.x / DESIGN_MIN.x, have.y / DESIGN_MIN.y), 1)
+	var canvas: Vector2i = have / scale
+	if window.content_scale_size == canvas and is_equal_approx(
+			window.content_scale_factor, float(scale)):
+		return
+	window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	window.content_scale_size = canvas
+	window.content_scale_factor = float(scale)
+
 # --- Telling the truth about the scale ---
 #
 # One line, in a corner of the title screen. It exists because "está num quadrado
@@ -127,13 +172,14 @@ static func _size_slot(control: Control) -> String:
 # DPI aware, so the integer scale floored to 1x. A readout turns the next report
 # of that class into "diz 1x" and ends the guessing in one message.
 static func scale_line() -> String:
-	var window: Vector2i = DisplayServer.window_get_size()
-	var canvas: Vector2 = Vector2(
-		float(ProjectSettings.get_setting("display/window/size/viewport_width", 1920)),
-		float(ProjectSettings.get_setting("display/window/size/viewport_height", 1080)))
-	var shown: int = maxi(int(floor(float(window.x) / canvas.x)), 1)
+	var window: Window = Engine.get_main_loop().get_root() as Window
+	var have: Vector2i = DisplayServer.window_get_size()
+	if window == null:
+		return "%dx%d" % [have.x, have.y]
+	var scale: int = maxi(int(round(window.content_scale_factor)), 1)
+	var canvas: Vector2i = window.content_scale_size
 	return "%dx%d  ·  canvas %dx%d  ·  %dx  ·  corpo %dpx" % [
-		window.x, window.y, int(canvas.x), int(canvas.y), shown, TEXT * shown]
+		have.x, have.y, canvas.x, canvas.y, scale, TEXT * scale]
 
 # The project-wide default, so a control nobody dressed still comes out in the
 # right face instead of in Godot's sans.

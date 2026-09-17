@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed - B.6e: o quadrado no meio da tela (2026-09-16)
+- **`Look.fit_window()` calcula a escala no runtime**, porque a configuracao do
+  projeto nao consegue expressar a regra: `scale_mode="integer"` arredonda a
+  escala pra baixo e poe tarja na sobra, e `aspect="expand"` NAO devolve essa
+  sobra. Num 2560x1440 com base 1920x1080 isso desenhava um canvas de 1920x1080 a
+  1x no meio da tela com 320px de borda em volta — o quadrado
+- A regra e `canvas = janela / escala`, com a escala sendo o maior inteiro que
+  ainda deixa `DESIGN_MIN` (1920x1080) de espaco. Entao a sobra vira canvas
+  usavel: 2560x1440 -> 1x com canvas 2560x1440, e 3840x2160 -> 2x com canvas
+  1920x1080. Preenche e fica em pixel inteiro em qualquer resolucao
+- O readout do menu inicial passa a mostrar o canvas REAL em vez do declarado, que
+  e a unica versao que serve pra diagnosticar
+- `FONTS.md` ganhou a conta de por que letra maior e sempre "menos coisa por
+  tela", com os numeros do caso 1440p: 1x da 2560x1440 de espaco e 18px de corpo,
+  2x da 36px de corpo e so 1280x720 de espaco — e o formulario pede 1850x1040
+
 ### Fixed - B.6d: 4K nao era 4K (2026-09-16)
 - **`allow_hidpi=true`.** Sem isso um monitor 4K nao e um monitor 4K: o Windows
   poe display de 4K em 150% por padrao, e um app que nao e DPI-aware recebe uma

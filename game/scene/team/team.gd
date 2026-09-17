@@ -110,6 +110,7 @@ var _root: VBoxContainer = null
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Look.fit_window()
 	_wear_club_colours()
 	var bg := ColorRect.new()
 	bg.color = BG

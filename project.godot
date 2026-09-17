@@ -41,11 +41,13 @@ window/size/mode=3
 ; With it, the window is the 3840x2160 it actually is and the scale is exactly 2x.
 window/dpi/allow_hidpi=true
 window/stretch/mode="canvas_items"
-; EXPAND, not keep. Integer scaling already guarantees whole pixels; `keep` then
-; letterboxes whatever the integer scale could not use, and `expand` hands that
-; leftover to the game as extra logical canvas instead. On a resolution that is an
-; exact multiple — 3840x2160 at 2x — the two are identical, so expand costs
-; nothing there and removes the border everywhere else.
+; ⚠️ THESE ARE ONLY THE FALLBACK. `Look.fit_window()` overrides the scale and the
+; canvas size at runtime, because the setting cannot express the rule: integer
+; scaling floors the factor and letterboxes the remainder, and `expand` does not
+; hand that remainder back — so a 2560x1440 monitor with this 1920x1080 base drew
+; a 1920x1080 canvas at 1x with a 320px border all the way round. `Look` computes
+; `canvas = window / scale` instead, so the leftover becomes usable canvas and the
+; picture fills the screen on whole pixels at any resolution.
 window/stretch/aspect="expand"
 ; INTEGER, not fractional. This is the half of "not pixel perfect" that has
 ; nothing to do with the fonts: the default fractional mode scales the canvas by

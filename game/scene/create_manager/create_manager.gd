@@ -71,6 +71,9 @@ var _root: VBoxContainer = null
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# The window may have changed since the last screen, and the canvas has to
+	# follow it on a whole-pixel boundary or nothing drawn here lands on one.
+	Look.fit_window()
 	var rng: RandomNumberGenerator = _free_rng()
 	var origins := Drive.def("origin") as OriginDef
 	_origin = origins.origin_ids()[0] if origins != null else ""

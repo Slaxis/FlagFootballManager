@@ -42,6 +42,9 @@ var _printed: int = 0
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# The window may have changed since the last screen, and the canvas has to
+	# follow it on a whole-pixel boundary or nothing drawn here lands on one.
+	Look.fit_window()
 	_wear_club_colours()
 	_build_ui()
 	_start()
