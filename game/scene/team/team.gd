@@ -36,18 +36,23 @@ var ON_ACCENT := Color(0.05, 0.09, 0.05)
 
 func _wear_club_colours() -> void:
 	var scheme: Dictionary = TeamColors.of(_viewed_club())
-	var plate: Color = scheme["plate"]
-	var ink: Color = scheme["ink"]
-	# A dark ground under a light kit and a light ground under a dark one: the
-	# club keeps its hue and the screen keeps its legibility.
-	BG = plate.darkened(0.82) if plate.get_luminance() > 0.35 else plate.darkened(0.45)
-	PANEL = BG.lightened(0.06)
-	LINE = BG.lightened(0.16)
-	ACCENT = TeamColors.accent(scheme)
-	TEXT = ACCENT.lightened(0.55)
-	MUTED = TEXT.darkened(0.45)
-	WELL = BG.darkened(0.18)
-	ON_ACCENT = BG.darkened(0.35)
+	# HIGH CONTRAST, LITERALLY: the background you chose, the lettering you
+	# chose, and shades of black and white for depth. Nothing is derived into a
+	# third hue any more — a yellow background used to be darkened by 82% into
+	# mustard, and the green lettering beside it was replaced outright.
+	#
+	# `shade` is the direction "away from the background": black on a light one,
+	# white on a dark one. Every panel, well and rule is the background mixed
+	# that way, so the screen has depth without inventing a colour.
+	BG = scheme["plate"]
+	ACCENT = scheme["ink"]
+	TEXT = ACCENT
+	var shade: Color = Color.BLACK if TeamColors.luminance(BG) > 0.4 else Color.WHITE
+	PANEL = BG.lerp(shade, 0.10)
+	WELL = BG.lerp(shade, 0.18)
+	LINE = BG.lerp(shade, 0.32)
+	MUTED = ACCENT.lerp(BG, 0.45)
+	ON_ACCENT = BG
 
 const TAB_SQUAD := "squad"
 const TAB_RIVALS := "rivals"

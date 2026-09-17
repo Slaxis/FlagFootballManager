@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Fixed - B.6n: alto contraste literal (2026-09-17)
+- **A escolha do player estava sendo sobreposta de duas maneiras.** `colors[0]`
+  era lido como a TINTA (nao como o fundo), e o par ainda era TROCADO quando
+  falhava o teste de contraste. Quem escolhia amarelo de fundo e verde de letra
+  recebia uma tela mostarda sem verde nenhum: o amarelo virava letra, era
+  trocado, e o verde era substituido inteiro
+- Agora `colors[0]` e o **fundo** e `colors[1]` e a **letra**, sem troca. Se a
+  letra nao der contraste, so o **brilho** dela se mexe — verde escuro no amarelo
+  continua verde, que e o motivo inteiro de deixar alguem escolher verde
+- **A tela do clube usa as duas cores LITERALMENTE.** O fundo amarelo era
+  escurecido em 82% ate virar mostarda; agora o fundo e o fundo. Painel, poco e
+  linha sao o fundo misturado com preto (se o fundo e claro) ou branco (se e
+  escuro), entao a tela tem profundidade sem inventar um terceiro matiz
+- `TeamColors.accent()` saiu: derivar uma terceira cor de duas escolhidas era
+  exatamente o habito que isso desfaz
+- **Os menus antes do clube viram CINZA.** Azul-marinho ainda tem temperatura —
+  le como frio, como noite, como alguma coisa — e toda cor desenhada em cima tem
+  que discutir com essa leitura antes de dizer o que veio dizer
+- Os dois seletores de cor dizem qual e qual: FUNDO e LETRA
+
 ### Fixed - B.6m: a cor do clube nao aparecia (2026-09-17)
 - **O accent era "a mais clara das duas" cores do clube**, que e a pergunta
   errada: clube de vinho e branco tem tinta branca, entao o accent saia BRANCO e

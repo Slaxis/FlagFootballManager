@@ -123,3 +123,21 @@ O canto inferior direito do menu inicial mostra
 `2560x1440 · canvas 2560x1440 · 1.00x · corpo 18px`. Os dois pares iguais e
 `1.00x` é o estado correto — qualquer outra coisa quer dizer que alguma escala
 entrou no meio.
+
+## A paleta, pela mesma lógica
+
+Antes do clube a moldura é **cinza**. Não verde (o do Elifoot), não azul-marinho:
+cinza, porque matiz na moldura é matiz carregando significado que ele não tem —
+e azul-marinho ainda tem temperatura, lê como frio, como noite, como *alguma
+coisa*, e toda coisa colorida desenhada em cima tem que discutir com essa leitura
+antes de dizer o que veio dizer.
+
+A cor fica pra onde significa: verde/vermelho (talento ou defeito), âmbar
+(atenção), os chakras (um tom por atributo), e as cores do clube.
+
+Da tela do time em diante é **alto contraste literal**: o fundo que você
+escolheu, a letra que você escolheu, e tons de preto e branco pra dar
+profundidade. Nada é derivado num terceiro matiz — `colors[0]` é o **fundo** e
+`colors[1]` é a **letra**, sem troca. Se a letra não der contraste no fundo, só o
+**brilho** dela se mexe: verde escuro no amarelo continua verde, que é o motivo
+inteiro de deixar alguém escolher verde.

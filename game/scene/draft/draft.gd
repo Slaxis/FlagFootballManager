@@ -111,15 +111,18 @@ func _wear_club_colours() -> void:
 	var career := read("career") as Career
 	var teams := Drive.def("team") as TeamDef
 	var club: Dictionary = teams.get_team(career.team_id) if career != null and teams != null else {}
+	# HIGH CONTRAST, LITERALLY: the background you chose, the lettering you chose,
+	# and shades of black and white for depth. `shade` is the direction away from
+	# the background — black on a light one, white on a dark one — so every panel
+	# and rule is the background mixed that way and no third hue is invented.
 	var scheme: Dictionary = TeamColors.of(club)
-	var plate: Color = scheme["plate"]
-	var ink: Color = scheme["ink"]
-	BG = plate.darkened(0.82) if plate.get_luminance() > 0.35 else plate.darkened(0.45)
-	PANEL = BG.lightened(0.06)
-	LINE = BG.lightened(0.16)
-	ACCENT = TeamColors.accent(scheme)
-	TEXT = ACCENT.lightened(0.55)
-	MUTED = TEXT.darkened(0.45)
+	BG = scheme["plate"]
+	ACCENT = scheme["ink"]
+	TEXT = ACCENT
+	var shade: Color = Color.BLACK if TeamColors.luminance(BG) > 0.4 else Color.WHITE
+	PANEL = BG.lerp(shade, 0.10)
+	LINE = BG.lerp(shade, 0.32)
+	MUTED = ACCENT.lerp(BG, 0.45)
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
