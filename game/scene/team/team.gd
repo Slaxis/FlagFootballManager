@@ -423,12 +423,12 @@ func _unit_caption(text: String, overall: int) -> Control:
 	var label := Label.new()
 	label.text = text
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.add_theme_font_size_override("font_size", 10)
+	Look.wear_body(label, Look.TEXT)
 	label.add_theme_color_override("font_color", MUTED)
 	row.add_child(label)
 	var value := Label.new()
 	value.text = str(overall) if overall > 0 else "—"
-	value.add_theme_font_size_override("font_size", 12)
+	Look.wear_body(value, Look.TEXT)
 	value.add_theme_color_override("font_color",
 		StatBar.tint(overall, ACCENT) if overall > 0 else MUTED)
 	row.add_child(value)
@@ -450,13 +450,13 @@ func _panel_title(text: String, note: String) -> Control:
 	box.add_theme_constant_override("separation", 1)
 	var title := Label.new()
 	title.text = text
-	title.add_theme_font_size_override("font_size", 12)
+	Look.wear_body(title, Look.TEXT)
 	title.add_theme_color_override("font_color", ACCENT)
 	Look.wear_display(title, Look.HEADING)
 	box.add_child(title)
 	var hint := Label.new()
 	hint.text = note
-	hint.add_theme_font_size_override("font_size", 10)
+	Look.wear_body(hint, Look.TEXT)
 	hint.add_theme_color_override("font_color", MUTED)
 	box.add_child(hint)
 	box.add_child(_rule())
@@ -468,7 +468,7 @@ func _slot_row(code: String, who: Actor) -> Control:
 	var tag := Label.new()
 	tag.text = code
 	tag.custom_minimum_size = Vector2(26, 0)
-	tag.add_theme_font_size_override("font_size", 11)
+	Look.wear_body(tag, Look.TEXT)
 	tag.add_theme_color_override("font_color", ACCENT if code != "" else MUTED)
 	row.add_child(tag)
 
@@ -476,7 +476,7 @@ func _slot_row(code: String, who: Actor) -> Control:
 	name_label.custom_minimum_size = Vector2(190, 0)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.clip_text = true
-	name_label.add_theme_font_size_override("font_size", 12)
+	Look.wear_body(name_label, Look.TEXT)
 	if who == null:
 		name_label.text = "\u2b1a " + UiText.t("team.empty_slot")
 		name_label.add_theme_color_override("font_color", MUTED.darkened(0.35))
@@ -489,7 +489,7 @@ func _slot_row(code: String, who: Actor) -> Control:
 	strength.text = str(who.overall())
 	strength.custom_minimum_size = Vector2(26, 0)
 	strength.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	strength.add_theme_font_size_override("font_size", 12)
+	Look.wear_body(strength, Look.TEXT)
 	strength.add_theme_color_override("font_color", StatBar.tint(who.overall(), ACCENT))
 	row.add_child(strength)
 	return row
@@ -594,7 +594,7 @@ func _heading(text: String, key: String, width: int) -> Button:
 	style.set_content_margin_all(0)
 	for state: String in ["normal", "hover", "pressed"]:
 		button.add_theme_stylebox_override(state, style)
-	button.add_theme_font_size_override("font_size", 11)
+	Look.wear_body(button, Look.TEXT)
 	button.add_theme_color_override("font_color", ACCENT if active else MUTED)
 	button.add_theme_color_override("font_hover_color", TEXT)
 	button.pressed.connect(_on_sort.bind(key))
@@ -648,13 +648,13 @@ func _shirt_cell(person: Actor) -> Control:
 	nick.text = person.nickname() if person.nickname() != "" else person.first_name()
 	nick.clip_text = true
 	nick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	nick.add_theme_font_size_override("font_size", 13)
+	Look.wear_body(nick, Look.TEXT)
 	nick.add_theme_color_override("font_color", TEXT)
 	nick.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(nick)
 	var number := Label.new()
 	number.text = "#%d" % person.jersey() if person.jersey() != Actor.NO_JERSEY else ""
-	number.add_theme_font_size_override("font_size", 11)
+	Look.wear_body(number, Look.TEXT)
 	number.add_theme_color_override("font_color", MUTED)
 	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(number)
@@ -687,7 +687,7 @@ func _talent_chip(person: Actor) -> Control:
 	var label := Label.new()
 	label.text = perks.icon(id)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 12)
+	Look.wear_body(label, Look.TEXT)
 	label.add_theme_color_override("font_color", hue.lightened(0.3))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chip.add_child(label)
@@ -698,7 +698,7 @@ func _cell(text: String, width: int, color: Color) -> Control:
 	label.name = "Cell"
 	label.text = text
 	label.custom_minimum_size = Vector2(width, 0)
-	label.add_theme_font_size_override("font_size", 13)
+	Look.wear_body(label, Look.TEXT)
 	label.add_theme_color_override("font_color", color)
 	label.clip_text = true
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -797,13 +797,13 @@ func _card_header() -> Control:
 	top.add_theme_constant_override("separation", 12)
 	var name_label := Label.new()
 	name_label.text = _selected.display_name()
-	name_label.add_theme_font_size_override("font_size", 24)
+	Look.wear_display(name_label, Look.PLATE)
 	name_label.add_theme_color_override("font_color", TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
 	var strength := Label.new()
 	strength.text = "%s %d" % [UiText.t("team.strength"), _selected.overall()]
-	strength.add_theme_font_size_override("font_size", 18)
+	Look.wear_body(strength, Look.LEAD)
 	strength.add_theme_color_override("font_color", StatBar.tint(_selected.overall(), ACCENT))
 	strength.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(strength)
@@ -823,7 +823,7 @@ func _card_header() -> Control:
 			stats.format_measure("weight", _selected.weight())])
 	var under := Label.new()
 	under.text = "   \u00b7   ".join(parts)
-	under.add_theme_font_size_override("font_size", 12)
+	Look.wear_body(under, Look.TEXT)
 	under.add_theme_color_override("font_color", MUTED)
 	box.add_child(under)
 
@@ -833,7 +833,7 @@ func _card_header() -> Control:
 			var perk := Label.new()
 			perk.text = "%s %s — %s" % [perks.icon(String(perk_id)),
 				perks.label(String(perk_id)), perks.desc(String(perk_id))]
-			perk.add_theme_font_size_override("font_size", 11)
+			Look.wear_body(perk, Look.TEXT)
 			perk.add_theme_color_override("font_color", ACCENT)
 			box.add_child(perk)
 	return box
@@ -930,7 +930,7 @@ func _rival_row(club: Dictionary) -> Control:
 	var badge := Label.new()
 	badge.text = UiText.t("tier.%d" % tier, "?")
 	badge.custom_minimum_size = Vector2(96, 0)
-	badge.add_theme_font_size_override("font_size", 12)
+	Look.wear_body(badge, Look.TEXT)
 	badge.add_theme_color_override("font_color", _TIER_COLOR.get(tier, Color.WHITE))
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(badge)
@@ -1024,6 +1024,13 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 	button.focus_mode = Control.FOCUS_NONE
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
 	button.clip_contents = true
+	# ONE CHAIR IS NOT YOURS TO HAND OUT. The president is the person the club
+	# answers to, and that is what being the player means — you cannot resign it
+	# and you cannot give it to a receiver. Every other chair on this row is a
+	# job, and jobs are exactly what this screen is for.
+	if id == OriginDef.CHAIR_OF_THE_CLUB:
+		button.disabled = true
+		button.tooltip_text = UiText.t("team.president_fixed")
 	var style := StyleBoxFlat.new()
 	style.bg_color = ACCENT if chosen else WELL
 	style.border_color = ACCENT if chosen else LINE
@@ -1159,7 +1166,7 @@ func _section(text: String) -> Control:
 	box.add_child(spacer)
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 11)
+	Look.wear_body(label, Look.TEXT)
 	label.add_theme_color_override("font_color", ACCENT)
 	box.add_child(label)
 	box.add_child(_rule())
@@ -1168,7 +1175,7 @@ func _section(text: String) -> Control:
 func _group_caption(text: String) -> Control:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 10)
+	Look.wear_body(label, Look.TEXT)
 	label.add_theme_color_override("font_color", MUTED)
 	return label
 
@@ -1192,6 +1199,6 @@ func _hint(text: String) -> Control:
 	var label := Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", 12)
+	Look.wear_body(label, Look.TEXT)
 	label.add_theme_color_override("font_color", MUTED)
 	return label

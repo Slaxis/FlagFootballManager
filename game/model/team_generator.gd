@@ -42,7 +42,7 @@ static func invent(seed_value: int, state: String = "RJ") -> Dictionary:
 	var team_name: String = _compose_name(names, rng, city, seed_value)
 	var palette: Array = PALETTES[rng.randi() % PALETTES.size()]
 	return {
-		"id": _slug(team_name, seed_value),
+		"id": slug(team_name, seed_value),
 		"group": "team",
 		"name": team_name,
 		# The bairro and the município are two different answers, and squashing
@@ -74,7 +74,7 @@ static func found(seed_value: int, name: String, neighborhood: String,
 	var clean: String = name.strip_edges()
 	if clean != "":
 		club["name"] = clean
-		club["id"] = _slug(clean, seed_value)
+		club["id"] = slug(clean, seed_value)
 	if neighborhood.strip_edges() != "":
 		club["neighborhood"] = neighborhood.strip_edges()
 	if city.strip_edges() != "":
@@ -110,7 +110,11 @@ static func _compose_name(names: NameGenDef, rng: RandomNumberGenerator, city: S
 		return names.random_team_name(rng)
 	return names.fill_pattern(pattern.replace("{neighborhood}", city), rng)
 
-static func _slug(text: String, seed_value: int) -> String:
+# Public, because the creation screen has to re-derive it every time the player
+# edits the name: the id is what every later screen looks the club up by, and a
+# club registered under the slug of a name nobody chose is a club that exists
+# under the wrong address.
+static func slug(text: String, seed_value: int) -> String:
 	var slug: String = text.to_lower()
 	for pair: Array in [["á", "a"], ["à", "a"], ["ã", "a"], ["â", "a"], ["é", "e"],
 			["ê", "e"], ["í", "i"], ["ó", "o"], ["ô", "o"], ["õ", "o"], ["ú", "u"],

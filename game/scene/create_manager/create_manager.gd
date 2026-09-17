@@ -45,7 +45,10 @@ const TALENT_BAD := Look.BAD
 # make you click between the halves you are comparing.
 # Pinned above the fullest scenario so the frame never moves: the three measure
 # 783, 784 and 783, and one pixel of drift is still the screen jumping under you.
-const PANEL_WIDTH := 1740
+# Pinned above the fullest scenario, so the frame never moves as you click
+# between them. A MINIMUM, so content that outgrows it still pushes through and
+# tests/fit_check.tscn still sees it.
+const PANEL_WIDTH := 1935
 # The widths live here so the hints know what to wrap against: an autowrapping
 # Label with no width reports its minimum as the whole unwrapped line and quietly
 # blows the layout open.
@@ -54,21 +57,31 @@ const PANEL_WIDTH := 1740
 # block does not make the frame jump when you click between scenarios.
 # Above the fullest scenario, so the frame never moves: the three measure 806,
 # 807 and 806, and one pixel of drift is still the screen jumping under you.
-const PANEL_HEIGHT := 790
+const PANEL_HEIGHT := 860
 const COL_LEFT := 620
-const COL_MID := 360
-const COL_RIGHT := 660
+const COL_MID := 400
+const COL_RIGHT := 820
 const SKILL_COLUMNS := 2
 # The footer note gets whatever the three buttons leave. It was once 700px beside
 # a 320px primary, which made that row alone wider than the screen.
 # The three letters in every attribute and skill row.
 const CODE_WIDTH := 52
 
-const BOON_COLUMNS := 4
-const FLAW_COLUMNS := 2
+# WIDE ENOUGH FOR THE WHOLE NAME. "Quebra de cintura  2 pp" is twenty-three
+# characters, and at the body size that is 240px — a chip narrower than that is
+# a chip that clips the thing it exists to say. Under the tracks instead of
+# beside them, there is room.
+const BOON_COLUMNS := 3
+const FLAW_COLUMNS := 1
 # How much of the row the qualities take. They outnumber the defects three to
 # one, so they get five columns and the defects two.
-const BOON_SHARE := 440
+# Three columns of qualities against one of defects, which is roughly the ratio
+# the catalogue has (20 to 7) and comes out at seven rows each.
+#
+# The share is set by the WIDEST NAME, measured and not guessed: "Quebra de
+# cintura  2 pp" is 276px at the body size, so a 252px chip clipped it — and a
+# chip that clips the thing it exists to say is a chip that failed.
+const BOON_SHARE := 900
 const PERK_GAP := 6
 
 
@@ -151,21 +164,21 @@ func _build_ui() -> void:
 
 # --- Form ---
 
-# THREE COLUMNS AND A FOOTER, and where each thing goes is not arbitrary:
+# A COLUMN AND AN AREA, and where each thing goes is not arbitrary:
 #
-#   left    WHO YOU ARE — scenario, name, seed, your club if you are founding
-#           one, and which category you turn out for. Everything that is a
-#           sentence about the person rather than a number.
-#   middle  the eight attributes and the body, because the body SHIFTS the
-#           attributes and reading one while the other is off-screen was the
-#           complaint that started all of this.
-#   right   the fifteen skills in two lanes, and the twenty-seven talents under
-#           them, split by sign.
+#   left    WHO YOU ARE — scenario, identity (name AND body, because both are
+#           what you look like on paper), category, and your club if you are
+#           founding one. Everything that is a sentence about the person rather
+#           than a number.
+#   right   the eight attributes beside the fifteen skills, and the twenty-seven
+#           talents spanning underneath both — which is what talents need to be
+#           READ rather than squinted at, because a talent is a sentence and the
+#           tracks above it are numbers.
 #
-# It was briefly three tabs, when the canvas was 1280x720 and none of this fit.
-# At one-to-one on a 1440p monitor it all fits at once, which is better: this is
-# a form you compare against itself, and clicking between the halves you are
-# comparing is the same problem scrolling was.
+# THE CLUB GOES LAST in the left column, after the category. It only exists for
+# the Fundador, and a block that appears and disappears in the MIDDLE of a column
+# shoves everything below it around as you click between scenarios; at the bottom
+# it grows downwards into space that is already empty.
 func _build_form() -> void:
 	_root.add_child(_header())
 	_root.add_child(_rule())
@@ -175,8 +188,7 @@ func _build_form() -> void:
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_root.add_child(columns)
 	columns.add_child(_left_column())
-	columns.add_child(_middle_column())
-	columns.add_child(_right_column())
+	columns.add_child(_right_area())
 
 	_root.add_child(_spacer(4))
 	_root.add_child(_rule())
@@ -195,27 +207,43 @@ func _left_column() -> Control:
 	box.add_child(_origin_row())
 	box.add_child(_section(UiText.t("manager.identity"), UiText.t("manager.identity_hint")))
 	box.add_child(_identity_row())
+	# THE BODY IS IDENTITY. Height and weight are the same kind of fact as the
+	# name — what you look like on paper — and they were sitting under the
+	# attributes purely because that is where the step they shift lives. Two
+	# spin boxes fit exactly where three name fields already are.
+	box.add_child(_body_row())
 	box.add_child(_seed_row())
-	if _authors_club():
-		box.add_child(_section(UiText.t("manager.club"), UiText.t("manager.club_hint")))
-		box.add_child(_club_row())
 	box.add_child(_section(UiText.t("manager.modality"), UiText.t("manager.plays_hint")))
 	box.add_child(_plays_row())
 	box.add_child(_manages_row())
+	if _authors_club():
+		box.add_child(_section(UiText.t("manager.club"), UiText.t("manager.club_hint")))
+		box.add_child(_club_row())
 	return box
 
-func _middle_column() -> Control:
+# Attributes beside skills, talents underneath both.
+func _right_area() -> Control:
+	var box: VBoxContainer = _column(COL_RIGHT + COL_MID + 24)
+	var tracks := HBoxContainer.new()
+	tracks.add_theme_constant_override("separation", 24)
+	box.add_child(tracks)
+	tracks.add_child(_attributes_column())
+	tracks.add_child(_skills_column())
+	box.add_child(_section(UiText.t("manager.perks"),
+		UiText.t("manager.perks_hint") % _build.perk_points_left()))
+	box.add_child(_perk_row())
+	return box
+
+func _attributes_column() -> Control:
 	var box: VBoxContainer = _column(COL_MID)
 	var stats := Drive.def("stat") as StatDef
 	box.add_child(_section(UiText.t("manager.attributes"), UiText.t("manager.attributes_hint")))
 	if stats != null:
 		for id: String in stats.base_ids():
 			box.add_child(_attribute_row(stats, id))
-	box.add_child(_section(UiText.t("manager.body"), UiText.t("manager.body_hint")))
-	box.add_child(_body_row())
 	return box
 
-func _right_column() -> Control:
+func _skills_column() -> Control:
 	var box: VBoxContainer = _column(COL_RIGHT)
 	var stats := Drive.def("stat") as StatDef
 	box.add_child(_section(UiText.t("manager.skills"), UiText.t("manager.skills_hint")))
@@ -229,28 +257,24 @@ func _right_column() -> Control:
 		var lane: VBoxContainer = _column(lane_width)
 		lanes.append(lane)
 		spread.add_child(lane)
-	if stats != null:
-		# Filled by ROW COUNT and not by group, so the lanes come out even — the
-		# four groups are 5/4/3/3 skills, and one lane per group would leave one
-		# half empty and another over the column.
-		var lane_index: int = 0
-		var placed: int = 0
-		var per_lane: int = int(ceil((float(stats.skill_ids().size())
-			+ float(stats.skill_groups().size())) / float(SKILL_COLUMNS)))
-		for group: String in stats.skill_groups():
-			if placed >= per_lane and lane_index < SKILL_COLUMNS - 1:
-				lane_index += 1
-				placed = 0
-			lanes[lane_index].add_child(_group_caption(group))
+	if stats == null:
+		return box
+	# Filled by ROW COUNT and not by group, so the lanes come out even — the four
+	# groups are 5/4/3/3 skills, and one lane per group would leave one half empty
+	# and another over the column.
+	var lane_index: int = 0
+	var placed: int = 0
+	var per_lane: int = int(ceil((float(stats.skill_ids().size())
+		+ float(stats.skill_groups().size())) / float(SKILL_COLUMNS)))
+	for group: String in stats.skill_groups():
+		if placed >= per_lane and lane_index < SKILL_COLUMNS - 1:
+			lane_index += 1
+			placed = 0
+		lanes[lane_index].add_child(_group_caption(group))
+		placed += 1
+		for id: String in stats.skills_in_group(group):
+			lanes[lane_index].add_child(_skill_row(stats, id))
 			placed += 1
-			for id: String in stats.skills_in_group(group):
-				lanes[lane_index].add_child(_skill_row(stats, id))
-				placed += 1
-
-	# Talents last, because they are the one thing on this sheet that is not
-	# training: you finish the person, then you say what happened to him.
-	box.add_child(_section(UiText.t("manager.perks"), UiText.t("manager.perks_hint") % _build.perk_points_left()))
-	box.add_child(_perk_row())
 	return box
 
 func _group_caption(group: String) -> Control:
@@ -509,8 +533,19 @@ func _roll_club() -> void:
 	_club = TeamGenerator.found(
 		SeedRng.derive(_career_seed(), "founded_%d" % _club_roll), "", "", "", [])
 
+# ⚠️ TYPING THE NAME HAS TO CHANGE THE CLUB, not just the box. It used to write
+# the dictionary and stop there, so the crest beside it kept the rolled name —
+# and worse, `id` kept the SLUG of the rolled name, which is the address every
+# screen after this one looks the club up by. You could name your club anything
+# and still be registered under whatever the dice said first.
+#
+# The form is not rebuilt, on purpose: that would yank the caret out of the field
+# being typed in. The crest is repainted in place instead.
 func _on_club_typed(text: String, key: String) -> void:
 	_club[key] = text
+	if key == "name":
+		_club["id"] = TeamGenerator.slug(text, _career_seed())
+	_paint_crest()
 
 func _on_reroll_club() -> void:
 	_roll_club()
@@ -570,7 +605,8 @@ func _perk_block(perks: PerkDef, ids: Array[String], caption: String,
 
 # The two blocks share the right column, split by how many chips each carries.
 func _perk_chip_width(columns: int) -> int:
-	var share: int = BOON_SHARE if columns == BOON_COLUMNS else COL_RIGHT - BOON_SHARE
+	var whole: int = COL_RIGHT + COL_MID + 24
+	var share: int = BOON_SHARE if columns == BOON_COLUMNS else whole - BOON_SHARE
 	return (share - PERK_GAP * (columns + 1)) / columns
 
 func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
@@ -630,13 +666,17 @@ func _body_row() -> Control:
 		field.step = stats.increment(id)
 		field.value = _measure_value(id)
 		field.suffix = String(spec.get("unit", ""))
-		field.custom_minimum_size = Vector2(170, 32)
+		field.custom_minimum_size = Vector2(190, 32)
 		field.value_changed.connect(_on_measure_value.bind(id))
 		cell.add_child(field)
 		row.add_child(cell)
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 3)
+	# The section that used to head this is gone — the body lives inside
+	# IDENTIDADE now — so what it explained comes with the row.
+	box.tooltip_text = UiText.t("manager.body_hint")
+	box.mouse_filter = Control.MOUSE_FILTER_STOP
 	box.add_child(row)
 
 	# UNDER the fields, and wrapping. As a fourth cell on the same line this was
@@ -646,7 +686,7 @@ func _body_row() -> Control:
 	var summary := Label.new()
 	summary.text = _effect_text(stats, effect)
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.custom_minimum_size = Vector2(COL_MID, 0)
+	summary.custom_minimum_size = Vector2(COL_LEFT, 0)
 	summary.add_theme_color_override("font_color", WARN)
 	Look.wear_body(summary, Look.TINY)
 	box.add_child(summary)

@@ -13,6 +13,7 @@ const SCENE := "res://game/scene/create_manager/create_manager.tscn"
 func tests() -> Array:
 	return [
 		"test_the_form_builds",
+		"test_every_talent_chip_can_show_its_whole_name",
 		"test_the_seed_follows_the_name_fields",
 		"test_the_dice_button_changes_the_person_and_the_world",
 		"test_a_perk_chip_can_be_taken_and_dropped",
@@ -212,3 +213,28 @@ func _spend_the_six_years(screen: Control) -> int:
 		(plus[clicks % plus.size()] as Button).pressed.emit()
 		clicks += 1
 	return clicks
+
+# ⚠️ A CHIP THAT CLIPS THE THING IT EXISTS TO SAY HAS FAILED, and `clip_text`
+# does it in silence — no warning, no error, just "Quebra de cintu". The widths
+# were measured against the longest name rather than guessed, and this is what
+# keeps them measured: a talent renamed one word longer breaks it, and nothing
+# else in the suite would notice.
+func test_every_talent_chip_can_show_its_whole_name(t: TestHelper) -> void:
+	var screen: Control = _open()
+	var font: FontFile = Look.body()
+	if screen == null or font == null:
+		t.fail("não consegui instanciar a tela"); return
+	var checked: int = 0
+	for node: Variant in _collect(screen, "Button", []):
+		var chip := node as Button
+		if not chip.clip_text or chip.text == "" or not chip.text.contains(" pp"):
+			continue
+		checked += 1
+		var needs: float = font.get_string_size(
+			chip.text, HORIZONTAL_ALIGNMENT_LEFT, -1, Look.TEXT).x
+		t.check(chip.custom_minimum_size.x >= needs,
+			"'%s' precisa de %.0fpx e o chip tem %.0f" %
+				[chip.text, needs, chip.custom_minimum_size.x])
+	t.equal(checked, (Drive.def("perk") as PerkDef).perk_ids().size(),
+		"chips de talento medidos")
+	_close(screen)

@@ -591,6 +591,10 @@
     "manager.club_colour_second": {
       "pt": "Cor secundária — é ela que escreve por cima da principal.",
       "en": "Secondary colour — it is the one that writes over the main one."
+    },
+    "team.president_fixed": {
+      "pt": "A presidência é sua e não se troca. Todo outro cargo, sim.",
+      "en": "The presidency is yours and does not change hands. Every other chair does."
     }
   }
 }

@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Fixed - B.6k: presidente, corpo e o nome do clube (2026-09-17)
+- **O player estava sendo sentado como HEAD COACH.** Era `head_coach` em dois dos
+  tres cenarios, e isso silenciosamente o punha como membro da propria comissao
+  tecnica — um entre quatro ou cinco disputando cadeira, num clube que ele
+  deveria mandar. Agora e **PRESIDENTE** em qualquer cenario
+- **A presidencia e a unica cadeira travada** na tabela do elenco: nao se
+  resigna e nao se da pra um recebedor. Todo outro cargo e trabalho que se
+  distribui, e a tabela e exatamente pra isso
+- **Mudar o nome do clube nao mudava o clube.** Escrevia o dicionario e parava
+  ali, entao o escudo colorido ao lado ficava com o nome sorteado — e pior, o
+  `id` mantinha o SLUG do nome sorteado, que e o endereco pelo qual toda tela
+  depois procura o clube. Dava pra batizar o time de qualquer coisa e continuar
+  registrado com o que o dado disse primeiro
+
+### Changed
+- **O corpo sobe pra IDENTIDADE.** Altura e peso sao o mesmo tipo de fato que o
+  nome, e estavam embaixo dos atributos so porque e la que mora o passo que eles
+  deslocam. Duas caixas cabem onde tres campos de nome ja estavam
+- **Talentos ganham a largura inteira** debaixo dos atributos e das habilidades —
+  talento e uma frase e frase precisa de linha. Chip de 252 para **292px**, que
+  e o que "Quebra de cintura  2 pp" pede (276px, medido)
+- **O clube vai por ultimo** na coluna: so existe pro Fundador, e bloco que
+  aparece e some no MEIO empurra tudo abaixo dele a cada troca de cenario
+- **As vinte fontes cravadas da tela do elenco** (de 10 a 24, todas fora da grade
+  e todas minusculas) foram pra escada do `Look`
+- `tests/test_screen_create_manager.gd` passa a medir cada chip de talento contra
+  a largura do proprio texto: `clip_text` corta em silencio, e chip que corta a
+  coisa que ele existe pra dizer falhou
+
 ### Changed - B.6j: paleta neutra e glifos ASCII (2026-09-17)
 - **A moldura vira azul-marinho muito escuro e branco** ate a tela do time. O
   verde do Elifoot e uma bela referencia e tambem uma tela inteira de cor

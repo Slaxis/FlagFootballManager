@@ -106,11 +106,19 @@ func career_years(id: String, rng: RandomNumberGenerator) -> int:
 	var career: Dictionary = origin(id).get("career", {})
 	return rng.randi_range(int(career.get("years_min", 0)), int(career.get("years_max", 0)))
 
-# The chair the club gives you the day you walk in. The only thing about the
-# manager that IS assigned rather than lived — because it is the club's
-# decision, not your body's.
+# PRESIDENT, WHATEVER THE SCENARIO. It is the one chair that is not a job on the
+# sideline: the president is the person the club answers to, which is what being
+# the player means. Head coach, coordinator, scout — those are jobs you HAND OUT,
+# including back to yourself, and the roster screen is where that happens.
+#
+# It used to be head_coach for two of the three, and that quietly made you a
+# member of your own technical staff — one of four or five people competing for
+# a chair, in a club you are supposed to own.
 func chair(id: String) -> String:
-	return String(origin(id).get("start", {}).get("chair", "head_coach"))
+	return String(origin(id).get("start", {}).get("chair", CHAIR_OF_THE_CLUB))
+
+# The chair nobody else can take and you cannot give up.
+const CHAIR_OF_THE_CLUB := "president"
 
 # The Fundador alone. He is not drafted — there is nothing to be drafted into —
 # so the club has to come from somewhere, and the only honest answer is that he
