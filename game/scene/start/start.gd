@@ -26,6 +26,22 @@ func _build_ui() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 
+	# Bottom-right, quiet. A pixel game lives or dies on whether the window is an
+	# exact multiple of its canvas, and that is invisible until it is written
+	# down: a 1x here means the screen is being upscaled by the compositor and
+	# nothing else about the picture will look right.
+	var scale_note := Label.new()
+	scale_note.text = Look.scale_line()
+	scale_note.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	scale_note.offset_left = -560
+	scale_note.offset_top = -34
+	scale_note.offset_right = -16
+	scale_note.offset_bottom = -12
+	scale_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	scale_note.add_theme_color_override("font_color", Color(0.32, 0.38, 0.33))
+	Look.wear_body(scale_note, Look.TEXT)
+	add_child(scale_note)
+
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	center.add_child(box)

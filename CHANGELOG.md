@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Fixed - B.6d: 4K nao era 4K (2026-09-16)
+- **`allow_hidpi=true`.** Sem isso um monitor 4K nao e um monitor 4K: o Windows
+  poe display de 4K em 150% por padrao, e um app que nao e DPI-aware recebe uma
+  janela de 2560x1440 e e esticado borrado pra preencher o painel. Junto com
+  escala inteira da um desastre visivel — `floor(2560/1920)` e **1**, entao o jogo
+  desenhava um canvas de 1920x1080 no meio de uma janela de 2560x1440: quadrado
+  pequeno, cercado de borda, e ainda esticado pelo compositor
+- **`aspect="expand"` no lugar de `keep`.** A escala inteira ja garante pixel
+  inteiro; o `keep` ainda punha tarja no que a escala nao usou. Em 3840x2160 a 2x
+  os dois sao identicos, entao expand nao custa nada ali e tira a borda no resto
+- **O numero esta na tela**: canto inferior direito do menu inicial mostra
+  `3840x2160 · canvas 1920x1080 · 2x · corpo 36px`. Um **1x** ali diz na hora que
+  a janela nao e multiplo do canvas
+- Escada de display subiu um degrau (45/35/30/25), que e onde havia folga: VT323
+  nao e grid-bound alem da linha de base em multiplo de 5, e titulo e uma linha so
+- `FONTS.md` ganhou a aritmetica do tamanho aparente, que e a conta que decide o
+  resto: `aparente = corpo logico x escala`, `escala = floor(tela / viewport)`
+
 ### Fixed - B.6c: pixel perfect de verdade (2026-09-16)
 - **`scale_mode="integer"`.** Metade do "nao esta pixel perfect" nao era fonte: o
   modo padrao escala o canvas por quanto a janela precisar (1,333x num 1440p) e

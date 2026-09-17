@@ -76,12 +76,55 @@ Pixel Code em 27 ou 36 — perde o contraste entre as duas, ganha a grade.
 ### A escala da janela tem que ser inteira
 
 `display/window/stretch/scale_mode="integer"`. O modo padrão (`fractional`)
-escala o canvas por quanto a janela precisar — 1,333x num monitor 1440p — e cada
-glifo, barra e retângulo é rasterizado numa fração de pixel. Não tem fonte que
-salve isso.
+escala o canvas por quanto a janela precisar — 1,333x num 1440p — e cada glifo,
+barra e retângulo é rasterizado numa fração de pixel. Não tem fonte que salve
+isso.
 
-O custo é real: com viewport base 1920x1080, um monitor **1080p dá 1x**
-(perfeito) e **2160p dá 2x** (perfeito). Um **1440p dá 1x com borda**, porque 2x
-não cabe. A escolha nessa resolução é entre borda e borrão, e não existe terceira
-opção sem mudar o viewport base — e um base menor (1280x720, que daria 2x em
-1440p) não segura um formulário de 1850px.
+E `display/window/dpi/allow_hidpi=true`, que é tão importante quanto: **sem ele
+um monitor 4K não é um monitor 4K.** O Windows põe display de 4K em 150% por
+padrão, e um app que não é DPI-aware recebe uma janela de 2560x1440 e depois é
+esticado borrado pra preencher o painel. Junto com escala inteira isso dá um
+desastre visível: `floor(2560/1920)` é **1**, então o jogo desenha um canvas de
+1920x1080 no meio de uma janela de 2560x1440 — um quadrado pequeno, cercado de
+borda, e ainda esticado pelo compositor.
+
+`aspect="expand"` e não `keep`: a escala inteira já garante pixel inteiro, e o
+`keep` ainda põe tarja no que a escala não usou. O `expand` entrega essa sobra
+como canvas lógico extra. Numa resolução que é múltiplo exato — 3840x2160 em 2x —
+os dois são idênticos, então o expand não custa nada ali e tira a borda em todo o
+resto.
+
+## A aritmética do tamanho aparente
+
+Essa é a conta que decide tudo, e não tem como fugir dela:
+
+```
+tamanho aparente = corpo lógico × escala inteira
+escala inteira   = floor(resolução da tela / viewport base)
+```
+
+Num monitor 3840x2160:
+
+| viewport base | escala | corpo 18 | corpo 27 | espaço lógico |
+|---|---|---|---|---|
+| **1920x1080** | **2x** | **36 px reais** | 54 px reais | 1920x1080 |
+| 1280x720 | 3x | 54 px reais | 81 px reais | 1280x720 |
+
+Com `aspect="expand"` só a escala importa: qualquer base entre 1281 e 1920 dá 2x
+e entrega 1920 lógicos; entre 961 e 1280 dá 3x e entrega 1280.
+
+O formulário de criação precisa de **1850x1040 lógicos** com o corpo em 18. Então
+`1920x1080 @ 2x` é o ponto de projeto, e **36 pixels reais de corpo é o que a
+densidade dessa tela compra**.
+
+Querer letra maior é a mesma decisão vista duas vezes: **menos coisa por tela.**
+Corpo 27 ou base 1280 só fecham se o formulário passar a caber em ~1280x720 — o
+que significa abas, ou tirar habilidades e talentos do mesmo painel. É decisão de
+design, não de constante.
+
+## O número está na tela
+
+O canto inferior direito do menu inicial mostra
+`3840x2160 · canvas 1920x1080 · 2x · corpo 36px`. Se disser **1x**, a janela não
+é múltiplo do canvas e nada mais na imagem vai parecer certo — foi assim que o
+"quadrado no meio" apareceu.

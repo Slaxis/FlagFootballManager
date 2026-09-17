@@ -57,10 +57,15 @@ const LEAD := 27
 # What it does have is a metric constraint: ascent 800 and descent -200 on a 1000
 # em, so only MULTIPLES OF 5 put the baseline on a whole pixel. Off a multiple of
 # five the whole line shifts half a pixel and every glyph in it softens.
-const TITLE := 40
-const PLATE := 30
-const HEADING := 25
-const BIG := 20
+# Bumped a rung each, because the display face is the one place there is slack:
+# VT323 is not grid-bound (only its baseline is, at multiples of five) and a
+# title is one row, so five more pixels of it costs five pixels of screen. The
+# BODY has no such slack — its next crisp rung is 27, which is half again as
+# tall on every one of forty rows.
+const TITLE := 45
+const PLATE := 35
+const HEADING := 30
+const BIG := 25
 
 static var _display: FontFile = null
 static var _body: FontFile = null
@@ -113,6 +118,22 @@ static func _font_slot(control: Control) -> String:
 
 static func _size_slot(control: Control) -> String:
 	return "normal_font_size" if control is RichTextLabel else "font_size"
+
+# --- Telling the truth about the scale ---
+#
+# One line, in a corner of the title screen. It exists because "está num quadrado
+# no meio e a fonte está pequena" is a description, and the thing underneath it is
+# a number: the window was 2560x1440 instead of 3840x2160 because the app was not
+# DPI aware, so the integer scale floored to 1x. A readout turns the next report
+# of that class into "diz 1x" and ends the guessing in one message.
+static func scale_line() -> String:
+	var window: Vector2i = DisplayServer.window_get_size()
+	var canvas: Vector2 = Vector2(
+		float(ProjectSettings.get_setting("display/window/size/viewport_width", 1920)),
+		float(ProjectSettings.get_setting("display/window/size/viewport_height", 1080)))
+	var shown: int = maxi(int(floor(float(window.x) / canvas.x)), 1)
+	return "%dx%d  ·  canvas %dx%d  ·  %dx  ·  corpo %dpx" % [
+		window.x, window.y, int(canvas.x), int(canvas.y), shown, TEXT * shown]
 
 # The project-wide default, so a control nobody dressed still comes out in the
 # right face instead of in Godot's sans.

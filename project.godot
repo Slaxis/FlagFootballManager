@@ -31,8 +31,22 @@ Audio="*res://addons/d5star/globals/audio_manager.gd"
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=3
+; ⚠️ WITHOUT THIS, A 4K MONITOR IS NOT A 4K MONITOR. Windows defaults a 4K
+; display to 150% scaling, and an app that is not per-monitor DPI aware is handed
+; a 2560x1440 window and then blurrily upscaled to fill the panel. Combined with
+; integer scaling that is a disaster you can see: floor(2560/1920) is 1, so the
+; game drew a 1920x1080 canvas in the middle of a 2560x1440 window — a small
+; square, surrounded by border, and then stretched by the compositor.
+;
+; With it, the window is the 3840x2160 it actually is and the scale is exactly 2x.
+window/dpi/allow_hidpi=true
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
+; EXPAND, not keep. Integer scaling already guarantees whole pixels; `keep` then
+; letterboxes whatever the integer scale could not use, and `expand` hands that
+; leftover to the game as extra logical canvas instead. On a resolution that is an
+; exact multiple — 3840x2160 at 2x — the two are identical, so expand costs
+; nothing there and removes the border everywhere else.
+window/stretch/aspect="expand"
 ; INTEGER, not fractional. This is the half of "not pixel perfect" that has
 ; nothing to do with the fonts: the default fractional mode scales the canvas by
 ; whatever the window happens to need — 1.333x on a 1440p monitor — and every
@@ -40,13 +54,11 @@ window/stretch/aspect="keep"
 ; snaps to 1x, 2x, 3x and letterboxes the remainder, which is the only way a
 ; pixel is a pixel.
 ;
-; The cost is real and it is a trade: at 2560x1440 the base 1920x1080 only fits
-; once, so you get 1x with a border instead of a slightly soft full screen. At
-; 3840x2160 it is exactly 2x and looks like it was drawn for the monitor.
-;
-; And `aspect` moves from "expand" to "keep" because expand hands the game
-; whatever aspect the window has, which is the other way a whole pixel stops
-; being one.
+; The cost is real: the apparent size of everything is
+; `logical size x integer scale`, and the scale is `floor(screen / viewport)`. So
+; 3840x2160 gives exactly 2x on this 1920x1080 base — an 18px body lands at 36
+; real pixels. Wanting it bigger means either fewer logical pixels of content on
+; screen or a bigger base font, and those are the same decision seen twice.
 window/stretch/scale_mode="integer"
 
 [gui]
