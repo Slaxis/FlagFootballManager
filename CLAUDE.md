@@ -163,6 +163,31 @@ Do not start implementing before the plan is approved.
   Flow, not on the boot scene, and a unit test asserting "the handler exists"
   proves nothing about whether it is still connected.
 
+- **Fit check** — the fourth, and the one the unit runner structurally cannot
+  do:
+
+  ```bash
+  godot --headless --path . res://tests/fit_check.tscn
+  ```
+
+  Every screen must fit `1920x1080` without scrolling, and must not fit by
+  using a third of it either. A screen's real size only settles after a LAYOUT
+  PASS, and `get_combined_minimum_size()` read in the same frame a Control was
+  added reports nonsense — an autowrapping Label does not know its own width
+  yet, so it reports the height it would need at its minimum width. The
+  creation form measured 7562px that way and 1051px one frame later, which is
+  why this is a scene with its own `_ready` that can await.
+
+  Each screen tags the node that has to fit with `set_meta("fit_root", true)`.
+  Guessing was wrong twice — the background ColorRect, then the club-colour
+  badge — and there is no generic answer, because a ScrollContainer reports a
+  tiny minimum by design and would hide the exact problem being looked for. A
+  new screen opts in; one that forgot fails loudly.
+
+  It exists because the creation form shipped at 1743px against a 1080 viewport,
+  in a 940px column, with two thirds of the monitor empty beside it — and
+  nothing about that looks wrong in a screenshot or in a passing test.
+
 - **Screen smoke tests** are the third check. UI is otherwise invisible to the
   loop: GDScript has no exceptions, so a screen that dies halfway through
   building its own form leaves a half-drawn panel and a green run — which is

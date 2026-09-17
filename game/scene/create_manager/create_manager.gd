@@ -35,6 +35,18 @@ const WARN := Color(0.85, 0.72, 0.45)
 const TALENT_GOOD := Color(0.42, 0.78, 0.45)
 const TALENT_BAD := Color(0.85, 0.36, 0.36)
 
+# The form is three columns inside one panel, and the widths live here so the
+# hints know what to wrap against. An autowrapping Label with no width reports
+# its minimum as the whole unwrapped line and quietly blows the layout open.
+const PANEL_WIDTH := 1840
+const COL_LEFT := 520
+const COL_MID := 400
+const COL_RIGHT := 830
+# Twenty-seven talents in four columns is seven rows, which the right column has
+# room for under the skills.
+const PERK_COLUMNS := 4
+const PERK_GAP := 6
+
 var _build: SheetBuilder = null
 var _name: Dictionary = {}
 var _plays: Array[String] = [Actor.CATEGORY_MASC]
@@ -77,11 +89,21 @@ func _ready() -> void:
 
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _panel_style())
-	panel.custom_minimum_size = Vector2(940, 0)
+	# THE WHOLE SCREEN, not a 940px ribbon down the middle of it. The form is
+	# twenty-three tracks plus a body plus a scenario plus a club, and stacked in
+	# one column that measured 1743px against a 1080 viewport — so two thirds of
+	# the monitor sat empty while the player scrolled past the thing they were
+	# trying to compare against.
+	panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
+	# Tagged for tests/fit_check.tscn: THIS is the node that has to fit on the
+	# screen. The check cannot guess it — a ScrollContainer reports a tiny
+	# minimum by design, so measuring the outermost thing would hide exactly the
+	# problem the check exists to catch.
+	panel.set_meta("fit_root", true)
 	center.add_child(panel)
 
 	_root = VBoxContainer.new()
-	_root.add_theme_constant_override("separation", 8)
+	_root.add_theme_constant_override("separation", 6)
 	panel.add_child(_root)
 	_build_ui()
 
@@ -96,61 +118,134 @@ func _build_ui() -> void:
 
 # --- Form ---
 
+# THREE COLUMNS AND A FOOTER, and which thing goes where is not arbitrary:
+#
+#   left    WHO YOU ARE — scenario, name, seed, your club if you are founding
+#           one, and which category you turn out for. Everything that is a
+#           sentence about the person rather than a number.
+#   middle  the eight attributes and the body, because the body SHIFTS the
+#           attributes and reading one while the other is off-screen was the
+#           worst of the scrolling.
+#   right   the fifteen skills in two sub-columns, and the talents under them.
+#
+# The footer is pinned last so the one button that leaves the screen is always
+# in the same place, whatever the scenario changed above it.
 func _build_form() -> void:
 	_root.add_child(_header())
 	_root.add_child(_rule())
-	_root.add_child(_section(UiText.t("manager.origin"), UiText.t("manager.origin_hint")))
-	_root.add_child(_origin_row())
-	_root.add_child(_identity_row())
-	_root.add_child(_seed_row())
-	if _authors_club():
-		_root.add_child(_section(UiText.t("manager.club"), UiText.t("manager.club_hint")))
-		_root.add_child(_club_row())
-	_root.add_child(_section(UiText.t("manager.body"), UiText.t("manager.body_hint")))
-	_root.add_child(_body_row())
 
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 40)
+	columns.add_theme_constant_override("separation", 24)
+	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_root.add_child(columns)
+	columns.add_child(_left_column())
+	columns.add_child(_middle_column())
+	columns.add_child(_right_column())
 
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 4)
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.add_child(_section(UiText.t("manager.attributes"), ""))
-	columns.add_child(left)
+	_root.add_child(_spacer(6))
+	_root.add_child(_rule())
+	_root.add_child(_footer())
+
+func _column(width: int) -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 3)
+	box.custom_minimum_size = Vector2(width, 0)
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return box
+
+func _left_column() -> Control:
+	var box: VBoxContainer = _column(COL_LEFT)
+	box.add_child(_section(UiText.t("manager.origin"),
+		UiText.t("manager.origin_hint"), COL_LEFT))
+	box.add_child(_origin_row())
+	box.add_child(_section(UiText.t("manager.identity"), "", COL_LEFT))
+	box.add_child(_identity_row())
+	box.add_child(_seed_row())
+	if _authors_club():
+		box.add_child(_section(UiText.t("manager.club"),
+			UiText.t("manager.club_hint"), COL_LEFT))
+		box.add_child(_club_row())
+	box.add_child(_section(UiText.t("manager.modality"), "", COL_LEFT))
+	box.add_child(_plays_row())
+	box.add_child(_manages_row())
+	return box
+
+func _middle_column() -> Control:
+	var box: VBoxContainer = _column(COL_MID)
 	var stats := Drive.def("stat") as StatDef
+	box.add_child(_section(UiText.t("manager.attributes"), "", COL_MID))
 	if stats != null:
 		for id: String in stats.base_ids():
-			left.add_child(_attribute_row(stats, id))
+			box.add_child(_attribute_row(stats, id))
+	box.add_child(_section(UiText.t("manager.body"),
+		UiText.t("manager.body_hint"), COL_MID))
+	box.add_child(_body_row())
+	return box
 
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 4)
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_child(_section(UiText.t("manager.skills"), ""))
-	columns.add_child(right)
+func _right_column() -> Control:
+	var box: VBoxContainer = _column(COL_RIGHT)
+	var stats := Drive.def("stat") as StatDef
+	box.add_child(_section(UiText.t("manager.skills"), "", COL_RIGHT))
+
+	# Two sub-columns of groups. Fifteen skills plus four captions is nineteen
+	# rows, which is taller than anything else on the screen on its own — split
+	# in half it stops being the reason the panel does not fit.
+	var pair := HBoxContainer.new()
+	pair.add_theme_constant_override("separation", 20)
+	box.add_child(pair)
+	var half: int = (COL_RIGHT - 20) / 2
+	var left: VBoxContainer = _column(half)
+	var right: VBoxContainer = _column(half)
+	pair.add_child(left)
+	pair.add_child(right)
 	if stats != null:
-		for group: String in stats.skill_groups():
-			var caption := Label.new()
-			caption.text = UiText.t("skillgroup." + group, group)
-			caption.add_theme_font_size_override("font_size", 11)
-			caption.add_theme_color_override("font_color", MUTED)
-			right.add_child(caption)
-			for id: String in stats.skills_in_group(group):
-				right.add_child(_skill_row(stats, id))
+		var groups: Array = stats.skill_groups()
+		var split: int = int(ceil(float(groups.size()) / 2.0))
+		for i: int in range(groups.size()):
+			var into: VBoxContainer = left if i < split else right
+			into.add_child(_group_caption(String(groups[i])))
+			for id: String in stats.skills_in_group(String(groups[i])):
+				into.add_child(_skill_row(stats, id))
 
-	_root.add_child(_section(UiText.t("manager.modality"), ""))
-	_root.add_child(_plays_row())
-	_root.add_child(_manages_row())
-	# Last, because they are the one thing on this sheet that is not training:
-	# you finish the person, then you say what happened to him.
-	_root.add_child(_section(UiText.t("manager.perks"),
-		UiText.t("manager.perks_hint") % _build.perk_points_left()))
-	_root.add_child(_perk_row())
-	_root.add_child(_spacer(4))
-	_root.add_child(_section(UiText.t("manager.career_type"), ""))
-	_root.add_child(_career_type())
-	_root.add_child(_spacer(4))
-	_root.add_child(_flat_button(UiText.t("common.back"), func() -> void: go("back"), false))
+	# Talents last, because they are the one thing on this sheet that is not
+	# training: you finish the person, then you say what happened to him.
+	box.add_child(_section(UiText.t("manager.perks"),
+		UiText.t("manager.perks_hint") % _build.perk_points_left(), COL_RIGHT))
+	box.add_child(_perk_row())
+	return box
+
+func _group_caption(group: String) -> Control:
+	var caption := Label.new()
+	caption.text = UiText.t("skillgroup." + group, group)
+	caption.add_theme_color_override("font_color", MUTED)
+	Look.wear_body(caption, Look.TINY)
+	return caption
+
+# One bar across the bottom: what you cannot do yet on the left, and the button
+# that leaves on the right. Pinned, so changing the scenario never moves it.
+func _footer() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	row.add_child(_flat_button(UiText.t("common.back"),
+		func() -> void: go("back"), false))
+
+	# The literal glyph: GDScript's `\u` escape takes exactly four hex digits, so
+	# `\u1F512` is U+1F51 followed by the character "2".
+	var pick: Button = _flat_button("\uD83D\uDD12  " + UiText.t("manager.pick_team"), Callable(), false)
+	pick.disabled = true
+	pick.tooltip_text = UiText.t("manager.pick_locked")
+	row.add_child(pick)
+
+	var note: Control = _hint(_draw_hint(), 700)
+	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(note)
+
+	var draw_button: Button = _flat_button(UiText.t("manager.random"), _on_draw, true)
+	draw_button.disabled = not _build.is_complete()
+	draw_button.custom_minimum_size = Vector2(320, 44)
+	row.add_child(draw_button)
+	return row
 
 # Age and remaining points side by side: the two halves of the same number.
 func _header() -> Control:
@@ -159,23 +254,23 @@ func _header() -> Control:
 
 	var title := Label.new()
 	title.text = UiText.t("manager.title")
-	title.add_theme_font_size_override("font_size", 26)
 	title.add_theme_color_override("font_color", TEXT)
+	Look.wear_display(title, Look.TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
 
 	var age := Label.new()
 	age.text = UiText.t("manager.years") % _build.age()
-	age.add_theme_font_size_override("font_size", 30)
 	age.add_theme_color_override("font_color", ACCENT)
+	Look.wear_display(age, Look.TITLE)
 	age.tooltip_text = UiText.t("manager.invest_hint")
 	age.mouse_filter = Control.MOUSE_FILTER_STOP
 	row.add_child(age)
 
 	var left := Label.new()
 	left.text = (UiText.t("manager.overspent") % -_build.remaining()) if _build.remaining() < 0 		else (UiText.t("manager.points_left") % _build.remaining())
-	left.add_theme_font_size_override("font_size", 18)
 	left.add_theme_color_override("font_color", WARN if _build.remaining() != 0 else ACCENT)
+	Look.wear_display(left, Look.BIG)
 	row.add_child(left)
 	return row
 
@@ -200,14 +295,33 @@ func _origin_row() -> Control:
 		box.add_child(_hint(origins.line(_origin) + " — " + origins.desc(_origin)))
 	return box
 
+# TWO ROWS. Three fields plus a labelled dice button measured 769px against a
+# 520px column — and the label on the dice was 185px of it, which is a lot of
+# width to spend saying what a die already says.
 func _identity_row() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	row.add_child(_name_field("first_name", UiText.t("manager.first_name"), 200))
-	row.add_child(_name_field("last_name", UiText.t("manager.last_name"), 200))
-	row.add_child(_name_field("nickname", UiText.t("manager.nickname"), 160))
-	row.add_child(_flat_button("🎲 " + UiText.t("manager.reroll_all"), _on_reroll_all, false))
-	return row
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	top.add_child(_name_field("first_name", UiText.t("manager.first_name"), 240))
+	top.add_child(_name_field("last_name", UiText.t("manager.last_name"), 240))
+	box.add_child(top)
+	var bottom := HBoxContainer.new()
+	bottom.add_theme_constant_override("separation", 8)
+	bottom.add_child(_name_field("nickname", UiText.t("manager.nickname"), 240))
+	bottom.add_child(_dice("manager.reroll_all", _on_reroll_all))
+	box.add_child(bottom)
+	return box
+
+# A die, and the sentence goes on the tooltip. It is the one control on this
+# screen that needs no label at all.
+func _dice(tip_key: String, on_press: Callable) -> Button:
+	var button: Button = _flat_button("🎲", on_press, false)
+	button.custom_minimum_size = Vector2(52, 34)
+	button.size_flags_vertical = Control.SIZE_SHRINK_END
+	button.tooltip_text = UiText.t(tip_key)
+	Look.wear_body(button, Look.TEXT)
+	return button
 
 func _name_field(key: String, caption: String, width: int) -> Control:
 	var box := VBoxContainer.new()
@@ -264,11 +378,14 @@ func _club_row() -> Control:
 
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
-	top.add_child(_club_field("name", UiText.t("manager.club_name"), 260))
-	top.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 170))
-	top.add_child(_club_field("city", UiText.t("manager.club_city"), 170))
-	top.add_child(_flat_button("🎲", _on_reroll_club, false))
+	top.add_child(_club_field("name", UiText.t("manager.club_name"), 420))
+	top.add_child(_dice("manager.club_reroll", _on_reroll_club))
 	box.add_child(top)
+	var where := HBoxContainer.new()
+	where.add_theme_constant_override("separation", 8)
+	where.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 240))
+	where.add_child(_club_field("city", UiText.t("manager.club_city"), 240))
+	box.add_child(where)
 
 	var colours := HBoxContainer.new()
 	colours.add_theme_constant_override("separation", 8)
@@ -347,16 +464,24 @@ func _on_cycle_colors() -> void:
 # One sentence about you, and you may take none. A defect is a perk with a
 # negative price: it hands career points back, which is the only reason anybody
 # would ever choose to drop passes on purpose.
+# A GRID, NOT A FLOW. HFlowContainer reports a minimum width that depends on the
+# width it has been given, so with twenty-seven chips it came back 81px over the
+# column's budget and pushed the whole panel past the screen. A grid's minimum is
+# the sum of its columns, which is a number that does not argue.
 func _perk_row() -> Control:
-	var flow := HFlowContainer.new()
-	flow.add_theme_constant_override("h_separation", 6)
-	flow.add_theme_constant_override("v_separation", 6)
+	var grid := GridContainer.new()
+	grid.columns = PERK_COLUMNS
+	grid.add_theme_constant_override("h_separation", PERK_GAP)
+	grid.add_theme_constant_override("v_separation", 4)
 	var perks := Drive.def("perk") as PerkDef
 	if perks == null:
-		return flow
+		return grid
 	for id: String in perks.perk_ids():
-		flow.add_child(_perk_chip(perks, id))
-	return flow
+		grid.add_child(_perk_chip(perks, id))
+	return grid
+
+func _perk_chip_width() -> int:
+	return (COL_RIGHT - PERK_GAP * (PERK_COLUMNS - 1)) / PERK_COLUMNS
 
 func _perk_chip(perks: PerkDef, id: String) -> Control:
 	var cost: int = perks.cost(id)
@@ -368,8 +493,12 @@ func _perk_chip(perks: PerkDef, id: String) -> Control:
 	var hue: Color = TALENT_BAD if cost < 0 else TALENT_GOOD
 	chip.add_theme_color_override("font_color", hue)
 	chip.add_theme_color_override("font_hover_color", hue.lightened(0.3))
-	chip.custom_minimum_size = Vector2(0, 32)
-	chip.tooltip_text = perks.desc(id)
+	chip.custom_minimum_size = Vector2(_perk_chip_width(), 30)
+	# Clipped, because a long name must not be allowed to set the column width —
+	# the whole label is on the tooltip that already carries the description.
+	chip.clip_text = true
+	Look.wear_body(chip, Look.TINY)
+	chip.tooltip_text = "%s — %s" % [perks.label(id), perks.desc(id)]
 	# Unaffordable is not the same as unchosen: grey it so the player can see
 	# the perk exists and costs more than they have left.
 	if not _build.has_perk(id) and not _build.can_take_perk(id):
@@ -384,19 +513,20 @@ func _perk_chip(perks: PerkDef, id: String) -> Control:
 func _body_row() -> Control:
 	var stats := Drive.def("stat") as StatDef
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 30)
+	row.add_theme_constant_override("separation", 18)
 	if stats == null:
 		return row
 	for id: String in stats.measure_ids():
 		var spec: Dictionary = stats.measure(id)
-		var cell := HBoxContainer.new()
-		cell.add_theme_constant_override("separation", 6)
+		var cell := VBoxContainer.new()
+		cell.add_theme_constant_override("separation", 2)
 		cell.tooltip_text = I18n.text(spec.get("desc", ""), "")
 		cell.mouse_filter = Control.MOUSE_FILTER_STOP
 
 		var caption := Label.new()
 		caption.text = I18n.text(spec.get("label", id), id)
 		caption.add_theme_color_override("font_color", MUTED)
+		Look.wear_body(caption, Look.TINY)
 		cell.add_child(caption)
 
 		# A SpinBox, not steppers: someone entering their own 1,83 m should type
@@ -407,24 +537,33 @@ func _body_row() -> Control:
 		field.step = stats.increment(id)
 		field.value = _measure_value(id)
 		field.suffix = String(spec.get("unit", ""))
-		field.custom_minimum_size = Vector2(104, 30)
+		field.custom_minimum_size = Vector2(170, 32)
 		field.value_changed.connect(_on_measure_value.bind(id))
 		cell.add_child(field)
 		row.add_child(cell)
 
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 3)
+	box.add_child(row)
+
+	# UNDER the fields, and wrapping. As a fourth cell on the same line this was
+	# a 432px unbroken sentence listing every shift the body performs, which on
+	# its own made the attributes column more than twice its budget.
 	var effect: Dictionary = stats.body_effect({"height": _build.height, "weight": _build.weight})
 	var summary := Label.new()
 	summary.text = _effect_text(stats, effect)
-	summary.add_theme_font_size_override("font_size", 12)
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	summary.custom_minimum_size = Vector2(COL_MID, 0)
 	summary.add_theme_color_override("font_color", WARN)
-	row.add_child(summary)
+	Look.wear_body(summary, Look.TINY)
+	box.add_child(summary)
 
 	var price := Label.new()
 	price.text = UiText.t("manager.body_cost") % _build.body_cost()
-	price.add_theme_font_size_override("font_size", 12)
 	price.add_theme_color_override("font_color", MUTED if _build.body_cost() == 0 else ACCENT)
-	row.add_child(price)
-	return row
+	Look.wear_body(price, Look.TINY)
+	box.add_child(price)
+	return box
 
 # Reads the shift the body performs, so the player sees the trade before paying
 # for it.
@@ -535,8 +674,11 @@ func _skill_row(stats: StatDef, id: String) -> Control:
 func _plays_row() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	# Wraps. Four chips behind a 120px label came to 576px in a 520px column, and
+	# a chip that fits on the next line is not a problem — it is a chip.
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 4)
 	row.add_child(_field_label(UiText.t("manager.plays")))
 	var categories := Drive.def("category") as CategoryDef
 	for id: String in (categories.category_ids() if categories != null else []):
@@ -550,7 +692,7 @@ func _plays_row() -> Control:
 		row.add_child(chip)
 	row.add_child(_choice(UiText.t("manager.plays_none"), _plays.is_empty(), _on_plays_none))
 	box.add_child(row)
-	box.add_child(_hint(UiText.t("manager.plays_hint")))
+	box.add_child(_hint(UiText.t("manager.plays_hint"), COL_LEFT))
 	return box
 
 func _plays_has_base() -> bool:
@@ -566,20 +708,6 @@ func _manages_row() -> Control:
 	value.add_theme_color_override("font_color", MUTED)
 	row.add_child(value)
 	return row
-
-func _career_type() -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 3)
-	var pick: Button = _flat_button("🔒  " + UiText.t("manager.pick_team"), Callable(), false)
-	pick.disabled = true
-	box.add_child(pick)
-	box.add_child(_hint(UiText.t("manager.pick_locked")))
-	box.add_child(_spacer(4))
-	var draw_button: Button = _flat_button(UiText.t("manager.random"), _on_draw, true)
-	draw_button.disabled = not _build.is_complete()
-	box.add_child(draw_button)
-	box.add_child(_hint(_draw_hint()))
-	return box
 
 # Three states, not two: ready, still holding points, or holding a remainder
 # too small to spend. The third used to read as the second and locked the
@@ -841,18 +969,18 @@ func _panel_style() -> StyleBoxFlat:
 		style.set("corner_radius_" + corner, 5)
 	return style
 
-func _section(text: String, hint: String) -> Control:
+func _section(text: String, hint: String, width: int = 0) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 1)
-	box.add_child(_spacer(6))
+	box.add_child(_spacer(3))
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 12)
 	label.add_theme_color_override("font_color", ACCENT)
+	Look.wear_display(label, Look.BIG)
 	box.add_child(label)
 	box.add_child(_rule())
 	if hint != "":
-		box.add_child(_hint(hint))
+		box.add_child(_hint(hint, width))
 	return box
 
 func _rule() -> Control:
@@ -869,12 +997,18 @@ func _field_label(text: String) -> Control:
 	label.add_theme_color_override("font_color", TEXT)
 	return label
 
-func _hint(text: String) -> Control:
+# ⚠️ WIDTH IS NOT OPTIONAL DECORATION. An autowrapping Label with no width
+# reports its minimum size as the entire unwrapped line, so one long hint drags
+# the column it lives in as wide as its own sentence and the three-column layout
+# silently becomes one very wide one.
+func _hint(text: String, width: int = 0) -> Control:
 	var label := Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", 11)
+	if width > 0:
+		label.custom_minimum_size = Vector2(width, 0)
 	label.add_theme_color_override("font_color", MUTED)
+	Look.wear_body(label, Look.TINY)
 	return label
 
 func _step_button(text: String, on_press: Callable, enabled: bool) -> Button:

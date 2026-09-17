@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Added — B.6b: pixel art, layout e talentos (2026-09-16)
+- **Duas fontes de terminal**, e as duas de proposito: o Elifoot era um jogo de
+  DOS, e um simulador 100% painel nao tem sprite pra carregar o clima — a fonte
+  carrega. **VT323** (matriz do DEC VT320) no display, **Pixel Code** (pixel
+  monoespacada) no corpo. Monoespacada nao e gosto: metade do jogo e coluna de
+  numero, e monoespacada alinha de graca
+- **Render em Nearest** no projeto inteiro, e antialiasing / hinting / subpixel
+  desligados no import — fonte pixel com antialiasing vira mingau
+- `Look` — as duas faces e a escada de tamanhos num lugar so. ⚠️ Nao `Skin`:
+  Godot ja tem essa classe (o recurso de esqueleto) e o `class_name` e erro de
+  parse na hora
+- **Formulario de criacao em tres colunas com rodape fixo**: quem voce e |
+  atributos + corpo | habilidades em duas sub-colunas + talentos. Atributo e
+  corpo lado a lado porque o corpo DESLOCA o atributo, e ler um com o outro fora
+  da tela era o pior do scroll
+- **Escalacao a esquerda, tabela a direita.** Voce le da esquerda pra direita, e
+  a pergunta com que chega e "quem e meu time e o que falta" — a resposta e o
+  painel
+- **Talentos: 10 para 27.** Nenhuma das 15 habilidades fica sem talento (antes
+  eram 11 descobertas). 20 qualidades, 7 defeitos
+- `tests/fit_check.tscn` — o quarto harness: toda tela cabe em 1920x1080, e nao
+  cabe usando um terco
+
+### Fixed
+- **O formulario de criacao pedia 1743px numa tela de 1080**, numa coluna de 940
+  com dois tercos do monitor vazios do lado. Agora 1850x1050, sem scroll
+- **A fonte nova e ~40% mais larga**, entao toda largura fixa calibrada contra a
+  sans passou a estourar. Medido e corrigido um por um: dado com legenda de 185px
+  (virou icone com tooltip), clube em duas linhas, chips de modalidade que
+  embrulham, e o resumo do corpo — uma frase de 432px numa coluna de 400
+- **Colunas da tabela do elenco** crescidas pra caber a monoespacada
+- `HFlowContainer` reporta largura minima que depende da largura que recebeu:
+  com 27 talentos voltou 81px acima do orcamento e empurrou o painel pra fora da
+  tela. Grade, cujo minimo e a soma das colunas
+
 ### Changed — B.5e: peneiras no lugar do pool mundial (2026-09-16)
 - **`Tryout`** — de onde jogador de flag realmente vem. Duas portas: o jogador de
   FA que tambem joga flag e aparece sozinho (o turnout indie), e quem o clube foi

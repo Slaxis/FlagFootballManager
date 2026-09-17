@@ -138,7 +138,12 @@ func _build_ui() -> void:
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
 		style.set("corner_radius_" + corner, 4)
 	panel.add_theme_stylebox_override("panel", style)
-	panel.custom_minimum_size = Vector2(880, 0)
+	panel.custom_minimum_size = Vector2(1240, 0)
+	# Tagged for tests/fit_check.tscn: THIS is the node that has to fit on the
+	# screen. The check cannot guess it — a ScrollContainer reports a tiny
+	# minimum by design, so measuring the outermost thing would hide exactly the
+	# problem the check exists to catch.
+	panel.set_meta("fit_root", true)
 	center.add_child(panel)
 
 	var box := VBoxContainer.new()
@@ -147,16 +152,16 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	title.text = UiText.t("draft.title")
-	title.add_theme_font_size_override("font_size", 26)
 	title.add_theme_color_override("font_color", ACCENT)
+	Look.wear_display(title, Look.TITLE)
 	box.add_child(title)
 
 	var lead := Label.new()
 	lead.text = UiText.t("draft.subtitle")
 	lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lead.custom_minimum_size = Vector2(830, 0)
-	lead.add_theme_font_size_override("font_size", 12)
+	lead.custom_minimum_size = Vector2(1180, 0)
 	lead.add_theme_color_override("font_color", MUTED)
+	Look.wear_body(lead, Look.TINY)
 	box.add_child(lead)
 
 	_bar = ProgressBar.new()
@@ -176,8 +181,8 @@ func _build_ui() -> void:
 
 	_caption = Label.new()
 	_caption.text = ""
-	_caption.add_theme_font_size_override("font_size", 12)
 	_caption.add_theme_color_override("font_color", TEXT)
+	Look.wear_body(_caption, Look.SMALL)
 	box.add_child(_caption)
 
 	# RichTextLabel and not a Label in a ScrollContainer: it appends without
@@ -187,9 +192,9 @@ func _build_ui() -> void:
 	_log.bbcode_enabled = false
 	_log.scroll_following = true
 	_log.selection_enabled = true
-	_log.custom_minimum_size = Vector2(830, 380)
-	_log.add_theme_font_size_override("normal_font_size", 11)
+	_log.custom_minimum_size = Vector2(1180, 470)
 	_log.add_theme_color_override("default_color", MUTED)
+	Look.wear_body(_log, Look.TINY)
 	var log_style := StyleBoxFlat.new()
 	log_style.bg_color = BG
 	log_style.border_color = LINE

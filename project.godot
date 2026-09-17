@@ -34,6 +34,12 @@ window/size/mode=3
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[gui]
+
+; So a control nobody dressed by hand still comes out in the right face instead
+; of in Godot's sans. Screens override only for display type.
+theme/custom="res://game/asset/theme/ffm.tres"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/d5star/plugin.cfg")
@@ -41,3 +47,6 @@ enabled=PackedStringArray("res://addons/d5star/plugin.cfg")
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+; NEAREST, project-wide. Bilinear on a pixel face is exactly the mush the fonts
+; were chosen to avoid, and it would soften every bar and swatch too.
+textures/canvas_textures/default_texture_filter=0

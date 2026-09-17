@@ -61,13 +61,18 @@ const SORT_AGE := "age"
 # Column widths live here and nowhere else: the group header above and the
 # sortable header below are both derived from them, so they cannot drift apart.
 const COL_MARK := 18
-const COL_NAME := 150
-const COL_SHIRT := 128
-const COL_PERK := 30
-const COL_STRENGTH := 44
-const COL_AGE := 40
-const COL_ROLE := 28
+const COL_NAME := 210
+const COL_SHIRT := 180
+const COL_PERK := 34
+const COL_STRENGTH := 56
+const COL_AGE := 48
+const COL_ROLE := 34
 const COL_GAP := 6
+
+# Pixel Code is monospace and runs about 40% wider per glyph than the sans these
+# columns were measured against, so every one of them grew. They are still
+# derived in one place: the group header above and the sortable header below both
+# read these, so they cannot drift apart.
 
 # Measured fits run from about 2% to 88%, so a fit IS the percentage — no
 # scaling. A box filled a third of the way means a third of the way.
@@ -120,6 +125,11 @@ func _ready() -> void:
 
 	_root = VBoxContainer.new()
 	_root.add_theme_constant_override("separation", 10)
+	# Tagged for tests/fit_check.tscn: THIS is the node that has to fit on the
+	# screen. The check cannot guess it — a ScrollContainer reports a tiny
+	# minimum by design, so measuring the outermost thing would hide exactly the
+	# problem the check exists to catch.
+	_root.set_meta("fit_root", true)
 	margin.add_child(_root)
 	_build_ui()
 
@@ -231,7 +241,7 @@ func _header() -> Control:
 	var name_label := Label.new()
 	name_label.text = String(club.get("name", "?"))
 	name_label.add_theme_color_override("font_color", scheme["ink"])
-	name_label.add_theme_font_size_override("font_size", 26)
+	Look.wear_display(name_label, Look.PLATE)
 	plate.add_child(name_label)
 	row.add_child(plate)
 
@@ -294,11 +304,16 @@ func _squad_tab() -> Control:
 	var manager_id: String = career.manager.thing_id if career != null and career.manager != null else ""
 	for person: Actor in people:
 		list.add_child(_roster_row(person, person.thing_id == manager_id))
-	columns.add_child(left)
-	# The consolidated view lives beside the table and not behind a tab, because
-	# the whole complaint was that ticking boxes gave no sense of completeness —
-	# and an answer you have to navigate to is not feedback.
+	# ESCALAÇÃO ON THE LEFT, table on the right. You read left to right, and the
+	# question you arrive with is "who is on my team and what is still empty" —
+	# the answer to that is the panel, so it goes first. The table is what you
+	# reach for to change the answer, which is a second move.
+	#
+	# It lives beside the table and not behind a tab because the whole complaint
+	# was that ticking boxes gave no sense of completeness, and an answer you
+	# have to navigate to is not feedback.
 	columns.add_child(_lineup_panel(people))
+	columns.add_child(left)
 	return columns
 
 # --- The lineup ---
@@ -429,6 +444,7 @@ func _panel_title(text: String, note: String) -> Control:
 	title.text = text
 	title.add_theme_font_size_override("font_size", 12)
 	title.add_theme_color_override("font_color", ACCENT)
+	Look.wear_display(title, Look.HEADING)
 	box.add_child(title)
 	var hint := Label.new()
 	hint.text = note

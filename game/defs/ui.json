@@ -555,6 +555,10 @@
     "draft.stalled": {
       "pt": "⚠  a rodada %d não trouxe ninguém — encerrando com elencos curtos",
       "en": "⚠  round %d signed nobody — closing with short squads"
+    },
+    "manager.club_reroll": {
+      "pt": "Sorteia outro clube — nome, bairro e cores",
+      "en": "Roll another club — name, neighbourhood and colours"
     }
   }
 }
