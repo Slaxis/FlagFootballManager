@@ -39,7 +39,9 @@ const TALENT_BAD := Color(0.85, 0.36, 0.36)
 # pixel per screen pixel), so the whole sheet fits side by side again and the
 # tabs it was split into are gone — a form you compare against itself should not
 # make you click between the halves you are comparing.
-const PANEL_WIDTH := 2240
+# Pinned above the fullest scenario so the frame never moves: the three measure
+# 783, 784 and 783, and one pixel of drift is still the screen jumping under you.
+const PANEL_WIDTH := 1740
 # The widths live here so the hints know what to wrap against: an autowrapping
 # Label with no width reports its minimum as the whole unwrapped line and quietly
 # blows the layout open.
@@ -48,20 +50,21 @@ const PANEL_WIDTH := 2240
 # block does not make the frame jump when you click between scenarios.
 # Above the fullest scenario, so the frame never moves: the three measure 806,
 # 807 and 806, and one pixel of drift is still the screen jumping under you.
-const PANEL_HEIGHT := 810
-const COL_LEFT := 660
-const COL_MID := 580
-const COL_RIGHT := 920
+const PANEL_HEIGHT := 790
+const COL_LEFT := 620
+const COL_MID := 360
+const COL_RIGHT := 660
 const SKILL_COLUMNS := 2
 # The footer note gets whatever the three buttons leave. It was once 700px beside
 # a 320px primary, which made that row alone wider than the screen.
-const FOOTER_NOTE := 760
+# The three letters in every attribute and skill row.
+const CODE_WIDTH := 52
 
 const BOON_COLUMNS := 4
 const FLAW_COLUMNS := 2
 # How much of the row the qualities take. They outnumber the defects three to
 # one, so they get five columns and the defects two.
-const BOON_SHARE := 620
+const BOON_SHARE := 440
 const PERK_GAP := 6
 # The colours row, capped part by part so a typed club name cannot widen it.
 const CREST_CAPTION := 90
@@ -182,17 +185,15 @@ func _column(width: int) -> VBoxContainer:
 
 func _left_column() -> Control:
 	var box: VBoxContainer = _column(COL_LEFT)
-	box.add_child(_section(UiText.t("manager.origin"),
-		UiText.t("manager.origin_hint"), COL_LEFT))
+	box.add_child(_section(UiText.t("manager.origin"), UiText.t("manager.origin_hint")))
 	box.add_child(_origin_row())
-	box.add_child(_section(UiText.t("manager.identity"), "", COL_LEFT))
+	box.add_child(_section(UiText.t("manager.identity"), UiText.t("manager.identity_hint")))
 	box.add_child(_identity_row())
 	box.add_child(_seed_row())
 	if _authors_club():
-		box.add_child(_section(UiText.t("manager.club"),
-			UiText.t("manager.club_hint"), COL_LEFT))
+		box.add_child(_section(UiText.t("manager.club"), UiText.t("manager.club_hint")))
 		box.add_child(_club_row())
-	box.add_child(_section(UiText.t("manager.modality"), "", COL_LEFT))
+	box.add_child(_section(UiText.t("manager.modality"), UiText.t("manager.plays_hint")))
 	box.add_child(_plays_row())
 	box.add_child(_manages_row())
 	return box
@@ -200,19 +201,18 @@ func _left_column() -> Control:
 func _middle_column() -> Control:
 	var box: VBoxContainer = _column(COL_MID)
 	var stats := Drive.def("stat") as StatDef
-	box.add_child(_section(UiText.t("manager.attributes"), "", COL_MID))
+	box.add_child(_section(UiText.t("manager.attributes"), UiText.t("manager.attributes_hint")))
 	if stats != null:
 		for id: String in stats.base_ids():
 			box.add_child(_attribute_row(stats, id))
-	box.add_child(_section(UiText.t("manager.body"),
-		UiText.t("manager.body_hint"), COL_MID))
+	box.add_child(_section(UiText.t("manager.body"), UiText.t("manager.body_hint")))
 	box.add_child(_body_row())
 	return box
 
 func _right_column() -> Control:
 	var box: VBoxContainer = _column(COL_RIGHT)
 	var stats := Drive.def("stat") as StatDef
-	box.add_child(_section(UiText.t("manager.skills"), "", COL_RIGHT))
+	box.add_child(_section(UiText.t("manager.skills"), UiText.t("manager.skills_hint")))
 
 	var spread := HBoxContainer.new()
 	spread.add_theme_constant_override("separation", 20)
@@ -243,8 +243,7 @@ func _right_column() -> Control:
 
 	# Talents last, because they are the one thing on this sheet that is not
 	# training: you finish the person, then you say what happened to him.
-	box.add_child(_section(UiText.t("manager.perks"),
-		UiText.t("manager.perks_hint") % _build.perk_points_left(), COL_RIGHT))
+	box.add_child(_section(UiText.t("manager.perks"), UiText.t("manager.perks_hint") % _build.perk_points_left()))
 	box.add_child(_perk_row())
 	return box
 
@@ -270,14 +269,16 @@ func _footer() -> Control:
 	pick.tooltip_text = UiText.t("manager.pick_locked")
 	row.add_child(pick)
 
-	var note: Control = _hint(_draw_hint(), FOOTER_NOTE)
-	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(note)
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(gap)
 
+	# The reason it is locked is on the button that is locked, which is where you
+	# look when a button will not press. It used to be a sentence beside it.
 	var draw_button: Button = _flat_button(UiText.t("manager.random"), _on_draw, true)
 	draw_button.disabled = not _build.is_complete()
-	draw_button.custom_minimum_size = Vector2(250, 38)
+	draw_button.custom_minimum_size = Vector2(280, 40)
+	draw_button.tooltip_text = _draw_hint()
 	row.add_child(draw_button)
 	return row
 
@@ -304,6 +305,8 @@ func _header() -> Control:
 	var left := Label.new()
 	left.text = (UiText.t("manager.overspent") % -_build.remaining()) if _build.remaining() < 0 		else (UiText.t("manager.points_left") % _build.remaining())
 	left.add_theme_color_override("font_color", WARN if _build.remaining() != 0 else ACCENT)
+	left.tooltip_text = UiText.t("manager.points_hint")
+	left.mouse_filter = Control.MOUSE_FILTER_STOP
 	Look.wear_display(left, Look.BIG)
 	row.add_child(left)
 	return row
@@ -321,15 +324,11 @@ func _origin_row() -> Control:
 	var origins := Drive.def("origin") as OriginDef
 	for id: String in (origins.origin_ids() if origins != null else []):
 		var chip: Button = _choice(origins.label(id), _origin == id, _on_origin.bind(id))
-		chip.custom_minimum_size = Vector2(150, 34)
-		chip.tooltip_text = origins.desc(id)
+		chip.custom_minimum_size = Vector2(196, 34)
+		chip.tooltip_text = "%s\n%s\n\n%s" % [
+			origins.label(id), origins.line(id), origins.desc(id)]
 		row.add_child(chip)
 	box.add_child(row)
-	# The one-line pitch, and nothing else. The full paragraph is already the
-	# chip's tooltip, and drawn here it was ten wrapped lines — on its own most
-	# of the reason the form did not fit.
-	if origins != null and _origin != "":
-		box.add_child(_hint(origins.line(_origin), COL_LEFT))
 	return box
 
 # TWO ROWS. Three fields plus a labelled dice button measured 769px against a
@@ -457,6 +456,7 @@ func _palette_button() -> Button:
 	var button: Button = _flat_button(UiText.t("manager.club_next_colors"), _on_cycle_colors, false)
 	button.custom_minimum_size = Vector2(CREST_BUTTON, 30)
 	button.clip_text = true
+	button.tooltip_text = UiText.t("manager.club_colors_hint")
 	return button
 
 func _crest_preview() -> Control:
@@ -468,6 +468,8 @@ func _crest_preview() -> Control:
 		style.set("corner_radius_" + corner, 3)
 	var plate := PanelContainer.new()
 	plate.add_theme_stylebox_override("panel", style)
+	plate.tooltip_text = UiText.t("manager.club_crest_hint")
+	plate.mouse_filter = Control.MOUSE_FILTER_STOP
 	var crest := Label.new()
 	crest.text = String(_club.get("name", "?"))
 	crest.add_theme_color_override("font_color", scheme["ink"])
@@ -644,6 +646,18 @@ func _effect_text(stats: StatDef, effect: Dictionary) -> String:
 		parts.append("%+d %s" % [value, I18n.text(stats.base_stat(id).get("label", id), id)])
 	return "   ".join(parts)
 
+# THREE LETTERS IN A FIXED COLUMN. "Chamada de jogada" is seventeen characters
+# beside a ten-slot bar, and twenty-three rows of that read as a classified ad
+# rather than a sheet. The name and the description are one hover away, where
+# they stop competing with the numbers and start being a tutorial.
+func _track_code(code: String) -> Control:
+	var label := Label.new()
+	label.text = code
+	label.custom_minimum_size = Vector2(CODE_WIDTH, 0)
+	label.add_theme_color_override("font_color", TEXT)
+	Look.wear_body(label, Look.TEXT)
+	return label
+
 func _attribute_row(stats: StatDef, id: String) -> Control:
 	var spec: Dictionary = stats.base_stat(id)
 	var step_value: int = int(_build.stats.get(id, 0))
@@ -654,25 +668,19 @@ func _attribute_row(stats: StatDef, id: String) -> Control:
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 5)
-	row.tooltip_text = "%s
-
-%d/10%s
-%s" % [
-		I18n.text(spec.get("desc", ""), ""), effective,
+	row.tooltip_text = "%s\n\n%d/10%s\n%s" % [
+		stats.explain(id), effective,
 		"   (%+d do corpo)" % shift if shift != 0 else "",
 		UiText.t("manager.team_bonus") % bonus,
 	]
 	row.mouse_filter = Control.MOUSE_FILTER_STOP
 
-	row.add_child(_step_button("−", _on_lower_stat.bind(id), _build.can_lower_stat(id)))
-	row.add_child(_step_button("+", _on_raise_stat.bind(id), _build.can_raise_stat(id)))
+	row.add_child(_step_button("−", _on_lower_stat.bind(id), _build.can_lower_stat(id),
+		UiText.t("manager.step_down")))
+	row.add_child(_step_button("+", _on_raise_stat.bind(id), _build.can_raise_stat(id),
+		UiText.t("manager.step_up") % maxi(_build.cost_to_raise_stat(id), 0)))
 
-	var label := Label.new()
-	label.text = I18n.text(spec.get("label", id), id)
-	label.custom_minimum_size = Vector2(104, 0)
-	label.add_theme_font_size_override("font_size", 13)
-	label.add_theme_color_override("font_color", TEXT)
-	row.add_child(label)
+	row.add_child(_track_code(stats.code(id)))
 	# The RAW value, not the effective one. The bar used to include the body
 	# shift while the minus button read the raw number, so an attribute at zero
 	# with a tall body drew as "1" and refused to come down — you were stuck at
@@ -707,22 +715,18 @@ func _skill_row(stats: StatDef, id: String) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 5)
 	row.tooltip_text = "%s\n\n%s %d + %s %d\n%s" % [
-		I18n.text(spec.get("desc", ""), ""),
-		I18n.text(stats.base_stat(attribute).get("label", attribute), attribute), attribute_step,
-		I18n.text(spec.get("label", id), id), step_value,
+		stats.explain(id),
+		stats.code(attribute), attribute_step, stats.code(id), step_value,
 		UiText.t("manager.roll_hint") % (attribute_step + step_value),
 	]
 	row.mouse_filter = Control.MOUSE_FILTER_STOP
 
-	row.add_child(_step_button("−", _on_lower_skill.bind(id), _build.can_lower_skill(id)))
-	row.add_child(_step_button("+", _on_raise_skill.bind(id), _build.can_raise_skill(id)))
+	row.add_child(_step_button("−", _on_lower_skill.bind(id), _build.can_lower_skill(id),
+		UiText.t("manager.step_down")))
+	row.add_child(_step_button("+", _on_raise_skill.bind(id), _build.can_raise_skill(id),
+		UiText.t("manager.step_up") % maxi(_build.cost_to_raise_skill(id), 0)))
 
-	var label := Label.new()
-	label.text = I18n.text(spec.get("label", id), id)
-	label.custom_minimum_size = Vector2(128, 0)
-	label.add_theme_font_size_override("font_size", 13)
-	label.add_theme_color_override("font_color", TEXT)
-	row.add_child(label)
+	row.add_child(_track_code(stats.code(id)))
 	row.add_child(StatBar.bar(step_value * 10, stats.skill_color(id)))
 
 	var cost := Label.new()
@@ -760,7 +764,6 @@ func _plays_row() -> Control:
 		row.add_child(chip)
 	row.add_child(_choice(UiText.t("manager.plays_none"), _plays.is_empty(), _on_plays_none))
 	box.add_child(row)
-	box.add_child(_hint(UiText.t("manager.plays_hint"), COL_LEFT))
 	return box
 
 func _plays_has_base() -> bool:
@@ -1039,7 +1042,14 @@ func _panel_style() -> StyleBoxFlat:
 		style.set("corner_radius_" + corner, 5)
 	return style
 
-func _section(text: String, hint: String, width: int = 0) -> Control:
+# A HEADING AND A TOOLTIP. Every one of these used to carry two lines of prose
+# explaining what the section was for, and six of them turned the form into a
+# page of small print that you read once and then had to look past forever.
+#
+# The explanation did not get deleted — it moved to where an explanation belongs,
+# which is one hover away and permanently available rather than permanently in
+# the way.
+func _section(text: String, tip: String = "") -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 1)
 	box.add_child(_spacer(5))
@@ -1047,10 +1057,11 @@ func _section(text: String, hint: String, width: int = 0) -> Control:
 	label.text = text
 	label.add_theme_color_override("font_color", ACCENT)
 	Look.wear_display(label, Look.HEADING)
+	if tip != "":
+		label.tooltip_text = tip
+		label.mouse_filter = Control.MOUSE_FILTER_STOP
 	box.add_child(label)
 	box.add_child(_rule())
-	if hint != "":
-		box.add_child(_hint(hint, width))
 	return box
 
 func _rule() -> Control:
@@ -1067,39 +1078,13 @@ func _field_label(text: String) -> Control:
 	label.add_theme_color_override("font_color", TEXT)
 	return label
 
-# ⚠️ WIDTH IS NOT OPTIONAL DECORATION. An autowrapping Label with no width
-# reports its minimum size as the entire unwrapped line, so one long hint drags
-# the column it lives in as wide as its own sentence and the three-column layout
-# silently becomes one very wide one.
-#
-# AND IT IS CAPPED AT TWO LINES, with the whole thing on the tooltip. Once the
-# body font went to its grid size of 18, these paragraphs were most of the
-# screen: six explanatory hints at four or five lines each pushed the form to
-# 1329px against a 1080 viewport. A hint is a nudge — if it needs five lines it
-# is documentation, and documentation belongs on hover.
-# ONE line. At two, the six explanatory hints on this form were 288px of a 520px
-# column — more than half the screen spent on text that says what the section
-# above it already says. The whole sentence is on the tooltip.
-const HINT_LINES := 1
-
-func _hint(text: String, width: int = 0) -> Control:
-	var label := Label.new()
-	label.text = text
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.max_lines_visible = HINT_LINES
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	label.tooltip_text = text
-	label.mouse_filter = Control.MOUSE_FILTER_STOP
-	if width > 0:
-		label.custom_minimum_size = Vector2(width, 0)
-	label.add_theme_color_override("font_color", MUTED)
-	Look.wear_body(label, Look.TINY)
-	return label
-
-func _step_button(text: String, on_press: Callable, enabled: bool) -> Button:
+func _step_button(text: String, on_press: Callable, enabled: bool,
+		tip: String = "") -> Button:
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(24, 24)
+	if tip != "":
+		button.tooltip_text = tip
 	button.focus_mode = Control.FOCUS_NONE
 	button.disabled = not enabled
 	var style := StyleBoxFlat.new()

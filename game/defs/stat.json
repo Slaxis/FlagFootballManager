@@ -65,6 +65,10 @@
           "pt": "Coroa",
           "en": "Crown"
         }
+      },
+      "code": {
+        "pt": "INT",
+        "en": "INT"
       }
     },
     {
@@ -84,6 +88,10 @@
           "pt": "Terceiro olho",
           "en": "Third eye"
         }
+      },
+      "code": {
+        "pt": "PER",
+        "en": "PER"
       }
     },
     {
@@ -103,6 +111,10 @@
           "pt": "Garganta",
           "en": "Throat"
         }
+      },
+      "code": {
+        "pt": "CAR",
+        "en": "CHA"
       }
     },
     {
@@ -122,6 +134,10 @@
           "pt": "Coração",
           "en": "Heart"
         }
+      },
+      "code": {
+        "pt": "VON",
+        "en": "WIL"
       }
     },
     {
@@ -141,6 +157,10 @@
           "pt": "Plexo solar",
           "en": "Solar plexus"
         }
+      },
+      "code": {
+        "pt": "VIT",
+        "en": "STA"
       }
     },
     {
@@ -160,6 +180,10 @@
           "pt": "Mãos",
           "en": "Hands"
         }
+      },
+      "code": {
+        "pt": "DES",
+        "en": "DEX"
       }
     },
     {
@@ -179,6 +203,10 @@
           "pt": "Sacral",
           "en": "Sacral"
         }
+      },
+      "code": {
+        "pt": "AGI",
+        "en": "AGI"
       }
     },
     {
@@ -198,6 +226,10 @@
           "pt": "Raiz",
           "en": "Root"
         }
+      },
+      "code": {
+        "pt": "FOR",
+        "en": "STR"
       }
     }
   ],
@@ -261,6 +293,10 @@
       "desc": {
         "pt": "Colocar a bola onde só o seu recebedor alcança",
         "en": "Putting the ball where only your receiver can reach"
+      },
+      "code": {
+        "pt": "LAN",
+        "en": "THR"
       }
     },
     {
@@ -274,6 +310,10 @@
       "desc": {
         "pt": "Segurar o que dá pra segurar — e o que não dá",
         "en": "Holding the catchable, and the uncatchable"
+      },
+      "code": {
+        "pt": "REC",
+        "en": "CAT"
       }
     },
     {
@@ -287,6 +327,10 @@
       "desc": {
         "pt": "Correr a jogada certa no tempo certo",
         "en": "Running the right route at the right time"
+      },
+      "code": {
+        "pt": "ROT",
+        "en": "RTE"
       }
     },
     {
@@ -300,6 +344,10 @@
       "desc": {
         "pt": "Entregar a bola limpa e ainda entrar na jogada",
         "en": "Delivering a clean ball and still joining the play"
+      },
+      "code": {
+        "pt": "SNP",
+        "en": "SNP"
       }
     },
     {
@@ -313,6 +361,10 @@
       "desc": {
         "pt": "Escapar da puxada no espaço curto",
         "en": "Escaping the flag pull in tight space"
+      },
+      "code": {
+        "pt": "DRI",
+        "en": "JUK"
       }
     },
     {
@@ -326,6 +378,10 @@
       "desc": {
         "pt": "Arrancar a flag na primeira tentativa",
         "en": "Ripping the flag on the first try"
+      },
+      "code": {
+        "pt": "TAC",
+        "en": "TAK"
       }
     },
     {
@@ -339,6 +395,10 @@
       "desc": {
         "pt": "Grudar no recebedor o jogo inteiro",
         "en": "Sticking to the receiver all game"
+      },
+      "code": {
+        "pt": "COB",
+        "en": "COV"
       }
     },
     {
@@ -352,6 +412,10 @@
       "desc": {
         "pt": "Contar os segundos e chegar no quarterback",
         "en": "Counting the seconds and reaching the quarterback"
+      },
+      "code": {
+        "pt": "RSH",
+        "en": "RSH"
       }
     },
     {
@@ -365,6 +429,10 @@
       "desc": {
         "pt": "Tipar a bola na mão do recebedor",
         "en": "Tipping the ball out of the receiver's hands"
+      },
+      "code": {
+        "pt": "DEF",
+        "en": "DFL"
       }
     },
     {
@@ -378,6 +446,10 @@
       "desc": {
         "pt": "No amador, saber a regra ganha jogo",
         "en": "In amateur play, knowing the rulebook wins games"
+      },
+      "code": {
+        "pt": "REG",
+        "en": "RUL"
       }
     },
     {
@@ -391,6 +463,10 @@
       "desc": {
         "pt": "Lê a jogada, comunica, e o time inteiro joga melhor",
         "en": "Reads the play, calls it, and the whole side plays better"
+      },
+      "code": {
+        "pt": "LID",
+        "en": "LDR"
       }
     },
     {
@@ -404,6 +480,10 @@
       "desc": {
         "pt": "Acha o ponto fraco do adversário e não larga",
         "en": "Finds the opponent's weak spot and never lets go"
+      },
+      "code": {
+        "pt": "PRO",
+        "en": "TLK"
       }
     },
     {
@@ -417,6 +497,10 @@
       "desc": {
         "pt": "Escolher a jogada certa para o momento certo",
         "en": "Choosing the right play for the moment"
+      },
+      "code": {
+        "pt": "CHM",
+        "en": "CAL"
       }
     },
     {
@@ -430,6 +514,10 @@
       "desc": {
         "pt": "Fazer o elenco evoluir semana após semana",
         "en": "Making the squad improve week after week"
+      },
+      "code": {
+        "pt": "TRE",
+        "en": "COA"
       }
     },
     {
@@ -443,6 +531,10 @@
       "desc": {
         "pt": "Bater o olho e saber quem presta",
         "en": "One look and you know who can play"
+      },
+      "code": {
+        "pt": "OLH",
+        "en": "SCT"
       }
     }
   ],

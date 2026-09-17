@@ -149,8 +149,8 @@
       "en": "seed %d"
     },
     "manager.seed_hint": {
-      "pt": "a semente vem do nome + sobrenome + apelido — edite os três para fixar um mundo e voltar a ele depois",
-      "en": "the seed comes from first name + surname + nickname — edit the three to pin a world down and come back to it"
+      "pt": "Sai do nome + sobrenome + apelido. Edite os três para fixar um mundo e voltar a ele.",
+      "en": "Comes from first name + surname + nickname. Edit the three to pin a world and come back to it."
     },
     "manager.body": {
       "pt": "CORPO",
@@ -185,16 +185,16 @@
       "en": "%d career points"
     },
     "manager.invest_hint": {
-      "pt": "Você nasce zerado e aloca a vida inteira. Atributo custa 3 career points por passo, habilidade custa 2 — crescer é mais caro que aprender.",
-      "en": "You are born at zero and allocate a whole life. An attribute costs 3 career points a step, a skill costs 2 — growing is dearer than learning."
+      "pt": "Atributo custa 3 career points por passo, habilidade 2. Crescer é mais caro que aprender.",
+      "en": "An attribute costs 3 career points a step, a skill 2. Growing is dearer than learning."
     },
     "manager.team_bonus": {
       "pt": "seu time ganha %+d nesta stat",
       "en": "your squad gets %+d in this stat"
     },
     "manager.body_hint": {
-      "pt": "sair do centro dá um passo a um atributo e tira de outro — e custa career points, porque o passo que você ganha vale mais que o que você entrega",
-      "en": "leaving the centre gives one attribute a step and takes one from another — and costs career points, because the step you gain is dearer than the one you give up"
+      "pt": "Sair do centro dá um passo a um atributo e tira de outro — e custa career points.",
+      "en": "Leaving the middle gives one attribute a step and takes one from another — and costs career points."
     },
     "skillgroup.offense": {
       "pt": "Ataque",
@@ -217,8 +217,8 @@
       "en": "a check on this skill rolls %d + 2d5*"
     },
     "manager.must_spend": {
-      "pt": "você ainda tem %d anos para viver — gaste tudo antes de começar",
-      "en": "you still have %d years to live — spend them all before starting"
+      "pt": "gaste os %d que sobram antes de começar",
+      "en": "spend the %d you have left before starting"
     },
     "manager.body_cost": {
       "pt": "corpo: %d cp",
@@ -229,12 +229,12 @@
       "en": "you spent %d career points more than you lived"
     },
     "manager.leftover_one": {
-      "pt": "sobra 1 career point e nada custa tão pouco — pode começar",
-      "en": "1 career point left and nothing costs that little — you can start"
+      "pt": "sobra 1 e nada custa tão pouco — pode começar",
+      "en": "1 left over and nothing costs that little — you can start"
     },
     "manager.leftover_many": {
-      "pt": "sobram %d career points e nada custa tão pouco — pode começar",
-      "en": "%d career points left and nothing costs that little — you can start"
+      "pt": "sobram %d e nada custa tão pouco — pode começar",
+      "en": "%d left over and nothing costs that little — you can start"
     },
     "manager.first_name": {
       "pt": "Nome",
@@ -257,12 +257,8 @@
       "en": "TALENTS"
     },
     "manager.perks_hint": {
-      "pt": "moeda própria, separada dos career points: treino é uma coisa, o que a carreira fez com você é outra. Pegue quantos quiser — um defeito PAGA por um talento. Saldo: %d",
-      "en": "their own currency, apart from career points: training is one thing, what a career did to you is another. Take as many as you like — a flaw PAYS for a talent. Balance: %d"
-    },
-    "manager.perk_none": {
-      "pt": "nenhum perk escolhido",
-      "en": "no perk taken"
+      "pt": "Moeda à parte do treino: um defeito PAGA por um talento. Saldo: %d",
+      "en": "A currency apart from training: a flaw PAYS for a talent. Balance: %d"
     },
     "manager.perk_price": {
       "pt": "%d pp",
@@ -273,8 +269,8 @@
       "en": "+%d pp"
     },
     "manager.plays_hint": {
-      "pt": "dá para marcar mais de uma: masculino ou feminino, e o misto junto. Misto sozinho não vale — o time misto tem cota de mulheres, então ele precisa saber se você ocupa vaga de homem ou de mulher.",
-      "en": "more than one is fine: men’s or women’s, plus mixed. Mixed alone is not — a mixed squad carries a women’s quota, so it has to know which slot you fill."
+      "pt": "Masculino ou feminino, e o misto junto. Misto sozinho não vale: a cota precisa saber que vaga você ocupa.",
+      "en": "Men’s or women’s, with mixed alongside. Mixed alone will not do: the quota has to know which slot you fill."
     },
     "team.squad": {
       "pt": "Elenco",
@@ -409,8 +405,8 @@
       "en": "WHERE YOU COME FROM"
     },
     "manager.origin_hint": {
-      "pt": "a resposta para \"por que este é o gestor\". Muda a sua ficha, o clube que te espera e a dificuldade",
-      "en": "the answer to \"why is this the manager\". Changes your sheet, the club waiting for you, and the difficulty"
+      "pt": "Por que VOCÊ é o gestor. Muda a ficha, o clube que te espera e a dificuldade.",
+      "en": "Why YOU are the manager. It changes the sheet, the club waiting for you, and the difficulty."
     },
     "team.admin": {
       "pt": "ADMINISTRAÇÃO",
@@ -425,8 +421,8 @@
       "en": "YOUR CLUB"
     },
     "manager.club_hint": {
-      "pt": "o único começo em que o clube é seu: você batiza, escolhe o bairro e as cores. Já vem preenchido pelo seed — aceite, ou escreva por cima.",
-      "en": "the one start where the club is yours: you name it, you pick the neighbourhood and the colours. It arrives filled in from the seed — accept it, or type over it."
+      "pt": "Só o Fundador batiza o próprio clube. Já vem sorteado — aceite ou escreva por cima.",
+      "en": "Only the Founder names his own club. It arrives rolled — accept it or type over it."
     },
     "manager.club_name": {
       "pt": "Nome do time",
@@ -567,6 +563,38 @@
     "manager.perk_flaws": {
       "pt": "DEFEITOS — pagam",
       "en": "FLAWS — they pay"
+    },
+    "manager.identity_hint": {
+      "pt": "Nome, sobrenome e apelido. Os três viram a semente do mundo.",
+      "en": "First name, surname, nickname. The three of them become the world seed."
+    },
+    "manager.club_colors_hint": {
+      "pt": "Troca o par de cores. Todos passam no contraste mínimo.",
+      "en": "Cycles the colour pair. Every one clears the contrast floor."
+    },
+    "manager.club_crest_hint": {
+      "pt": "O clube como ele vai aparecer na tabela.",
+      "en": "The club as it will appear in the table."
+    },
+    "manager.attributes_hint": {
+      "pt": "O que você É. Todo teste rola atributo + habilidade + 2d5*.",
+      "en": "What you ARE. Every check rolls attribute + skill + 2d5*."
+    },
+    "manager.skills_hint": {
+      "pt": "O que você TREINOU. Cada uma soma com o atributo que a sustenta.",
+      "en": "What you TRAINED. Each one adds to the attribute under it."
+    },
+    "manager.points_hint": {
+      "pt": "Career points ainda por gastar. A ficha só fecha em zero.",
+      "en": "Career points still unspent. The sheet only settles at zero."
+    },
+    "manager.step_up": {
+      "pt": "Sobe um passo — %d cp",
+      "en": "One step up — %d cp"
+    },
+    "manager.step_down": {
+      "pt": "Devolve um passo",
+      "en": "Hand a step back"
     }
   }
 }

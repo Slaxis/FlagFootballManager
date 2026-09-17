@@ -358,6 +358,33 @@ func quantile_band(quantile: int) -> Dictionary:
 	var index: int = clampi(quantile, 1, maxi(_quantiles.size(), 1)) - 1
 	return _quantiles[index] if index < _quantiles.size() else {}
 
+# THE THREE LETTERS. Every attribute and every skill carries one, and the screens
+# show it instead of the name.
+#
+# "Chamada de jogada" is seventeen characters beside a ten-slot bar; twenty-three
+# rows of that read as a classified ad rather than a sheet. Three letters in a
+# fixed column reads as a TABLE, which is what it is — and the name and the
+# description move to the tooltip, where they stop competing with the numbers and
+# start being a tutorial that is always one hover away.
+#
+# Per language, because the mnemonic is the point: VIT is Vitalidade and STA is
+# Stamina, and a code that does not match the word next to it in the tooltip
+# helps nobody. `tests/test_stat.gd` keeps them three letters, uppercase and
+# unique inside each language.
+func code(id: String) -> String:
+	var key: String = _key(id)
+	var spec: Dictionary = _base.get(key, _skills.get(key, {}))
+	return I18n.text(spec.get("code", ""), key.substr(0, 3).to_upper())
+
+# Name and description in one string, for the tooltip that replaced them on
+# screen. Blank line between, so the name reads as a heading.
+func explain(id: String) -> String:
+	var key: String = _key(id)
+	var spec: Dictionary = _base.get(key, _skills.get(key, {}))
+	var name: String = I18n.text(spec.get("label", key), key)
+	var desc: String = I18n.text(spec.get("desc", ""), "")
+	return "%s\n\n%s" % [name, desc] if desc != "" else name
+
 func quantile_label(quantile: int) -> String:
 	# Not `band`: this class already has a `band()` for the height and weight
 	# bands, and a local of the same name shadows it.

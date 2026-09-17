@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Changed - B.6i: codigos de tres letras e tooltips (2026-09-17)
+- **Todo atributo e habilidade tem um codigo de tres letras**, e e ele que
+  aparece: INT, PER, CAR, VON, VIT, DES, AGI, FOR e os quinze das habilidades.
+  "Chamada de jogada" tem dezessete caracteres ao lado de uma barra de dez casas,
+  e vinte e tres linhas assim leem como classificado em vez de ficha
+- Por idioma, porque a mnemonica e o ponto (VIT/Vitalidade, STA/Stamina), e
+  unicos dentro de cada um — `StatDef.code()` e `StatDef.explain()`, com teste
+- **Todo texto explicativo saiu da tela e virou tooltip.** Seis secoes carregavam
+  duas linhas de prosa cada; a explicacao nao foi deletada, mudou pra onde
+  explicacao pertence — a um hover de distancia, permanentemente disponivel em
+  vez de permanentemente no caminho
+- **Todo tooltip foi reescrito curto**, e o criterio inverte: o que estava na
+  tela tinha que justificar o espaco explicando a si mesmo; o que esta no hover
+  so precisa responder a pergunta com que voce passou o mouse ali. `plays_hint`
+  de 193 para 105 caracteres, `perks_hint` de 166 para 66, `body_hint` de 144
+  para 81
+- **Sete tooltips novos** onde nao havia nenhum: os botoes de + e - (com o custo
+  do proximo passo), o contador de career points, a paleta de cores, o escudo, e
+  as secoes de identidade, atributos e habilidades
+- O botao de sortear clube carrega o motivo de estar travado, que e onde se olha
+  quando um botao nao aperta
+- A ficha do atleta na tela do elenco recebeu o mesmo tratamento
+- Criacao: **2256x810 -> 1740x790**
+
 ### Changed - B.6h: pixel art de alta resolucao (2026-09-17)
 - **A janela E o canvas.** `content_scale_size` = janela, `content_scale_factor`
   = 1, escala nenhuma. Um pixel logico e um pixel de tela, que e o mais nitido

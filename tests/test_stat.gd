@@ -10,6 +10,7 @@ const BASE_IDS: Array[String] = [
 
 func tests() -> Array:
 	return [
+		"test_every_track_has_a_unique_three_letter_code",
 		"test_eight_attributes_including_will",
 		"test_fifteen_skills_each_governed_by_a_real_attribute",
 		"test_no_derived_layer_survives",
@@ -212,3 +213,36 @@ func test_a_skill_wears_its_attribute_colour(t: TestHelper) -> void:
 	# And the one that started it: throwing hangs off dexterity, the hands.
 	t.equal(def.skill_color("throwing").to_html(false),
 		def.chakra_color("dexterity").to_html(false), "lançamento é cor de mãos")
+
+# THE CODE IS THE COLUMN. Screens show three letters where the name used to be —
+# "Chamada de jogada" is seventeen characters beside a ten-slot bar, and
+# twenty-three rows of that read as a classified ad — so a code that is missing,
+# the wrong length or shared with another track breaks the table quietly.
+#
+# Per language, because the mnemonic is the point: VIT for Vitalidade, STA for
+# Stamina. Uniqueness only has to hold WITHIN a language.
+func test_every_track_has_a_unique_three_letter_code(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var previous: String = I18n.get_lang()
+	var tracks: Array[String] = []
+	tracks.append_array(def.base_ids())
+	tracks.append_array(def.skill_ids())
+	for lang: String in ["pt", "en"]:
+		I18n.set_lang(lang)
+		var owner_of: Dictionary = {}
+		for id: String in tracks:
+			var code: String = def.code(id)
+			t.equal(code.length(), 3, "[%s] '%s' tem código '%s'" % [lang, id, code])
+			t.equal(code, code.to_upper(), "[%s] '%s' não está em maiúsculas" % [lang, id])
+			if owner_of.has(code):
+				t.fail("[%s] código '%s' repetido entre '%s' e '%s'" %
+					[lang, code, owner_of[code], id])
+			owner_of[code] = id
+		t.equal(owner_of.size(), tracks.size(), "[%s] códigos distintos" % lang)
+		# And the tooltip that replaced the name on screen has to carry it.
+		for id: String in tracks:
+			t.check(def.explain(id).strip_edges() != "",
+				"[%s] '%s' sem texto de tooltip" % [lang, id])
+	I18n.set_lang(previous)

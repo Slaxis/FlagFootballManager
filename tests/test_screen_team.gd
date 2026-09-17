@@ -136,10 +136,18 @@ func test_clicking_somebody_opens_their_sheet(t: TestHelper) -> void:
 	var shown: String = _texts(screen)
 	t.check(shown.contains(wanted.display_name()), "a ficha não abriu para quem cliquei")
 	# The sheet is the debt A.2/A.3 left: the eight attributes have to be there.
+	#
+	# BY CODE, not by name. Twenty-three named rows beside twenty-three bars was a
+	# wall of words competing with the numbers they label, so the card shows INT,
+	# PER, CAR — and the name moved to the tooltip, which is what the next
+	# assertion checks, because a code nobody can expand is a code nobody can read.
 	var stats := Drive.def("stat") as StatDef
 	for id: String in stats.base_ids():
-		var label: String = I18n.text(stats.base_stat(id).get("label", id), id)
-		t.check(shown.contains(label), "a ficha não mostra '%s'" % label)
+		t.check(shown.contains(stats.code(id)),
+			"a ficha não mostra o código '%s'" % stats.code(id))
+	t.check(_tooltips(screen).contains(
+		I18n.text(stats.base_stat("intelligence").get("label", ""), "")),
+		"o nome por extenso sumiu junto com o código — ele tem que estar no tooltip")
 	_close(screen)
 
 func test_the_rivals_tab_leaves_your_own_club_out(t: TestHelper) -> void:
@@ -312,15 +320,24 @@ func test_the_sheet_has_the_same_rows_for_everybody(t: TestHelper) -> void:
 		row.pressed.emit()
 		var shown: String = _texts(screen)
 		for id: String in stats.skill_ids():
-			var label: String = I18n.text(stats.skill(id).get("label", id), id)
-			t.check(shown.contains(label),
-				"a ficha de %s não mostra '%s'" % [person.display_name(), label])
+			t.check(shown.contains(stats.code(id)),
+				"a ficha de %s não mostra '%s'" % [person.display_name(), stats.code(id)])
 		for id: String in stats.base_ids():
-			var label: String = I18n.text(stats.base_stat(id).get("label", id), id)
-			t.check(shown.contains(label),
-				"a ficha de %s não mostra '%s'" % [person.display_name(), label])
+			t.check(shown.contains(stats.code(id)),
+				"a ficha de %s não mostra '%s'" % [person.display_name(), stats.code(id)])
 	_close(screen)
 
+
+# Every tooltip on the screen, joined. The card shows three-letter codes now, so
+# the names and descriptions live here — and a code with no way to expand it is
+# worse than the long name it replaced.
+func _tooltips(screen: Control) -> String:
+	var all: Array[String] = []
+	for node: Variant in _collect(screen, "Control", []):
+		var tip: String = (node as Control).tooltip_text
+		if tip != "":
+			all.append(tip)
+	return "\n".join(all)
 
 # Rows and role buttons are tagged with metadata, because their text is empty
 # and Godot renames duplicate siblings.

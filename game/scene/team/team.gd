@@ -68,6 +68,8 @@ const COL_STRENGTH := 58
 const COL_AGE := 48
 const COL_ROLE := 36
 const COL_GAP := 6
+# The three-letter code column on the athlete card.
+const CARD_CODE := 52
 
 # ⚠️ THE ROLE COLUMNS ARE THE BUDGET. There are EIGHTEEN of them — three
 # administration chairs, five on the technical staff and ten in the formation —
@@ -748,12 +750,13 @@ func _show_card() -> void:
 	left.add_child(_group_caption(UiText.t("manager.attributes")))
 	# Declared head to foot in the JSON, so this loop reads top-down like a
 	# person standing up: mind, eyes, voice, heart, core, hands, hips, feet.
+	# THE THREE-LETTER CODE, same as the creation sheet. Twenty-three named rows
+	# beside twenty-three bars is a wall of words competing with the numbers they
+	# label; the name and the description are one hover away instead.
 	for id: String in stats.base_ids():
-		var spec: Dictionary = stats.base_stat(id)
-		left.add_child(StatBar.row(I18n.text(spec.get("label", id), id),
-			_selected.step(id) * 10,
-			"%s\n%s" % [stats.chakra_label(id), I18n.text(spec.get("desc", ""), "")],
-			96, stats.chakra_color(id)))
+		left.add_child(StatBar.row(stats.code(id), _selected.step(id) * 10,
+			"%s\n%s" % [stats.chakra_label(id), stats.explain(id)],
+			CARD_CODE, stats.chakra_color(id)))
 	columns.add_child(left)
 
 	# Two columns with a MEANING, not just a fold. Left is attack and defence —
@@ -776,10 +779,9 @@ func _show_card() -> void:
 				continue
 			column.add_child(_group_caption(UiText.t("skillgroup." + String(group), String(group))))
 			for id: String in ids:
-				var spec: Dictionary = stats.skill(id)
-				column.add_child(StatBar.row(I18n.text(spec.get("label", id), id),
+				column.add_child(StatBar.row(stats.code(id),
 					_selected.skill_step(id) * 10,
-					I18n.text(spec.get("desc", ""), ""), 112, stats.skill_color(id)))
+					stats.explain(id), CARD_CODE, stats.skill_color(id)))
 	columns.add_child(right)
 
 	box.add_child(_career_log())
