@@ -154,6 +154,16 @@ static func _size_slot(control: Control) -> String:
 # creation form used to want 1850x1040. Paid in tabs.
 const DESIGN_MIN := Vector2i(1280, 720)
 
+# ⚠️ `content_scale_size` AND `content_scale_factor` MULTIPLY. That is the whole
+# trap: the size is the logical canvas and the engine already stretches it to the
+# window, so a 1280x720 canvas in a 2560x1440 window is ALREADY 2x. Setting the
+# factor to 2 as well made it 4x — everything twice the size it should be, the
+# logical viewport collapsing to 640x360, and forms built for 1250 spilling off
+# the edges. It reads exactly like somebody hit zoom, because somebody did.
+#
+# So only the SIZE is set here. The factor stays at 1 and the integer scale comes
+# out of the arithmetic: pick the canvas as `window / scale`, and the stretch the
+# engine then performs is that same whole number on both axes by construction.
 static func fit_window() -> void:
 	var window: Window = Engine.get_main_loop().get_root() as Window
 	if window == null:
@@ -161,15 +171,29 @@ static func fit_window() -> void:
 	var have: Vector2i = DisplayServer.window_get_size()
 	if have.x <= 0 or have.y <= 0:
 		return
-	var scale: int = maxi(mini(have.x / DESIGN_MIN.x, have.y / DESIGN_MIN.y), 1)
-	var canvas: Vector2i = have / scale
-	if window.content_scale_size == canvas and is_equal_approx(
-			window.content_scale_factor, float(scale)):
+	var canvas: Vector2i = canvas_for(have)
+	if window.content_scale_size == canvas \
+			and is_equal_approx(window.content_scale_factor, 1.0):
 		return
 	window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 	window.content_scale_size = canvas
-	window.content_scale_factor = float(scale)
+	# NOT the scale. See above — this multiplies on top of the stretch.
+	window.content_scale_factor = 1.0
+
+# The arithmetic on its own, so it can be tested without a monitor.
+#
+#   1366x768   -> 1x, canvas 1366x768
+#   1920x1080  -> 1x, canvas 1920x1080
+#   2560x1440  -> 2x, canvas 1280x720
+#   3840x2160  -> 3x, canvas 1280x720
+static func scale_for(window_size: Vector2i) -> int:
+	if window_size.x <= 0 or window_size.y <= 0:
+		return 1
+	return maxi(mini(window_size.x / DESIGN_MIN.x, window_size.y / DESIGN_MIN.y), 1)
+
+static func canvas_for(window_size: Vector2i) -> Vector2i:
+	return window_size / scale_for(window_size)
 
 # --- Telling the truth about the scale ---
 #
@@ -183,8 +207,13 @@ static func scale_line() -> String:
 	var have: Vector2i = DisplayServer.window_get_size()
 	if window == null:
 		return "%dx%d" % [have.x, have.y]
-	var scale: int = maxi(int(round(window.content_scale_factor)), 1)
 	var canvas: Vector2i = window.content_scale_size
+	if canvas.x <= 0:
+		canvas = have
+	# Read back from the window and the canvas, NOT from content_scale_factor:
+	# the factor is supposed to stay at 1, and a readout that trusts it would
+	# have shown "2x" while the picture was at 4x.
+	var scale: int = maxi(have.x / maxi(canvas.x, 1), 1)
 	return "%dx%d  ·  canvas %dx%d  ·  %dx  ·  corpo %dpx" % [
 		have.x, have.y, canvas.x, canvas.y, scale, TEXT * scale]
 

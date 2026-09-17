@@ -28,57 +28,22 @@ Audio="*res://addons/d5star/globals/audio_manager.gd"
 
 [display]
 
-; 1280x720 is the DESIGN CANVAS (see Look.DESIGN_MIN), picked so that every common
-; monitor takes a whole-number scale instead of being stuck at 1x: 1080p 1x,
-; 1440p 2x, 4K 3x.
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/mode=3
-; ⚠️ WITHOUT THIS, A 4K MONITOR IS NOT A 4K MONITOR. Windows defaults a 4K
-; display to 150% scaling, and an app that is not per-monitor DPI aware is handed
-; a 2560x1440 window and then blurrily upscaled to fill the panel. Combined with
-; integer scaling that is a disaster you can see: floor(2560/1920) is 1, so the
-; game drew a 1920x1080 canvas in the middle of a 2560x1440 window — a small
-; square, surrounded by border, and then stretched by the compositor.
-;
-; With it, the window is the 3840x2160 it actually is and the scale is exactly 2x.
-window/dpi/allow_hidpi=true
 window/stretch/mode="canvas_items"
-; ⚠️ THESE ARE ONLY THE FALLBACK. `Look.fit_window()` overrides the scale and the
-; canvas size at runtime, because the setting cannot express the rule: integer
-; scaling floors the factor and letterboxes the remainder, and `expand` does not
-; hand that remainder back — so a 2560x1440 monitor with this 1920x1080 base drew
-; a 1920x1080 canvas at 1x with a 320px border all the way round. `Look` computes
-; `canvas = window / scale` instead, so the leftover becomes usable canvas and the
-; picture fills the screen on whole pixels at any resolution.
 window/stretch/aspect="expand"
-; INTEGER, not fractional. This is the half of "not pixel perfect" that has
-; nothing to do with the fonts: the default fractional mode scales the canvas by
-; whatever the window happens to need — 1.333x on a 1440p monitor — and every
-; glyph, bar and swatch gets re-rasterised at a fraction of a pixel. Integer
-; snaps to 1x, 2x, 3x and letterboxes the remainder, which is the only way a
-; pixel is a pixel.
-;
-; The cost is real: the apparent size of everything is
-; `logical size x integer scale`, and the scale is `floor(screen / viewport)`. So
-; 3840x2160 gives exactly 2x on this 1920x1080 base — an 18px body lands at 36
-; real pixels. Wanting it bigger means either fewer logical pixels of content on
-; screen or a bigger base font, and those are the same decision seen twice.
 window/stretch/scale_mode="integer"
-
-[gui]
-
-; So a control nobody dressed by hand still comes out in the right face instead
-; of in Godot's sans. Screens override only for display type.
-theme/custom="res://game/asset/theme/ffm.tres"
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/d5star/plugin.cfg")
 
+[gui]
+
+theme/custom="res://game/asset/theme/ffm.tres"
+
 [rendering]
 
-rendering_device/driver.windows="d3d12"
-; NEAREST, project-wide. Bilinear on a pixel face is exactly the mush the fonts
-; were chosen to avoid, and it would soften every bar and swatch too.
 textures/canvas_textures/default_texture_filter=0
+rendering_device/driver.windows="d3d12"

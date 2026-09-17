@@ -110,6 +110,17 @@ escala pra baixo e põe tarja na sobra, e `aspect="expand"` não devolve essa
 sobra. Num monitor 2560x1440 isso desenhava o canvas no meio da tela com borda
 em volta — um quadrado pequeno.
 
+⚠️ **`content_scale_size` e `content_scale_factor` se MULTIPLICAM.** O `size` é o
+canvas lógico e a engine **já** o estica até a janela, então 1280x720 numa janela
+2560x1440 já é 2x. Setar o `factor` em 2 também deixou tudo em **4x** — o
+viewport lógico desabando pra 640x360 e formulários feitos pra 1250 vazando pela
+borda. Lê exatamente como se alguém tivesse dado zoom, porque alguém deu.
+
+Só o **size** é setado. O `factor` fica em 1, e a escala inteira sai da
+aritmética: escolhe-se o canvas como `janela / escala`, e o esticão que a engine
+faz em seguida é esse mesmo número inteiro nos dois eixos, por construção.
+`tests/test_look.gd` fixa isso.
+
 ### O canvas de projeto é 1280x720
 
 `Look.DESIGN_MIN`. Escolhido pra que **todo monitor comum peque um degrau

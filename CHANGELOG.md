@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed - B.6g: o zoom de 4x (2026-09-17)
+- **`content_scale_size` e `content_scale_factor` se MULTIPLICAM**, e eu setei os
+  dois. O `size` e o canvas logico e a engine JA o estica ate a janela — 1280x720
+  numa janela 2560x1440 ja e 2x — entao o `factor` em 2 deixou tudo em **4x**: o
+  viewport logico desabando pra 640x360 e formularios feitos pra 1250 vazando
+  pela borda. Le como zoom porque e zoom
+- Agora so o `size` e setado; o `factor` fica em 1 e a escala sai da aritmetica
+  (`canvas = janela / escala`), entao o esticao da engine e o mesmo inteiro nos
+  dois eixos por construcao
+- O readout do menu inicial lia a escala do `content_scale_factor` — teria
+  mostrado "2x" enquanto a imagem estava em 4x. Agora sai de `janela / canvas`
+- `tests/test_look.gd`: a aritmetica virou funcao pura (`scale_for`,
+  `canvas_for`) e ganhou suite. Fixa que 1080p da 1x, 1440p da 2x e 4K da 3x, que
+  `canvas x escala == janela` nos dois eixos, que `content_scale_factor` sai em 1,
+  e que a escada de corpos cai na grade das fontes (multiplo de 9 na Pixel Code,
+  de 5 na VT323)
+
 ### Changed - B.6f: canvas de projeto 1280x720 (2026-09-16)
 - **O canvas de projeto vira 1280x720** (`Look.DESIGN_MIN`), escolhido pra que
   todo monitor comum peque um degrau inteiro em vez de ficar preso em 1x: 1080p
