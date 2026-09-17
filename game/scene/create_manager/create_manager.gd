@@ -154,9 +154,7 @@ func _ready() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
-	for child: Node in _root.get_children():
-		_root.remove_child(child)
-		child.queue_free()
+	Look.clear(_root)
 	if _drafted.is_empty():
 		_build_form()
 	else:
@@ -252,6 +250,9 @@ func _skills_column() -> Control:
 	spread.add_theme_constant_override("separation", 20)
 	box.add_child(spread)
 	var lanes: Array[VBoxContainer] = []
+	# Whole pixels on purpose: a lane is a column of controls, and a fractional
+	# one would put every bar in it half off the grid the fonts sit on.
+	@warning_ignore("integer_division")
 	var lane_width: int = (COL_RIGHT - 20 * (SKILL_COLUMNS - 1)) / SKILL_COLUMNS
 	for i: int in range(SKILL_COLUMNS):
 		var lane: VBoxContainer = _column(lane_width)
@@ -607,7 +608,9 @@ func _perk_block(perks: PerkDef, ids: Array[String], caption: String,
 func _perk_chip_width(columns: int) -> int:
 	var whole: int = COL_RIGHT + COL_MID + 24
 	var share: int = BOON_SHARE if columns == BOON_COLUMNS else whole - BOON_SHARE
-	return (share - PERK_GAP * (columns + 1)) / columns
+	@warning_ignore("integer_division")
+	var each: int = (share - PERK_GAP * (columns + 1)) / columns
+	return each
 
 func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
 	var cost: int = perks.cost(id)

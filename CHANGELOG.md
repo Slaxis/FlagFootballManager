@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed - B.6p: avisos do compilador (2026-09-17)
+- Tres variaveis locais sombreando funcoes da propria classe: `band` em
+  `stat.gd` (a segunda ocorrencia — a primeira ja tinha saido), `spec` em
+  `ActorDef`, e `slug` em `TeamGenerator`, que virou sombra quando a funcao ficou
+  publica. E duas divisoes inteiras intencionais, agora anotadas
+- **`remove_child` seguido de `queue_free` deixa um no VIVO fora da arvore** pelo
+  resto do quadro, e as duas telas se reconstroem assim a cada clique. Varios dos
+  controles que elas jogam fora tem Timer interno (SpinBox, LineEdit,
+  ColorPickerButton), e um timer que dispara nessa janela levanta
+  `Unable to start the timer because it's not inside the scene tree` — um erro
+  que ninguem consegue rastrear, porque o no que ele nomeia foi descartado por
+  uma tela que ja terminou de se reconstruir
+- `Look.clear()` move os filhos velhos pra raiz da viewport em vez de destaca-los:
+  continuam na arvore, escondidos, e sao coletados no fim do quadro como qualquer
+  `queue_free`. O container fica vazio na hora, que era o que o chamador
+  precisava, e nada fica vivo e sem casa
+
 ### Fixed - B.6o: a cadeira e sua (2026-09-17)
 - **Todo clube abria com um HC ja em posto.** A comissao era sentada no instante
   em que era assinada, e como `head_coach` e a primeira cadeira que uma peneira

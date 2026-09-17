@@ -154,6 +154,36 @@ const MUTED := Color(0.435, 0.498, 0.588)
 # What goes ON a white fill.
 const ON_ACCENT := Color(0.031, 0.043, 0.075)
 
+# --- Emptying a container ---
+#
+# ⚠️ `remove_child` THEN `queue_free` LEAVES A LIVE NODE OUTSIDE THE TREE, for
+# the rest of the frame. Both screens rebuild themselves that way on every click,
+# and several of the controls they throw away own internal Timers — a SpinBox, a
+# LineEdit, a ColorPickerButton. A timer that ticks inside that window raises
+#
+#     Unable to start the timer because it's not inside the scene tree
+#
+# which is an error nobody can trace back, because the node it names was thrown
+# away by a screen that has already finished rebuilding.
+#
+# So the old children are moved to the viewport root instead of being detached:
+# still in the tree, hidden so they draw nothing, and collected at the end of the
+# frame like any other `queue_free`. The container is empty immediately, which is
+# what the caller needed, and nothing is ever alive and homeless.
+#
+# The root and not a bin under the screen, deliberately: a bin would keep the
+# discarded controls inside the screen for a frame, where anything walking the
+# screen — a test, a tooltip sweep — would find the old form and the new one.
+static func clear(container: Node) -> void:
+	var root: Node = container.get_tree().root if container.is_inside_tree() else null
+	for child: Node in container.get_children():
+		container.remove_child(child)
+		if child is CanvasItem:
+			(child as CanvasItem).visible = false
+		if root != null:
+			root.add_child(child)
+		child.queue_free()
+
 # --- Glyphs ---
 #
 # ASCII, NEVER AN EMOJI. An emoji is a colour bitmap out of somebody else's font:

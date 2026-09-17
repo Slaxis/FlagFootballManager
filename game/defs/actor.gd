@@ -40,18 +40,20 @@ func add_thing(thing: Dictionary) -> void:
 	if id == "":
 		Log.log(self, "error", "ActorDef: actor without an id")
 		return
-	var spec: Dictionary = _by_id.get(id, {}).duplicate(true)
-	if spec.is_empty():
+	# Not `spec`: this class exposes a reader of that name, and a local shadows it
+	# for the rest of the function.
+	var entry: Dictionary = _by_id.get(id, {}).duplicate(true)
+	if entry.is_empty():
 		_order.append(id)
 	for key: String in thing.keys():
 		if (key == "stats" or key == "skills") and thing[key] is Dictionary:
-			var merged: Dictionary = spec.get(key, {})
+			var merged: Dictionary = entry.get(key, {})
 			merged.merge(thing[key] as Dictionary, true)
-			spec[key] = merged
+			entry[key] = merged
 		else:
-			spec[key] = thing[key]
-	spec["id"] = id
-	_by_id[id] = spec
+			entry[key] = thing[key]
+	entry["id"] = id
+	_by_id[id] = entry
 
 # --- Reading ---
 

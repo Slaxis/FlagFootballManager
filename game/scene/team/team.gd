@@ -160,15 +160,16 @@ func _build_ui() -> void:
 	for child: Node in get_children():
 		if child is ColorRect and not child.has_meta("card_layer"):
 			(child as ColorRect).color = BG
-	for child: Node in _root.get_children():
-		_root.remove_child(child)
-		child.queue_free()
+	Look.clear(_root)
 	# The card is a sibling of the layout and not a child of it, so clearing
 	# `_root` does not clear the card. Without this every click stacked another
 	# one on top of the last and the screen slowly filled with dead sheets.
 	for child: Node in get_children():
 		if child.has_meta("card_layer"):
 			remove_child(child)
+			if child is CanvasItem:
+				(child as CanvasItem).visible = false
+			get_tree().root.add_child(child)
 			child.queue_free()
 	_root.add_child(_header())
 	_root.add_child(_tab_bar())

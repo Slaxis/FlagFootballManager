@@ -393,10 +393,12 @@ func quantile_label(quantile: int) -> String:
 
 # A value drawn inside a band, so "Q2" becomes an actual number.
 func quantile_value(quantile: int, rng: RandomNumberGenerator) -> int:
-	var band: Dictionary = quantile_band(quantile)
-	if band.is_empty():
+	# Not `band`: this class has a `band()` for the height and weight bands, and
+	# a local of that name shadows it.
+	var entry: Dictionary = quantile_band(quantile)
+	if entry.is_empty():
 		return 50
-	return rng.randi_range(int(band.get("min", 30)), int(band.get("max", 55)))
+	return rng.randi_range(int(entry.get("min", 30)), int(entry.get("max", 55)))
 
 
 # --- Chakras ---

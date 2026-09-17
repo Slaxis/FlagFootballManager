@@ -115,14 +115,15 @@ static func _compose_name(names: NameGenDef, rng: RandomNumberGenerator, city: S
 # club registered under the slug of a name nobody chose is a club that exists
 # under the wrong address.
 static func slug(text: String, seed_value: int) -> String:
-	var slug: String = text.to_lower()
+	# Not `slug`: that is this function's own name now that it is public.
+	var folded: String = text.to_lower()
 	for pair: Array in [["á", "a"], ["à", "a"], ["ã", "a"], ["â", "a"], ["é", "e"],
 			["ê", "e"], ["í", "i"], ["ó", "o"], ["ô", "o"], ["õ", "o"], ["ú", "u"],
 			["ç", "c"], ["-", " "]]:
-		slug = slug.replace(String(pair[0]), String(pair[1]))
+		folded = folded.replace(String(pair[0]), String(pair[1]))
 	var clean: String = ""
-	for i: int in range(slug.length()):
-		var ch: String = slug[i]
+	for i: int in range(folded.length()):
+		var ch: String = folded[i]
 		clean += ch if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9") else "_"
 	while clean.contains("__"):
 		clean = clean.replace("__", "_")
