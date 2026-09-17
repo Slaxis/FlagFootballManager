@@ -177,21 +177,24 @@ static func opening_budget() -> int:
 # floor before the appetite plays favourites, and nothing passes POTENTIAL —
 # the same ceiling a squad player has, drawn from the world the scenario drops
 # you into. The manager was the only person on screen without one.
-static func rolled_opening(rng: RandomNumberGenerator, origin: String = "") -> SheetBuilder:
+# `origin_id` and not `origin`: the class has a member of that name, and a
+# parameter shadowing it in a STATIC function is the confusing kind — the member
+# is not even reachable from here.
+static func rolled_opening(rng: RandomNumberGenerator, origin_id: String = "") -> SheetBuilder:
 	var builder: SheetBuilder = average_adult()
 	var def := Drive.def("stat") as StatDef
 	var origins := Drive.def("origin") as OriginDef
 	if def == null:
 		return builder
-	builder.origin = origin
+	builder.origin = origin_id
 
 	# LIVED, NOT ALLOCATED. The manager used to come out of a second generator
 	# with its own appetite, and two generators drift — which is exactly how he
 	# ended up heroic next to the squad he manages. Now he is an Actor like any
 	# other: a birth sheet, a position his scenario put him in, and the years
 	# that scenario gives him.
-	var level: float = origins.club_level(origin) if origins != null and origin != "" else 1.0
-	var track: String = origins.career_track(origin) if origins != null 		else ActorGenerator.TRACK_PLAYER
+	var level: float = origins.club_level(origin_id) if origins != null and origin_id != "" else 1.0
+	var track: String = origins.career_track(origin_id) if origins != null 		else ActorGenerator.TRACK_PLAYER
 	# TWO SPANS, ADDED. The scenario's own years are what makes the three
 	# different from each other — the ex-jogador has one to three years AS a
 	# club player, the founder has none because there was no club. But every
@@ -200,7 +203,7 @@ static func rolled_opening(rng: RandomNumberGenerator, origin: String = "") -> S
 	# out at nothing: a budget of three career points, an uneditable screen,
 	# and a manager who had never done anything.
 	var years: int = BASE_YEARS.x + rng.randi() % int(BASE_YEARS.y - BASE_YEARS.x + 1)
-	years += origins.career_years(origin, rng) if origins != null else 0
+	years += origins.career_years(origin_id, rng) if origins != null else 0
 	var person: Actor = ActorGenerator.lived(rng, level, track, years)
 
 	# Where the career actually happened, which the BODY decided and not the
@@ -216,7 +219,7 @@ static func rolled_opening(rng: RandomNumberGenerator, origin: String = "") -> S
 		builder.stats[id] = def.step(person.stat(id))
 	for id: String in def.skill_ids():
 		builder.skills[id] = def.step(person.skill(id))
-	builder.perk_points = origins.perk_points(origin) if origins != null and origin != "" else 1
+	builder.perk_points = origins.perk_points(origin_id) if origins != null and origin_id != "" else 1
 	for id: Variant in person.perks():
 		if builder.can_take_perk(String(id)):
 			builder.perks.append(String(id))

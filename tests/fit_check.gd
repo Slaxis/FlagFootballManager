@@ -19,7 +19,9 @@
 # the same ceiling, silently.
 extends Node
 
-const VIEWPORT := Vector2(1280, 720)
+# The resolution the screens are laid out for. One source of truth with the
+# runtime, so raising one cannot quietly leave the other behind.
+var VIEWPORT := Vector2(Look.DESIGN_MIN)
 # A screen that fits by using a third of the monitor is the old problem wearing
 # different trousers, so there is a floor as well as a ceiling.
 const MIN_WIDTH_USE := 0.6

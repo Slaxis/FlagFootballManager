@@ -567,30 +567,6 @@
     "manager.perk_flaws": {
       "pt": "DEFEITOS — pagam",
       "en": "FLAWS — they pay"
-    },
-    "manager.tab_sheet": {
-      "pt": "FICHA",
-      "en": "SHEET"
-    },
-    "manager.tab_left": {
-      "pt": "sobram %d career points pra gastar em TREINO",
-      "en": "%d career points left to spend under TRAINING"
-    },
-    "manager.tab_talents": {
-      "pt": "sobram %d pontos de talento",
-      "en": "%d talent points left"
-    },
-    "manager.tab_done": {
-      "pt": "ficha fechada",
-      "en": "sheet settled"
-    },
-    "manager.tab_skills": {
-      "pt": "HABILIDADES",
-      "en": "SKILLS"
-    },
-    "manager.tab_talents_name": {
-      "pt": "TALENTOS",
-      "en": "TALENTS"
     }
   }
 }

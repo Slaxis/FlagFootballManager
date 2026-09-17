@@ -64,7 +64,7 @@ const LEAD := 27
 # tall on every one of forty rows.
 const TITLE := 45
 const PLATE := 35
-const HEADING := 20
+const HEADING := 25
 const BIG := 25
 
 static var _display: FontFile = null
@@ -119,51 +119,30 @@ static func _font_slot(control: Control) -> String:
 static func _size_slot(control: Control) -> String:
 	return "normal_font_size" if control is RichTextLabel else "font_size"
 
-# --- Making the window fill, and stay on whole pixels ---
+# --- Making the window the canvas ---
 #
-# THE PROJECT SETTING CANNOT DO THIS ON ITS OWN. `scale_mode="integer"` floors
-# the scale and letterboxes the remainder, and `aspect="expand"` does not hand
-# that remainder back — so a 2560x1440 monitor with a 1920x1080 base drew a
-# 1920x1080 canvas at 1x in the middle of the screen with a 320px border all the
-# way round. A small square, exactly as reported.
+# ONE TO ONE, AND NO SCALING AT ALL. The canvas is whatever the monitor is, one
+# logical pixel per screen pixel, which is the sharpest a picture can possibly
+# be — there is no resampling step to be sharp *through*.
 #
-# The arithmetic nobody can dodge: 2x needs 3840 pixels of width, because 2x of a
-# 1920 canvas IS 3840. On a 2560-wide screen the only whole-pixel scale that fills
-# anything is 1x — so the fix is not a bigger scale, it is to let the canvas GROW
-# to the window at that scale. 2560x1440 logical pixels, one screen pixel each.
+# It used to scale by whole numbers instead, on a 1280x720 canvas, so a 1440p
+# monitor drew everything at 2x. That is genuinely pixel-perfect and it is also
+# a completely different aesthetic: chunky, close, SNES. HIGH-RESOLUTION PIXEL
+# ART is the other one — small hard-edged glyphs with room around them — and it
+# comes from the FACE and the NEAREST filter, not from magnifying anything.
 #
-# So the scale is computed from the window that actually exists:
+# ⚠️ `content_scale_size` AND `content_scale_factor` MULTIPLY. The size is the
+# logical canvas and the engine already stretches it to the window; the factor is
+# a multiplier on top. Setting both put the game at 4x on a monitor that should
+# have been at 2x — the logical viewport collapsing to 640x360 and forms built
+# for 1250 spilling off the edges. Both are pinned here, and `tests/test_look.gd`
+# keeps them that way.
 #
-#   scale  = the largest whole number that still leaves DESIGN_MIN of room
-#   canvas = window / scale        ← the leftover becomes usable canvas
-#
-#   1920x1080  ->  1x, canvas 1920x1080   body 18px real
-#   2560x1440  ->  2x, canvas 1280x720    body 36px real
-#   3840x2160  ->  3x, canvas 1280x720    body 54px real
-#
-# ⚠️ DESIGN_MIN IS A CONTRACT. Every screen is built to fit inside it (see
-# tests/fit_check.tscn), so the scale may never rise to the point where the canvas
-# drops below it — a crisper picture you cannot read the forms on is not a better
-# picture.
-# 1280x720, WHICH IS A DESIGN DECISION AND NOT A DEFAULT. It is the canvas that
-# lets every common monitor pick up a whole-number scale instead of being stuck at
-# 1x: 1080p takes 1x, 1440p takes 2x, 4K takes 3x. Apparent text size then rides
-# the monitor, which is the only way a pixel game reads the same on all three.
-#
-# The cost is the room: 1280x720 is what every screen has to fit inside, and the
-# creation form used to want 1850x1040. Paid in tabs.
-const DESIGN_MIN := Vector2i(1280, 720)
+# DESIGN_MIN is now a TARGET rather than a divisor: the resolution the screens are
+# laid out for, and what tests/fit_check.tscn measures against. Smaller monitors
+# are a problem for the day somebody has one.
+const DESIGN_MIN := Vector2i(2560, 1440)
 
-# ⚠️ `content_scale_size` AND `content_scale_factor` MULTIPLY. That is the whole
-# trap: the size is the logical canvas and the engine already stretches it to the
-# window, so a 1280x720 canvas in a 2560x1440 window is ALREADY 2x. Setting the
-# factor to 2 as well made it 4x — everything twice the size it should be, the
-# logical viewport collapsing to 640x360, and forms built for 1250 spilling off
-# the edges. It reads exactly like somebody hit zoom, because somebody did.
-#
-# So only the SIZE is set here. The factor stays at 1 and the integer scale comes
-# out of the arithmetic: pick the canvas as `window / scale`, and the stretch the
-# engine then performs is that same whole number on both axes by construction.
 static func fit_window() -> void:
 	var window: Window = Engine.get_main_loop().get_root() as Window
 	if window == null:
@@ -178,22 +157,13 @@ static func fit_window() -> void:
 	window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 	window.content_scale_size = canvas
-	# NOT the scale. See above — this multiplies on top of the stretch.
+	# NEITHER of these may be anything else. See above.
 	window.content_scale_factor = 1.0
 
-# The arithmetic on its own, so it can be tested without a monitor.
-#
-#   1366x768   -> 1x, canvas 1366x768
-#   1920x1080  -> 1x, canvas 1920x1080
-#   2560x1440  -> 2x, canvas 1280x720
-#   3840x2160  -> 3x, canvas 1280x720
-static func scale_for(window_size: Vector2i) -> int:
-	if window_size.x <= 0 or window_size.y <= 0:
-		return 1
-	return maxi(mini(window_size.x / DESIGN_MIN.x, window_size.y / DESIGN_MIN.y), 1)
-
+# The window, unchanged. A function rather than a literal because it is the one
+# place the rule lives, and tests/test_look.gd asserts against it.
 static func canvas_for(window_size: Vector2i) -> Vector2i:
-	return window_size / scale_for(window_size)
+	return window_size
 
 # --- Telling the truth about the scale ---
 #
@@ -213,9 +183,9 @@ static func scale_line() -> String:
 	# Read back from the window and the canvas, NOT from content_scale_factor:
 	# the factor is supposed to stay at 1, and a readout that trusts it would
 	# have shown "2x" while the picture was at 4x.
-	var scale: int = maxi(have.x / maxi(canvas.x, 1), 1)
-	return "%dx%d  ·  canvas %dx%d  ·  %dx  ·  corpo %dpx" % [
-		have.x, have.y, canvas.x, canvas.y, scale, TEXT * scale]
+	var scale: float = float(have.x) / float(maxi(canvas.x, 1))
+	return "%dx%d  ·  canvas %dx%d  ·  %.2fx  ·  corpo %dpx" % [
+		have.x, have.y, canvas.x, canvas.y, scale, TEXT]
 
 # The project-wide default, so a control nobody dressed still comes out in the
 # right face instead of in Godot's sans.

@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Changed - B.6h: pixel art de alta resolucao (2026-09-17)
+- **A janela E o canvas.** `content_scale_size` = janela, `content_scale_factor`
+  = 1, escala nenhuma. Um pixel logico e um pixel de tela, que e o mais nitido
+  que uma imagem consegue ser — nao existe reamostragem pra ser nitido atraves
+- Escalar por inteiro a partir de 1280x720 era genuinamente pixel-perfect e era
+  **outra estetica**: grossa, proxima, SNES. E apertada: 2x num 1440p deixa so
+  1280x720 de espaco, e essa tela e quase toda tabela
+- `Look.DESIGN_MIN` vira **2560x1440**, e passa a ser ALVO e nao divisor
+- **Criacao volta a uma pagina de tres colunas** (2256x810). As abas existiam so
+  porque nada cabia em 1280x720 — e um formulario que voce compara contra ele
+  mesmo nao devia obrigar a clicar entre as metades que voce esta comparando
+- **Elenco** recupera as larguras: os 18 codigos de posicao voltam a 36px com o
+  rotulo no corpo normal, em vez de 22px no degrau de 9
+- **Draft** recupera o log: 1850x760
+
+### Fixed
+- Tres avisos do compilador: `band` sombreando a funcao `band()` em `stat.gd`,
+  o parametro `origin` sombreando o membro homonimo em `sheet_builder.gd` (numa
+  funcao STATIC, onde o membro nem e alcancavel), e uma divisao inteira em
+  `look.gd` que saiu junto com a aritmetica de escala
+
 ### Fixed - B.6g: o zoom de 4x (2026-09-17)
 - **`content_scale_size` e `content_scale_factor` se MULTIPLICAM**, e eu setei os
   dois. O `size` e o canvas logico e a engine JA o estica ate a janela — 1280x720

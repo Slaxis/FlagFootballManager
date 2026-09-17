@@ -359,8 +359,10 @@ func quantile_band(quantile: int) -> Dictionary:
 	return _quantiles[index] if index < _quantiles.size() else {}
 
 func quantile_label(quantile: int) -> String:
-	var band: Dictionary = quantile_band(quantile)
-	return I18n.text(band.get("label", ""), "Q%d" % quantile)
+	# Not `band`: this class already has a `band()` for the height and weight
+	# bands, and a local of the same name shadows it.
+	var entry: Dictionary = quantile_band(quantile)
+	return I18n.text(entry.get("label", ""), "Q%d" % quantile)
 
 # A value drawn inside a band, so "Q2" becomes an actual number.
 func quantile_value(quantile: int, rng: RandomNumberGenerator) -> int:

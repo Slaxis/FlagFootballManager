@@ -73,78 +73,53 @@ inteiro. Fora disso a linha desloca meio pixel e tudo nela amolece.
 Se algum dia quiser pixel-perfect estrito também no display, o troco é usar
 Pixel Code em 27 ou 36 — perde o contraste entre as duas, ganha a grade.
 
-### A escala da janela tem que ser inteira
+### A janela é o canvas — um para um
 
-`display/window/stretch/scale_mode="integer"`. O modo padrão (`fractional`)
-escala o canvas por quanto a janela precisar — 1,333x num 1440p — e cada glifo,
-barra e retângulo é rasterizado numa fração de pixel. Não tem fonte que salve
-isso.
+`Look.fit_window()` põe `content_scale_size` igual à janela e
+`content_scale_factor` em 1. **Não há escala nenhuma**: um pixel lógico é um
+pixel de tela, que é o mais nítido que uma imagem consegue ser, porque não existe
+etapa de reamostragem pra ser nítido *através* dela.
 
-E `display/window/dpi/allow_hidpi=true`, que é tão importante quanto: **sem ele
-um monitor 4K não é um monitor 4K.** O Windows põe display de 4K em 150% por
-padrão, e um app que não é DPI-aware recebe uma janela de 2560x1440 e depois é
-esticado borrado pra preencher o painel. Junto com escala inteira isso dá um
-desastre visível: `floor(2560/1920)` é **1**, então o jogo desenha um canvas de
-1920x1080 no meio de uma janela de 2560x1440 — um quadrado pequeno, cercado de
-borda, e ainda esticado pelo compositor.
+E `display/window/dpi/allow_hidpi=true`, sem o qual um monitor 4K não é um
+monitor 4K: o Windows põe display de alta densidade em 150% por padrão, e um app
+que não é DPI-aware recebe uma janela menor e depois é esticado borrado pra
+preencher o painel.
 
-`aspect="expand"` e não `keep`: a escala inteira já garante pixel inteiro, e o
-`keep` ainda põe tarja no que a escala não usou. O `expand` entrega essa sobra
-como canvas lógico extra. Numa resolução que é múltiplo exato — 3840x2160 em 2x —
-os dois são idênticos, então o expand não custa nada ali e tira a borda em todo o
-resto.
+#### Por que não escala inteira
 
-## A aritmética do tamanho aparente
+Teve uma versão que escalava por número inteiro a partir de um canvas de
+1280x720, então um monitor 1440p desenhava tudo em 2x. Aquilo é genuinamente
+pixel-perfect — e é **outra estética**: grossa, próxima, SNES. Também ficava
+apertada, porque 2x num 1440p deixa só 1280x720 de espaço de projeto e essa tela
+é quase toda tabela.
 
-Essa é a conta que decide tudo, e não tem como fugir dela:
+**Pixel art de alta resolução** é a outra: glifo pequeno de aresta dura com
+espaço em volta. Ela vem da **fonte** e do filtro **Nearest**, não de ampliar um
+canvas pequeno.
 
-```
-tamanho aparente = corpo lógico × escala inteira
-escala inteira   = floor(resolução da tela / canvas de projeto)
-canvas           = resolução da tela / escala      (a sobra vira canvas)
-```
+⚠️ E `content_scale_size` e `content_scale_factor` **se multiplicam**. O `size` é
+o canvas lógico que a engine já estica até a janela; o `factor` multiplica em
+cima. Setar os dois pôs o jogo em 4x num monitor que devia dar 2x — viewport
+lógico desabando pra 640x360 e formulários vazando pela borda. `tests/test_look.gd`
+fixa os dois em "a janela, uma vez".
 
-A escala é calculada em `Look.fit_window()` e **não** no project.godot, porque a
-configuração não consegue expressar a regra: `scale_mode="integer"` arredonda a
-escala pra baixo e põe tarja na sobra, e `aspect="expand"` não devolve essa
-sobra. Num monitor 2560x1440 isso desenhava o canvas no meio da tela com borda
-em volta — um quadrado pequeno.
+## O espaço de projeto é 2560x1440
 
-⚠️ **`content_scale_size` e `content_scale_factor` se MULTIPLICAM.** O `size` é o
-canvas lógico e a engine **já** o estica até a janela, então 1280x720 numa janela
-2560x1440 já é 2x. Setar o `factor` em 2 também deixou tudo em **4x** — o
-viewport lógico desabando pra 640x360 e formulários feitos pra 1250 vazando pela
-borda. Lê exatamente como se alguém tivesse dado zoom, porque alguém deu.
+`Look.DESIGN_MIN`, e é um **alvo**, não um divisor: a resolução pra qual as telas
+são desenhadas e contra a qual `tests/fit_check.tscn` mede. Resolução menor é
+problema pro dia em que alguém tiver uma.
 
-Só o **size** é setado. O `factor` fica em 1, e a escala inteira sai da
-aritmética: escolhe-se o canvas como `janela / escala`, e o esticão que a engine
-faz em seguida é esse mesmo número inteiro nos dois eixos, por construção.
-`tests/test_look.gd` fixa isso.
+Com todo esse espaço, as telas voltaram a caber de uma vez:
 
-### O canvas de projeto é 1280x720
-
-`Look.DESIGN_MIN`. Escolhido pra que **todo monitor comum peque um degrau
-inteiro** em vez de ficar preso em 1x:
-
-| monitor | escala | canvas | corpo 18 |
-|---|---|---|---|
-| 1920x1080 | 1x | 1920x720+ | 18 px reais |
-| **2560x1440** | **2x** | **1280x720** | **36 px reais** |
-| 3840x2160 | 3x | 1280x720 | 54 px reais |
-
-O preço é o espaço: **1280x720 é o que toda tela tem que caber dentro**, e o
-formulário de criação queria 1850x1040. Pago em **abas** — FICHA, HABILIDADES,
-TALENTOS — e em disciplina: dica de uma linha com o resto no tooltip, rótulo de
-campo virando placeholder, e os códigos de posição da tabela do elenco rodando em
-`Look.MICRO` (9px, o outro degrau nítido) porque são dezoito colunas de duas ou
-três letras num botão, não prosa.
-
-`tests/fit_check.tscn` verifica os dois lados: cabe em 1280x720, e não cabe
-usando menos de 60% da largura.
+| tela | |
+|---|---|
+| criação | 2256x810 — três colunas, sem abas |
+| draft | 1900x1028 |
+| elenco | 1707x170 |
 
 ## O número está na tela
 
 O canto inferior direito do menu inicial mostra
-`2560x1440 · canvas 1280x720 · 2x · corpo 36px`. O primeiro par é a janela, o
-segundo é o canvas; se os dois forem iguais, a escala é 1x e alguma coisa está
-errada num monitor grande.
+`2560x1440 · canvas 2560x1440 · 1.00x · corpo 18px`. Os dois pares iguais e
+`1.00x` é o estado correto — qualquer outra coisa quer dizer que alguma escala
+entrou no meio.

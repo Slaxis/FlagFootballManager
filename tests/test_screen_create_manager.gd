@@ -135,10 +135,6 @@ func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	# The ex-player arrives with two perk points, which is enough to take
 	# something without trading first.
 	_button_starting_with(screen, origins.label("player")).pressed.emit()
-	# And the talents live on their own tab now: twenty-seven of them plus the
-	# fifteen skills came to nine pixels over a 720px canvas, and splitting the
-	# screen beat shaving nine pixels off it.
-	_tab(screen, "manager.tab_talents_name")
 
 	# The roll may already have spent the balance on a talent of its own — the
 	# ex-player lives one to three years now, and a career hands out talents.
@@ -171,13 +167,6 @@ func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	t.check(_button_starting_with(screen, perks.icon(flaw)).button_pressed,
 		"o defeito deveria entrar sempre — ele paga")
 	_close(screen)
-
-# The form is three tabs — FICHA, HABILIDADES, TALENTOS — so a test that wants
-# something has to be on the tab that draws it.
-func _tab(screen: Control, key: String) -> void:
-	var button: Button = _button_starting_with(screen, UiText.t(key))
-	if button != null:
-		button.pressed.emit()
 
 func _pressed_chip(screen: Control, perks: PerkDef) -> Button:
 	var found: Button = null
