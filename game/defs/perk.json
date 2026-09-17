@@ -187,7 +187,7 @@
     },
     {
       "id": "braco_de_ouro",
-      "icon": "🎯",
+      "icon": "🏹",
       "cost": 2,
       "label": {
         "pt": "Braço de ouro",
@@ -448,7 +448,7 @@
     },
     {
       "id": "voz_de_comando",
-      "icon": "📣",
+      "icon": "🎙",
       "cost": 1,
       "label": {
         "pt": "Voz de comando",

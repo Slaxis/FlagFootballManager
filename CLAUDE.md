@@ -170,8 +170,11 @@ Do not start implementing before the plan is approved.
   godot --headless --path . res://tests/fit_check.tscn
   ```
 
-  Every screen must fit `1920x1080` without scrolling, and must not fit by
-  using a third of it either. A screen's real size only settles after a LAYOUT
+  Every screen must fit `1280x720` — the design canvas, `Look.DESIGN_MIN` —
+  without scrolling, and must not fit by using a third of it either. That canvas
+  is chosen so every common monitor picks up a whole-number scale (1080p 1x,
+  1440p 2x, 4K 3x) instead of being stuck at 1x, and the price is that 1280x720
+  is all the room there is. A screen's real size only settles after a LAYOUT
   PASS, and `get_combined_minimum_size()` read in the same frame a Control was
   added reports nonsense — an autowrapping Label does not know its own width
   yet, so it reports the height it would need at its minimum width. The

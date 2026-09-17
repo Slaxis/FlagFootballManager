@@ -28,8 +28,11 @@ Audio="*res://addons/d5star/globals/audio_manager.gd"
 
 [display]
 
-window/size/viewport_width=1920
-window/size/viewport_height=1080
+; 1280x720 is the DESIGN CANVAS (see Look.DESIGN_MIN), picked so that every common
+; monitor takes a whole-number scale instead of being stuck at 1x: 1080p 1x,
+; 1440p 2x, 4K 3x.
+window/size/viewport_width=1280
+window/size/viewport_height=720
 window/size/mode=3
 ; ⚠️ WITHOUT THIS, A 4K MONITOR IS NOT A 4K MONITOR. Windows defaults a 4K
 ; display to 150% scaling, and an app that is not per-monitor DPI aware is handed

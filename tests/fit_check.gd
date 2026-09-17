@@ -19,7 +19,7 @@
 # the same ceiling, silently.
 extends Node
 
-const VIEWPORT := Vector2(1920, 1080)
+const VIEWPORT := Vector2(1280, 720)
 # A screen that fits by using a third of the monitor is the old problem wearing
 # different trousers, so there is a floor as well as a ceiling.
 const MIN_WIDTH_USE := 0.6

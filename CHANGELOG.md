@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Changed - B.6f: canvas de projeto 1280x720 (2026-09-16)
+- **O canvas de projeto vira 1280x720** (`Look.DESIGN_MIN`), escolhido pra que
+  todo monitor comum peque um degrau inteiro em vez de ficar preso em 1x: 1080p
+  1x, **1440p 2x**, 4K 3x. O tamanho aparente passa a acompanhar o monitor
+- **Criação em tres abas**: FICHA (cenario, nome, seed, clube, modalidade +
+  atributos e corpo), HABILIDADES (15 em duas faixas), TALENTOS (27 numa grade
+  que da pra ler). Antes eram tres colunas de 1850x1040
+- **Elenco**: os dezoito codigos de posicao (3 admin + 5 comissao + 10 escalacao)
+  rodam em `Look.MICRO` — 9px, o outro degrau nitido da fonte. Sao duas ou tres
+  letras num botao, nao prosa, e a 2x/3x eles saem em 18 ou 27 pixels reais
+- **Draft** mais curto: log de 470 para 330, margens do painel de 24 para 14
+- Disciplina de espaco que valeu por si: **dica de uma linha** com o resto no
+  tooltip (eram seis paragrafos de 4-5 linhas), e **rotulo de campo virando
+  placeholder** — um label acima de cada campo era 22px, cinco campos, 110px de
+  uma coluna de 520
+- `fit_check` agora mede contra 1280x720
+
+### Fixed
+- **Icone de talento repetido.** Dois dos treze talentos novos reusaram glifos que
+  ja estavam no catalogo (`ferrolho`/`braco_de_ouro` e `capitao`/`voz_de_comando`).
+  O icone e a coluna Talento inteira do elenco — uma caixa de 26px com um glifo —
+  entao repetido faz a coluna mentir, e o teste de tela que devolve um talento
+  comecou a devolver o de outro. Invariante virou teste
+- O rodape do formulario tinha 1379px de largura (uma dica de 700px ao lado de
+  tres botoes), sozinho mais largo que o canvas
+
 ### Fixed - B.6e: o quadrado no meio da tela (2026-09-16)
 - **`Look.fit_window()` calcula a escala no runtime**, porque a configuracao do
   projeto nao consegue expressar a regra: `scale_mode="integer"` arredonda a

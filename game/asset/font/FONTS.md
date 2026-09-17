@@ -101,50 +101,39 @@ Essa é a conta que decide tudo, e não tem como fugir dela:
 ```
 tamanho aparente = corpo lógico × escala inteira
 escala inteira   = floor(resolução da tela / canvas de projeto)
-canvas           = resolução da tela / escala      (o resto vira canvas)
+canvas           = resolução da tela / escala      (a sobra vira canvas)
 ```
 
 A escala é calculada em `Look.fit_window()` e **não** no project.godot, porque a
 configuração não consegue expressar a regra: `scale_mode="integer"` arredonda a
-escala pra baixo e põe tarja na sobra, e `aspect="expand"` não devolve essa sobra.
-Num monitor 2560x1440 com base 1920x1080 isso desenhava um canvas de 1920x1080 a
-1x no meio da tela, com 320px de borda em volta — um quadrado pequeno.
+escala pra baixo e põe tarja na sobra, e `aspect="expand"` não devolve essa
+sobra. Num monitor 2560x1440 isso desenhava o canvas no meio da tela com borda
+em volta — um quadrado pequeno.
 
-`Look` calcula `canvas = janela / escala`, então a sobra vira canvas usável e a
-imagem preenche a tela em pixel inteiro em qualquer resolução.
+### O canvas de projeto é 1280x720
 
-`DESIGN_MIN` é o contrato: 1920x1080. Toda tela é construída pra caber nele
-(`tests/fit_check.tscn` verifica), então a escala nunca sobe ao ponto de o canvas
-ficar menor que isso.
+`Look.DESIGN_MIN`. Escolhido pra que **todo monitor comum peque um degrau
+inteiro** em vez de ficar preso em 1x:
 
 | monitor | escala | canvas | corpo 18 |
 |---|---|---|---|
-| 1920x1080 | 1x | 1920x1080 | 18 px reais |
-| **2560x1440** | **1x** | **2560x1440** | **18 px reais** |
-| 3840x2160 | 2x | 1920x1080 | 36 px reais |
+| 1920x1080 | 1x | 1920x720+ | 18 px reais |
+| **2560x1440** | **2x** | **1280x720** | **36 px reais** |
+| 3840x2160 | 3x | 1280x720 | 54 px reais |
 
-**2x num 2560 de largura exigiria um canvas de 1280**, porque 2x de 1280 é 2560.
-Não existe escala inteira entre 1x e 2x.
+O preço é o espaço: **1280x720 é o que toda tela tem que caber dentro**, e o
+formulário de criação queria 1850x1040. Pago em **abas** — FICHA, HABILIDADES,
+TALENTOS — e em disciplina: dica de uma linha com o resto no tooltip, rótulo de
+campo virando placeholder, e os códigos de posição da tabela do elenco rodando em
+`Look.MICRO` (9px, o outro degrau nítido) porque são dezoito colunas de duas ou
+três letras num botão, não prosa.
 
-### Logo: letra maior é sempre "menos coisa por tela"
-
-Num 2560x1440 as únicas duas opções em pixel inteiro são:
-
-| canvas | escala | corpo 18 | espaço de projeto |
-|---|---|---|---|
-| 2560x1440 | 1x | 18 px reais | 2560x1440 — folgado |
-| **1280x720** | **2x** | **36 px reais** | 1280x720 — aperta |
-
-O formulário de criação precisa hoje de **1850x1040**. Pra ele caber em 1280x720,
-habilidades e talentos têm que sair do mesmo painel (aba), e o elenco (1647 de
-largura) e o draft (767 de altura) também precisam de um passe.
-
-Se o canvas de projeto virar 1280x720, aí **todo** monitor ganha o degrau que
-merece: 1080p → 1x, 1440p → 2x, 4K → 3x. É o ponto de projeto clássico de pixel
-art, e é uma decisão de design — não de constante.
+`tests/fit_check.tscn` verifica os dois lados: cabe em 1280x720, e não cabe
+usando menos de 60% da largura.
 
 ## O número está na tela
 
 O canto inferior direito do menu inicial mostra
-`2560x1440 · canvas 2560x1440 · 1x · corpo 18px`. O primeiro par é a janela, o
-segundo é o canvas, e se os dois forem iguais a escala é 1x.
+`2560x1440 · canvas 1280x720 · 2x · corpo 36px`. O primeiro par é a janela, o
+segundo é o canvas; se os dois forem iguais, a escala é 1x e alguma coisa está
+errada num monitor grande.

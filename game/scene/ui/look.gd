@@ -64,7 +64,7 @@ const LEAD := 27
 # tall on every one of forty rows.
 const TITLE := 45
 const PLATE := 35
-const HEADING := 30
+const HEADING := 20
 const BIG := 25
 
 static var _display: FontFile = null
@@ -137,15 +137,22 @@ static func _size_slot(control: Control) -> String:
 #   scale  = the largest whole number that still leaves DESIGN_MIN of room
 #   canvas = window / scale        ← the leftover becomes usable canvas
 #
-#   2560x1440  ->  1x, canvas 2560x1440   fills, crisp, body 18px real
-#   3840x2160  ->  2x, canvas 1920x1080   fills, crisp, body 36px real
-#   1920x1080  ->  1x, canvas 1920x1080   fills, crisp
+#   1920x1080  ->  1x, canvas 1920x1080   body 18px real
+#   2560x1440  ->  2x, canvas 1280x720    body 36px real
+#   3840x2160  ->  3x, canvas 1280x720    body 54px real
 #
 # ⚠️ DESIGN_MIN IS A CONTRACT. Every screen is built to fit inside it (see
 # tests/fit_check.tscn), so the scale may never rise to the point where the canvas
 # drops below it — a crisper picture you cannot read the forms on is not a better
 # picture.
-const DESIGN_MIN := Vector2i(1920, 1080)
+# 1280x720, WHICH IS A DESIGN DECISION AND NOT A DEFAULT. It is the canvas that
+# lets every common monitor pick up a whole-number scale instead of being stuck at
+# 1x: 1080p takes 1x, 1440p takes 2x, 4K takes 3x. Apparent text size then rides
+# the monitor, which is the only way a pixel game reads the same on all three.
+#
+# The cost is the room: 1280x720 is what every screen has to fit inside, and the
+# creation form used to want 1850x1040. Paid in tabs.
+const DESIGN_MIN := Vector2i(1280, 720)
 
 static func fit_window() -> void:
 	var window: Window = Engine.get_main_loop().get_root() as Window

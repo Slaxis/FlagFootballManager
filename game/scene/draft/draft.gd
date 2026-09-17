@@ -137,11 +137,11 @@ func _build_ui() -> void:
 	style.bg_color = PANEL
 	style.border_color = LINE
 	style.set_border_width_all(1)
-	style.set_content_margin_all(24)
+	style.set_content_margin_all(14)
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
 		style.set("corner_radius_" + corner, 4)
 	panel.add_theme_stylebox_override("panel", style)
-	panel.custom_minimum_size = Vector2(1240, 0)
+	panel.custom_minimum_size = Vector2(1210, 0)
 	# Tagged for tests/fit_check.tscn: THIS is the node that has to fit on the
 	# screen. The check cannot guess it — a ScrollContainer reports a tiny
 	# minimum by design, so measuring the outermost thing would hide exactly the
@@ -150,13 +150,13 @@ func _build_ui() -> void:
 	center.add_child(panel)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 6)
 	panel.add_child(box)
 
 	var title := Label.new()
 	title.text = UiText.t("draft.title")
 	title.add_theme_color_override("font_color", ACCENT)
-	Look.wear_display(title, Look.TITLE)
+	Look.wear_display(title, Look.HEADING)
 	box.add_child(title)
 
 	var lead := Label.new()
@@ -195,7 +195,7 @@ func _build_ui() -> void:
 	_log.bbcode_enabled = false
 	_log.scroll_following = true
 	_log.selection_enabled = true
-	_log.custom_minimum_size = Vector2(1180, 470)
+	_log.custom_minimum_size = Vector2(1180, 330)
 	_log.add_theme_color_override("default_color", MUTED)
 	Look.wear_body(_log, Look.TINY)
 	var log_style := StyleBoxFlat.new()
@@ -209,7 +209,7 @@ func _build_ui() -> void:
 	_ok = Button.new()
 	_ok.text = UiText.t("draft.working")
 	_ok.disabled = true
-	_ok.custom_minimum_size = Vector2(0, 38)
+	_ok.custom_minimum_size = Vector2(0, 34)
 	_ok.pressed.connect(func() -> void: go("drafted"))
 	var ok_style := StyleBoxFlat.new()
 	ok_style.bg_color = ACCENT

@@ -60,19 +60,29 @@ const SORT_AGE := "age"
 
 # Column widths live here and nowhere else: the group header above and the
 # sortable header below are both derived from them, so they cannot drift apart.
-const COL_MARK := 18
-const COL_NAME := 210
-const COL_SHIRT := 180
-const COL_PERK := 34
-const COL_STRENGTH := 56
-const COL_AGE := 48
-const COL_ROLE := 34
-const COL_GAP := 6
+const COL_MARK := 14
+const COL_NAME := 140
+const COL_SHIRT := 116
+const COL_PERK := 26
+const COL_STRENGTH := 46
+const COL_AGE := 34
+const COL_ROLE := 22
+const COL_GAP := 4
 
-# Pixel Code is monospace and runs about 40% wider per glyph than the sans these
-# columns were measured against, so every one of them grew. They are still
-# derived in one place: the group header above and the sortable header below both
-# read these, so they cannot drift apart.
+# ⚠️ THE ROLE COLUMNS ARE THE WHOLE BUDGET. There are EIGHTEEN of them — three
+# administration chairs, five on the technical staff and ten in the formation —
+# and at a comfortable width that is 714px of the 1240 the canvas has. Beside a
+# lineup panel it simply does not fit, and no amount of shaving the name column
+# changes that arithmetic.
+#
+# So the codes run at Look.MICRO, which is the OTHER crisp rung of the body face
+# (9px, one screen pixel per design pixel). They are two and three letter codes
+# in a box you click, not prose — and on the monitors this canvas was chosen for
+# they land at 18 or 27 real pixels anyway, because the whole canvas is scaled by
+# a whole number.
+#
+# Everything is still derived in one place: the group header above and the
+# sortable header below both read these, so they cannot drift apart.
 
 # Measured fits run from about 2% to 88%, so a fit IS the percentage — no
 # scaling. A box filled a third of the way means a third of the way.
@@ -525,7 +535,8 @@ func _group_label(text: String, width: int) -> Control:
 	var label := Label.new()
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 10)
+	label.clip_text = true
+	Look.wear_body(label, Look.MICRO)
 	label.add_theme_color_override("font_color", ACCENT)
 	box.add_child(label)
 	var rule := ColorRect.new()
@@ -1045,7 +1056,7 @@ func _position_button(person: Actor, positions: PositionDef, id: String,
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	label.add_theme_font_size_override("font_size", 10)
+	Look.wear_body(label, Look.MICRO)
 	label.add_theme_color_override("font_color",
 		ON_ACCENT if chosen else TEXT)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE

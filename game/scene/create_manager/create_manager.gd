@@ -38,21 +38,35 @@ const TALENT_BAD := Color(0.85, 0.36, 0.36)
 # The form is three columns inside one panel, and the widths live here so the
 # hints know what to wrap against. An autowrapping Label with no width reports
 # its minimum as the whole unwrapped line and quietly blows the layout open.
-const PANEL_WIDTH := 1840
-# Tall enough for the Fundador, who has the most in his column, so switching
-# scenarios never moves the frame.
-const PANEL_HEIGHT := 1040
-const COL_LEFT := 520
-const COL_MID := 400
-const COL_RIGHT := 830
+# 1280x720 IS THE CANVAS NOW (see Look.DESIGN_MIN), which is what buys every
+# monitor a whole-number scale — and it is 570px narrower and 320px shorter than
+# what this form used to sprawl across. Paid for in TABS: the sheet on one, the
+# training on the other.
+const PANEL_WIDTH := 1250
+# Tall enough for the fullest tab and the Fundador's extra block, so neither
+# switching tabs nor switching scenarios ever moves the frame.
+# Above the fullest tab and the fullest scenario, with a little room — the
+# Fundador's FICHA measures 702 and everything else less, so 708 pins all of them
+# to the same frame. It is a MINIMUM, so anything that outgrows it still pushes
+# through and tests/fit_check.tscn still sees it.
+const PANEL_HEIGHT := 708
+const COL_LEFT := 610
+const COL_MID := 580
+# The training tab runs full width in sub-columns instead of a third column.
+const COL_WIDE := 1216
+const SKILL_COLUMNS := 2
+# ⚠️ The footer note is the reason the panel used to measure 1431 wide: at 700px
+# beside a back button, a locked button and a 320px primary, the row alone was
+# wider than the canvas. It is a note, so it gets what is left.
+const FOOTER_NOTE := 330
 # Twenty-seven talents in four columns is seven rows, which the right column has
 # room for under the skills.
-const BOON_COLUMNS := 3
-const FLAW_COLUMNS := 1
-# How much of the right column the qualities take. They outnumber the defects
-# three to one, so they get three columns and the defects get a tall one.
-const BOON_SHARE := 600
-const PERK_GAP := 6
+const BOON_COLUMNS := 4
+const FLAW_COLUMNS := 2
+# How much of the row the qualities take. They outnumber the defects three to
+# one, so they get five columns and the defects two.
+const BOON_SHARE := 800
+const PERK_GAP := 5
 # The colours row, capped part by part so a typed club name cannot widen it.
 const CREST_CAPTION := 90
 const CREST_BUTTON := 130
@@ -68,6 +82,7 @@ var _drafted: Dictionary = {}
 var _club: Dictionary = {}
 var _seed_label: Label = null
 var _root: VBoxContainer = null
+var _tab: String = TAB_SHEET
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -124,7 +139,7 @@ func _ready() -> void:
 	center.add_child(panel)
 
 	_root = VBoxContainer.new()
-	_root.add_theme_constant_override("separation", 6)
+	_root.add_theme_constant_override("separation", 4)
 	panel.add_child(_root)
 	_build_ui()
 
@@ -139,37 +154,81 @@ func _build_ui() -> void:
 
 # --- Form ---
 
-# THREE COLUMNS AND A FOOTER, and which thing goes where is not arbitrary:
+# TWO TABS, TWO COLUMNS EACH, AND A FOOTER. The canvas is 1280x720 now, which is
+# what buys a whole-number scale on every monitor — and it is 570px narrower and
+# 320px shorter than the three-column sprawl this replaced.
 #
-#   left    WHO YOU ARE — scenario, name, seed, your club if you are founding
-#           one, and which category you turn out for. Everything that is a
-#           sentence about the person rather than a number.
-#   middle  the eight attributes and the body, because the body SHIFTS the
-#           attributes and reading one while the other is off-screen was the
-#           worst of the scrolling.
-#   right   the fifteen skills in two sub-columns, and the talents under them.
+#   FICHA    who you are (scenario, name, seed, your club, category) beside the
+#            eight attributes and the body. Attributes next to the body because
+#            the body SHIFTS them, and reading one with the other off-screen was
+#            the original complaint.
+#   TREINO   the fifteen skills in three sub-columns, and the talents under them.
+#            Both are "what you spend points on", and neither needs the identity
+#            fields in view while you do it.
 #
-# The footer is pinned last so the one button that leaves the screen is always
-# in the same place, whatever the scenario changed above it.
+# The header and the footer are on BOTH tabs, because the age, the balance and
+# the button that leaves are the three things you check constantly.
+# THREE, not two. Skills and talents together came to nine pixels over the
+# canvas, and shaving nine pixels off a screen is a bad trade against splitting
+# it: with a tab each, the fifteen skills get two roomy lanes instead of three
+# cramped ones, and twenty-seven talents get a grid you can read.
+const TAB_SHEET := "sheet"
+const TAB_SKILLS := "skills"
+const TAB_TALENTS := "talents"
+
 func _build_form() -> void:
 	_root.add_child(_header())
+	_root.add_child(_tab_bar())
 	_root.add_child(_rule())
 
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 24)
+	columns.add_theme_constant_override("separation", 20)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_root.add_child(columns)
-	columns.add_child(_left_column())
-	columns.add_child(_middle_column())
-	columns.add_child(_right_column())
+	match _tab:
+		TAB_SKILLS:
+			columns.add_child(_skills_column())
+		TAB_TALENTS:
+			columns.add_child(_talents_column())
+		_:
+			columns.add_child(_left_column())
+			columns.add_child(_middle_column())
 
-	_root.add_child(_spacer(6))
+	_root.add_child(_spacer(2))
 	_root.add_child(_rule())
 	_root.add_child(_footer())
 
+func _tab_bar() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	for pair: Array in [[TAB_SHEET, "manager.tab_sheet"],
+			[TAB_SKILLS, "manager.tab_skills"], [TAB_TALENTS, "manager.tab_talents_name"]]:
+		var id: String = String(pair[0])
+		var tab: Button = _choice(UiText.t(String(pair[1])), _tab == id, _on_tab.bind(id))
+		tab.custom_minimum_size = Vector2(160, 32)
+		row.add_child(tab)
+	# What is still unspent, on whichever tab you are on, because the reason to
+	# change tabs is usually that you have points left and they are over there.
+	var note: Control = _hint(_spend_note(), FOOTER_NOTE)
+	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(note)
+	return row
+
+func _spend_note() -> String:
+	if _build.remaining() > 0:
+		return UiText.t("manager.tab_left") % _build.remaining()
+	if _build.perk_points_left() > 0:
+		return UiText.t("manager.tab_talents") % _build.perk_points_left()
+	return UiText.t("manager.tab_done")
+
+func _on_tab(id: String) -> void:
+	_tab = id
+	_build_ui()
+
 func _column(width: int) -> VBoxContainer:
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 3)
+	box.add_theme_constant_override("separation", 2)
 	box.custom_minimum_size = Vector2(width, 0)
 	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	return box
@@ -203,35 +262,46 @@ func _middle_column() -> Control:
 	box.add_child(_body_row())
 	return box
 
-func _right_column() -> Control:
-	var box: VBoxContainer = _column(COL_RIGHT)
+func _skills_column() -> Control:
+	var box: VBoxContainer = _column(COL_WIDE)
 	var stats := Drive.def("stat") as StatDef
-	box.add_child(_section(UiText.t("manager.skills"), "", COL_RIGHT))
+	box.add_child(_section(UiText.t("manager.skills"), "", COL_WIDE))
 
-	# Two sub-columns of groups. Fifteen skills plus four captions is nineteen
-	# rows, which is taller than anything else on the screen on its own — split
-	# in half it stops being the reason the panel does not fit.
-	var pair := HBoxContainer.new()
-	pair.add_theme_constant_override("separation", 20)
-	box.add_child(pair)
-	var half: int = (COL_RIGHT - 20) / 2
-	var left: VBoxContainer = _column(half)
-	var right: VBoxContainer = _column(half)
-	pair.add_child(left)
-	pair.add_child(right)
-	if stats != null:
-		var groups: Array = stats.skill_groups()
-		var split: int = int(ceil(float(groups.size()) / 2.0))
-		for i: int in range(groups.size()):
-			var into: VBoxContainer = left if i < split else right
-			into.add_child(_group_caption(String(groups[i])))
-			for id: String in stats.skills_in_group(String(groups[i])):
-				into.add_child(_skill_row(stats, id))
+	var spread := HBoxContainer.new()
+	spread.add_theme_constant_override("separation", 20)
+	box.add_child(spread)
+	var lanes: Array[VBoxContainer] = []
+	var lane_width: int = (COL_WIDE - 20 * (SKILL_COLUMNS - 1)) / SKILL_COLUMNS
+	for i: int in range(SKILL_COLUMNS):
+		var lane: VBoxContainer = _column(lane_width)
+		lanes.append(lane)
+		spread.add_child(lane)
+	if stats == null:
+		return box
+	# Filled by ROW COUNT and not by group, so the lanes come out even — the four
+	# groups are 5/4/3/3 skills, and one lane per group would leave one half empty
+	# and another over the canvas.
+	var lane_index: int = 0
+	var placed: int = 0
+	var per_lane: int = int(ceil((float(stats.skill_ids().size())
+		+ float(stats.skill_groups().size())) / float(SKILL_COLUMNS)))
+	for group: String in stats.skill_groups():
+		if placed >= per_lane and lane_index < SKILL_COLUMNS - 1:
+			lane_index += 1
+			placed = 0
+		lanes[lane_index].add_child(_group_caption(group))
+		placed += 1
+		for id: String in stats.skills_in_group(group):
+			lanes[lane_index].add_child(_skill_row(stats, id))
+			placed += 1
+	return box
 
-	# Talents last, because they are the one thing on this sheet that is not
-	# training: you finish the person, then you say what happened to him.
+# Talents get the whole tab, which is what twenty-seven of them need to be read
+# rather than scanned. Qualities left, defects right — the sign is the split.
+func _talents_column() -> Control:
+	var box: VBoxContainer = _column(COL_WIDE)
 	box.add_child(_section(UiText.t("manager.perks"),
-		UiText.t("manager.perks_hint") % _build.perk_points_left(), COL_RIGHT))
+		UiText.t("manager.perks_hint") % _build.perk_points_left(), COL_WIDE))
 	box.add_child(_perk_row())
 	return box
 
@@ -257,14 +327,14 @@ func _footer() -> Control:
 	pick.tooltip_text = UiText.t("manager.pick_locked")
 	row.add_child(pick)
 
-	var note: Control = _hint(_draw_hint(), 700)
+	var note: Control = _hint(_draw_hint(), FOOTER_NOTE)
 	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(note)
 
 	var draw_button: Button = _flat_button(UiText.t("manager.random"), _on_draw, true)
 	draw_button.disabled = not _build.is_complete()
-	draw_button.custom_minimum_size = Vector2(320, 44)
+	draw_button.custom_minimum_size = Vector2(250, 38)
 	row.add_child(draw_button)
 	return row
 
@@ -341,46 +411,54 @@ func _identity_row() -> Control:
 # screen that needs no label at all.
 func _dice(tip_key: String, on_press: Callable) -> Button:
 	var button: Button = _flat_button("🎲", on_press, false)
-	button.custom_minimum_size = Vector2(52, 34)
-	button.size_flags_vertical = Control.SIZE_SHRINK_END
+	button.custom_minimum_size = Vector2(46, 32)
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.tooltip_text = UiText.t(tip_key)
 	Look.wear_body(button, Look.TEXT)
 	return button
 
+# THE CAPTION IS THE PLACEHOLDER. A label above every field was 22px each, and
+# with five text fields on this form that is 110px of a 520px column spent
+# repeating what the box obviously is. The name survives as the tooltip, so the
+# label is still there for anybody who wants it.
 func _name_field(key: String, caption: String, width: int) -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var label := Label.new()
-	label.text = caption
-	label.add_theme_font_size_override("font_size", 11)
-	label.add_theme_color_override("font_color", MUTED)
-	box.add_child(label)
+	return _text_field(caption, width, String(_name.get(key, "")),
+		_on_name_typed.bind(key))
+
+func _text_field(caption: String, width: int, value: String,
+		on_typed: Callable) -> Control:
 	var field := LineEdit.new()
-	field.text = String(_name.get(key, ""))
+	field.text = value
+	field.placeholder_text = caption
+	field.tooltip_text = caption
 	field.custom_minimum_size = Vector2(width, 32)
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	field.text_changed.connect(_on_name_typed.bind(key))
-	box.add_child(field)
-	return box
+	field.text_changed.connect(on_typed)
+	return field
 
 # Read-only, because it is not an input: it is what the three fields above add
 # up to. Typing updates it in place — rebuilding the form on every keystroke
 # would yank the caret out of the field being used.
+# ONE LINE, and no hint under it. What the seed is for is on its tooltip: it is
+# read far more often than it is explained, and the explanation was three lines
+# of a column that did not have three lines to give.
 func _seed_row() -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 1)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	row.add_child(_field_label("Seed"))
+	row.tooltip_text = UiText.t("manager.seed_hint")
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
+	var caption := Label.new()
+	caption.text = "SEED"
+	caption.add_theme_color_override("font_color", MUTED)
+	Look.wear_body(caption, Look.TEXT)
+	row.add_child(caption)
 	_seed_label = Label.new()
 	_seed_label.text = str(_career_seed())
 	_seed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_seed_label.add_theme_color_override("font_color", ACCENT)
+	Look.wear_body(_seed_label, Look.TEXT)
 	row.add_child(_seed_label)
-	box.add_child(row)
-	box.add_child(_hint(UiText.t("manager.seed_hint")))
-	return box
+	return row
 
 # --- The club you are founding ---
 #
@@ -426,21 +504,8 @@ func _club_row() -> Control:
 	return box
 
 func _club_field(key: String, caption: String, width: int) -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var label := Label.new()
-	label.text = caption
-	label.add_theme_font_size_override("font_size", 11)
-	label.add_theme_color_override("font_color", MUTED)
-	box.add_child(label)
-	var field := LineEdit.new()
-	field.text = String(_club.get(key, ""))
-	field.custom_minimum_size = Vector2(width, 32)
-	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	field.text_changed.connect(_on_club_typed.bind(key))
-	box.add_child(field)
-	return box
+	return _text_field(caption, width, String(_club.get(key, "")),
+		_on_club_typed.bind(key))
 
 # A cycle and not a colour picker. Every pair in the palette is authored to
 # clear the contrast floor on its own, so no combination the player can reach
@@ -523,7 +588,7 @@ func _perk_row() -> Control:
 func _perk_block(perks: PerkDef, ids: Array[String], caption: String,
 		columns: int, hue: Color) -> Control:
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 3)
+	box.add_theme_constant_override("separation", 2)
 	var label := Label.new()
 	label.text = caption
 	label.add_theme_color_override("font_color", hue)
@@ -532,7 +597,7 @@ func _perk_block(perks: PerkDef, ids: Array[String], caption: String,
 	var grid := GridContainer.new()
 	grid.columns = columns
 	grid.add_theme_constant_override("h_separation", PERK_GAP)
-	grid.add_theme_constant_override("v_separation", 3)
+	grid.add_theme_constant_override("v_separation", 2)
 	for id: String in ids:
 		grid.add_child(_perk_chip(perks, id, columns))
 	box.add_child(grid)
@@ -540,7 +605,7 @@ func _perk_block(perks: PerkDef, ids: Array[String], caption: String,
 
 # The two blocks share the right column, split by how many chips each carries.
 func _perk_chip_width(columns: int) -> int:
-	var share: int = BOON_SHARE if columns == BOON_COLUMNS else COL_RIGHT - BOON_SHARE
+	var share: int = BOON_SHARE if columns == BOON_COLUMNS else COL_WIDE - BOON_SHARE
 	return (share - PERK_GAP * (columns + 1)) / columns
 
 func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
@@ -1022,7 +1087,9 @@ func _free_rng() -> RandomNumberGenerator:
 func _panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = PANEL
-	style.set_content_margin_all(26)
+	# 12, not 26. On a 720px canvas the panel's own padding was 52px of it — the
+	# frame was eating a section.
+	style.set_content_margin_all(12)
 	style.border_color = LINE
 	style.set_border_width_all(1)
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
@@ -1032,11 +1099,11 @@ func _panel_style() -> StyleBoxFlat:
 func _section(text: String, hint: String, width: int = 0) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 1)
-	box.add_child(_spacer(3))
+	box.add_child(_spacer(2))
 	var label := Label.new()
 	label.text = text
 	label.add_theme_color_override("font_color", ACCENT)
-	Look.wear_display(label, Look.BIG)
+	Look.wear_display(label, Look.HEADING)
 	box.add_child(label)
 	box.add_child(_rule())
 	if hint != "":
@@ -1067,7 +1134,10 @@ func _field_label(text: String) -> Control:
 # screen: six explanatory hints at four or five lines each pushed the form to
 # 1329px against a 1080 viewport. A hint is a nudge — if it needs five lines it
 # is documentation, and documentation belongs on hover.
-const HINT_LINES := 2
+# ONE line. At two, the six explanatory hints on this form were 288px of a 520px
+# column — more than half the screen spent on text that says what the section
+# above it already says. The whole sentence is on the tooltip.
+const HINT_LINES := 1
 
 func _hint(text: String, width: int = 0) -> Control:
 	var label := Label.new()

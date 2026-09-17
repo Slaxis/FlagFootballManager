@@ -11,6 +11,7 @@ func tests() -> Array:
 	return [
 		"test_catalogue_loads_and_prices_in_perk_points",
 		"test_every_perk_is_translated_and_declares_an_effect",
+		"test_every_talent_has_its_own_icon",
 		"test_skill_effects_point_at_real_skills",
 		"test_boons_charge_and_flaws_pay",
 		"test_a_talent_costs_nothing_in_career_points",
@@ -184,3 +185,22 @@ func test_generated_actors_only_take_what_exists(t: TestHelper) -> void:
 			with_perk += 1
 	t.check(with_perk > 0, "ninguém em 40 jogadores tirou um talento")
 	t.check(with_perk < 40, "todo mundo tirou um talento")
+
+# THE ICON IS AN IDENTITY, not decoration. It is the whole of the Talento column
+# on the roster — a 26px box with one glyph in it — so two talents sharing one
+# means the column lies, and anything that looks a talent up by its glyph finds
+# the wrong one. Which is exactly what happened: two of the thirteen talents
+# added at once reused glyphs already in the catalogue, and the screen test that
+# gives a talent back started giving back somebody else's.
+func test_every_talent_has_its_own_icon(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("PerkDef ausente"); return
+	var owner_of: Dictionary = {}
+	for id: String in def.perk_ids():
+		var icon: String = def.icon(id)
+		t.check(icon.strip_edges() != "", "'%s' sem ícone" % id)
+		if owner_of.has(icon):
+			t.fail("ícone '%s' repetido entre '%s' e '%s'" % [icon, owner_of[icon], id])
+		owner_of[icon] = id
+	t.equal(owner_of.size(), def.perk_ids().size(), "ícones distintos")
