@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### Changed - B.7c: a criacao em 1640, e um teste que ve estouro (2026-09-18)
+- A criacao foi de **2116 pra 1640 x 860**, com as duas metades em 786 cada —
+  48% e 48%. Nada mais sai da tela mesmo em janela que nao esta maximizada
+- **O `fit_check` passou a medir estouro de celula.** Todo Control que DECLARA um
+  minimo esta fazendo uma promessa sobre quanto espaco precisa; quando o minimo
+  combinado dele passa da propria declaracao, alguma coisa dentro quebrou a
+  promessa e o container acima cresceu pra cobrir — que e por que isso e
+  invisivel de fora e obvio de dentro
+- O mesmo erro ja tinha causado dois bugs no mesmo arquivo: a criacao 2x2 saiu
+  500px mais larga porque tres filhos continuavam dimensionados contra a coluna
+  inteira, e a passada seguinte ficou 66px presa por **uma linha de tres chips**.
+  Nos dois casos a tela ainda "cabia", os totais ainda passavam, e o unico
+  sintoma era o painel ser maior do que tinha motivo pra ser
+- Na primeira execucao o teste novo achou **cinco coisas que ninguem tinha
+  visto**: tres Labels do elenco declarando 26px e precisando de 36, um botao em
+  140 precisando de 142, o painel de alocacao em 300 precisando de 310, e a
+  criacao mudando de tamanho entre cenarios porque a nota de ONDE VOCE COMECA
+  reportava a linha inteira sem quebrar
+- **A coluna de preco saiu das 23 linhas de atributo e habilidade.** Ela
+  imprimia o preco do proximo degrau — numero que o "+" ao lado JA carrega no
+  tooltip, que e onde voce olha quando vai apertar. Vinte e tres numeros
+  duplicados, cada um em fonte 11px porque nada daquele tamanho cabe de outro
+  jeito, e juntos eram 27px de cada linha num formulario que nao cabia
+- **A barra foi de 13px por casa pra 10** (148px pra 118). Dez casas e nove
+  vaos e o item mais largo de toda linha de atributo e habilidade, numa linha
+  que tem que caber duas vezes dentro de meia tela — e um retangulo solido nao
+  perde nada nesse tamanho do jeito que um glifo perderia: nao ha forma pra ler,
+  so quantas estao acesas
+- `CODE_WIDTH` de 52 pra 40 (tres caracteres a 12px), e os chips de cenario
+  passaram a quebrar linha em vez de decidir a largura do formulario inteiro
+- Decisao 84 ganhou a segunda metade: a regra virou medicao
+
 ### Changed - B.7b: a idade de novo, e a criacao em 2x2 (2026-09-18)
 - **A estreia agora comeca aos 14**, com 95% dentro aos 20 — e a mediana do
   elenco de varzea caiu de 19 pra 17 anos. Catorze e quando a galera pega o

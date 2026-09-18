@@ -139,7 +139,15 @@ func _check(label: String, path: String) -> void:
 	elif need.x < VIEWPORT.x * MIN_WIDTH_USE:
 		verdict = "ESTREITA"
 		_failures.append("%s usa só %.0f de %.0f de largura" % [label, need.x, VIEWPORT.x])
+	var burst: Array[String] = []
+	_overflows(screen, burst, "")
+	if not burst.is_empty():
+		verdict = "ESTOURA"
+		for line: String in burst:
+			_failures.append("%s: %s" % [label, line])
 	print("%-16s %5.0f x %5.0f   %s" % [label, need.x, need.y, verdict])
+	for line: String in burst:
+		print("                 %s" % line)
 
 	screen.get_parent().remove_child(screen)
 	screen.queue_free()
@@ -162,3 +170,34 @@ func _panel(node: Node) -> Control:
 		if found != null:
 			return found
 	return null
+
+
+# ⚠️ NOTHING INSIDE A CELL MAY BE WIDER THAN THE CELL, and this is that rule as a
+# measurement rather than as a note in a comment.
+#
+# It has now caused the same bug twice in the same file. The creation form was
+# rebuilt as a 2x2 to be MORE compact and came out 500px wider, because three of
+# its children were still sized against the whole column; and the pass after that
+# was held 66px wide by one row of three scenario chips. In both cases the screen
+# still "fitted", the totals still passed, and the only visible symptom was that
+# the panel was bigger than it had any reason to be.
+#
+# A Control that DECLARES a minimum is making a promise about how much room it
+# needs. When its combined minimum exceeds its own declaration, something inside
+# it broke that promise, and the container above obligingly grew to cover for it
+# — which is why this is invisible from the outside and obvious from here.
+#
+# It names the offender's ancestry rather than its node name, because these
+# screens build their controls in code and the names are all `@VBoxContainer@41`.
+const OVERFLOW_SLACK := 0.5
+
+func _overflows(node: Node, into: Array[String], path: String) -> void:
+	if node is Control:
+		var control := node as Control
+		var wants: float = control.get_combined_minimum_size().x
+		var said: float = control.custom_minimum_size.x
+		if said > 0.0 and wants > said + OVERFLOW_SLACK:
+			into.append("%s pede %.0fpx e declarou %.0f   %s" % [
+				node.get_class(), wants, said, path])
+	for child: Node in node.get_children():
+		_overflows(child, into, path + "/" + child.get_class())

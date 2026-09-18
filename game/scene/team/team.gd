@@ -578,7 +578,7 @@ func _rule_cell() -> Control:
 func _lineup_panel(people: Array[Actor]) -> Control:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _panel_style())
-	panel.custom_minimum_size = Vector2(300, 0)
+	panel.custom_minimum_size = Vector2(310, 0)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -762,7 +762,7 @@ func _slot_row(code: String, who: Actor) -> Control:
 	row.add_theme_constant_override("separation", 8)
 	var tag := Label.new()
 	tag.text = code
-	tag.custom_minimum_size = Vector2(26, 0)
+	tag.custom_minimum_size = Vector2(36, 0)
 	Look.wear_body(tag, Look.TEXT)
 	tag.add_theme_color_override("font_color", ACCENT if code != "" else MUTED)
 	row.add_child(tag)
@@ -782,7 +782,7 @@ func _slot_row(code: String, who: Actor) -> Control:
 	row.add_child(name_label)
 	var strength := Label.new()
 	strength.text = str(who.overall())
-	strength.custom_minimum_size = Vector2(26, 0)
+	strength.custom_minimum_size = Vector2(36, 0)
 	strength.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	Look.wear_body(strength, Look.TEXT)
 	strength.add_theme_color_override("font_color", StatBar.tint(who.overall(), ACCENT))
@@ -1297,7 +1297,7 @@ func _sort_value(person: Actor, key: String, positions: PositionDef) -> float:
 func _tab_button(text: String, id: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(140, 32)
+	button.custom_minimum_size = Vector2(142, 32)
 	button.focus_mode = Control.FOCUS_NONE
 	var chosen: bool = _tab == id
 	var style := StyleBoxFlat.new()

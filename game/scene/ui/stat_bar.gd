@@ -11,7 +11,12 @@ const LIT := Color(0.49, 0.78, 0.45)
 const DARK := Color(0.12, 0.21, 0.14)
 # Where the gradient starts: a grey that reads as off, not as dark green.
 const UNLIT_TEXT := Color(0.38, 0.40, 0.38)
-const SLOT_SIZE := Vector2(13, 15)
+# ⚠️ TEN WIDE, NOT THIRTEEN. Ten slots and nine gaps is the widest single item in
+# every attribute and skill row — 148px at thirteen, against a row that has to
+# fit twice over inside half a screen. At ten it is 118, and a solid rectangle
+# loses nothing at that size the way a glyph would: there is no shape to read,
+# only how many are lit.
+const SLOT_SIZE := Vector2(10, 15)
 const SLOT_GAP := 2
 
 # A labelled row: name on the left, bar on the right, full description and the

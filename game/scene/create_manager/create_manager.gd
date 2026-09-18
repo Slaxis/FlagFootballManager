@@ -48,7 +48,7 @@ const TALENT_BAD := Look.BAD
 # Pinned above the fullest scenario, so the frame never moves as you click
 # between them. A MINIMUM, so content that outgrows it still pushes through and
 # tests/fit_check.tscn still sees it.
-const PANEL_WIDTH := 2116
+const PANEL_WIDTH := 1640
 # The widths live here so the hints know what to wrap against: an autowrapping
 # Label with no width reports its minimum as the whole unwrapped line and quietly
 # blows the layout open.
@@ -67,23 +67,24 @@ const PANEL_HEIGHT := 860
 # than the cell. Three of these were not — the scenario chips, the body summary
 # and the club fields were all still sized against the whole column, which is
 # how a "compaction" came out 500px WIDER than what it replaced.
-const COL_LEFT_HALF := 500
-const COL_LEFT := 1024
-const COL_MID := 380
-const COL_RIGHT := 620
+const COL_LEFT_HALF := 381
+const COL_LEFT := 786
+const COL_MID := 272
+const COL_RIGHT := 490
 const SKILL_COLUMNS := 2
 # The footer note gets whatever the three buttons leave. It was once 700px beside
 # a 320px primary, which made that row alone wider than the screen.
 # The three letters in every attribute and skill row.
-const CODE_WIDTH := 52
+# Three characters at 12px each. It was 52, sized before the face was measured.
+const CODE_WIDTH := 40
 
 # WIDE ENOUGH FOR THE WIDEST CHIP, measured and not guessed: the body face is
 # monospaced at 12px a character and "ARRANCADA ^ 2" is thirteen of them, so
 # 156px is the floor. Four columns of qualities against two of defects — the
 # catalogue is 20 to 7, which comes out at five rows each.
 const PERK_CHIP_MIN := 156
-const BOON_COLUMNS := 4
-const FLAW_COLUMNS := 2
+const BOON_COLUMNS := 3
+const FLAW_COLUMNS := 1
 # How much of the row the qualities take. They outnumber the defects three to
 # one, so they get five columns and the defects two.
 # Three columns of qualities against one of defects, which is roughly the ratio
@@ -92,7 +93,7 @@ const FLAW_COLUMNS := 2
 # The share is set by the WIDEST NAME, measured and not guessed: "Quebra de
 # cintura  2 pp" is 276px at the body size, so a 252px chip clipped it — and a
 # chip that clips the thing it exists to say is a chip that failed.
-const BOON_SHARE := 690
+const BOON_SHARE := 540
 const PERK_GAP := 6
 
 
@@ -236,8 +237,15 @@ func _second_cell() -> Control:
 	if _authors_club():
 		return _cell_column(UiText.t("manager.club"), UiText.t("manager.club_hint"),
 			[_club_row()])
+	# ⚠️ IT WRAPS AGAINST THE CELL, and it has to say so. Left to itself a Label
+	# reports its minimum as the whole unwrapped line, so this one sentence made
+	# the two scenarios that show it 27px wider than the Fundador — the panel
+	# changing size as you click between them, which is the exact thing
+	# PANEL_WIDTH was pinned to stop.
 	var note := Label.new()
 	note.text = UiText.t("manager.drafted_line")
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size = Vector2(COL_LEFT_HALF, 0)
 	note.add_theme_color_override("font_color", MUTED)
 	Look.wear_body(note, Look.TEXT)
 	return _cell_column(UiText.t("manager.drafted"), UiText.t("manager.drafted_hint"),
@@ -403,12 +411,18 @@ func _header() -> Control:
 func _origin_row() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 3)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	# ⚠️ AN HBOX OF THREE WAS THE ONLY THING IN THE FORM THAT DID NOT FIT. Three
+	# chips wide enough to say "Ex-jogador" is 447px, and it was setting the width
+	# of the entire left column — one row, in a form of twenty-three, deciding how
+	# wide the screen is. A flow wraps instead, and the cell is free to be as
+	# narrow as everything else in it.
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 4)
 	var origins := Drive.def("origin") as OriginDef
 	for id: String in (origins.origin_ids() if origins != null else []):
 		var chip: Button = _choice(origins.label(id), _origin == id, _on_origin.bind(id))
-		chip.custom_minimum_size = Vector2(160, 34)
+		chip.custom_minimum_size = Vector2(145, 34)
 		chip.tooltip_text = "%s\n%s\n\n%s" % [
 			origins.label(id), origins.line(id), origins.desc(id)]
 		row.add_child(chip)
@@ -423,12 +437,12 @@ func _identity_row() -> Control:
 	box.add_theme_constant_override("separation", 6)
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
-	top.add_child(_name_field("first_name", UiText.t("manager.first_name"), 240))
-	top.add_child(_name_field("last_name", UiText.t("manager.last_name"), 240))
+	top.add_child(_name_field("first_name", UiText.t("manager.first_name"), 186))
+	top.add_child(_name_field("last_name", UiText.t("manager.last_name"), 186))
 	box.add_child(top)
 	var bottom := HBoxContainer.new()
 	bottom.add_theme_constant_override("separation", 8)
-	bottom.add_child(_name_field("nickname", UiText.t("manager.nickname"), 240))
+	bottom.add_child(_name_field("nickname", UiText.t("manager.nickname"), 186))
 	bottom.add_child(_dice("manager.reroll_all", _on_reroll_all))
 	box.add_child(bottom)
 	return box
@@ -437,7 +451,7 @@ func _identity_row() -> Control:
 # screen that needs no label at all.
 func _dice(tip_key: String, on_press: Callable) -> Button:
 	var button: Button = _flat_button(Look.GLYPH_ROLL, on_press, false)
-	button.custom_minimum_size = Vector2(46, 32)
+	button.custom_minimum_size = Vector2(50, 32)
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.tooltip_text = UiText.t(tip_key)
 	Look.wear_body(button, Look.TEXT)
@@ -509,8 +523,8 @@ func _club_row() -> Control:
 
 	var where := HBoxContainer.new()
 	where.add_theme_constant_override("separation", 8)
-	where.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 246))
-	where.add_child(_club_field("city", UiText.t("manager.club_city"), 246))
+	where.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 186))
+	where.add_child(_club_field("city", UiText.t("manager.club_city"), 186))
 	box.add_child(where)
 
 	# The dice joined the colours: the name row is the one that needed the whole
@@ -736,7 +750,7 @@ func _body_row() -> Control:
 		field.step = stats.increment(id)
 		field.value = _measure_value(id)
 		field.suffix = String(spec.get("unit", ""))
-		field.custom_minimum_size = Vector2(190, 32)
+		field.custom_minimum_size = Vector2(150, 32)
 		field.value_changed.connect(_on_measure_value.bind(id))
 		cell.add_child(field)
 		row.add_child(cell)
@@ -828,14 +842,11 @@ func _attribute_row(stats: StatDef, id: String) -> Control:
 		ACCENT if bonus > 0 else (WARN if bonus < 0 else MUTED))
 	row.add_child(mod)
 
-	var cost := Label.new()
-	var next_cost: int = _build.cost_to_raise_stat(id)
-	cost.text = str(next_cost) if next_cost >= 0 else "—"
-	cost.custom_minimum_size = Vector2(22, 0)
-	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	cost.add_theme_font_size_override("font_size", 11)
-	cost.add_theme_color_override("font_color", MUTED)
-	row.add_child(cost)
+	# ⚠️ NO COST COLUMN. It printed the price of the next step on all twenty-three
+	# rows — a number that the "+" beside it ALREADY carries on its tooltip, which
+	# is where you look when you are about to press it. Twenty-three duplicated
+	# numbers, each in its own 11px font because nothing that small fits any other
+	# way, and together they were 27px of every row in a form that did not fit.
 	return row
 
 func _skill_row(stats: StatDef, id: String) -> Control:
@@ -861,14 +872,6 @@ func _skill_row(stats: StatDef, id: String) -> Control:
 	row.add_child(_track_code(stats.code(id)))
 	row.add_child(StatBar.bar(step_value * 10, stats.skill_color(id)))
 
-	var cost := Label.new()
-	var next_cost: int = _build.cost_to_raise_skill(id)
-	cost.text = str(next_cost) if next_cost >= 0 else "—"
-	cost.custom_minimum_size = Vector2(22, 0)
-	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	cost.add_theme_font_size_override("font_size", 11)
-	cost.add_theme_color_override("font_color", MUTED)
-	row.add_child(cost)
 	return row
 
 # Not a single choice. You can play the men's side and the mixed side, or the
@@ -1241,7 +1244,7 @@ func _step_button(text: String, on_press: Callable, enabled: bool,
 func _choice(text: String, selected: bool, on_press: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(108, 32)
+	button.custom_minimum_size = Vector2(118, 32)
 	button.toggle_mode = true
 	button.button_pressed = selected
 	button.focus_mode = Control.FOCUS_NONE
