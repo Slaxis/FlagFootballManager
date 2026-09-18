@@ -74,15 +74,21 @@ const STORED_PER_STEP := 10.0
 # where people come in at sixteen is not a flat band, it is a pile at the floor
 # with a tail — most arrive as kids, a few wander in late.
 #
-# The numbers are derived, not picked. With `offset = exp(N(mu, sigma))` and the
-# age floored from it, P(debut <= 21) = P(offset < 6) = 0.95 means
+# FOURTEEN IS WHERE THE VÁRZEA STARTS. Not because a fourteen-year-old is a
+# várzea player, but because that is when people in this scene take the sport
+# up, and somebody who reaches the top of the ladder almost certainly started
+# there rather than at twenty. Twelve would be truer still and would need a
+# youth structure to be honest about, which does not exist yet.
 #
-#     ln(6) = mu + 1.645 * sigma      (1.645 is the 95th percentile of N(0,1))
-#     mu    = 1.791759 - 1.645 * 0.9 = 0.3113
+# The numbers are derived, not picked. With `offset = exp(N(mu, sigma))` and the
+# age floored from it, P(debut <= 20) = P(offset < 7) = 0.95 means
+#
+#     ln(7) = mu + 1.645 * sigma      (1.645 is the 95th percentile of N(0,1))
+#     mu    = 1.945910 - 1.645 * 0.9 = 0.4654
 #
 # Sigma is the one free choice: it decides how fat the late tail is. At 0.9 the
-# mode sits on sixteen itself.
-const DEBUT_AGE_MIN := 16
+# mode sits on fourteen itself and twenty-one is already rare.
+const DEBUT_AGE_MIN := 14
 # Nobody takes up the sport for the first time at forty. The tail is cut, not
 # folded, so the cut shows up in a measurement instead of piling on the last bin.
 const DEBUT_AGE_CAP := 30
@@ -91,7 +97,27 @@ const DEBUT_AGE_CAP := 30
 # than at twenty-nine — and that bump is made of people who rolled forty.
 const DEBUT_TRIES := 6
 const DEBUT_SIGMA := 0.9
-const DEBUT_MU := 0.3113
+const DEBUT_MU := 0.4654
+
+# WHEN SOMEBODY IS AT THEIR BEST, which is not a UI opinion — it is what the
+# curve below already says. Under twenty-two they are still learning faster than
+# they are finished; past twenty-eight the rate has halved and the body has
+# started charging rent. The band between is where a squad wants people, and the
+# roster paints its age column against it.
+const PRIME_AGE := Vector2i(22, 28)
+# How far outside the band before somebody reads as fully cold. Eight years, so a
+# sixteen-year-old is dim rather than dark: he is not a bad player, he is an
+# early one, and the column should say that rather than accuse him.
+const PRIME_FALLOFF := 8.0
+
+# 0..100, hottest inside the band. The roster's Geral column runs on the same
+# ramp, so the two read as one language.
+static func prime_heat(age: int) -> int:
+	if age < PRIME_AGE.x:
+		return clampi(100 - int(round(float(PRIME_AGE.x - age) * 100.0 / PRIME_FALLOFF)), 0, 100)
+	if age > PRIME_AGE.y:
+		return clampi(100 - int(round(float(age - PRIME_AGE.y) * 100.0 / PRIME_FALLOFF)), 0, 100)
+	return 100
 
 # How fast somebody still learns. The tail is not zero: a 36-year-old still
 # picks things up, just not the way he did at eighteen.
@@ -219,12 +245,22 @@ static func roll_potential(club_level: float, rng: RandomNumberGenerator) -> int
 	var quantile: int = clampi(base + drift, 1, def.quantile_count())
 	return def.quantile_value(quantile, rng)
 
-static func roll_debut_age(rng: RandomNumberGenerator) -> int:
-	for attempt: int in range(DEBUT_TRIES):
+# ⚠️ THE WINDOW IS A TRUNCATION OF THIS CURVE, NOT A SECOND DISTRIBUTION. The
+# manager needs a narrower band than a random kid in the Praça, and the cheap
+# way to get one is a second pair of constants — which is how you end up with
+# two shapes that disagree and nobody able to say which is the real one. Ask the
+# same curve and keep only the draws that land inside the window, so "managers
+# start later than average" is a fact ABOUT the curve rather than beside it.
+#
+# Rejection and not a clamp: a clamp folds everything outside onto the edges,
+# which piles half the population on the first and last year of the window.
+static func roll_debut_age(rng: RandomNumberGenerator,
+		floor_age: int = DEBUT_AGE_MIN, cap_age: int = DEBUT_AGE_CAP) -> int:
+	for attempt: int in range(DEBUT_TRIES * 8):
 		var age: int = DEBUT_AGE_MIN + int(floor(exp(rng.randfn(DEBUT_MU, DEBUT_SIGMA))))
-		if age <= DEBUT_AGE_CAP:
+		if age >= floor_age and age <= cap_age:
 			return age
-	return DEBUT_AGE_CAP
+	return floor_age
 
 # --- The week ---
 

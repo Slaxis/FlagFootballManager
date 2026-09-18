@@ -71,6 +71,23 @@ func cost(id: String) -> int:
 func label(id: String) -> String:
 	return I18n.text(perk(id).get("label", id), id)
 
+# ONE WORD, AND IT IS NOT THE NAME. Twenty-seven three-letter codes is a screen
+# you read with the mouse, one tooltip at a time — which is fine for the eight
+# attributes you learn once and terrible for a catalogue you browse. The code
+# earns its place in the roster's 34px column, where there is room for nothing
+# else; the chip has room for a word, so it gets one.
+#
+# `tag` is a nickname and not an abbreviation of `label`: "Só no ataque" has no
+# short form, and TURISTA says the same thing in one word. A flaw's tag has to
+# read as a flaw on its own — ATAQUE and FÔLEGO would both sound like praise.
+func tag(id: String) -> String:
+	return I18n.text(perk(id).get("tag", ""), label(id))
+
+# Its mark: one ASCII character, from the catalogue and not from a table in the
+# UI, so a module shipping its own talents ships their marks with them.
+func glyph(id: String) -> String:
+	return String(perk(id).get("glyph", ""))
+
 func icon(id: String) -> String:
 	return String(perk(id).get("icon", ""))
 
@@ -81,6 +98,10 @@ func explain(id: String) -> String:
 	return "%s · %s
 
 %s" % [icon(id), label(id), desc(id)]
+
+# What the chip says: FOGUETE >
+func plate(id: String) -> String:
+	return "%s %s" % [tag(id).to_upper(), glyph(id)]
 
 func desc(id: String) -> String:
 	return I18n.text(perk(id).get("desc", ""), "")

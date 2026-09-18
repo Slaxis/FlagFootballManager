@@ -15,7 +15,7 @@ func tests() -> Array:
 		"test_category_changes_the_name_pool",
 		"test_club_level_moves_the_ceiling",
 		"test_club_level_moves_the_years",
-		"test_debut_piles_up_at_sixteen",
+		"test_debut_piles_up_at_the_floor",
 		"test_actors_are_specialists",
 		"test_defaults_put_actor_in_praca",
 		"test_squad_is_stable_per_index",
@@ -140,7 +140,11 @@ func test_club_level_moves_the_years(t: TestHelper) -> void:
 # THE SHAPE OF WHEN PEOPLE START, which is a pile at the floor and a tail, not a
 # flat band. It was uniform 15..21 — which says debuting at twenty-one is
 # exactly as likely as at fifteen, and no scene works that way.
-func test_debut_piles_up_at_sixteen(t: TestHelper) -> void:
+#
+# The floor is FOURTEEN: that is when people in this scene take the sport up, and
+# somebody who reaches the top of the ladder almost certainly started there
+# rather than at twenty.
+func test_debut_piles_up_at_the_floor(t: TestHelper) -> void:
 	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
 	var hist: Dictionary = {}
 	var rolls: Array[int] = []
@@ -151,17 +155,22 @@ func test_debut_piles_up_at_sixteen(t: TestHelper) -> void:
 	rolls.sort()
 	t.equal(rolls[0], ActorLife.DEBUT_AGE_MIN,
 		"alguém estreou antes dos %d" % ActorLife.DEBUT_AGE_MIN)
-	# The mode is the floor itself: more people start at sixteen than at any
-	# other age, which is the asymmetry the uniform draw did not have.
-	var top: int = 0
+	# ⚠️ THE MASS IS AT THE FLOOR, and it is deliberately NOT a single mode: the
+	# curve puts about thirty percent on each of the first two years, so which of
+	# them wins is a coin flip per seed. Asserting a single winner is asserting
+	# the coin, which is how a fair test starts failing for no reason.
+	var early: int = int(hist.get(ActorLife.DEBUT_AGE_MIN, 0)) 		+ int(hist.get(ActorLife.DEBUT_AGE_MIN + 1, 0))
+	t.check(early >= 2000,
+		"só %d%% estreou nos dois primeiros anos — a curva não está encostada no chão"
+			% (early / 40))
 	for age: int in hist.keys():
-		if int(hist[age]) > int(hist.get(top, -1)):
-			top = age
-	t.equal(top, ActorLife.DEBUT_AGE_MIN,
-		"a idade mais comum de estreia é %d, não %d" % [top, ActorLife.DEBUT_AGE_MIN])
-	# And 95% of everybody is in by twenty-one, which is the whole calibration:
-	# the tail exists, but it is a tail.
-	t.check(rolls[3800] <= 21,
+		if age <= ActorLife.DEBUT_AGE_MIN + 1:
+			continue
+		t.check(int(hist[age]) < int(hist.get(ActorLife.DEBUT_AGE_MIN, 0)),
+			"aos %d estreia mais gente que aos %d" % [age, ActorLife.DEBUT_AGE_MIN])
+	# And 95% of everybody is in by twenty, which is the whole calibration: the
+	# tail exists, but it is a tail.
+	t.check(rolls[3800] <= 20,
 		"o percentil 95 da estreia caiu em %d anos" % rolls[3800])
 	t.check(rolls[3999] <= ActorLife.DEBUT_AGE_CAP,
 		"alguém estreou aos %d" % rolls[3999])

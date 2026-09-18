@@ -48,7 +48,7 @@ const TALENT_BAD := Look.BAD
 # Pinned above the fullest scenario, so the frame never moves as you click
 # between them. A MINIMUM, so content that outgrows it still pushes through and
 # tests/fit_check.tscn still sees it.
-const PANEL_WIDTH := 1935
+const PANEL_WIDTH := 2116
 # The widths live here so the hints know what to wrap against: an autowrapping
 # Label with no width reports its minimum as the whole unwrapped line and quietly
 # blows the layout open.
@@ -58,20 +58,31 @@ const PANEL_WIDTH := 1935
 # Above the fullest scenario, so the frame never moves: the three measure 806,
 # 807 and 806, and one pixel of drift is still the screen jumping under you.
 const PANEL_HEIGHT := 860
-const COL_LEFT := 620
-const COL_MID := 400
-const COL_RIGHT := 820
+# FOUR SECTIONS IN TWO ROWS, not seven stacked. The left column was a single
+# file — cenário, identidade, corpo, semente, modalidade, clube — and half of
+# those are two controls wide, so it read as a list of headings with air between
+# them. Paired, the column is half as tall and the form stops scrolling.
+# ⚠️ THE HALF IS SET BY THE WIDEST THING THAT HAS TO LIVE IN IT, measured: two
+# name fields at 240 plus their gap is 488, and nothing in a cell may be wider
+# than the cell. Three of these were not — the scenario chips, the body summary
+# and the club fields were all still sized against the whole column, which is
+# how a "compaction" came out 500px WIDER than what it replaced.
+const COL_LEFT_HALF := 500
+const COL_LEFT := 1024
+const COL_MID := 380
+const COL_RIGHT := 620
 const SKILL_COLUMNS := 2
 # The footer note gets whatever the three buttons leave. It was once 700px beside
 # a 320px primary, which made that row alone wider than the screen.
 # The three letters in every attribute and skill row.
 const CODE_WIDTH := 52
 
-# WIDE ENOUGH FOR THE WHOLE NAME. "Quebra de cintura  2 pp" is twenty-three
-# characters, and at the body size that is 240px — a chip narrower than that is
-# a chip that clips the thing it exists to say. Under the tracks instead of
-# beside them, there is room.
-const BOON_COLUMNS := 5
+# WIDE ENOUGH FOR THE WIDEST CHIP, measured and not guessed: the body face is
+# monospaced at 12px a character and "ARRANCADA ^ 2" is thirteen of them, so
+# 156px is the floor. Four columns of qualities against two of defects — the
+# catalogue is 20 to 7, which comes out at five rows each.
+const PERK_CHIP_MIN := 156
+const BOON_COLUMNS := 4
 const FLAW_COLUMNS := 2
 # How much of the row the qualities take. They outnumber the defects three to
 # one, so they get five columns and the defects two.
@@ -81,7 +92,7 @@ const FLAW_COLUMNS := 2
 # The share is set by the WIDEST NAME, measured and not guessed: "Quebra de
 # cintura  2 pp" is 276px at the body size, so a 252px chip clipped it — and a
 # chip that clips the thing it exists to say is a chip that failed.
-const BOON_SHARE := 900
+const BOON_SHARE := 690
 const PERK_GAP := 6
 
 
@@ -201,22 +212,49 @@ func _column(width: int) -> VBoxContainer:
 
 func _left_column() -> Control:
 	var box: VBoxContainer = _column(COL_LEFT)
-	box.add_child(_section(UiText.t("manager.origin"), UiText.t("manager.origin_hint")))
-	box.add_child(_origin_row())
-	box.add_child(_section(UiText.t("manager.identity"), UiText.t("manager.identity_hint")))
-	box.add_child(_identity_row())
+	box.add_child(_pair(
+		_cell_column(UiText.t("manager.origin"), UiText.t("manager.origin_hint"),
+			[_origin_row()]),
+		_cell_column(UiText.t("manager.modality"), UiText.t("manager.plays_hint"),
+			[_plays_row(), _manages_row()])))
 	# THE BODY IS IDENTITY. Height and weight are the same kind of fact as the
 	# name — what you look like on paper — and they were sitting under the
-	# attributes purely because that is where the step they shift lives. Two
-	# spin boxes fit exactly where three name fields already are.
-	box.add_child(_body_row())
-	box.add_child(_seed_row())
-	box.add_child(_section(UiText.t("manager.modality"), UiText.t("manager.plays_hint")))
-	box.add_child(_plays_row())
-	box.add_child(_manages_row())
+	# attributes purely because that is where the step they shift lives.
+	box.add_child(_pair(
+		_cell_column(UiText.t("manager.identity"), UiText.t("manager.identity_hint"),
+			[_identity_row(), _body_row()]),
+		_second_cell()))
+	return box
+
+# ⚠️ THE RIGHT-HAND CELL IS NEVER EMPTY, and that is a layout rule rather than a
+# decoration. Only the Fundador authors a club, so a cell that simply vanished
+# for the other two made the panel change size when you clicked between
+# scenarios — the screen moving under you as you compare the three. The seed
+# lives there when the club does not: it is the one control that belongs to
+# every scenario and was previously crammed into the identity stack.
+func _second_cell() -> Control:
 	if _authors_club():
-		box.add_child(_section(UiText.t("manager.club"), UiText.t("manager.club_hint")))
-		box.add_child(_club_row())
+		return _cell_column(UiText.t("manager.club"), UiText.t("manager.club_hint"),
+			[_club_row()])
+	var note := Label.new()
+	note.text = UiText.t("manager.drafted_line")
+	note.add_theme_color_override("font_color", MUTED)
+	Look.wear_body(note, Look.TEXT)
+	return _cell_column(UiText.t("manager.drafted"), UiText.t("manager.drafted_hint"),
+		[note] as Array[Control])
+
+func _pair(left: Control, right: Control) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	row.add_child(left)
+	row.add_child(right)
+	return row
+
+func _cell_column(caption: String, tip: String, rows: Array[Control]) -> Control:
+	var box: VBoxContainer = _column(COL_LEFT_HALF)
+	box.add_child(_section(caption, tip))
+	for row: Control in rows:
+		box.add_child(row)
 	return box
 
 # Attributes beside skills, talents underneath both.
@@ -228,7 +266,7 @@ func _right_area() -> Control:
 	tracks.add_child(_attributes_column())
 	tracks.add_child(_skills_column())
 	box.add_child(_section(UiText.t("manager.perks"),
-		UiText.t("manager.perks_hint") % _build.perk_points_left()))
+		UiText.t("manager.perks_hint")))
 	box.add_child(_perk_row())
 	return box
 
@@ -313,7 +351,12 @@ func _footer() -> Control:
 	row.add_child(draw_button)
 	return row
 
-# Age and remaining points side by side: the two halves of the same number.
+# EVERY BALANCE IN ONE PLACE, and the seed with them. Age and career points are
+# two halves of the same number, and talent points are a SECOND currency that was
+# only ever visible inside the hint of the section that spends it — so the one
+# question the talents section provokes ("can I afford this?") was answered by a
+# sentence you had to go and read. The seed joins them because it is the same
+# kind of fact: about the run, not a field of the form.
 func _header() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 24)
@@ -333,6 +376,15 @@ func _header() -> Control:
 	age.mouse_filter = Control.MOUSE_FILTER_STOP
 	row.add_child(age)
 
+	var talents := Label.new()
+	talents.text = UiText.t("manager.talent_points") % _build.perk_points_left()
+	talents.add_theme_color_override("font_color",
+		TALENT_GOOD if _build.perk_points_left() > 0 else MUTED)
+	talents.tooltip_text = UiText.t("manager.talent_points_hint")
+	talents.mouse_filter = Control.MOUSE_FILTER_STOP
+	Look.wear_display(talents, Look.BIG)
+	row.add_child(talents)
+
 	var left := Label.new()
 	left.text = (UiText.t("manager.overspent") % -_build.remaining()) if _build.remaining() < 0 		else (UiText.t("manager.points_left") % _build.remaining())
 	left.add_theme_color_override("font_color", WARN if _build.remaining() != 0 else ACCENT)
@@ -340,6 +392,7 @@ func _header() -> Control:
 	left.mouse_filter = Control.MOUSE_FILTER_STOP
 	Look.wear_display(left, Look.BIG)
 	row.add_child(left)
+	row.add_child(_seed_row())
 	return row
 
 # Three fields, not one. They are three different things — the surname the
@@ -355,7 +408,7 @@ func _origin_row() -> Control:
 	var origins := Drive.def("origin") as OriginDef
 	for id: String in (origins.origin_ids() if origins != null else []):
 		var chip: Button = _choice(origins.label(id), _origin == id, _on_origin.bind(id))
-		chip.custom_minimum_size = Vector2(196, 34)
+		chip.custom_minimum_size = Vector2(160, 34)
 		chip.tooltip_text = "%s\n%s\n\n%s" % [
 			origins.label(id), origins.line(id), origins.desc(id)]
 		row.add_child(chip)
@@ -427,7 +480,6 @@ func _seed_row() -> Control:
 	row.add_child(caption)
 	_seed_label = Label.new()
 	_seed_label.text = str(_career_seed())
-	_seed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_seed_label.add_theme_color_override("font_color", ACCENT)
 	Look.wear_body(_seed_label, Look.TEXT)
 	row.add_child(_seed_label)
@@ -453,20 +505,22 @@ func _authors_club() -> bool:
 func _club_row() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
-	box.add_child(_club_field("name", UiText.t("manager.club_name"), COL_LEFT))
+	box.add_child(_club_field("name", UiText.t("manager.club_name"), COL_LEFT_HALF))
 
 	var where := HBoxContainer.new()
 	where.add_theme_constant_override("separation", 8)
-	where.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 230))
-	where.add_child(_club_field("city", UiText.t("manager.club_city"), 230))
-	where.add_child(_dice("manager.club_reroll", _on_reroll_club))
+	where.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 246))
+	where.add_child(_club_field("city", UiText.t("manager.club_city"), 246))
 	box.add_child(where)
 
+	# The dice joined the colours: the name row is the one that needed the whole
+	# width, and a 40px button beside two 211px fields was what made it short.
 	var colours := HBoxContainer.new()
 	colours.add_theme_constant_override("separation", 8)
 	colours.add_child(_colour_pick(0, UiText.t("manager.club_colour_main")))
 	colours.add_child(_colour_pick(1, UiText.t("manager.club_colour_second")))
 	colours.add_child(_crest_preview())
+	colours.add_child(_dice("manager.club_reroll", _on_reroll_club))
 	box.add_child(colours)
 	return box
 
@@ -619,17 +673,22 @@ func _perk_chip_width(columns: int) -> int:
 	var share: int = BOON_SHARE if columns == BOON_COLUMNS else whole - BOON_SHARE
 	@warning_ignore("integer_division")
 	var each: int = (share - PERK_GAP * (columns + 1)) / columns
-	return each
+	return maxi(each, PERK_CHIP_MIN)
 
 func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
 	var cost: int = perks.cost(id)
 	var price: String = (UiText.t("manager.perk_refund") % -cost) if cost < 0 		else (UiText.t("manager.perk_price") % cost)
-	# THE CODE, NOT THE NAME — the same move `B.6i` made on INT/PER/CAR, and the
-	# last section of this screen that still read like a classified ad. Twenty
-	# names at "Quebra de cintura  2 pp" needed 276px each and got 252, so the
-	# chip that clipped was ALSO the chip that set the column width; three
-	# letters and a number fit five across with room to spare.
-	var chip: Button = _choice("%s  %s" % [perks.icon(id), price],
+	# ⚠️ A WORD AND A MARK — NOT three letters. The codes are right for the eight
+	# attributes and the fifteen skills, which you learn once and then read for
+	# the rest of the game. A catalogue of TWENTY-SEVEN is a different problem:
+	# nobody learns it, so `CRQ FOG CER COL` is a screen you read with the mouse,
+	# one tooltip at a time.
+	#
+	# `tag` is a nickname rather than an abbreviation — "Só no ataque" has no
+	# short form and TURISTA says the same thing in one word — and the glyph
+	# comes from the catalogue too, so a module that ships talents ships their
+	# marks with them.
+	var chip: Button = _choice("%s %s" % [perks.plate(id), price],
 		_build.has_perk(id), _on_perk.bind(id))
 	# Green buys you something, red pays you to accept something. The sign is
 	# the whole decision, so it should not need reading.
@@ -697,7 +756,7 @@ func _body_row() -> Control:
 	var summary := Label.new()
 	summary.text = _effect_text(stats, effect)
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.custom_minimum_size = Vector2(COL_LEFT, 0)
+	summary.custom_minimum_size = Vector2(COL_LEFT_HALF, 0)
 	summary.add_theme_color_override("font_color", WARN)
 	Look.wear_body(summary, Look.TINY)
 	box.add_child(summary)

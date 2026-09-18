@@ -16,7 +16,12 @@
         "kind": "roll_bonus",
         "scope": "all",
         "amount": 1
-      }
+      },
+      "tag": {
+        "pt": "Craque",
+        "en": "Star"
+      },
+      "glyph": "*"
     },
     {
       "id": "foguete",
@@ -35,7 +40,12 @@
         "scope": "skill",
         "target": "route",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Foguete",
+        "en": "Rocket"
+      },
+      "glyph": ">"
     },
     {
       "id": "cerebro",
@@ -54,7 +64,12 @@
         "scope": "skill",
         "target": "coverage",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Cérebro",
+        "en": "Brain"
+      },
+      "glyph": "?"
     },
     {
       "id": "maos_de_cola",
@@ -73,7 +88,12 @@
         "scope": "skill",
         "target": "catching",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Cola",
+        "en": "Glue"
+      },
+      "glyph": "&"
     },
     {
       "id": "ferrolho",
@@ -92,7 +112,12 @@
         "scope": "skill",
         "target": "tackle",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Ferrolho",
+        "en": "Bolt"
+      },
+      "glyph": "#"
     },
     {
       "id": "capitao",
@@ -110,7 +135,12 @@
         "kind": "team_bonus",
         "scope": "morale",
         "amount": 1
-      }
+      },
+      "tag": {
+        "pt": "Capitão",
+        "en": "Captain"
+      },
+      "glyph": "!"
     },
     {
       "id": "padrinho",
@@ -128,7 +158,12 @@
         "kind": "finance_bonus",
         "scope": "sponsorship",
         "amount": 1
-      }
+      },
+      "tag": {
+        "pt": "Padrinho",
+        "en": "Godfather"
+      },
+      "glyph": "$"
     },
     {
       "id": "maos_de_pedra",
@@ -147,7 +182,12 @@
         "scope": "skill",
         "target": "catching",
         "amount": -2
-      }
+      },
+      "tag": {
+        "pt": "Pedra",
+        "en": "Stone"
+      },
+      "glyph": "x"
     },
     {
       "id": "sumido",
@@ -165,7 +205,12 @@
         "kind": "training_penalty",
         "scope": "attendance",
         "amount": -2
-      }
+      },
+      "tag": {
+        "pt": "Sumido",
+        "en": "Ghost"
+      },
+      "glyph": "."
     },
     {
       "id": "vidraca",
@@ -183,7 +228,12 @@
         "kind": "injury_risk",
         "scope": "all",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Vidraça",
+        "en": "Glass"
+      },
+      "glyph": "\\"
     },
     {
       "id": "braco_de_ouro",
@@ -202,7 +252,12 @@
         "scope": "skill",
         "target": "throwing",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Braço",
+        "en": "Arm"
+      },
+      "glyph": "~"
     },
     {
       "id": "arrancada",
@@ -221,7 +276,12 @@
         "scope": "skill",
         "target": "rush",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Arrancada",
+        "en": "Burst"
+      },
+      "glyph": "^"
     },
     {
       "id": "leitura_de_jogo",
@@ -240,7 +300,12 @@
         "scope": "skill",
         "target": "deflection",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Leitura",
+        "en": "Read"
+      },
+      "glyph": ":"
     },
     {
       "id": "snap_de_relogio",
@@ -259,7 +324,12 @@
         "scope": "skill",
         "target": "snap",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Relógio",
+        "en": "Clockwork"
+      },
+      "glyph": "|"
     },
     {
       "id": "rato_de_regra",
@@ -278,7 +348,12 @@
         "scope": "skill",
         "target": "rules",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Regra",
+        "en": "Rulebook"
+      },
+      "glyph": "="
     },
     {
       "id": "olho_clinico",
@@ -297,7 +372,12 @@
         "scope": "skill",
         "target": "scouting",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Olho",
+        "en": "Eye"
+      },
+      "glyph": "@"
     },
     {
       "id": "prancheta",
@@ -316,7 +396,12 @@
         "scope": "skill",
         "target": "play_calling",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Prancheta",
+        "en": "Clipboard"
+      },
+      "glyph": "+"
     },
     {
       "id": "ferro",
@@ -334,7 +419,12 @@
         "kind": "injury_risk",
         "scope": "all",
         "amount": -2
-      }
+      },
+      "tag": {
+        "pt": "Ferro",
+        "en": "Iron"
+      },
+      "glyph": "%"
     },
     {
       "id": "motorista",
@@ -352,7 +442,12 @@
         "kind": "finance_bonus",
         "scope": "travel",
         "amount": 1
-      }
+      },
+      "tag": {
+        "pt": "Motorista",
+        "en": "Driver"
+      },
+      "glyph": "_"
     },
     {
       "id": "pavio_curto",
@@ -370,7 +465,12 @@
         "kind": "penalty_risk",
         "scope": "all",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Pavio",
+        "en": "Fuse"
+      },
+      "glyph": "'"
     },
     {
       "id": "so_no_ataque",
@@ -389,7 +489,12 @@
         "scope": "skill",
         "target": "tackle",
         "amount": -2
-      }
+      },
+      "tag": {
+        "pt": "Turista",
+        "en": "Tourist"
+      },
+      "glyph": ","
     },
     {
       "id": "dono_da_bola",
@@ -407,7 +512,12 @@
         "kind": "team_bonus",
         "scope": "morale",
         "amount": -1
-      }
+      },
+      "tag": {
+        "pt": "Dono",
+        "en": "Owner"
+      },
+      "glyph": "("
     },
     {
       "id": "sem_condicao",
@@ -425,7 +535,12 @@
         "kind": "training_penalty",
         "scope": "conditioning",
         "amount": -2
-      }
+      },
+      "tag": {
+        "pt": "Cansaço",
+        "en": "Gassed"
+      },
+      "glyph": "-"
     },
     {
       "id": "quebra_de_cintura",
@@ -444,7 +559,12 @@
         "scope": "skill",
         "target": "juke",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Cintura",
+        "en": "Hips"
+      },
+      "glyph": "<"
     },
     {
       "id": "voz_de_comando",
@@ -463,7 +583,12 @@
         "scope": "skill",
         "target": "leadership",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Voz",
+        "en": "Voice"
+      },
+      "glyph": "\""
     },
     {
       "id": "dentro_da_cabeca",
@@ -482,7 +607,12 @@
         "scope": "skill",
         "target": "trash_talk",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Cabeça",
+        "en": "Headgame"
+      },
+      "glyph": ";"
     },
     {
       "id": "didatico",
@@ -501,7 +631,12 @@
         "scope": "skill",
         "target": "coaching",
         "amount": 2
-      }
+      },
+      "tag": {
+        "pt": "Didático",
+        "en": "Teacher"
+      },
+      "glyph": "/"
     }
   ]
 }

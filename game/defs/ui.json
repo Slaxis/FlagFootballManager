@@ -133,8 +133,8 @@
       "en": "Elifoot style: a sandlot club calls you"
     },
     "manager.drafted": {
-      "pt": "Você é o novo técnico do",
-      "en": "You are the new coach of"
+      "pt": "ONDE VOCÊ COMEÇA",
+      "en": "WHERE YOU START"
     },
     "manager.not_fielded": {
       "pt": "você não poderá se escalar: o clube não tem equipe dessa modalidade",
@@ -257,8 +257,8 @@
       "en": "TALENTS"
     },
     "manager.perks_hint": {
-      "pt": "Moeda à parte do treino: um defeito PAGA por um talento. Saldo: %d",
-      "en": "A currency apart from training: a flaw PAYS for a talent. Balance: %d"
+      "pt": "Moeda à parte do treino: um defeito PAGA por um talento.",
+      "en": "A currency apart from training: a flaw PAYS for a talent."
     },
     "manager.perk_price": {
       "pt": "%d",
@@ -603,6 +603,22 @@
     "team.lineup_hint": {
       "pt": "Clique numa caixa da tabela para escalar. O número é a afinidade; o preenchimento compara com o resto do elenco.",
       "en": "Click a box in the table to field somebody. The number is the affinity; the fill compares him with the rest of the squad."
+    },
+    "manager.talent_points": {
+      "pt": "%d tp",
+      "en": "%d tp"
+    },
+    "manager.talent_points_hint": {
+      "pt": "Talent points. Moeda separada do treino — não se compra com career point, e um defeito devolve.",
+      "en": "Talent points. A currency apart from training — career points cannot buy them, and a flaw gives them back."
+    },
+    "manager.drafted_hint": {
+      "pt": "Um clube existente te contrata no draft. Só o Fundador batiza o próprio — é isso que o cenário escolhe.",
+      "en": "An existing club signs you in the draft. Only the Founder names his own — that is what the scenario picks."
+    },
+    "manager.drafted_line": {
+      "pt": "Sorteado no draft · várzea carioca",
+      "en": "Drawn in the draft · Rio sandlot"
     }
   }
 }

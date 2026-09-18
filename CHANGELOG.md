@@ -2,6 +2,74 @@
 
 ## [Unreleased]
 
+### Changed - B.7b: a idade de novo, e a criacao em 2x2 (2026-09-18)
+- **A estreia agora comeca aos 14**, com 95% dentro aos 20 — e a mediana do
+  elenco de varzea caiu de 19 pra 17 anos. Catorze e quando a galera pega o
+  esporte nessa cena, e quem chega no topo da escada quase certamente comecou la
+  e nao aos vinte. Doze seria mais verdade ainda e precisaria de um juvenil pra
+  ser honesto, que nao existe
+- **A janela do manager (16..18) e uma TRUNCAGEM da mesma curva**, nao uma
+  segunda distribuicao. O caminho barato era um segundo par de constantes, que e
+  como se acaba com duas formas que discordam e ninguem capaz de dizer qual e a
+  real. Por rejeicao e nao por clamp: clamp dobra tudo que fica de fora nas
+  bordas, empilhando metade da populacao no primeiro e no ultimo ano da janela
+- Resultado medido: o **fundador cai 100% entre 16 e 19** (16:25% 17:43% 18:23%
+  19:9%), o estudado entre 16 e 18, e o ex-jogador entre 19 e 24 — os tres saindo
+  da mesma janela mais a propria carreira
+- `MANAGER_DEBUT` era 18..22 com a justificativa "voce nao esta criando uma
+  crianca", mas a razao real embaixo era **orcamento**: estreia aos quinze dava
+  ficha de tres career points e tela sem nada pra editar. Isso saiu quando os
+  cenarios pararam de dividir um bolo de anos sem dono, entao a idade ficou livre
+  pra ser o que a cena e
+- **`MIN_MANAGER_POTENTIAL` foi de 25 pra 35, e um teste forcou.** A premissa do
+  estudado e saber mais do jogo que quem jogou — e com teto de dois degraus ele
+  nao conseguia, porque o ex-jogador chega a dois de regra so de viver tres a
+  seis temporadas. Os dois empatavam, e cenario que empata com o proprio oposto e
+  cenario que nao existe
+- **Talento deixou de ser sigla de tres letras e virou PALAVRA + marca ascii** —
+  `FOGUETE >`. Os codigos estao certos pros oito atributos e as quinze
+  habilidades, que voce aprende uma vez; um catalogo de 27 e outro problema,
+  ninguem decora, e `CRQ FOG CER COL` e uma tela que se le com o mouse, um
+  tooltip por vez
+- `tag` e apelido e nao abreviacao: "So no ataque" nao tem forma curta e TURISTA
+  diz a mesma coisa numa palavra. Apelido de defeito tem que LER como defeito
+  sozinho — ATAQUE e FOLEGO soariam elogio, viraram TURISTA e CANSACO. O glifo
+  vem do catalogo tambem, entao modulo que traz talento traz a marca junto
+- **O saldo de talent points subiu pro cabecalho**, ao lado da idade e do saldo
+  de cp. Era visivel so dentro da dica da secao que gasta — a unica pergunta que
+  a secao provoca ("da pra pagar?") respondida por uma frase que voce tinha que
+  ir ler
+- **A coluna da esquerda virou 2x2**: [CENARIO | MODALIDADE] sobre [IDENTIDADE |
+  CLUBE]. Era fila indiana de sete secoes, metade delas com dois controles de
+  largura, entao lia como lista de titulos com ar no meio. A semente foi pro
+  cabecalho, que e onde moram os fatos sobre a RODADA e nao campos do formulario
+- A celula da direita nunca fica vazia: so o Fundador batiza clube, entao os
+  outros dois ganham ONDE VOCE COMECA no lugar — o que responde uma pergunta real
+  em vez de deixar meia linha em branco
+- ⚠️ E a "compactacao" saiu **500px MAIS LARGA** na primeira tentativa, porque
+  tres filhos continuavam dimensionados contra a coluna inteira: os chips de
+  cenario, o resumo do corpo e os campos do clube. Nada dentro de uma celula pode
+  ser mais largo que a celula. Medido e corrigido: 2116x860
+- **Na camisa, `Fulano #10` com um espaco** — o apelido fazia EXPAND_FILL, que
+  empurrava o numero pro canto direito de uma coluna de 190px e deixava um trecho
+  de tabela vazio no meio: a linha pontilhada de um cardapio, numa coisa que
+  deveria ler como as costas da camisa
+- **A coluna de idade ganhou gradiente**, na mesma rampa do Geral e fazendo outra
+  pergunta: Geral sobe porque mais e melhor; idade nao — vinte nao e pior que
+  trinta, e mais cedo — entao o calor tem pico no meio (22..28) e cai pros dois
+  lados. `ActorLife.prime_heat()`, derivado da propria curva de aprendizado
+- ⚠️ **Tres cabecalhos da tabela estavam cortados** e era invisivel: a face do
+  corpo e monoespacada em 12px por caractere, entao "Talento" tem 84px e "Idade"
+  e "Geral" tem 60, contra colunas de 34, 48 e 58. O mais LARGO de cada uma
+  dessas colunas e o cabecalho e nao o dado — dois digitos de idade ocupam 24px —
+  entao a coluna parecia folgada de toda linha menos a que a nomeia
+- ⚠️ **Nao existe "uma fonte menor".** A face do corpo e nitida em 9 e em 18 e em
+  mais nada entre os dois — e isso esta escrito no `look.gd` como restricao
+  deliberada, porque inventar um degrau intermediario e inventar o borrao de
+  volta. Diminuir 1 ponto os numeros custaria a nitidez que todo o trabalho de
+  pixel existe pra ter
+- Decisoes 82, 83 e 84 no roadmap
+
 ### Changed - B.7: talentos em sigla, e a pagina preta (2026-09-18)
 - **A pagina e preta agora.** `Look.CANVAS` passou a ser coisa diferente de
   `Look.PANEL`: o canvas e quase preto sempre, pra todo clube, e o clube veste

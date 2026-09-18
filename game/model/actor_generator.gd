@@ -9,7 +9,7 @@
 # numbers, not vibes.
 class_name ActorGenerator
 
-const AGE_MIN := 16
+const AGE_MIN := 14
 const AGE_MAX := 42
 const STAT_MIN := 1
 const STAT_MAX := 99
@@ -131,12 +131,21 @@ static func spawn(world_seed: int, actor_seed: int, level: float,
 		"actor_%d_%d" % [world_seed, actor_seed], level, category, track, years,
 		-1, toward)
 
-# YOU ARE NOT CREATING A FIFTEEN-YEAR-OLD. Everybody else spawns as a kid and
-# grows up, because that is how a squad gets its age spread — but the person on
-# the creation screen is a grown adult by definition, and rolling him a child's
-# debut produced managers of fifteen with an empty sheet and nothing to edit.
-const MANAGER_DEBUT_MIN := 18
-const MANAGER_DEBUT_MAX := 22
+# A MANAGER STARTED LATER THAN THE AVERAGE KID, and that is the whole of it now.
+# It used to be a flat 18..22 with its own reasoning — "you are not creating a
+# fifteen-year-old" — but the reason underneath was a BUDGET problem: a debut at
+# fifteen gave a sheet worth three career points and a screen with nothing to
+# edit. That went away when the scenarios stopped sharing a pool of unnamed
+# years and started carrying their own allocation, so the age is free to be
+# what it should have been.
+#
+# The window is a truncation of the same lognormal everybody else is drawn from
+# (see `ActorLife.roll_debut_age`), which keeps the founder where he belongs:
+# with nought to one season behind him he lands between sixteen and nineteen
+# essentially every time, and the ex-player and the student fall out of the same
+# window plus their own careers.
+const MANAGER_DEBUT_MIN := 16
+const MANAGER_DEBUT_MAX := 18
 
 # The creation screen's door into the same production line. It takes an rng
 # rather than a seed because 🎲 has to deal a different person every press —
@@ -144,7 +153,7 @@ const MANAGER_DEBUT_MAX := 22
 static func lived(rng: RandomNumberGenerator, level: float,
 		track: String, years: int) -> Actor:
 	return _lived(rng, "manager", level, Actor.CATEGORY_MASC, track, years,
-		rng.randi_range(MANAGER_DEBUT_MIN, MANAGER_DEBUT_MAX))
+		ActorLife.roll_debut_age(rng, MANAGER_DEBUT_MIN, MANAGER_DEBUT_MAX))
 
 static func _lived(rng: RandomNumberGenerator, thing_id: String, level: float,
 		category: String, track: String, years: int, debut: int = -1,

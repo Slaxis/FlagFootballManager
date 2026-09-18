@@ -73,14 +73,24 @@ const SORT_AGE := "age"
 
 # Column widths live here and nowhere else: the group header above and the
 # sortable header below are both derived from them, so they cannot drift apart.
+# ⚠️ MEASURED AGAINST THEIR OWN HEADINGS, which three of them were not. The body
+# face is monospaced at 12px a character, so "Talento" is 84px and "Idade" and
+# "Geral" are 60 — plus a character for the sort arrow. Against COL_PERK 34,
+# COL_AGE 48 and COL_STRENGTH 58, all three headings were cropped, and a cropped
+# heading is the one cell in a table that cannot be read from context.
+#
+# It was invisible because the WIDEST thing in each of those columns is the
+# heading, not the data: two digits of age need 24px, so the column looked
+# comfortable from every row except the one that names it.
+const HEAD_CHAR := 12
 const COL_MARK := 18
-const COL_NAME := 230
-const COL_SHIRT := 190
-const COL_PERK := 34
-const COL_STRENGTH := 58
-const COL_AGE := 48
+const COL_NAME := 204
+const COL_SHIRT := 156
+const COL_PERK := 96
+const COL_STRENGTH := 72
+const COL_AGE := 72
 const COL_ROLE := 36
-const COL_GAP := 6
+const COL_GAP := 5
 # The three-letter code column on the athlete card.
 const CARD_CODE := 52
 # Mark, name, shirt, talent, Geral, age.
@@ -445,7 +455,13 @@ func _fill_row(grid: GridContainer, person: Actor, positions: PositionDef,
 	var strength: int = person.overall()
 	_put(grid, person, "strength", _cell(str(strength), COL_STRENGTH,
 		StatBar.tint(_in_squad(strength), ACCENT)), chosen, index)
-	_put(grid, person, "age", _cell(str(person.age()), COL_AGE, MUTED), chosen, index)
+	# THE SAME RAMP AS GERAL, ASKING A DIFFERENT QUESTION. Geral runs low-to-high
+	# because more is better; age does not — twenty is not worse than thirty, it
+	# is earlier — so the heat peaks in the middle and falls off both ways. The
+	# squad reads as a map of who is ready NOW, which is the question a roster is
+	# for, and the two columns share a language because they share the ramp.
+	_put(grid, person, "age", _cell(str(person.age()), COL_AGE,
+		StatBar.tint(ActorLife.prime_heat(person.age()), ACCENT)), chosen, index)
 	for step: Dictionary in _column_plan(positions):
 		if step.has("rule"):
 			grid.add_child(_rule_cell())
@@ -781,10 +797,13 @@ func _shirt_cell(person: Actor) -> Control:
 	box.add_theme_constant_override("separation", 5)
 	box.custom_minimum_size = Vector2(COL_SHIRT, 0)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# ⚠️ ONE SPACE, NOT A LEADER. The nickname used to EXPAND_FILL, which pushed
+	# the number to the right edge of a 190px column and left a run of empty
+	# table between them — the dotted line of a menu, on something that should
+	# read the way it reads on the back of the shirt.
 	var nick := Label.new()
 	nick.text = person.nickname() if person.nickname() != "" else person.first_name()
 	nick.clip_text = true
-	nick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	Look.wear_body(nick, Look.TEXT)
 	nick.add_theme_color_override("font_color", INK)
 	nick.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -136,10 +136,15 @@ const OPENING_APPETITE_SPREAD := 0.45
 # One step: enough that nobody is a literal zero across the board, which on
 # this ruler would mean somebody who cannot take a field.
 const OPENING_FLOOR_STEP := 1
-# Q1 runs from ten to thirty. Twenty-five is two steps, which is the least that
-# still fits what an origin promises — a student who cannot reach two steps of
-# rules is not a student.
-const MIN_MANAGER_POTENTIAL := 25
+# ⚠️ THREE STEPS, NOT TWO, AND A TEST FORCED IT. The student's whole premise is
+# that he knows the game better than the man who played it — and at a ceiling of
+# two steps he could not, because the ex-player reaches two steps of rules just
+# by living three to six seasons. The two tied, and a scenario that ties with its
+# own opposite is a scenario that does not exist.
+#
+# One signature skill at three is also defensible on its own terms: this is not a
+# random Q1 adult, it is the one who ended up running a club.
+const MIN_MANAGER_POTENTIAL := 35
 # And nobody is a prodigy yet. Two steps past the average ADULT is already a
 # remarkable child; the ruler puts 10 at an Olympic medal contender, and the
 # appetite will happily buy one at twelve if nothing stops it.

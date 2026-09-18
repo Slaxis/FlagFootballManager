@@ -13,7 +13,7 @@ const SCENE := "res://game/scene/create_manager/create_manager.tscn"
 func tests() -> Array:
 	return [
 		"test_the_form_builds",
-		"test_every_talent_is_a_code_with_its_name_on_the_tooltip",
+		"test_every_talent_is_a_word_with_its_name_on_the_tooltip",
 		"test_the_seed_follows_the_name_fields",
 		"test_the_dice_button_changes_the_person_and_the_world",
 		"test_a_perk_chip_can_be_taken_and_dropped",
@@ -145,7 +145,7 @@ func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	# back whatever it took before asking whether a chip can be taken, or this
 	# test is measuring the dice.
 	for id: String in perks.boons():
-		var owned: Button = _button_starting_with(screen, perks.icon(id))
+		var owned: Button = _button_starting_with(screen, perks.plate(id))
 		if owned != null and owned.button_pressed:
 			owned.pressed.emit()
 
@@ -153,29 +153,29 @@ func test_a_perk_chip_can_be_taken_and_dropped(t: TestHelper) -> void:
 	for id: String in perks.boons():
 		if cheap == "" or perks.cost(id) < perks.cost(cheap):
 			cheap = id
-	var chip: Button = _button_starting_with(screen, perks.icon(cheap))
+	var chip: Button = _button_starting_with(screen, perks.plate(cheap))
 	if chip == null:
 		t.fail("chip do talento não foi desenhado"); _close(screen); return
 
 	var was_on: bool = chip.button_pressed
 	chip.pressed.emit()
-	t.check(_button_starting_with(screen, perks.icon(cheap)).button_pressed != was_on,
+	t.check(_button_starting_with(screen, perks.plate(cheap)).button_pressed != was_on,
 		"o talento não mudou de estado")
-	_button_starting_with(screen, perks.icon(cheap)).pressed.emit()
-	t.equal(_button_starting_with(screen, perks.icon(cheap)).button_pressed, was_on,
+	_button_starting_with(screen, perks.plate(cheap)).pressed.emit()
+	t.equal(_button_starting_with(screen, perks.plate(cheap)).button_pressed, was_on,
 		"clicar de novo não voltou ao estado anterior")
 
 	# A flaw pays, so it is always takeable whatever the balance.
 	var flaw: String = perks.flaws()[0]
-	_button_starting_with(screen, perks.icon(flaw)).pressed.emit()
-	t.check(_button_starting_with(screen, perks.icon(flaw)).button_pressed,
+	_button_starting_with(screen, perks.plate(flaw)).pressed.emit()
+	t.check(_button_starting_with(screen, perks.plate(flaw)).button_pressed,
 		"o defeito deveria entrar sempre — ele paga")
 	_close(screen)
 
 func _pressed_chip(screen: Control, perks: PerkDef) -> Button:
 	var found: Button = null
 	for id: String in perks.perk_ids():
-		var chip: Button = _button_starting_with(screen, perks.icon(id))
+		var chip: Button = _button_starting_with(screen, perks.plate(id))
 		if chip != null and chip.button_pressed:
 			found = chip
 	return found
@@ -219,13 +219,13 @@ func _spend_the_six_years(screen: Control) -> int:
 # were measured against the longest name rather than guessed, and this is what
 # keeps them measured: a talent renamed one word longer breaks it, and nothing
 # else in the suite would notice.
-# ⚠️ THE CHIP CARRIES THE CODE, AND THE NAME LIVES ON THE TOOLTIP. This test
-# used to measure whether the whole NAME fit — and it was right to, back when the
-# chip spelled "Quebra de cintura  2 pp" in 252px of room and needed 276. Three
-# letters made that whole class of failure impossible, so what is worth pinning
-# changed with it: every talent must be findable by its code, and every code
-# must carry the name it stands for somewhere a mouse can reach.
-func test_every_talent_is_a_code_with_its_name_on_the_tooltip(t: TestHelper) -> void:
+# ⚠️ THE CHIP CARRIES A WORD AND A MARK, and the full name lives on the tooltip.
+# This test used to measure whether the whole NAME fit — right to, back when the
+# chip spelled "Quebra de cintura  2 pp" in 252px of room and needed 276 — and
+# then whether the three-letter code did. Both are now impossible to fail, so
+# what is pinned is what can still go wrong: every talent has to be on the screen
+# under its own nickname, and the nickname has to lead back to the real name.
+func test_every_talent_is_a_word_with_its_name_on_the_tooltip(t: TestHelper) -> void:
 	var perks := Drive.def("perk") as PerkDef
 	var screen: Control = _open()
 	var font: FontFile = Look.body()
@@ -235,7 +235,7 @@ func test_every_talent_is_a_code_with_its_name_on_the_tooltip(t: TestHelper) -> 
 	for node: Variant in _collect(screen, "Button", []):
 		var chip := node as Button
 		for id: String in perks.perk_ids():
-			if not chip.text.begins_with(perks.icon(id)):
+			if not chip.text.begins_with(perks.plate(id)):
 				continue
 			found[id] = true
 			t.check(chip.tooltip_text.contains(perks.label(id)),

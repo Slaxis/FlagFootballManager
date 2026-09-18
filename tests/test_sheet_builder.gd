@@ -255,12 +255,15 @@ func test_the_opening_rolls_a_lived_person(t: TestHelper) -> void:
 			# The age is the LIFE's, not a function of the budget. Deriving it
 			# from spending is what let the header say "12 anos" beside eight
 			# steps of leadership.
-			# Eighteen to thirty-four. The old band opened at fifteen, from
-			# back when the manager was rolled a child's debut like everybody
-			# else — and a fifteen-year-old running a club was a bug nobody had
-			# written down. The top moved too: a thirty-one-year-old ex-player
-			# taking over a side is the most ordinary case there is.
-			t.check(builder.age() >= 18 and builder.age() <= 34,
+			# ⚠️ SIXTEEN NOW, AND THE REASON IT MOVED IS THE POINT. The floor
+			# was eighteen because a child's debut produced a sheet worth three
+			# career points and a screen with nothing to edit — a BUDGET
+			# problem wearing an age problem's clothes. The scenarios carry
+			# their own allocation since, so the two came apart and the age is
+			# free to be what the scene looks like: a founder who put a club
+			# together at seventeen is the most ordinary story in amateur flag.
+			# The budget itself is asserted separately, where it belongs.
+			t.check(builder.age() >= MANAGER_ADULT_AGE and builder.age() <= 34,
 				"origem %s, semente %d: %d anos" % [id, seed_value, builder.age()])
 			# And the roll leaves nothing over: what you may move is HIS points.
 			t.equal(builder.remaining(), 0,
@@ -530,13 +533,20 @@ func test_only_the_ex_player_has_a_career(t: TestHelper) -> void:
 		"o ex-jogador saiu com %d anos de carreira — ele é o único que tem uma"
 			% int(oldest.get("player", -1)))
 
-# The manager's own debut runs 18..22, so any age measured from the floor
-# carries up to four years that are not career at all.
-const MANAGER_DEBUT_SPAN := 4
+# The manager's own debut window is 16..18, so any age measured from its floor
+# carries up to two years that are not career at all.
+const MANAGER_DEBUT_SPAN := 2
 
-# Eighteen is the floor for being in charge of anything, and a sheet worth less
-# than a couple of steps is not a sheet you can edit.
-const MANAGER_ADULT_AGE := 18
+# ⚠️ SIXTEEN, AND THE REASON THIS NUMBER MOVED MATTERS. It was eighteen, and the
+# stated reason was that you should not be creating a child — but the real
+# problem underneath was a BUDGET: a child's debut gave a sheet worth three
+# career points and a screen with nothing to edit. That is asserted separately,
+# by MANAGER_MIN_BUDGET, and it is the assertion that was doing the work.
+#
+# With the scenarios carrying their own allocation the two came apart, and the
+# age is free to be what the scene actually looks like: a founder who put a club
+# together at seventeen is the most ordinary story in amateur flag.
+const MANAGER_ADULT_AGE := 16
 # Eight attributes one step above the ordinary adult is 24 career points, and
 # that is the thinnest sheet the roll actually produces. The number is here to
 # catch the collapse — a budget of three, which is what a child's debut gave —
