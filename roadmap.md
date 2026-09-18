@@ -60,14 +60,14 @@ Somos o *International Superstar Soccer* do flag: adaptação, não simulação.
 | 20 | **O líder empresta seus passos ao elenco.** O modificador é `passo − 5`, com a âncora do adulto mediano como zero: 6 dá +1, 7 dá +2, e um líder de 3 passos **atrapalha** em −2. Vale para atributos e para as habilidades de comissão, e é por isso que a ficha do manager não é enfeite. |
 | 21 | **A criação é paga em anos de vida.** A tela **sorteia um moleque de 12 anos** — corpo, os 8 atributos entre 2 e 7, e às vezes um perk — e **os 6 anos que fazem dele um adulto são os que você gasta** (~130 career points). O sorteio não encosta nas habilidades de propósito: como um teste é atributo + habilidade, decidir isso pelo jogador esvaziaria a única pergunta da tela. O perk sai desses mesmos 12 anos — quem veio com Craque pagou em atributo, quem veio com Vidraça está mais forte por causa disso — e serve pra dar um tom antes do jogador decidir qualquer coisa. O 🎲 sorteia **outro moleque**, idêntico — os dados escolhem quem você nasceu, nunca quem você virou. A origem de todo custo continua sendo o zero, então vender um atributo devolve os 45 pontos inteiros e você pode se refazer do nada. A idade sobe enquanto você distribui e volta quando você desfaz. Tudo pode ser devolvido até zero. Atributos e habilidades saem do mesmo bolso, porque treinar destreza e treinar lançamento melhoram a mesma jogada. **E você sai da tela aos 18 ou não sai**: o botão de começar fica fechado enquanto sobrar ponto. A moeda é o **career point**: entrar no passo N custa N pontos do próprio tipo, e um ponto de atributo vale 3 career points contra 2 de habilidade — crescer é mais caro que aprender. Um ano de vida dá 23, então a vida inteira vale 414. A semente **é o nome**: `hash(nome + sobrenome + apelido)`. Ela não *rola* a ficha — o jogador continua distribuindo cada ponto à mão, que era o motivo de tirar o sorteio inicial do caminho — mas define o mundo em que ele nasce: quais clubes de várzea existem e qual deles te chama. Escrever os três campos num papel é o suficiente para voltar ao mesmo mundo. |
 | 22 | **O apelido tem que ser sobre a pessoa.** No amador brasileiro o apelido *é* o nome — ninguém no campo sabe o sobrenome do cara — então um apelido sorteado de um saco genérico se denuncia na hora. São quatro fontes e três delas são coerentes com o actor: morfologia sobre o **nome** (Pedro → Pedrinho, Lucas → Luquinho), sobre o **sobrenome** (Vasconcelos → Vasco), sobre o que ele é **notável** por (9 de agilidade → Foguete, 2 de vontade → Chorão) e, por último, o saco aberto. Atributo conta para os dois lados; **habilidade só conta para cima**, porque um amador tem uma dúzia de habilidades zeradas por nunca ter treinado, não por ser ruim nelas. |
-| 23 | **Um perk, opcional, e o defeito paga.** No máximo **1** por actor, e não pegar nenhum é uma resposta legítima — tudo vai para a ficha. Qualidade custa career points; **defeito devolve**. Sem isso ninguém escolheria "mãos de pedra", e é justamente o defeito pago que faz o teto de 1 ser uma regra necessária em vez de arbitrária. O `effect` de cada perk fica **declarado** no catálogo e é consumido por quem é dono da regra — `C.1` lê `roll_bonus`, o treino lê `training_penalty`, a temporada lê `injury_risk`. |
+| 23 | **Um perk, opcional, e o defeito paga.** No máximo **1** por actor, e não pegar nenhum é uma resposta legítima — tudo vai para a ficha. Qualidade custa career points; **defeito devolve**. Sem isso ninguém escolheria "mãos de pedra", e é justamente o defeito pago que faz o teto de 1 ser uma regra necessária em vez de arbitrária. O `effect` de cada perk fica **declarado** no catálogo e é consumido por quem é dono da regra — `D.1` lê `roll_bonus`, o treino (`C.2`) lê `training_penalty`, a temporada lê `injury_risk`. |
 | 24 | **Elenco é curadoria mais geração, e a curadoria é esparsa.** Atleta real entra como Thing de módulo (`ActorDef`); o que o curador não escrever, o gerador preenche a partir da reputação do clube. Ficha cheia são 23 números, e doze pessoas em dezesseis clubes são 4.400 campos que ninguém preenche direito — seis linhas têm que virar uma pessoa completa. O preenchimento é semeado pelo **id do atleta**, não pela semente da carreira: o mesmo atleta sai igual em toda partida, e só os gerados ao redor dele mudam. Fonte que chega depois **mescla** por id em vez de substituir, então um mod que só quer dizer "esse cara tem 100 de força" escreve só isso. A organização de pastas é **convenção**: a engine varre tudo e mescla (d5star v0.5.0). |
 | 25 | **Nome de atleta real vem de fonte, nota não.** Nome e elenco de lista oficial (CBFA/IFAF, site do clube) é referência e pode entrar. As 23 notas não têm fonte pública — atribuí-las a uma pessoa real seria uma avaliação inventada publicada num jogo. A saída é a decisão 24: o atleta real entra só com nome, clube e modalidade, e os números saem explicitamente do gerador. Onde a curadoria tiver julgamento real, ela fixa o número — decisão editorial de quem cura. |
 | 26 | **A semana é um `d5*−2` de career points, e essa é a régua de balanceamento.** Cada actor rola por semana: miolo de −1 a +2 em 71% das semanas, e caudas raras de 9% pra cada lado — a semana perdida e a semana de virada. Média crua 0,5/semana (26 cp/ano); vontade, clube e juventude somam ao dado. A âncora é **16-18 anos + 3-5 anos de boa dedicação = seleção brasileira** (passo 8), o que dá ~1 cp/semana pro comprometido. Comparação: a infância custa 23 cp/ano, então um ano de atleta dedicado vale ~2× um ano de criança crescendo. |
 | 27 | **Potencial por actor, sorteado no nascimento.** Teto mole em passos: 6 é comum, 7-8 incomum, 9-10 raro. Ganho acima do teto é amortecido, não zerado — trabalho conta, só rende pouco. Sem isso "jogar em clube bom" vira sinônimo de virar lenda, e clube não devia fabricar talento. |
 | 28 | **A carreira é o dado, curada ou simulada.** Um actor é ficha de nascimento + lista de anos. Cada ano diz `position` (o que treinou) e, opcionalmente, `gains` (quando o curador sabe). Ano sem `gains` é simulado. Um actor inventado é literalmente isso com a lista inventada — não existem dois caminhos de código. De quebra, `team` por ano vira histórico real: "jogou em 5 times" deixa de ser anedota. |
 | 29 | **Leader Action Points, à la Old World.** O manager tem 1-3 ações por semana e gasta pra influenciar em QUE habilidade um atleta queima o cp da semana. Três moedas, de Aristóteles: **Logos** convence pelo intelecto (inteligência), **Ethos** pela autoridade (vontade + carreira + títulos), **Pathos** pelo carisma. Quantas e de que tipo saem das stats do manager — é o que faz a ficha dele importar depois da tela de criação. |
-| 30 | **Quatro pools por actor, gastos na partida.** **Health** é a vida física e é a "mana" das jogadas; **Stamina** diz quantas jogadas seguidas antes de descansar; **Sanity** é o HP mental, quebra sob pressão; **Emotional** é o que convoca aliado, provoca adversário e chama a torcida; e **Loyalty** é o quanto o jogador está comprometido com a equipe ATUAL — o que decide se ele escuta o manager e se atende a proposta do vizinho. Derivados dos atributos, então dá pra calcular e mostrar antes de `C.1` — quem os CONSOME é a partida. |
+| 30 | **Quatro pools por actor, gastos na partida.** **Health** é a vida física e é a "mana" das jogadas; **Stamina** diz quantas jogadas seguidas antes de descansar; **Sanity** é o HP mental, quebra sob pressão; **Emotional** é o que convoca aliado, provoca adversário e chama a torcida; e **Loyalty** é o quanto o jogador está comprometido com a equipe ATUAL — o que decide se ele escuta o manager e se atende a proposta do vizinho. Derivados dos atributos, então dá pra calcular e mostrar em `B.8` — quem os CONSOME é a partida (`D.1`) e o People Management (`C.1`). |
 | 31 | **Afinidade é polaridade, não peso.** Cada posição carrega um vetor de +1 / 0 / −1 sobre atributos **e** habilidades, e o fit é o produto interno com os números do actor. O QB quer destreza, inteligência e regra; ele **não** quer provocação, então essa entrada é −1 e um boca-suja pontua pior na posição por mais que arremesse bem. Peso diria "arremesso vale 3× regra", que é uma afirmação sobre **treino** e mora em `trains`. Polaridade responde outra pergunta — essa pessoa serve pra essa vaga — e responder com sinal em vez de magnitude é o que deixa o vetor fácil de escrever: sim / não / errado, quinze vezes, e acabou. Um vetor serve as duas eras da carreira: no nascimento as habilidades são zero e só os atributos falam; no ano dez as habilidades dominam. `B.6` pergunta pra mesma função. |
 | 32 | **O dia é a unidade e xp é a moeda.** `xp/dia = dedicação + D5.successes()`, `10 xp = 1 cp`, semana de 5 dias. E são **duas correntes**: quem fez o trabalho ganha 1 cp de atributo **e** 1 cp de habilidade — academia e campo são sessões diferentes, e um bolso só dividido entre as duas deixava metade da ficha parada. 1 cp/semana = semana boa (academia quase todo dia, treino a 75%); 2 = excelente; 3 = treinou todo dia e ainda teve o dia da epifania. `D5.successes()` é a leitura de **contagem** do mesmo dado (à la White Wolf): 5 é um sucesso, 0 é uma falha, 1-4 é nada, e as duas pontas explodem. Medido: 70,6% de nada, 12,2% pra cada ±1, caudas raras. |
 | 33 | **A régua é absoluta, então ela precisa de quantis — e de uma escala internacional.** 10 é o melhor que existe **na Terra**, então "bom pra várzea" e "bom" são frases diferentes. Cinco bandas com razão de chance **4:1** (80/20) entre vizinhas: **Q1** nível cidade (30-55) · **Q2** estadual (55-68) · **Q3** nacional (68-80, *a seleção brasileira é isto*) · **Q4** mundial menor (80-90) · **Q5** mundial maior (90-100). O nível de um clube é `país + divisão` (`nation.json`), então um clube **de cidade** no México bate um clube **estadual** no Brasil — e o Brasil inteiro tem 0 a 2 Q5, que é o que a realidade diz. Isto nasceu de um furo visível: um garoto de 26 anos do Piedade Pelicanos com Treinamento 8, nível internacional em treino num clube de bairro. |
@@ -155,7 +155,8 @@ entrega naturalmente a tela do Elifoot com um jogo por linha.
 
 **Consequência de projeto:** como toda semana tem um jogo pra assistir, o
 motor de partida e a tela de jogo não são "o fim do projeto" — são o coração
-do loop semanal, e por isso vêm cedo (Fase C).
+do loop semanal — mas não são pré-requisito de existir uma semana, então
+vêm na Fase D, depois que o loop já gira (Fase C).
 
 ### Financeiro — a tensão é viagem
 
@@ -176,7 +177,7 @@ Receita por tier: **mensalidade de atleta** (tier baixo) → **patrocínio**
 
 ```
 START SCREEN
-  Continue (cinza até E.1) · Novo Jogo · Ajustes · Sair
+  Continue (cinza até E.3) · Novo Jogo · Ajustes · Sair
         │
         └─ MODULE SELECT
              "Brasileirão de Flag 2026"   ← módulo nativo
@@ -191,12 +192,12 @@ START SCREEN
                   └─ TEAM SCREEN  ── abas ──┬── Elenco        (o seu)
                                             ├── Adversários   (os outros clubes)
                                             ├── Comissão Técnica   (D.1)
-                                            ├── Local de Treino    (D.2)
-                                            └── Financeiro         (D.3)
-                       └─ [ Próxima Semana ]  → C.4
+                                            ├── Local de Treino    (C.2)
+                                            └── Financeiro         (C.3)
+                       └─ [ Próxima Semana ]  → C.5
 ```
 
-A barra de abas nasce com **duas** abas em `B.4` e cresce conforme a Fase D
+A barra de abas nasce com **duas** abas em `B.4` e cresce conforme a Fase C
 entrega as outras. `club_select` de hoje vira a aba **Adversários**.
 
 A seleção de módulo não é enfeite: é onde o jogador pluga o **próprio
@@ -256,7 +257,7 @@ opcional. O preço é em career points e o defeito **devolve**.
 | `🩹` | Vidraça | **−12** | `injury_risk` +2 |
 
 O `effect` é um **contrato**, não uma regra: quem o executa é o sistema dono
-dela — `C.1` lê `roll_bonus`, o treino lê `training_penalty`, a temporada lê
+dela — `D.1` lê `roll_bonus`, o treino lê `training_penalty`, a temporada lê
 `injury_risk`. Enquanto esses sistemas não existirem, o perk custa, aparece na
 ficha e não faz nada — do mesmo jeito que `min_women` esperou a partida.
 
@@ -323,41 +324,65 @@ var novo: Dictionary = TeamFusion.merge(vasco_patriotas, botafogo_reptiles)
 | **B.6b** | `pixel-e-layout` | Duas fontes pixel de terminal (VT323 + Pixel Code), render em Nearest, e as telas remontadas pra usar a tela: criação em três colunas com rodapé fixo (1743px → 1050px), escalação à esquerda e tabela à direita. Catálogo de talentos de 10 para **27** | ✅ |
 | **B.5e** | `tryouts` | A oferta deixa de ser um pool mundial e passa a ser **peneira por clube** (2d5* + alcance, no nível do clube) + quem aparece sozinho. Rodada: peneiras → indies → draft da praça, do melhor pro pior. Comissão técnica entra como orçamento próprio | ✅ |
 | **B.6** | `role-assignment` | Colunas ordenáveis e três blocos: **Perfil · Escalação · Comissão**. Cada vaga é um botão onde a CAIXA É UMA BARRA preenchida pela afinidade — o elenco lê como mapa de calor, e a mesma tela resolve escalação e comissão técnica | ✅ |
-| **B.8** | `pools-and-leader` | Os quatro pools (Health · Stamina · Sanity · Emotional) e os Leader Action Points na ficha e na home do time. **Só exibição** — são derivados, então dá pra ver antes de existir quem gaste. `C.1` consome os pools, `C.4` gasta os LAP | |
-| **B.7** | `perks` | Os ícones `★ ⚡ 🧠 🪨` na lista do elenco — o catálogo e a escolha já saíram em `B.4c`, falta o roster mostrar | |
+| **B.7** | `perks` | Os talentos na tabela do elenco — o catálogo de 27 e a escolha já saíram em `B.4c`/`B.6b`, falta o roster mostrar. Código de três letras, não emoji (decisão 64) | |
+| **B.8** | `pools-e-moedas` | Os cinco pools (Health · Stamina · Sanity · Emotional · **Loyalty**) e as três moedas (Ethos · Pathos · Logos) na ficha e na home do time. **Só exibição** — são derivados, então dá pra ver antes de existir quem gaste. É aqui que a conta das moedas e a renda semanal se fecham; `D.1` consome os pools, `C.1` gasta as moedas | |
+| **B.9** | `vaga-e-dropdown` | **A vaga vazia vira ponto de entrada.** Clicar numa vaga da escalação (ou numa cadeira da comissão) abre a lista de quem pode ocupá-la, ordenada pela afinidade NAQUELA posição — o caminho inverso de ordenar a tabela e clicar na célula, e os dois passam a valer. ⚠️ Uma fonte, dois leitores: a ordem da lista e a cor da célula saem da MESMA função de afinidade, senão a lista diz que ele é o melhor center enquanto a barra dele está fria. A vaga já sabe a posição, então a lista é o elenco inteiro ordenado e não uma lista "de centers" — decisão 47 de pé. Quem já está sentado aparece com onde está, não sumido | |
 
 > `team-generator` subiu na frente de `create-manager`: o sorteio coloca você
 > num clube **tier 4**, e nenhum dos 10 clubes reais é tier 4. Sortear num
 > tier 3 agora significaria refazer depois, perdendo a premissa de começar na
 > várzea.
 
-### Fase C — O coletivo  🔥 *fim desta fase = jogo rodando em loop*
-| Branch | Entrega |
-|---|---|
-| `C.1-match-engine` | Simulação headless, determinística, emitindo eventos |
-| `C.2-match-view` | **A tela Elifoot**: um jogo por linha, cronômetro, eventos ao vivo |
-| `C.3-coletivo` | Coletivo semanal: elenco dividido em dois, você observa |
-| `C.4-week-tick` | Próxima Semana avança `S/YYYY` e dispara o evento da semana |
+### Fase C — A semana  🔥 *fim desta fase = jogo rodando em loop*
 
-### Fase D — As outras abas
-| Branch | Entrega |
-|---|---|
-| `D.1-comissao-tecnica` | Buffs/debuffs dos cargos e chamada de jogada. **A ESCOLHA dos cargos já saiu em `B.6`** — os 5 cargos (HC · OC · DC · PF · OL) são posições de `side: staff` e usam a mesma afinidade, o mesmo botão e a mesma tela |
-| `D.2-local-treino` | Campos, custo, buff/debuff no elenco |
-| `D.3-financeiro` | Caixa, mensalidades, patrocínios |
-| `D.4-praca` | Actors sem clube — jogadores e comissão — esperando convite |
-| `D.5-elenco-crud` | Expulsar, elogiar, convidar da Praça |
+⚠️ **O motor de partida saiu do caminho crítico.** A semana 1 que o loop precisa
+— escalar, treinar, cobrar mensalidade, ver o que aconteceu — **não tem jogo**:
+o evento dela é o coletivo. `match-engine` era o item mais caro dessa fase e
+virou Fase D, onde ele é "a semana que tem jogo" em vez de o pré-requisito de
+existir uma semana.
 
-### Fase E — A temporada e a carreira
 | Branch | Entrega |
 |---|---|
-| `E.1-save-load` | Conserta `The.snapshot()` e persiste a carreira |
-| `E.2-calendar-season` | 1º semestre estaduais, 2º regionais + nacional |
-| `E.3-carioca` | Campeonato Carioca: tabela, rodadas, decide o tier |
-| `E.4-match-controls` | Substituição e mudança de padrão tático durante o jogo |
-| `E.5-manager-career` | Envelhece, morre aos 90, força por resultados, expulsão e convite |
-| `E.6-season-rollover` | Virada de ano, envelhecimento do elenco |
-| `E.7-team-lifecycle` | Fusão e extinção de clubes, redistribuindo os actors |
+| `C.1-people-management` | O modelo de ação: o ponto compra a TENTATIVA, o D5 resolve o desfecho em três faixas (2+ agrada todos e ele · 1 agrada todos menos ele · 0 não agrada ninguém). Oito ações nas três moedas, escrevendo **Loyalty** e **relações**. Montar comissão e escalação pela primeira vez é de graça — desfazer o que você mesmo fez é que custa |
+| `C.2-ct-e-treino` | Quatro níveis de CT valendo 1–3 slots, e a semana como **roteiro**: discurso inicial → slots → discurso final. Catálogo de seis exercícios mais o coletivo. O discurso é a ação de People Management que mora na tela de treino |
+| `C.3-financeiro` | Caixa e extrato de cinco linhas. **A mensalidade é um slider e é a tensão inteira do jogo**: alto enche o caixa e derruba a Loyalty, baixo é amado e quebrado. Aluguel do CT, equipamento, churrasco |
+| `C.4-coletivo` | Coletivo semanal: elenco dividido em dois, você observa. **É o evento da semana no MVP** |
+| `C.5-week-tick` | A resolução e o relatório da semana — o log do draft serve de molde. `S/YYYY` avança. **O loop fecha aqui** |
+
+> Recomendação registrada: **`E.3-save-load` deveria vir logo depois do `C.5`**.
+> A partir dele existe uma carreira que dura semanas, e perder oito semanas de
+> teste a cada sessão é o que mata o playtest.
+
+### Fase D — A partida
+| Branch | Entrega |
+|---|---|
+| `D.1-match-engine` | Simulação headless, determinística, emitindo eventos *(era `C.1`)* |
+| `D.2-match-view` | **A tela Elifoot**: um jogo por linha, cronômetro, eventos ao vivo *(era `C.2`)* |
+| `D.3-comissao-tecnica` | Buffs/debuffs dos cargos e chamada de jogada. **A ESCOLHA dos cargos já saiu em `B.6`** — os 5 cargos (HC · OC · DC · PF · OL) são posições de `side: staff` e usam a mesma afinidade, o mesmo botão e a mesma tela *(era `D.1`)* |
+| `D.4-match-controls` | Substituição e mudança de padrão tático durante o jogo *(era `E.4`)* |
+
+### Fase E — O mundo vivo
+| Branch | Entrega |
+|---|---|
+| `E.1-praca-viva` | A praça com fluxo semanal, aba própria e KPIs — actors sem clube, jogadores e comissão, esperando convite. **Quente `^^` / fria `vv`** *(era `D.4`)* |
+| `E.2-fog-of-war` | Stats, habilidades e talentos invisíveis; revelados por olheiro, coletivo, tempo de convívio e jogo oficial |
+| `E.3-save-load` | Conserta `The.snapshot()` e persiste a carreira *(era `E.1`)* |
+
+### Fase F — A temporada e a carreira
+| Branch | Entrega |
+|---|---|
+| `F.1-calendar-season` | 1º semestre estaduais, 2º regionais + nacional *(era `E.2`)* |
+| `F.2-carioca` | Campeonato Carioca: tabela, rodadas, decide o tier *(era `E.3`)* |
+| `F.3-manager-career` | Envelhece, morre aos 90, força por resultados, expulsão e convite *(era `E.5`)* |
+| `F.4-season-rollover` | Virada de ano, envelhecimento do elenco *(era `E.6`)* |
+| `F.5-team-lifecycle` | Fusão e extinção de clubes, redistribuindo os actors *(era `E.7`)* |
+
+### Movidas e absorvidas
+| Branch | |
+|---|---|
+| ~~`C.1-match-engine`~~ · ~~`C.2-match-view`~~ | viraram `D.1` e `D.2` — a partida deixou de ser pré-requisito do loop | → |
+| ~~`D.5-elenco-crud`~~ | **absorvida pelo `C.1`**. Expulsar, elogiar e convidar da praça eram um CRUD; viraram ações com custo em moeda e roll de desfecho. A feature sumiu porque o People Management já a contém — menos código, não mais | ✂ |
+| ~~`D.2-local-treino`~~ · ~~`D.3-financeiro`~~ | subiram pra `C.2` e `C.3`: sem elas não existe o que resolver numa semana | ↑ |
 
 ### Fora do MVP
 Regional e nacional · categoria feminina · amistosos agendados · expansão
