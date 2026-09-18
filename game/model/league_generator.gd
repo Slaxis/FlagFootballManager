@@ -196,11 +196,41 @@ static func is_built(club: Dictionary, rosters: Rosters, category: String,
 	return playable(rosters, id, category, positions)
 
 # How badly this club wants this person. Zero means it does not.
+# How much of a career somebody may already have to be signed here. -1 is "no
+# rule", which is every club that existed before you did.
+#
+# The origin writes the numbers (`squad.max_career_years`, `squad.veterans`) and
+# the founded club carries them: a squad of rookies plus the two or three who
+# left another side to bet on this one. Once those seats are taken the door
+# closes and everybody after them is a novice.
+static func years_cap(club: Dictionary, rosters: Rosters, category: String) -> int:
+	if not club.has("max_career_years"):
+		return -1
+	var cap: int = int(club["max_career_years"])
+	var allowed: int = int(club.get("veterans", 0))
+	if allowed <= 0:
+		return cap
+	var seasoned: int = 0
+	for person: Actor in rosters.squad(String(club.get("id", "")), category):
+		if person.career_years() > cap:
+			seasoned += 1
+	return cap if seasoned >= allowed else cap + allowed
+
+
 static func wants(club: Dictionary, actor: Actor, rosters: Rosters,
 		category: String, positions: PositionDef) -> float:
 	var id: String = String(club.get("id", ""))
 	var tier: int = int(club.get("tier", 4))
 	var position: String = actor.position()
+
+	# A CLUB FOUNDED LAST WEEK CANNOT SIGN A TEN-YEAR VETERAN. Its own tryouts
+	# already turn up rookies, but the Praça does not, and without this line the
+	# founded side would quietly stock up on other people's careers in the market
+	# phase — the one club whose whole premise is that nobody there has done this
+	# before.
+	var cap: int = years_cap(club, rosters, category)
+	if cap >= 0 and actor.career_years() > cap:
+		return 0.0
 
 	# A CLIPBOARD IS NOT A ROSTER SPOT. Staff has its own small budget and one
 	# person per chair — you do not carry a spare head coach — and it must not

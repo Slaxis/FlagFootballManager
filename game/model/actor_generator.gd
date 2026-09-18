@@ -46,7 +46,7 @@ static func generate(
 ) -> Actor:
 	var spec: Dictionary = {"position": position} if position != "" else {}
 	return _build(SeedRng.make_rng(seed_value), "actor_%d" % seed_value,
-		quality_from_reputation(reputation), category, spec, reputation, club_level)
+		quality_from_reputation(reputation), category, spec, club_level)
 
 # Hydrates a CURATED actor: a sparse spec from ActorDef plus whatever the
 # curator did not say. Everything pinned wins; everything absent is rolled.
@@ -60,7 +60,7 @@ static func from_spec(spec: Dictionary, reputation: int,
 	var id: String = String(spec.get("id", "")).strip_edges()
 	return _build(SeedRng.make_rng(SeedRng.seed_from_string(id)), id,
 		int(spec.get("quality", quality_from_reputation(reputation))),
-		category, spec, reputation, club_level)
+		category, spec, club_level)
 
 # How long somebody has been playing, by how established the club is. This is
 # the whole of decision 26's first half: an entry club is full of kids because
@@ -70,9 +70,21 @@ static func from_spec(spec: Dictionary, reputation: int,
 const YEARS_AT_ENTRY_CLUB := 1.6
 const YEARS_AT_ELITE_CLUB := 9.0
 const YEARS_SPREAD := 0.62
+# The top of the world ladder, so a level maps onto 0..1 the same way NationDef
+# lays it out.
+const LEVEL_TOP := 5.0
 
-static func career_years(reputation: int, rng: RandomNumberGenerator) -> int:
-	var maturity: float = clampf(float(reputation) / 100.0, 0.0, 1.0)
+# ⚠️ IT TAKES THE LEVEL, NOT THE REPUTATION, and that is the fix for a dial that
+# could never reach its own low end. The entry figure above is decision 26 — a
+# sandlot club is full of kids BECAUSE its players have a season or two behind
+# them — but what was feeding the mix was `reputation = level x 20`, and the
+# level never goes below one, so the maturity never went below 0.2 and the
+# weakest club in the world got a centre of 3.1 years instead of 1.6.
+#
+# The two numbers looked interchangeable — both "something out of a hundred" —
+# which is exactly why nobody noticed for as long as nobody measured.
+static func career_years(level: float, rng: RandomNumberGenerator) -> int:
+	var maturity: float = clampf((level - 1.0) / (LEVEL_TOP - 1.0), 0.0, 1.0)
 	var centre: float = lerpf(YEARS_AT_ENTRY_CLUB, YEARS_AT_ELITE_CLUB, maturity)
 	return clampi(int(round(exp(rng.randfn(log(centre), YEARS_SPREAD)))), 0, 26)
 
@@ -146,7 +158,7 @@ static func _lived(rng: RandomNumberGenerator, thing_id: String, level: float,
 	if toward != "":
 		spec["toward"] = toward
 	return _build(rng, thing_id, quality_from_reputation(reputation),
-		category, spec, reputation, level)
+		category, spec, level)
 
 # NOBODY IS A SCOUT AT FIFTEEN. A player starts as a kid and grows up, which is
 # how a squad gets its age spread — but a staff chair is something you reach
@@ -186,13 +198,18 @@ static func level_to_reputation(level: float) -> int:
 
 # The one construction path. `spec` is empty for an invented actor and holds
 # whatever a curator pinned for an authored one, so the two cannot drift apart.
+# ⚠️ NO `reputation` HERE ANY MORE, and that is the point rather than tidying.
+# Every caller already resolves it into `quality` before calling, and the one
+# thing inside that still read the raw number was the career length — which was
+# reading the wrong ruler, and now takes the level. A parameter nobody reads is
+# a lie in the signature: it says this function cares about club fame, and it
+# is exactly that lie that hid the bug for as long as it did.
 static func _build(
 	rng: RandomNumberGenerator,
 	thing_id: String,
 	quality: int,
 	category: String,
 	spec: Dictionary,
-	reputation: int,
 	club_level: float,
 ) -> Actor:
 	var actor := Actor.new()
@@ -209,7 +226,13 @@ static func _build(
 		birth = _body_toward(rng, positions, toward, birth)
 	var debut: int = int(spec.get("debut_age",
 		_debut_for(rng, String(spec.get("track", TRACK_PLAYER)))))
-	var years: int = int(spec.get("career_years", career_years(reputation, rng)))
+	var years: int = int(spec.get("career_years", career_years(club_level, rng)))
+	# ⚠️ AND AGE_MAX HAS TO BIND SOMETHING. It was a constant two tests read and
+	# nothing enforced: a late debut plus a long career adds up on its own, and
+	# the level-4 clubs were shipping fifty-five-year-old receivers. Both ends
+	# are rolled from their own distribution and neither knows about the other,
+	# so the sum is capped where they meet.
+	years = maxi(mini(years, AGE_MAX - debut), 0)
 	var payload: Dictionary = {
 		"plays": [category],
 		"manages": [],

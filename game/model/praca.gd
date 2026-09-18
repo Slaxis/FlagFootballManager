@@ -64,6 +64,7 @@ func median_age() -> int:
 	for actor: Actor in people:
 		ages.append(actor.age())
 	ages.sort()
+	@warning_ignore("integer_division")
 	return ages[ages.size() / 2]
 
 func median_overall() -> int:
@@ -73,6 +74,7 @@ func median_overall() -> int:
 	for actor: Actor in people:
 		marks.append(actor.overall())
 	marks.sort()
+	@warning_ignore("integer_division")
 	return marks[marks.size() / 2]
 
 # Where this pool sits on the world ladder. The one that answers "is there
@@ -86,6 +88,7 @@ func median_level() -> float:
 	for actor: Actor in people:
 		levels.append(float(actor.data.get("level", 1.0)))
 	levels.sort()
+	@warning_ignore("integer_division")
 	return levels[levels.size() / 2]
 
 # --- Memento ---

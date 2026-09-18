@@ -26,6 +26,7 @@ func tests() -> Array:
 		"test_the_scenario_is_a_trajectory_not_a_chair",
 		"test_you_arrive_sitting_in_your_chair",
 		"test_the_rolled_manager_is_an_adult_worth_editing",
+		"test_only_the_ex_player_has_a_career",
 		"test_the_roll_only_takes_talents_it_can_pay_for",
 		"test_the_opening_is_not_the_same_person_twice",
 	]
@@ -495,6 +496,43 @@ func test_the_rolled_manager_is_an_adult_worth_editing(t: TestHelper) -> void:
 			"origem '%s': saiu um manager de %d anos" % [id, youngest])
 		t.check(thinnest >= MANAGER_MIN_BUDGET,
 			"origem '%s': a ficha mais magra tem %d cp para mexer" % [id, thinnest])
+
+# WHICH OF THE THREE ACTUALLY PLAYED, and only one of them did.
+#
+# There used to be a second, shared span of years on top of the origin's own —
+# three to six that everybody got for having been around — and it was
+# load-bearing for the wrong reason: without it the sheet came out at nothing,
+# three career points and an uneditable screen. But it also made all three the
+# same person underneath, which is false for two of them. The founder is a
+# rookie; that is the premise, there was no club to have a career at. The
+# student never played at all.
+#
+# So the sheet is carried by the origin's own allocation now, and this test
+# guards both halves at once: the years are the scenario's, and the budget did
+# not collapse back to three when they left.
+func test_only_the_ex_player_has_a_career(t: TestHelper) -> void:
+	var origins := Drive.def("origin") as OriginDef
+	if origins == null:
+		t.fail("OriginDef ausente"); return
+	var oldest: Dictionary = {}
+	for id: String in origins.origin_ids():
+		var top: int = 0
+		for seed_value: int in range(300, 340):
+			var build: SheetBuilder = SheetBuilder.rolled_opening(
+				SeedRng.make_rng(seed_value), id)
+			top = maxi(top, build.age() - ActorGenerator.MANAGER_DEBUT_MIN)
+		oldest[id] = top
+	t.check(int(oldest.get("founder", 99)) <= 1 + MANAGER_DEBUT_SPAN,
+		"o fundador saiu com %d anos de carreira — ele é novato" % int(oldest.get("founder", -1)))
+	t.check(int(oldest.get("student", 99)) <= MANAGER_DEBUT_SPAN,
+		"o estudado saiu com %d anos de carreira — ele nunca jogou" % int(oldest.get("student", -1)))
+	t.check(int(oldest.get("player", 0)) >= 4,
+		"o ex-jogador saiu com %d anos de carreira — ele é o único que tem uma"
+			% int(oldest.get("player", -1)))
+
+# The manager's own debut runs 18..22, so any age measured from the floor
+# carries up to four years that are not career at all.
+const MANAGER_DEBUT_SPAN := 4
 
 # Eighteen is the floor for being in charge of anything, and a sheet worth less
 # than a couple of steps is not a sheet you can edit.

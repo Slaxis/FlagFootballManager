@@ -14,7 +14,8 @@ func tests() -> Array:
 		"test_name_is_filled_and_keeps_its_case",
 		"test_category_changes_the_name_pool",
 		"test_club_level_moves_the_ceiling",
-		"test_reputation_moves_the_years",
+		"test_club_level_moves_the_years",
+		"test_debut_piles_up_at_sixteen",
 		"test_actors_are_specialists",
 		"test_defaults_put_actor_in_praca",
 		"test_squad_is_stable_per_index",
@@ -105,17 +106,65 @@ func test_club_level_moves_the_ceiling(t: TestHelper) -> void:
 	t.check(national > city and world > national,
 		"a escada deveria ser monotônica (%d < %d < %d)" % [city, national, world])
 
-func test_reputation_moves_the_years(t: TestHelper) -> void:
-	var young: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 20)
-	var seasoned: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 85)
-	var young_age: float = 0.0
-	var seasoned_age: float = 0.0
+# ⚠️ IT IS THE LEVEL THAT MOVES THE YEARS, and this test used to pass a
+# REPUTATION — which the generator quietly ignored, because career length reads
+# the world ladder. Both numbers run zero to a hundred and look alike at a call
+# site, so the test went green for years while the dial it was aiming at never
+# moved.
+#
+# The second half is the part that matters: the entry end has to be REACHABLE.
+# Decision 26 puts a sandlot club at about 1.6 seasons a man, and what was
+# feeding the mix was `reputation = level x 20` with the level floored at one —
+# so the weakest club in the world came out at 3.1 and every várzea side in the
+# league was a decade too old.
+func test_club_level_moves_the_years(t: TestHelper) -> void:
+	var sandlot: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 20, Actor.CATEGORY_MASC, 1.0)
+	var elite: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 85, Actor.CATEGORY_MASC, 5.0)
+	var sandlot_age: float = 0.0
+	var elite_age: float = 0.0
 	for i: int in range(COHORT):
-		young_age += float(young[i].age())
-		seasoned_age += float(seasoned[i].age())
-	t.check(seasoned_age > young_age + float(COHORT) * 2.0,
-		"clube estabelecido deveria ter gente mais velha (%d vs %d anos de média)" % [
-			int(seasoned_age / COHORT), int(young_age / COHORT)])
+		sandlot_age += float(sandlot[i].age())
+		elite_age += float(elite[i].age())
+	sandlot_age /= float(COHORT)
+	elite_age /= float(COHORT)
+	t.check(elite_age > sandlot_age + 4.0,
+		"clube estabelecido deveria ter gente bem mais velha (%d vs %d anos de média)" % [
+			int(elite_age), int(sandlot_age)])
+	# The floor of the ladder is where the sandlot actually lives, and it is the
+	# number the decision named. Two years of slack around it, no more: at 3.1
+	# this passed nothing and the league shipped old.
+	t.check(sandlot_age < 22.0,
+		"a várzea saiu com média de %d anos — a ponta de entrada não está sendo alcançada"
+			% int(sandlot_age))
+
+# THE SHAPE OF WHEN PEOPLE START, which is a pile at the floor and a tail, not a
+# flat band. It was uniform 15..21 — which says debuting at twenty-one is
+# exactly as likely as at fifteen, and no scene works that way.
+func test_debut_piles_up_at_sixteen(t: TestHelper) -> void:
+	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
+	var hist: Dictionary = {}
+	var rolls: Array[int] = []
+	for i: int in range(4000):
+		var age: int = ActorLife.roll_debut_age(rng)
+		hist[age] = int(hist.get(age, 0)) + 1
+		rolls.append(age)
+	rolls.sort()
+	t.equal(rolls[0], ActorLife.DEBUT_AGE_MIN,
+		"alguém estreou antes dos %d" % ActorLife.DEBUT_AGE_MIN)
+	# The mode is the floor itself: more people start at sixteen than at any
+	# other age, which is the asymmetry the uniform draw did not have.
+	var top: int = 0
+	for age: int in hist.keys():
+		if int(hist[age]) > int(hist.get(top, -1)):
+			top = age
+	t.equal(top, ActorLife.DEBUT_AGE_MIN,
+		"a idade mais comum de estreia é %d, não %d" % [top, ActorLife.DEBUT_AGE_MIN])
+	# And 95% of everybody is in by twenty-one, which is the whole calibration:
+	# the tail exists, but it is a tail.
+	t.check(rolls[3800] <= 21,
+		"o percentil 95 da estreia caiu em %d anos" % rolls[3800])
+	t.check(rolls[3999] <= ActorLife.DEBUT_AGE_CAP,
+		"alguém estreou aos %d" % rolls[3999])
 
 # The whole point of the two-layer model: an actor is not "good" or "bad", he
 # is good at some things. If this spread collapses, every actor plays the same

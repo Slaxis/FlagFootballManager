@@ -2,6 +2,67 @@
 
 ## [Unreleased]
 
+### Changed - B.6q: a idade, e quem tem carreira (2026-09-18)
+- **A estreia virou lognormal a partir dos 16**, com 95% de todo mundo dentro
+  aos 21. Era uniforme 15-21, que e a afirmacao de que nao existe idade tipica
+  pra comecar — estrear aos 21 era tao provavel quanto aos 15. Agora: 36% aos
+  16, 30% aos 17, 15% aos 18, e o resto escorrendo. Os parametros sao derivados
+  e nao escolhidos: `mu = ln(6) - 1.645 * sigma`, com sigma = 0.9 como unica
+  escolha livre (ela decide a gordura da cauda tardia)
+- E o corte da cauda e **rerroll, nao clamp**: `clampi` dobrava a cauda inteira
+  no ultimo degrau, entao meio por cento de todo mundo estreava exatamente aos
+  30 — mais do que aos 29 — e aquele calombo era feito de gente que rolou 40
+- **`career_years()` passou a ler o NIVEL do clube e nao a reputacao**, que e o
+  conserto de um dial que nunca alcancava a propria ponta de baixo. A decisao 26
+  calibra a varzea em ~1,6 temporadas por atleta; o que alimentava a mistura era
+  `reputacao = nivel x 20`, e o nivel nunca desce de 1, entao a maturidade nunca
+  descia de 0.2 e o clube mais fraco do mundo recebia centro 3,1. As duas reguas
+  vao de 0 a 100 e sao indistinguiveis num call site — foi por isso que passou
+- **`AGE_MAX` passou a prender alguma coisa.** Era constante que dois testes liam
+  e ninguem aplicava: estreia tardia mais carreira longa somavam sozinhas, e os
+  clubes de nivel 4 despachavam recebedor de 55 anos
+- Medido depois: nivel 1.0 mediana de **19 anos** (era 22 na liga montada) com
+  41% de 18 ou menos, nivel 2.5 mediana 22, nivel 4.0 mediana 25, ninguem acima
+  de 42
+- **So o ex-jogador tem carreira.** Havia um segundo intervalo de anos,
+  compartilhado — tres a seis que todo mundo ganhava por ter estado por perto —
+  e ele era estrutural pelo motivo errado: sem ele a ficha saia em nada, tres
+  pontos de carreira e uma tela que nao da pra editar. So que ele tambem fazia os
+  tres cenarios serem a mesma pessoa por baixo. O fundador e novato (e a
+  premissa: nao existia clube onde ter carreira) e o estudado nunca jogou
+- Quem carrega a ficha agora e a alocacao do proprio cenario, que e o lugar
+  honesto: o estudado tem o regulamento porque **leu**. Fundador 0-1 anos,
+  estudado 0, ex-jogador 3-6. Budget medido: fundador 33-78, estudado 32-44,
+  ex-jogador 25-275 — nenhum perto do colapso de 3 que o intervalo compartilhado
+  existia pra evitar
+- **O clube fundado por voce e um elenco de novatos.** O cenario escreve os
+  numeros (`squad.max_career_years`, `squad.veterans`) e o clube os carrega,
+  entao o draft le a regra sem saber o que e uma origem. As peneiras do proprio
+  clube ja trariam novatos, mas a praca nao — o mercado e feito da carreira dos
+  outros — entao o teto mora em `LeagueGenerator.wants()`, onde as duas portas
+  leem ele
+- **Os fundadores de um clube sao os de mais TEMPORADAS, nao os mais velhos.**
+  Idade e estreia mais carreira, e a estreia e rolada por conta propria — entao
+  ordenar por idade entrega a historia do clube pra quem por acaso comecou
+  tarde. Um cara de 28 que pegou o esporte ha dois anos nao estava la na
+  fundacao; o de 22 com seis temporadas estava. E ordenar por idade tambem fazia
+  os fundadores serem sempre a cauda extrema da distribuicao de carreira, que e
+  exatamente o punhado de veteranos de que essa revisao trata
+- Testes: `test_debut_piles_up_at_sixteen` (a moda e o proprio piso, p95 <= 21),
+  `test_club_level_moves_the_years` (substitui `test_reputation_moves_the_years`,
+  que mirava no dial errado e ficou verde por isso), `test_only_the_ex_player_
+  has_a_career` e `test_a_founded_club_is_a_squad_of_rookies`
+- **`_build()` perdeu o parametro `reputation`**, e isso e a conclusao e nao
+  arrumacao: todo chamador ja resolve a reputacao em `quality` antes de chamar, e
+  a unica coisa la dentro que ainda lia o numero cru era o tempo de carreira —
+  que estava lendo a regua errada. Parametro que ninguem le e mentira na
+  assinatura: ele dizia que a funcao se importa com a fama do clube, e foi
+  exatamente essa mentira que escondeu o bug
+- Mais dois avisos: `spec` morto em `_attribute_row` (ficou pra tras quando o
+  tooltip passou a usar `stats.explain`) e as tres divisoes inteiras das medianas
+  da praca, anotadas
+- Decisoes 74, 75, 76 e 77 no roadmap
+
 ### Fixed - B.6p: avisos do compilador (2026-09-17)
 - Tres variaveis locais sombreando funcoes da propria classe: `band` em
   `stat.gd` (a segunda ocorrencia — a primeira ja tinha saido), `spec` em

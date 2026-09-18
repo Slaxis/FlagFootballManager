@@ -67,8 +67,31 @@ const STORED_PER_STEP := 10.0
 # Age is not rolled. It falls out of debut plus years, which is what makes an
 # entry club young and an established one full of veterans without either
 # being stated anywhere.
-const DEBUT_AGE_MIN := 15
-const DEBUT_AGE_MAX := 21
+# WHEN SOMEBODY STARTS PLAYING, as a lognormal from sixteen.
+#
+# It was uniform 15..21, which says there is no such thing as a typical age to
+# start: debuting at twenty-one was exactly as likely as at fifteen. A scene
+# where people come in at sixteen is not a flat band, it is a pile at the floor
+# with a tail — most arrive as kids, a few wander in late.
+#
+# The numbers are derived, not picked. With `offset = exp(N(mu, sigma))` and the
+# age floored from it, P(debut <= 21) = P(offset < 6) = 0.95 means
+#
+#     ln(6) = mu + 1.645 * sigma      (1.645 is the 95th percentile of N(0,1))
+#     mu    = 1.791759 - 1.645 * 0.9 = 0.3113
+#
+# Sigma is the one free choice: it decides how fat the late tail is. At 0.9 the
+# mode sits on sixteen itself.
+const DEBUT_AGE_MIN := 16
+# Nobody takes up the sport for the first time at forty. The tail is cut, not
+# folded, so the cut shows up in a measurement instead of piling on the last bin.
+const DEBUT_AGE_CAP := 30
+# ⚠️ AND THE CUT IS A REROLL, NOT A CLAMP. `clampi` folds the whole tail onto
+# the last bin: half a percent of everybody debuted at exactly thirty — more
+# than at twenty-nine — and that bump is made of people who rolled forty.
+const DEBUT_TRIES := 6
+const DEBUT_SIGMA := 0.9
+const DEBUT_MU := 0.3113
 
 # How fast somebody still learns. The tail is not zero: a 36-year-old still
 # picks things up, just not the way he did at eighteen.
@@ -197,7 +220,11 @@ static func roll_potential(club_level: float, rng: RandomNumberGenerator) -> int
 	return def.quantile_value(quantile, rng)
 
 static func roll_debut_age(rng: RandomNumberGenerator) -> int:
-	return rng.randi_range(DEBUT_AGE_MIN, DEBUT_AGE_MAX)
+	for attempt: int in range(DEBUT_TRIES):
+		var age: int = DEBUT_AGE_MIN + int(floor(exp(rng.randfn(DEBUT_MU, DEBUT_SIGMA))))
+		if age <= DEBUT_AGE_CAP:
+			return age
+	return DEBUT_AGE_CAP
 
 # --- The week ---
 

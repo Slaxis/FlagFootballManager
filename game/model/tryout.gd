@@ -58,7 +58,7 @@ static func turnout(club: Dictionary, rng: RandomNumberGenerator) -> int:
 # Returns everybody who showed up. The club picks first; whoever is left walks
 # to the Praça, which is how somebody good ends up available to a worse club.
 static func hold(club: Dictionary, wanted: Array[String], world_seed: int,
-		first_index: int, category: String) -> Array[Actor]:
+		first_index: int, category: String, years_cap: int = -1) -> Array[Actor]:
 	var positions := Drive.def("position") as PositionDef
 	var nations := Drive.def("nation") as NationDef
 	var out: Array[Actor] = []
@@ -71,9 +71,13 @@ static func hold(club: Dictionary, wanted: Array[String], world_seed: int,
 	var count: int = turnout(club, rng)
 	for i: int in range(count):
 		var toward: String = "" if wanted.is_empty() else wanted[i % wanted.size()]
+		# -1 is "roll a career like anybody else". A cap is a club with no
+		# history of its own: what turns up to its trials is people who have
+		# never done this either.
+		var years: int = -1 if years_cap < 0 else rng.randi_range(0, years_cap)
 		out.append(_candidate(positions, world_seed, first_index + i,
 			clampf(rng.randfn(level, LEVEL_SPREAD), LEVEL_FLOOR, LEVEL_CEILING),
-			category, toward))
+			category, toward, years))
 	return out
 
 # The turnout nobody organised. No club, no advertised position — just the body
@@ -95,8 +99,8 @@ static func indie(level: float, world_seed: int, first_index: int,
 	return out
 
 static func _candidate(positions: PositionDef, world_seed: int, index: int,
-		level: float, category: String, toward: String) -> Actor:
+		level: float, category: String, toward: String, years: int = -1) -> Actor:
 	var track: String = ActorGenerator.TRACK_PLAYER
 	if toward != "" and positions.side(toward) == PositionDef.SIDE_STAFF:
 		track = ActorGenerator.TRACK_STAFF
-	return ActorGenerator.spawn(world_seed, index, level, category, track, -1, toward)
+	return ActorGenerator.spawn(world_seed, index, level, category, track, years, toward)

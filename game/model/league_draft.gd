@@ -173,7 +173,7 @@ func _step_tryouts() -> void:
 	var id: String = String(club.get("id", ""))
 	var wanted: Array[String] = LeagueGenerator.gaps(club, rosters, category, _positions)
 	var candidates: Array[Actor] = Tryout.hold(club, wanted, praca.world_seed,
-		_spawned, category)
+		_spawned, category, LeagueGenerator.years_cap(club, rosters, category))
 	_spawned += candidates.size()
 	_last_club = String(club.get("name", id))
 	_say("draft.tryout", [_last_club, candidates.size(), _codes(wanted)])

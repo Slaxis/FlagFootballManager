@@ -533,6 +533,15 @@ func _roll_club() -> void:
 	_club_roll += 1
 	_club = TeamGenerator.found(
 		SeedRng.derive(_career_seed(), "founded_%d" % _club_roll), "", "", "", [])
+	# The scenario says what the squad you are about to build is allowed to be —
+	# rookies, plus a couple who left another side for this one — and the club
+	# carries it so the draft can read it without knowing anything about origins.
+	var origins := Drive.def("origin") as OriginDef
+	if origins != null:
+		var rule: Dictionary = origins.squad_rule(_origin)
+		for key: String in ["max_career_years", "veterans"]:
+			if rule.has(key):
+				_club[key] = int(rule[key])
 
 # ⚠️ TYPING THE NAME HAS TO CHANGE THE CLUB, not just the box. It used to write
 # the dictionary and stop there, so the crest beside it kept the rolled name —
@@ -725,7 +734,6 @@ func _track_code(code: String) -> Control:
 	return label
 
 func _attribute_row(stats: StatDef, id: String) -> Control:
-	var spec: Dictionary = stats.base_stat(id)
 	var step_value: int = int(_build.stats.get(id, 0))
 	var shift: int = int(stats.body_effect(
 		{"height": _build.height, "weight": _build.weight}).get(id, 0))
@@ -973,7 +981,8 @@ func _on_reroll_all() -> void:
 	_build_ui()
 
 # Changing the scenario rerolls, because a sheet built as an ex-player is not
-# the sheet a student would have. The six spare years survive either way.
+# the sheet a student would have — and since the years each one lived are now
+# the scenario's own, it is not a repaint, it is a different person.
 func _on_origin(id: String) -> void:
 	_origin = id
 	_build = SheetBuilder.rolled_opening(_free_rng(), _origin)

@@ -140,9 +140,6 @@ const OPENING_FLOOR_STEP := 1
 # still fits what an origin promises — a student who cannot reach two steps of
 # rules is not a student.
 const MIN_MANAGER_POTENTIAL := 25
-# The years everybody has just by having been around: playing on Sunday,
-# helping out, watching. The origin's own years sit on top of these.
-const BASE_YEARS := Vector2i(3, 6)
 # And nobody is a prodigy yet. Two steps past the average ADULT is already a
 # remarkable child; the ruler puts 10 at an Olympic medal contender, and the
 # appetite will happily buy one at twelve if nothing stops it.
@@ -195,15 +192,20 @@ static func rolled_opening(rng: RandomNumberGenerator, origin_id: String = "") -
 	# that scenario gives him.
 	var level: float = origins.club_level(origin_id) if origins != null and origin_id != "" else 1.0
 	var track: String = origins.career_track(origin_id) if origins != null 		else ActorGenerator.TRACK_PLAYER
-	# TWO SPANS, ADDED. The scenario's own years are what makes the three
-	# different from each other — the ex-jogador has one to three years AS a
-	# club player, the founder has none because there was no club. But every
-	# one of them has been around the sport for a few years before that, the
-	# way any adult in the várzea has, and without those years the sheet came
-	# out at nothing: a budget of three career points, an uneditable screen,
-	# and a manager who had never done anything.
-	var years: int = BASE_YEARS.x + rng.randi() % int(BASE_YEARS.y - BASE_YEARS.x + 1)
-	years += origins.career_years(origin_id, rng) if origins != null else 0
+	# ONE SPAN, AND IT IS THE SCENARIO'S. ⚠️ There used to be a second, shared
+	# one — three to six years everybody got just for having been around — and
+	# it was load-bearing for the wrong reason: without it the sheet came out at
+	# nothing, a budget of three career points and an uneditable screen.
+	#
+	# But it also made all three the same person underneath, and it is not true
+	# of two of them. THE EX-JOGADOR IS THE ONLY ONE WITH A CAREER. The founder
+	# is a rookie — that is the whole premise, there was no club to have a
+	# career at. The student never played at all.
+	#
+	# What carries the sheet now is the origin's own allocation instead, which is
+	# the honest place for it: the student has a rulebook because he read it, not
+	# because he spent four unnamed years somewhere.
+	var years: int = origins.career_years(origin_id, rng) if origins != null else 0
 	var person: Actor = ActorGenerator.lived(rng, level, track, years)
 
 	# Where the career actually happened, which the BODY decided and not the

@@ -24,17 +24,18 @@
       },
       "sheet": {
         "stats": {
-          "will": 1
+          "will": 2,
+          "charisma": 2
         },
         "skills": {
-          "leadership": 1,
-          "rules": 1
+          "leadership": 2,
+          "rules": 2
         }
       },
       "career": {
         "track": "player",
         "years_min": 0,
-        "years_max": 2
+        "years_max": 1
       },
       "perk_points": 1,
       "start": {
@@ -73,8 +74,8 @@
       },
       "career": {
         "track": "player",
-        "years_min": 1,
-        "years_max": 3
+        "years_min": 3,
+        "years_max": 6
       },
       "perk_points": 2,
       "start": {
@@ -103,17 +104,19 @@
       "squad": {},
       "sheet": {
         "stats": {
-          "intelligence": 1
+          "intelligence": 2,
+          "perception": 2
         },
         "skills": {
           "rules": 2,
-          "play_calling": 1
+          "play_calling": 2,
+          "coaching": 1
         }
       },
       "career": {
         "track": "staff",
-        "years_min": 1,
-        "years_max": 3
+        "years_min": 0,
+        "years_max": 0
       },
       "perk_points": 1,
       "start": {

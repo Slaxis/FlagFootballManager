@@ -158,7 +158,17 @@ func mark_founders(team_id: String, category: String) -> void:
 	var rng: RandomNumberGenerator = SeedRng.make_rng(
 		SeedRng.derive(career_seed, "founders_" + _key(team_id)))
 	var wanted: int = mini(rng.randi_range(FOUNDERS_MIN, FOUNDERS_MAX), people.size())
-	people.sort_custom(func(a: Actor, b: Actor) -> bool: return a.age() > b.age())
+	# ⚠️ BY SEASONS, NOT BY AGE. Age is debut plus career, and the debut is
+	# rolled on its own — so sorting by it hands the club's history to whoever
+	# happened to start late. A twenty-eight-year-old who took the sport up two
+	# years ago was not there when the club was founded; the twenty-two-year-old
+	# with six seasons was. Sorting by age also meant the founders were always
+	# the extreme tail of the career distribution, which is exactly the handful
+	# of veterans the age rework was about.
+	people.sort_custom(func(a: Actor, b: Actor) -> bool:
+		if a.career_years() != b.career_years():
+			return a.career_years() > b.career_years()
+		return a.age() > b.age())
 	for i: int in range(wanted):
 		people[i].data["founder"] = true
 

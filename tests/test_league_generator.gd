@@ -30,6 +30,7 @@ func tests() -> Array:
 		"test_a_praca_survives_the_round_trip",
 		"test_the_draft_writes_down_what_it_did",
 		"test_a_club_hires_a_bench_but_the_chairs_are_yours",
+		"test_a_founded_club_is_a_squad_of_rookies",
 	]
 
 func _world() -> Rosters:
@@ -320,3 +321,41 @@ func _mean(values: Array[int]) -> float:
 	for value: int in values:
 		total += float(value)
 	return total / float(values.size())
+
+
+# THE ONE CLUB WHOSE PREMISE IS THAT NOBODY THERE HAS DONE THIS BEFORE.
+#
+# The founder scenario promises a squad of rookies, and the origin writes the
+# numbers — `squad.max_career_years`, plus a couple who left another side to bet
+# on this one. Its own tryouts turn up novices because the cap is passed down to
+# them, but the PRAÇA does not: the market is full of other people's careers,
+# and without a rule the founded club would quietly stock up on them in the
+# draft phase. So the cap lives in `wants`, where both doors read it.
+func test_a_founded_club_is_a_squad_of_rookies(t: TestHelper) -> void:
+	var positions := Drive.def("position") as PositionDef
+	if positions == null:
+		t.fail("PositionDef ausente"); return
+	var rosters: Rosters = Rosters.make(SEED + 77)
+	var club: Dictionary = {
+		"id": "test_founded", "name": "Fundado Ontem", "tier": 4, "reputation": 12,
+		"max_career_years": 2, "veterans": 0,
+	}
+	# Same club, same hole, two candidates — one who has been playing eight
+	# years and one who started last season.
+	var veteran: Actor = ActorGenerator.spawn(SEED, 1, 4.0)
+	var rookie: Actor = ActorGenerator.spawn(SEED, 1, 4.0, Actor.CATEGORY_MASC,
+		ActorGenerator.TRACK_PLAYER, 1)
+	t.check(veteran.career_years() > 2,
+		"o veterano do teste tem %d anos de carreira" % veteran.career_years())
+	t.equal(rookie.career_years(), 1, "o novato do teste não é novato")
+	t.equal(LeagueGenerator.wants(club, veteran, rosters, CATEGORY, positions), 0.0,
+		"o clube fundado ontem contratou alguém com %d anos de estrada"
+			% veteran.career_years())
+	t.check(LeagueGenerator.wants(club, rookie, rosters, CATEGORY, positions) > 0.0,
+		"o clube fundado ontem recusou um novato")
+	# And the rule is opt-in: an ordinary club has no cap and takes either.
+	var ordinary: Dictionary = {"id": "test_plain", "name": "Comum", "tier": 4, "reputation": 12}
+	t.equal(LeagueGenerator.years_cap(ordinary, rosters, CATEGORY), -1,
+		"um clube comum herdou o teto de novatos")
+	t.check(LeagueGenerator.wants(ordinary, veteran, rosters, CATEGORY, positions) > 0.0,
+		"um clube comum recusou um veterano")
