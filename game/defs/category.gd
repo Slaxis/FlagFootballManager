@@ -46,6 +46,12 @@ func category_ids() -> Array:
 func has_category(id: String) -> bool:
 	return _categories.has(_key(id))
 
+# The short form for a chip, with the whole word one hover away — the same
+# contract the attributes, the positions and the talents all keep.
+func category_code(id: String) -> String:
+	return I18n.text(
+		(_categories.get(_key(id), {}) as Dictionary).get("code", ""), category_label(id))
+
 func category_label(id: String) -> String:
 	return I18n.text((_categories.get(_key(id), {}) as Dictionary).get("label", id), id)
 

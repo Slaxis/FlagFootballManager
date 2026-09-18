@@ -99,9 +99,16 @@ func explain(id: String) -> String:
 
 %s" % [icon(id), label(id), desc(id)]
 
-# What the chip says: FOGUETE >
+# ⚠️ THE MARK FIRST, AND IN BRACKETS: `[>] FOGUETE`.
+#
+# It read `FOGUETE > 2` for a while, which says "foguete is greater than two" to
+# anybody who has ever seen an expression — the glyph looked like an OPERATOR
+# between the name and the price rather than a mark belonging to the name. The
+# brackets make it a label, and putting it first makes the row teach the mapping:
+# your eye goes down a column of marks and each one is followed by what it means,
+# which is how you end up recognising `>` in the roster without being told.
 func plate(id: String) -> String:
-	return "%s %s" % [tag(id).to_upper(), glyph(id)]
+	return "[%s] %s" % [glyph(id), tag(id).to_upper()]
 
 func desc(id: String) -> String:
 	return I18n.text(perk(id).get("desc", ""), "")

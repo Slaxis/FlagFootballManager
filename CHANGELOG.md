@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+### Changed - B.7d: o formulario em uma coluna (2026-09-18)
+- **A criacao virou UMA coluna** e foi pra 1564x860. O 2x2 so e compacto se as
+  duas celulas de uma linha tem mais ou menos a mesma altura, e elas nao tem:
+  IDENTIDADE e uma linha de campos e CLUBE sao tres, entao a celula curta ficava
+  num buraco do tamanho do proprio formulario. Empilhado, cada secao tem
+  exatamente a altura que precisa e o buraco nao pode existir
+- Cenario com os tres chips na mesma linha, dividindo a coluna por expansao — um
+  quarto cenario nao precisaria de numero mexido em lugar nenhum
+- **Identidade numa linha so**: nome, sobrenome, apelido e o dado. Eram duas
+  linhas de campos de 186px com metade da largura vazia ao lado — placeholder e
+  palavra curta, valor e palavra curta, e nenhum dos dois precisou de um terco do
+  formulario
+- **O corpo virou uma linha por medida**, com o efeito em acronimo ao lado:
+  `Altura [1,89 m]  +1PER -1AGI`. Era duas caixas lado a lado com uma frase
+  quebrada embaixo nomeando todo atributo que o corpo INTEIRO move — dava pra ler
+  que o corpo da +1 de percepcao e nao qual dos dois numeros acima estava dando
+- E saiu o "corpo: 6 cp": ele ficava embaixo de um saldo, no topo da tela, que ja
+  se mexe quando voce arrasta o spinner. Era copia de um numero, e ver o numero
+  de verdade se mexer e como voce aprende que o corpo custa alguma coisa
+- **Modalidade numa linha**, com `category_code()` — MASC FEM MIS. Quatro chips
+  no tamanho de "Masculino" atras de um rotulo sao 610px: uma linha decidindo que
+  o formulario inteiro e cem pixels mais largo que tudo que mora nele
+- E `_choice` deixou de declarar largura minima. Um chip e tao largo quanto a
+  propria palavra, e um piso em TODOS era o chamador mais largo cobrando pedagio
+  de todos os outros
+- **O clube em tres linhas**, terminando no resultado: nome + as duas cores + o
+  dado, bairro + cidade, e o escudo embaixo. O escudo era um quarto controle na
+  linha das cores — uma fatia mostrando uma palavra cortada, ao lado dos dois
+  seletores que ele existe pra explicar
+- **O talento virou `[>] FOGUETE`** — a marca primeiro, entre colchetes. Lia
+  `FOGUETE > 2`, que diz "foguete e maior que dois" pra quem ja viu uma
+  expressao: o glifo parecia um OPERADOR entre o nome e o preco em vez de uma
+  marca que pertence ao nome. O colchete faz dele um rotulo, e por primeiro a
+  coluna ensina o mapeamento — seu olho desce uma coluna de marcas e cada uma e
+  seguida do que significa, que e como voce acaba reconhecendo `>` no elenco sem
+  ninguem te contar
+- Um campo com largura 0 passou a significar "divide a linha": campo que declara
+  pixel e campo que decide a largura do formulario, e tres deles decidiram que
+  ela era 600
+
 ### Changed - B.7c: a criacao em 1640, e um teste que ve estouro (2026-09-18)
 - A criacao foi de **2116 pra 1640 x 860**, com as duas metades em 786 cada —
   48% e 48%. Nada mais sai da tela mesmo em janela que nao esta maximizada

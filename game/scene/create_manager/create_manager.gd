@@ -48,7 +48,7 @@ const TALENT_BAD := Look.BAD
 # Pinned above the fullest scenario, so the frame never moves as you click
 # between them. A MINIMUM, so content that outgrows it still pushes through and
 # tests/fit_check.tscn still sees it.
-const PANEL_WIDTH := 1640
+const PANEL_WIDTH := 1564
 # The widths live here so the hints know what to wrap against: an autowrapping
 # Label with no width reports its minimum as the whole unwrapped line and quietly
 # blows the layout open.
@@ -67,10 +67,14 @@ const PANEL_HEIGHT := 860
 # than the cell. Three of these were not — the scenario chips, the body summary
 # and the club fields were all still sized against the whole column, which is
 # how a "compaction" came out 500px WIDER than what it replaced.
-const COL_LEFT_HALF := 381
-const COL_LEFT := 786
+const COL_LEFT := 620
+# The widest talent plate: "[_] MOTORISTA" plus its price.
+const PERK_PLATE_MIN := 196
+# "Altura" and "Peso" in a fixed column, so the two spin boxes line up.
+const MEASURE_LABEL := 78
+const MEASURE_FIELD := 130
 const COL_MID := 272
-const COL_RIGHT := 490
+const COL_RIGHT := 580
 const SKILL_COLUMNS := 2
 # The footer note gets whatever the three buttons leave. It was once 700px beside
 # a 320px primary, which made that row alone wider than the screen.
@@ -82,7 +86,7 @@ const CODE_WIDTH := 40
 # monospaced at 12px a character and "ARRANCADA ^ 2" is thirteen of them, so
 # 156px is the floor. Four columns of qualities against two of defects — the
 # catalogue is 20 to 7, which comes out at five rows each.
-const PERK_CHIP_MIN := 156
+const PERK_CHIP_MIN := 196
 const BOON_COLUMNS := 3
 const FLAW_COLUMNS := 1
 # How much of the row the qualities take. They outnumber the defects three to
@@ -93,7 +97,7 @@ const FLAW_COLUMNS := 1
 # The share is set by the WIDEST NAME, measured and not guessed: "Quebra de
 # cintura  2 pp" is 276px at the body size, so a 252px chip clipped it — and a
 # chip that clips the thing it exists to say is a chip that failed.
-const BOON_SHARE := 540
+const BOON_SHARE := 634
 const PERK_GAP := 6
 
 
@@ -211,61 +215,38 @@ func _column(width: int) -> VBoxContainer:
 	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	return box
 
+# ⚠️ ONE COLUMN, NOT A 2x2. The form was briefly paired two sections to a row,
+# which is compact only if the two cells on a row are about the same height — and
+# they are not: IDENTIDADE is one line of fields and CLUBE is three, so the short
+# cell sat in a hole as tall as the form itself. Stacked, every section is exactly
+# as tall as it needs to be and the hole cannot exist.
 func _left_column() -> Control:
 	var box: VBoxContainer = _column(COL_LEFT)
-	box.add_child(_pair(
-		_cell_column(UiText.t("manager.origin"), UiText.t("manager.origin_hint"),
-			[_origin_row()]),
-		_cell_column(UiText.t("manager.modality"), UiText.t("manager.plays_hint"),
-			[_plays_row(), _manages_row()])))
+	box.add_child(_section(UiText.t("manager.origin"), UiText.t("manager.origin_hint")))
+	box.add_child(_origin_row())
+	box.add_child(_section(UiText.t("manager.identity"), UiText.t("manager.identity_hint")))
+	box.add_child(_identity_row())
 	# THE BODY IS IDENTITY. Height and weight are the same kind of fact as the
-	# name — what you look like on paper — and they were sitting under the
-	# attributes purely because that is where the step they shift lives.
-	box.add_child(_pair(
-		_cell_column(UiText.t("manager.identity"), UiText.t("manager.identity_hint"),
-			[_identity_row(), _body_row()]),
-		_second_cell()))
+	# name — what you look like on paper — so they sit with it rather than under
+	# the attributes they happen to shift.
+	box.add_child(_body_row())
+	box.add_child(_section(UiText.t("manager.modality"), UiText.t("manager.plays_hint")))
+	box.add_child(_plays_row())
+	box.add_child(_section(
+		UiText.t("manager.club") if _authors_club() else UiText.t("manager.drafted"),
+		UiText.t("manager.club_hint") if _authors_club() else UiText.t("manager.drafted_hint")))
+	box.add_child(_club_row() if _authors_club() else _drafted_note())
 	return box
 
-# ⚠️ THE RIGHT-HAND CELL IS NEVER EMPTY, and that is a layout rule rather than a
-# decoration. Only the Fundador authors a club, so a cell that simply vanished
-# for the other two made the panel change size when you clicked between
-# scenarios — the screen moving under you as you compare the three. The seed
-# lives there when the club does not: it is the one control that belongs to
-# every scenario and was previously crammed into the identity stack.
-func _second_cell() -> Control:
-	if _authors_club():
-		return _cell_column(UiText.t("manager.club"), UiText.t("manager.club_hint"),
-			[_club_row()])
-	# ⚠️ IT WRAPS AGAINST THE CELL, and it has to say so. Left to itself a Label
-	# reports its minimum as the whole unwrapped line, so this one sentence made
-	# the two scenarios that show it 27px wider than the Fundador — the panel
-	# changing size as you click between them, which is the exact thing
-	# PANEL_WIDTH was pinned to stop.
+func _drafted_note() -> Control:
 	var note := Label.new()
 	note.text = UiText.t("manager.drafted_line")
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.custom_minimum_size = Vector2(COL_LEFT_HALF, 0)
+	note.custom_minimum_size = Vector2(COL_LEFT, 0)
 	note.add_theme_color_override("font_color", MUTED)
 	Look.wear_body(note, Look.TEXT)
-	return _cell_column(UiText.t("manager.drafted"), UiText.t("manager.drafted_hint"),
-		[note] as Array[Control])
+	return note
 
-func _pair(left: Control, right: Control) -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 24)
-	row.add_child(left)
-	row.add_child(right)
-	return row
-
-func _cell_column(caption: String, tip: String, rows: Array[Control]) -> Control:
-	var box: VBoxContainer = _column(COL_LEFT_HALF)
-	box.add_child(_section(caption, tip))
-	for row: Control in rows:
-		box.add_child(row)
-	return box
-
-# Attributes beside skills, talents underneath both.
 func _right_area() -> Control:
 	var box: VBoxContainer = _column(COL_RIGHT + COL_MID + 24)
 	var tracks := HBoxContainer.new()
@@ -411,18 +392,16 @@ func _header() -> Control:
 func _origin_row() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 3)
-	# ⚠️ AN HBOX OF THREE WAS THE ONLY THING IN THE FORM THAT DID NOT FIT. Three
-	# chips wide enough to say "Ex-jogador" is 447px, and it was setting the width
-	# of the entire left column — one row, in a form of twenty-three, deciding how
-	# wide the screen is. A flow wraps instead, and the cell is free to be as
-	# narrow as everything else in it.
-	var row := HFlowContainer.new()
-	row.add_theme_constant_override("h_separation", 6)
-	row.add_theme_constant_override("v_separation", 4)
+	# Three across, sharing the column. They expand rather than carrying a width,
+	# so the row is exactly the column and a fourth scenario would not need a
+	# number changed anywhere.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
 	var origins := Drive.def("origin") as OriginDef
 	for id: String in (origins.origin_ids() if origins != null else []):
 		var chip: Button = _choice(origins.label(id), _origin == id, _on_origin.bind(id))
-		chip.custom_minimum_size = Vector2(145, 34)
+		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		chip.custom_minimum_size = Vector2(0, 34)
 		chip.tooltip_text = "%s\n%s\n\n%s" % [
 			origins.label(id), origins.line(id), origins.desc(id)]
 		row.add_child(chip)
@@ -433,19 +412,16 @@ func _origin_row() -> Control:
 # 520px column — and the label on the dice was 185px of it, which is a lot of
 # width to spend saying what a die already says.
 func _identity_row() -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 8)
-	top.add_child(_name_field("first_name", UiText.t("manager.first_name"), 186))
-	top.add_child(_name_field("last_name", UiText.t("manager.last_name"), 186))
-	box.add_child(top)
-	var bottom := HBoxContainer.new()
-	bottom.add_theme_constant_override("separation", 8)
-	bottom.add_child(_name_field("nickname", UiText.t("manager.nickname"), 186))
-	bottom.add_child(_dice("manager.reroll_all", _on_reroll_all))
-	box.add_child(bottom)
-	return box
+	# ONE LINE. Three names and the die were two rows of 186px fields with half
+	# the width empty beside them: a placeholder is a short word and a value is a
+	# short word, and neither ever needed a third of the form.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.add_child(_name_field("first_name", UiText.t("manager.first_name"), 0))
+	row.add_child(_name_field("last_name", UiText.t("manager.last_name"), 0))
+	row.add_child(_name_field("nickname", UiText.t("manager.nickname"), 0))
+	row.add_child(_dice("manager.reroll_all", _on_reroll_all))
+	return row
 
 # A die, and the sentence goes on the tooltip. It is the one control on this
 # screen that needs no label at all.
@@ -471,7 +447,13 @@ func _text_field(caption: String, width: int, value: String,
 	field.text = value
 	field.placeholder_text = caption
 	field.tooltip_text = caption
-	field.custom_minimum_size = Vector2(width, 32)
+	# ⚠️ WIDTH 0 MEANS "SHARE THE ROW". A field that declares pixels is a field
+	# that decides how wide the form is, and three of them decided it was 600.
+	if width > 0:
+		field.custom_minimum_size = Vector2(width, 32)
+	else:
+		field.custom_minimum_size = Vector2(0, 32)
+		field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	field.text_changed.connect(on_typed)
 	return field
@@ -513,29 +495,29 @@ func _authors_club() -> bool:
 	var origins := Drive.def("origin") as OriginDef
 	return origins != null and _origin != "" and origins.authors_club(_origin)
 
-# THE NAME GETS THE WHOLE ROW. It is typed by the player and "Associação
-# Atlética Padre Miguel Piranhas" is a real length; sharing a line with the dice
-# button meant the field and the crest below it both cropped it.
+# THREE LINES, ENDING IN THE RESULT. The name and the two colours are the
+# decision; the crest under them is what the decision looks like, which is the
+# only reason to draw it. It used to be a fourth control on the colour line — a
+# sliver showing a clipped word, next to the two pickers it was meant to explain.
 func _club_row() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
-	box.add_child(_club_field("name", UiText.t("manager.club_name"), COL_LEFT_HALF))
+
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	top.add_child(_club_field("name", UiText.t("manager.club_name"), 0))
+	top.add_child(_colour_pick(0, UiText.t("manager.club_colour_main")))
+	top.add_child(_colour_pick(1, UiText.t("manager.club_colour_second")))
+	top.add_child(_dice("manager.club_reroll", _on_reroll_club))
+	box.add_child(top)
 
 	var where := HBoxContainer.new()
 	where.add_theme_constant_override("separation", 8)
-	where.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 186))
-	where.add_child(_club_field("city", UiText.t("manager.club_city"), 186))
+	where.add_child(_club_field("neighborhood", UiText.t("manager.club_neighborhood"), 0))
+	where.add_child(_club_field("city", UiText.t("manager.club_city"), 0))
 	box.add_child(where)
 
-	# The dice joined the colours: the name row is the one that needed the whole
-	# width, and a 40px button beside two 211px fields was what made it short.
-	var colours := HBoxContainer.new()
-	colours.add_theme_constant_override("separation", 8)
-	colours.add_child(_colour_pick(0, UiText.t("manager.club_colour_main")))
-	colours.add_child(_colour_pick(1, UiText.t("manager.club_colour_second")))
-	colours.add_child(_crest_preview())
-	colours.add_child(_dice("manager.club_reroll", _on_reroll_club))
-	box.add_child(colours)
+	box.add_child(_crest_preview())
 	return box
 
 func _club_field(key: String, caption: String, width: int) -> Control:
@@ -725,73 +707,73 @@ func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
 # points: the trade they force IS the price.
 func _body_row() -> Control:
 	var stats := Drive.def("stat") as StatDef
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 18)
-	if stats == null:
-		return row
-	for id: String in stats.measure_ids():
-		var spec: Dictionary = stats.measure(id)
-		var cell := VBoxContainer.new()
-		cell.add_theme_constant_override("separation", 2)
-		cell.tooltip_text = I18n.text(spec.get("desc", ""), "")
-		cell.mouse_filter = Control.MOUSE_FILTER_STOP
-
-		var caption := Label.new()
-		caption.text = I18n.text(spec.get("label", id), id)
-		caption.add_theme_color_override("font_color", MUTED)
-		Look.wear_body(caption, Look.TINY)
-		cell.add_child(caption)
-
-		# A SpinBox, not steppers: someone entering their own 1,83 m should type
-		# it, not click twenty-eight times.
-		var field := SpinBox.new()
-		field.min_value = float(spec.get("min", 0.0))
-		field.max_value = float(spec.get("max", 999.0))
-		field.step = stats.increment(id)
-		field.value = _measure_value(id)
-		field.suffix = String(spec.get("unit", ""))
-		field.custom_minimum_size = Vector2(150, 32)
-		field.value_changed.connect(_on_measure_value.bind(id))
-		cell.add_child(field)
-		row.add_child(cell)
-
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 3)
-	# The section that used to head this is gone — the body lives inside
-	# IDENTIDADE now — so what it explained comes with the row.
+	box.add_theme_constant_override("separation", 4)
+	if stats == null:
+		return box
 	box.tooltip_text = UiText.t("manager.body_hint")
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
-	box.add_child(row)
-
-	# UNDER the fields, and wrapping. As a fourth cell on the same line this was
-	# a 432px unbroken sentence listing every shift the body performs, which on
-	# its own made the attributes column more than twice its budget.
-	var effect: Dictionary = stats.body_effect({"height": _build.height, "weight": _build.weight})
-	var summary := Label.new()
-	summary.text = _effect_text(stats, effect)
-	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.custom_minimum_size = Vector2(COL_LEFT_HALF, 0)
-	summary.add_theme_color_override("font_color", WARN)
-	Look.wear_body(summary, Look.TINY)
-	box.add_child(summary)
-
-	var price := Label.new()
-	price.text = UiText.t("manager.body_cost") % _build.body_cost()
-	price.add_theme_color_override("font_color", MUTED if _build.body_cost() == 0 else ACCENT)
-	Look.wear_body(price, Look.TINY)
-	box.add_child(price)
+	for id: String in stats.measure_ids():
+		box.add_child(_measure_row(stats, id))
 	return box
 
-# Reads the shift the body performs, so the player sees the trade before paying
-# for it.
+# ⚠️ ONE LINE PER MEASURE, AND THE SHIFT IS ITS OWN. It used to be two spin boxes
+# side by side with a wrapped sentence underneath naming every attribute the
+# WHOLE body moves — so you could read that the body gives +1 of perception and
+# not which of the two numbers above was giving it. Height on its own line with
+# its own consequence beside it is the same information and half the reading.
+#
+# `body_effect` treats anything missing from the dictionary as centred, so asking
+# it about one measure is exactly "what does this one do, on its own".
+#
+# And there is no price label any more. It said "corpo: 6 cp" underneath a
+# balance at the top of the screen that already moves when you drag the spinner —
+# a second copy of a number, and watching the real one move is how you learn that
+# the body costs anything at all.
+func _measure_row(stats: StatDef, id: String) -> Control:
+	var spec: Dictionary = stats.measure(id)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.tooltip_text = I18n.text(spec.get("desc", ""), "")
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	var caption := Label.new()
+	caption.text = I18n.text(spec.get("label", id), id)
+	caption.custom_minimum_size = Vector2(MEASURE_LABEL, 0)
+	caption.add_theme_color_override("font_color", MUTED)
+	Look.wear_body(caption, Look.TEXT)
+	row.add_child(caption)
+
+	# A SpinBox, not steppers: someone entering their own 1,83 m should type it,
+	# not click twenty-eight times.
+	var field := SpinBox.new()
+	field.min_value = float(spec.get("min", 0.0))
+	field.max_value = float(spec.get("max", 999.0))
+	field.step = stats.increment(id)
+	field.value = _measure_value(id)
+	field.suffix = String(spec.get("unit", ""))
+	field.custom_minimum_size = Vector2(MEASURE_FIELD, 32)
+	field.value_changed.connect(_on_measure_value.bind(id))
+	row.add_child(field)
+
+	var shift := Label.new()
+	shift.text = _effect_text(stats, stats.body_effect({id: _measure_value(id)}))
+	shift.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shift.add_theme_color_override("font_color", WARN)
+	Look.wear_body(shift, Look.TEXT)
+	row.add_child(shift)
+	return row
+
 func _effect_text(stats: StatDef, effect: Dictionary) -> String:
 	var parts: Array[String] = []
 	for id: String in effect.keys():
 		var value: int = int(effect[id])
 		if value == 0:
 			continue
-		parts.append("%+d %s" % [value, I18n.text(stats.base_stat(id).get("label", id), id)])
-	return "   ".join(parts)
+		# The CODE, like everywhere else on this screen. "+1 Percepção  -1 Agilidade"
+		# is thirty characters on a line that has 150px left.
+		parts.append("%+d%s" % [value, stats.code(id)])
+	return "  ".join(parts)
 
 # THREE LETTERS IN A FIXED COLUMN. "Chamada de jogada" is seventeen characters
 # beside a ten-slot bar, and twenty-three rows of that read as a classified ad
@@ -879,18 +861,17 @@ func _skill_row(stats: StatDef, id: String) -> Control:
 # they did not: forcing one selection made "mixed" read as though it implied a
 # men's slot when it implies nothing at all.
 func _plays_row() -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
-	# Wraps. Four chips behind a 120px label came to 576px in a 520px column, and
-	# a chip that fits on the next line is not a problem — it is a chip.
-	var row := HFlowContainer.new()
-	row.add_theme_constant_override("h_separation", 6)
-	row.add_theme_constant_override("v_separation", 4)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
 	row.add_child(_field_label(UiText.t("manager.plays")))
 	var categories := Drive.def("category") as CategoryDef
 	for id: String in (categories.category_ids() if categories != null else []):
+		# ⚠️ THE CODE, and it is what made this row fit. Four chips at "Masculino"
+		# length behind a label is 610px — one row deciding that the whole form is
+		# a hundred pixels wider than everything else in it needs.
 		var chip: Button = _choice(
-			categories.category_label(id), _plays.has(id), _on_plays.bind(id))
+			categories.category_code(id), _plays.has(id), _on_plays.bind(id))
+		chip.tooltip_text = categories.category_label(id)
 		# Mixed needs a base under it: the quota has to know which slot you
 		# fill. Greyed rather than hidden, so the rule is visible.
 		if id == Actor.CATEGORY_MISTO and not _plays_has_base():
@@ -898,8 +879,7 @@ func _plays_row() -> Control:
 			chip.tooltip_text = UiText.t("manager.plays_hint")
 		row.add_child(chip)
 	row.add_child(_choice(UiText.t("manager.plays_none"), _plays.is_empty(), _on_plays_none))
-	box.add_child(row)
-	return box
+	return row
 
 func _plays_has_base() -> bool:
 	return _plays.has(Actor.CATEGORY_MASC) or _plays.has(Actor.CATEGORY_FEM)
@@ -1244,7 +1224,11 @@ func _step_button(text: String, on_press: Callable, enabled: bool,
 func _choice(text: String, selected: bool, on_press: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(118, 32)
+	# ⚠️ NO WIDTH. A chip is as wide as its own word, and a floor on ALL of them is
+	# the widest caller taxing every other one: four modality chips reading MASC
+	# FEM MIS were still 118px each because a scenario chip once needed it, and
+	# that alone made the column 116px wider than anything in it.
+	button.custom_minimum_size = Vector2(0, 32)
 	button.toggle_mode = true
 	button.button_pressed = selected
 	button.focus_mode = Control.FOCUS_NONE
