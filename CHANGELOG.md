@@ -2,6 +2,59 @@
 
 ## [Unreleased]
 
+### Changed - B.7: talentos em sigla, e a pagina preta (2026-09-18)
+- **A pagina e preta agora.** `Look.CANVAS` passou a ser coisa diferente de
+  `Look.PANEL`: o canvas e quase preto sempre, pra todo clube, e o clube veste
+  as janelas. As duas telas punham o fundo do clube na TELA e derivavam painel,
+  poco e regua dele, entao nao existia um quadrado que nao fosse o clube — e a
+  ficha que voce abre num atleta desenha oito atributos em oito cores de chakra
+  sem ter contra o que contrastar
+- Um clube amarelo tornava a propria ficha ilegivel e **nao era bug de ninguem**:
+  cada cor individual era exatamente a que o player escolheu. A decisao 70
+  continua de pe (nenhum matiz novo e inventado); o que mudou e o que "fundo"
+  quer dizer — a janela, nao a tela
+- `Look.club_scheme()` e `Look.window()`: uma funcao, dois leitores. As cinco
+  linhas que derivam a paleta do clube estavam copiadas em `draft.gd` e em
+  `team.gd`, que e a forma de todo bug de alinhamento que esse projeto teve
+- **`signal`, a cor do clube que sobrevive a uma pagina preta.** `TeamColors`
+  promete que fundo e letra contrastam entre SI e nao promete nada sobre nenhum
+  dos dois contra o preto. Vasco e preto no branco, America e branco no vermelho
+  — "usa o fundo pra borda" da borda invisivel pra um, "usa a letra" da pro
+  outro. `signal` e aquele dos dois que le melhor no canvas
+- ⚠️ **O cinza da decisao 71 nunca tinha sido aplicado.** A paleta inteira
+  continuava azul-marinho, com o azul em 2.4x o vermelho — "azul escuro" e
+  "cinza escuro" sao indistinguiveis numa frase e a diferenca esta nos numeros,
+  que nenhuma revisao ve a olho. `test_the_chrome_has_no_hue` subtrai os canais
+  e reprova qualquer matiz, e pegou meu proprio deslize no MUTED na primeira
+  execucao
+- ⚠️ **E `draft.gd` e `team.gd` tinham paleta VERDE hard-coded** — o verde do
+  Elifoot, vivo muito depois da decisao 62 tira-lo. Nunca aparecia, porque
+  `_wear_club_colours()` sobrescreve todas as constantes um quadro depois, entao
+  os dois arquivos afirmavam uma coisa falsa sobre o jogo havia meses. Os
+  defaults vem do `Look` agora
+- **Talento virou sigla de tres letras na criacao** (a tabela do elenco ja era),
+  com nome e descricao no tooltip. Era a ultima secao que ainda lia como
+  classificado — e "Quebra de cintura  2 pp" pedia 276px num chip de 252, entao
+  o que cortava era tambem o que definia a largura da coluna. Cinco colunas de
+  qualidade e duas de defeito no lugar de tres e uma
+- A linha de talento na ficha do atleta era o ultimo sobrevivente do texto
+  corrido: sobreviveu porque esta atras de um clique, onde ninguem que olha as
+  telas principais passa
+- Dois **codigos** refeitos: `FER`/`FRR` diferiam por uma letra e os dois soavam
+  defensivos (um e tackle, outro e durabilidade) — Ferro ficou com `FER` e
+  Ferrolho virou `FLH`; e `SEM` lia como preposicao, virou `SCD`. Os 27 textos
+  ficaram como estavam: sao voz, nao verborragia, e tooltip nao cobra comprimento
+- **O vocabulario de `effect` fechou.** `"kind": "roll_bonuz"` carregava,
+  validava e entao nao fazia nada dentro do motor de partida — um bug que ia
+  parecer desbalanceamento no `D.1` em vez de erro de digitacao. A lista mora no
+  teste e cada entrada diz quem le
+- Testes: `test_the_chrome_has_no_hue`, `test_the_club_never_paints_the_canvas`,
+  `test_the_window_survives_a_black_club_and_a_white_one`,
+  `test_every_effect_names_a_kind_somebody_will_consume`, e os dois testes de
+  chip reescritos pra procurar pelo codigo (o que eles mediam — se o nome
+  inteiro cabia — virou impossivel de falhar)
+- Decisoes 78, 79, 80 e 81 no roadmap
+
 ### Changed - B.6q: a idade, e quem tem carreira (2026-09-18)
 - **A estreia virou lognormal a partir dos 16**, com 95% de todo mundo dentro
   aos 21. Era uniforme 15-21, que e a afirmacao de que nao existe idade tipica

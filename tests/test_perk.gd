@@ -13,6 +13,7 @@ func tests() -> Array:
 		"test_every_perk_is_translated_and_declares_an_effect",
 		"test_every_talent_has_its_own_icon",
 		"test_skill_effects_point_at_real_skills",
+		"test_every_effect_names_a_kind_somebody_will_consume",
 		"test_boons_charge_and_flaws_pay",
 		"test_a_talent_costs_nothing_in_career_points",
 		"test_as_many_as_the_balance_allows",
@@ -213,3 +214,39 @@ func test_every_talent_has_its_own_icon(t: TestHelper) -> void:
 			t.fail("código '%s' repetido entre '%s' e '%s'" % [code, owner_of[code], id])
 		owner_of[code] = id
 	t.equal(owner_of.size(), def.perk_ids().size(), "códigos distintos")
+
+
+# ⚠️ A TYPO HERE IS SILENT UNTIL THE CONSUMER EXISTS, and the consumer is months
+# away. `"kind": "roll_bonuz"` loads, validates, ships, and then does nothing
+# inside the match engine — at which point the bug looks like a balance problem
+# in `D.1` rather than a spelling mistake in a JSON nobody has opened since.
+#
+# The vocabulary is closed on purpose, and each entry names who reads it. Adding
+# a kind means adding it here, which is the moment to answer "and who acts on
+# it?" — the question that a free-text field never asks.
+const EFFECT_KINDS := {
+	"roll_bonus": "D.1 — o motor de partida, no rolamento",
+	"penalty_risk": "D.1 — chance de falta",
+	"injury_risk": "D.1 e a temporada — chance de lesão",
+	"training_penalty": "C.2 — o treino, no ganho da semana",
+	"team_bonus": "C.1 — People Management, na moral do elenco",
+	"finance_bonus": "C.3 — o financeiro, na receita e no custo",
+}
+
+func test_every_effect_names_a_kind_somebody_will_consume(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("PerkDef ausente"); return
+	var seen: Dictionary = {}
+	for id: String in def.perk_ids():
+		var kind: String = String(def.effect(id).get("kind", ""))
+		t.check(EFFECT_KINDS.has(kind),
+			"'%s' declara kind '%s', que ninguém consome — ou é typo, ou falta dizer quem lê"
+				% [id, kind])
+		seen[kind] = true
+	# And the other direction: a kind in the list that no perk uses is a
+	# consumer waiting on content that never arrived.
+	for kind: String in EFFECT_KINDS.keys():
+		t.check(seen.has(kind),
+			"nenhum talento usa '%s', mas %s está esperando por ele"
+				% [kind, EFFECT_KINDS[kind]])

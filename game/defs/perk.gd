@@ -74,6 +74,14 @@ func label(id: String) -> String:
 func icon(id: String) -> String:
 	return String(perk(id).get("icon", ""))
 
+# Code, name and description as one block — the shape a tooltip wants, and the
+# same contract as `StatDef.explain()`: the screen shows three letters, the
+# tooltip carries everything those three letters stand for.
+func explain(id: String) -> String:
+	return "%s · %s
+
+%s" % [icon(id), label(id), desc(id)]
+
 func desc(id: String) -> String:
 	return I18n.text(perk(id).get("desc", ""), "")
 

@@ -138,21 +138,104 @@ static func _size_slot(control: Control) -> String:
 #   as cores do clube  from the team screen onwards everything modulates to
 #                      them, and against a neutral run-up that lands as an
 #                      arrival rather than as one more green
-const BG := Color(0.031, 0.043, 0.075)
-const PANEL := Color(0.055, 0.071, 0.110)
-# Insets: a field, a well, the ground inside a control.
-const WELL := Color(0.020, 0.028, 0.051)
-const LINE := Color(0.110, 0.141, 0.204)
+# ⚠️ AND NEUTRAL MEANS NEUTRAL. This was navy for a while — the decision said
+# grey and the constants stayed blue, which is a thing only a measurement
+# catches, because "dark blue" and "dark grey" look identical in a description
+# and the difference is right there in the numbers: blue was 2.4x the red.
+# Every coloured thing drawn on top had to argue with a temperature before it
+# could say what it came to say.
+#
+# THE CANVAS IS NOT THE PANEL, and that split is the other half of this file's
+# job. `CANVAS` is the screen and it is always near-black, in every screen, for
+# every club. `PANEL` is a WINDOW standing on it. They used to be one constant,
+# which is why dressing a screen in a club meant painting the whole monitor in
+# it and leaving the chakras nothing to contrast against.
+const CANVAS := Color(0.039, 0.039, 0.043)
+const PANEL := Color(0.082, 0.082, 0.090)
+# Insets: a field, a well, the ground inside a control. Actual black, so the
+# depth goes DOWN from the canvas — pure black as the page leaves no step below
+# it, and at four percent the canvas reads as black anyway on a pixel screen.
+const WELL := Color(0.0, 0.0, 0.0)
+const LINE := Color(0.180, 0.180, 0.192)
 # ⚠️ `INK` and not `TEXT`: this class already owns a `TEXT`, and it is a font
 # SIZE. One namespace, two meanings of the same word, and the parser is right to
 # refuse it.
-const INK := Color(0.902, 0.925, 0.961)
+const INK := Color(0.910, 0.910, 0.922)
 # White, for headings and for anything the eye should land on first. It is the
 # accent precisely because it is not a colour.
 const ACCENT := Color(1.0, 1.0, 1.0)
-const MUTED := Color(0.435, 0.498, 0.588)
+const MUTED := Color(0.478, 0.478, 0.478)
 # What goes ON a white fill.
-const ON_ACCENT := Color(0.031, 0.043, 0.075)
+const ON_ACCENT := Color(0.039, 0.039, 0.043)
+
+# --- Dressing a screen in a club ---
+#
+# ⚠️ THE CLUB COLOURS THE WINDOWS, NOT THE MONITOR. Both screens used to set
+# their background to the club's own background and derive everything else from
+# it, so there was no square of the screen that was not the club — and the
+# chakra of an attribute, drawn on top, had nothing to contrast against. A
+# yellow club made the whole sheet unreadable and it was nobody's bug: every
+# individual colour was exactly the one the player picked.
+#
+# So the canvas stays black and the club lives inside panels. The palette is
+# still literal — the background you chose, the lettering you chose, black and
+# white for depth, no third hue invented (decision 70). What changed is what
+# "background" means: the window, not the screen.
+#
+# `edge` is why this works at all. A club whose background is black gives a
+# black window on a black canvas, and a white one gives white on white; the
+# window only exists because it is outlined in the club's own LETTERING, which
+# by construction contrasts with its own background.
+#
+# And it is ONE function because it has two callers. The draft and the team
+# screen computed this separately, with the same five lines copied — which is
+# the shape of every alignment bug this project has had.
+static func club_scheme(club: Dictionary) -> Dictionary:
+	var scheme: Dictionary = TeamColors.of(club)
+	var plate: Color = scheme["plate"]
+	var ink: Color = scheme["ink"]
+	# The direction away from the plate: black on a light one, white on a dark
+	# one. Depth without a new hue.
+	var shade: Color = Color.BLACK if TeamColors.luminance(plate) > 0.4 else Color.WHITE
+	return {
+		# The screen. Never the club.
+		"canvas": CANVAS,
+		"canvas_ink": ACCENT,
+		"canvas_muted": MUTED,
+		"canvas_line": LINE,
+		# ⚠️ THE CLUB'S COLOUR THAT SURVIVES A BLACK PAGE. `TeamColors` promises
+		# that the plate and the ink contrast with EACH OTHER; it promises
+		# nothing about either of them against black. Vasco is black on white
+		# and América is white on red, so picking one of the two by name gives
+		# an invisible border half the time. Take whichever of the pair reads
+		# better on the canvas and use it for everything that touches it —
+		# border, heading, bar, selection.
+		"signal": plate if contrast(plate, CANVAS) >= contrast(ink, CANVAS) else ink,
+		# The window.
+		"plate": plate,
+		"ink": ink,
+		"edge": ink,
+		"well": plate.lerp(shade, 0.18),
+		"line": plate.lerp(shade, 0.32),
+		"muted": ink.lerp(plate, 0.45),
+	}
+
+static func contrast(a: Color, b: Color) -> float:
+	return TeamColors.contrast(a, b)
+
+# The border that makes a window a window, in the club's lettering.
+const EDGE_WIDTH := 1
+const PANEL_RADIUS := 3
+
+# A window: the club's background, outlined in the club's lettering.
+static func window(scheme: Dictionary, fill: Color = Color.TRANSPARENT) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = scheme.get("plate", PANEL) if fill.a == 0.0 else fill
+	style.border_color = scheme.get("edge", LINE)
+	style.set_border_width_all(EDGE_WIDTH)
+	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
+		style.set("corner_radius_" + corner, PANEL_RADIUS)
+	return style
 
 # --- Emptying a container ---
 #

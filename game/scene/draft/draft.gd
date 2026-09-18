@@ -26,12 +26,17 @@ const BUDGET_MS := 25
 # enough to refresh every frame.
 const LINES_PER_PAINT := 40
 
-var BG := Color(0.055, 0.078, 0.063)
-var PANEL := Color(0.086, 0.118, 0.094)
-var ACCENT := Color(0.49, 0.78, 0.45)
-var MUTED := Color(0.47, 0.52, 0.48)
-var TEXT := Color(0.87, 0.90, 0.87)
-var LINE := Color(0.16, 0.22, 0.17)
+# ⚠️ THE DEFAULTS CAME FROM `Look`, and they did not use to. These six were
+# hand-written GREEN — Elifoot's green, kept alive in two screens long after
+# decision 62 took it off the palette. It never showed, because
+# `_wear_club_colours()` overwrites all of them a frame later, so the file sat
+# there asserting something false about the game for months.
+var CANVAS := Look.CANVAS
+var SIGNAL := Look.ACCENT
+var MUTED := Look.MUTED
+var INK := Look.INK
+var LINE := Look.LINE
+var WELL := Look.WELL
 
 var _run: LeagueDraft = null
 var _bar: ProgressBar = null
@@ -107,26 +112,26 @@ func _paint() -> void:
 # The club's own colours, same derivation as the team screen: you are already
 # inside your club by the time this runs, and arriving at a green screen and
 # then a yellow one reads as two different games.
+# ⚠️ THE CLUB DRESSES THE WINDOW, NOT THE MONITOR. This used to set the
+# background to the club's own background, so the draft of a yellow club was two
+# megapixels of yellow with a log written on it. The page is black now and the
+# club arrives as the frame, the heading and the bar — which is more of the club
+# than a wall of it was, because you can actually see where it is.
 func _wear_club_colours() -> void:
 	var career := read("career") as Career
 	var teams := Drive.def("team") as TeamDef
 	var club: Dictionary = teams.get_team(career.team_id) if career != null and teams != null else {}
-	# HIGH CONTRAST, LITERALLY: the background you chose, the lettering you chose,
-	# and shades of black and white for depth. `shade` is the direction away from
-	# the background — black on a light one, white on a dark one — so every panel
-	# and rule is the background mixed that way and no third hue is invented.
-	var scheme: Dictionary = TeamColors.of(club)
-	BG = scheme["plate"]
-	ACCENT = scheme["ink"]
-	TEXT = ACCENT
-	var shade: Color = Color.BLACK if TeamColors.luminance(BG) > 0.4 else Color.WHITE
-	PANEL = BG.lerp(shade, 0.10)
-	LINE = BG.lerp(shade, 0.32)
-	MUTED = ACCENT.lerp(BG, 0.45)
+	var scheme: Dictionary = Look.club_scheme(club)
+	CANVAS = scheme["canvas"]
+	SIGNAL = scheme["signal"]
+	INK = scheme["canvas_ink"]
+	MUTED = scheme["canvas_muted"]
+	LINE = SIGNAL.lerp(CANVAS, 0.55)
+	WELL = Look.WELL
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = BG
+	bg.color = CANVAS
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
@@ -135,11 +140,14 @@ func _build_ui() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 
+	# The window: black inside, outlined in the club. It fills most of the
+	# screen, so filling it with the club's own background would put the wall
+	# straight back — the frame is what says whose draft this is.
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = PANEL
-	style.border_color = LINE
-	style.set_border_width_all(1)
+	style.bg_color = CANVAS
+	style.border_color = SIGNAL
+	style.set_border_width_all(Look.EDGE_WIDTH)
 	style.set_content_margin_all(22)
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
 		style.set("corner_radius_" + corner, 4)
@@ -158,7 +166,7 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	title.text = UiText.t("draft.title")
-	title.add_theme_color_override("font_color", ACCENT)
+	title.add_theme_color_override("font_color", SIGNAL)
 	Look.wear_display(title, Look.TITLE)
 	box.add_child(title)
 
@@ -176,18 +184,18 @@ func _build_ui() -> void:
 	_bar.show_percentage = false
 	_bar.custom_minimum_size = Vector2(0, 14)
 	var track := StyleBoxFlat.new()
-	track.bg_color = BG
+	track.bg_color = WELL
 	track.border_color = LINE
 	track.set_border_width_all(1)
 	var fill := StyleBoxFlat.new()
-	fill.bg_color = ACCENT
+	fill.bg_color = SIGNAL
 	_bar.add_theme_stylebox_override("background", track)
 	_bar.add_theme_stylebox_override("fill", fill)
 	box.add_child(_bar)
 
 	_caption = Label.new()
 	_caption.text = ""
-	_caption.add_theme_color_override("font_color", TEXT)
+	_caption.add_theme_color_override("font_color", INK)
 	Look.wear_body(_caption, Look.SMALL)
 	box.add_child(_caption)
 
@@ -202,7 +210,7 @@ func _build_ui() -> void:
 	_log.add_theme_color_override("default_color", MUTED)
 	Look.wear_body(_log, Look.TINY)
 	var log_style := StyleBoxFlat.new()
-	log_style.bg_color = BG
+	log_style.bg_color = WELL
 	log_style.border_color = LINE
 	log_style.set_border_width_all(1)
 	log_style.set_content_margin_all(8)
@@ -215,7 +223,7 @@ func _build_ui() -> void:
 	_ok.custom_minimum_size = Vector2(0, 40)
 	_ok.pressed.connect(func() -> void: go("drafted"))
 	var ok_style := StyleBoxFlat.new()
-	ok_style.bg_color = ACCENT
+	ok_style.bg_color = SIGNAL
 	ok_style.set_content_margin_all(6)
 	_ok.add_theme_stylebox_override("normal", ok_style)
 	_ok.add_theme_stylebox_override("hover", ok_style)
@@ -224,9 +232,9 @@ func _build_ui() -> void:
 	off_style.bg_color = LINE
 	off_style.set_content_margin_all(6)
 	_ok.add_theme_stylebox_override("disabled", off_style)
-	_ok.add_theme_color_override("font_color", BG)
-	_ok.add_theme_color_override("font_hover_color", BG)
-	_ok.add_theme_color_override("font_pressed_color", BG)
+	_ok.add_theme_color_override("font_color", CANVAS)
+	_ok.add_theme_color_override("font_hover_color", CANVAS)
+	_ok.add_theme_color_override("font_pressed_color", CANVAS)
 	_ok.add_theme_color_override("font_disabled_color", MUTED)
 	_ok.set_meta("draft_ok", true)
 	box.add_child(_ok)

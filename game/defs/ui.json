@@ -261,12 +261,12 @@
       "en": "A currency apart from training: a flaw PAYS for a talent. Balance: %d"
     },
     "manager.perk_price": {
-      "pt": "%d pp",
-      "en": "%d pp"
+      "pt": "%d",
+      "en": "%d"
     },
     "manager.perk_refund": {
-      "pt": "+%d pp",
-      "en": "+%d pp"
+      "pt": "+%d",
+      "en": "+%d"
     },
     "manager.plays_hint": {
       "pt": "Masculino ou feminino, e o misto junto. Misto sozinho não vale: a cota precisa saber que vaga você ocupa.",
@@ -549,12 +549,12 @@
       "en": "Roll another club — name, neighbourhood and colours"
     },
     "manager.perk_boons": {
-      "pt": "QUALIDADES — custam",
-      "en": "QUALITIES — they cost"
+      "pt": "QUALIDADES — custam pp",
+      "en": "QUALITIES — they cost pp"
     },
     "manager.perk_flaws": {
-      "pt": "DEFEITOS — pagam",
-      "en": "FLAWS — they pay"
+      "pt": "DEFEITOS — pagam pp",
+      "en": "FLAWS — they pay pp"
     },
     "manager.identity_hint": {
       "pt": "Nome, sobrenome e apelido. Os três viram a semente do mundo.",

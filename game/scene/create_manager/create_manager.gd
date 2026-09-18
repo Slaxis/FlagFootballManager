@@ -28,7 +28,7 @@ extends Menu
 # The neutral palette, from Look. Before you have a club there is nothing on
 # screen that a hue could honestly stand for, so the chrome says nothing and the
 # colour is saved for the things that mean something.
-const BG := Look.BG
+const BG := Look.CANVAS
 const PANEL := Look.PANEL
 const WELL := Look.WELL
 const ACCENT := Look.ACCENT
@@ -71,8 +71,8 @@ const CODE_WIDTH := 52
 # characters, and at the body size that is 240px — a chip narrower than that is
 # a chip that clips the thing it exists to say. Under the tracks instead of
 # beside them, there is room.
-const BOON_COLUMNS := 3
-const FLAW_COLUMNS := 1
+const BOON_COLUMNS := 5
+const FLAW_COLUMNS := 2
 # How much of the row the qualities take. They outnumber the defects three to
 # one, so they get five columns and the defects two.
 # Three columns of qualities against one of defects, which is roughly the ratio
@@ -624,10 +624,12 @@ func _perk_chip_width(columns: int) -> int:
 func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
 	var cost: int = perks.cost(id)
 	var price: String = (UiText.t("manager.perk_refund") % -cost) if cost < 0 		else (UiText.t("manager.perk_price") % cost)
-	# NO GLYPH ON THE CHIP. The colour already says quality or defect and the name
-	# is right there — the three-letter code exists for the roster column, where
-	# there is no room for a name at all.
-	var chip: Button = _choice("%s  %s" % [perks.label(id), price],
+	# THE CODE, NOT THE NAME — the same move `B.6i` made on INT/PER/CAR, and the
+	# last section of this screen that still read like a classified ad. Twenty
+	# names at "Quebra de cintura  2 pp" needed 276px each and got 252, so the
+	# chip that clipped was ALSO the chip that set the column width; three
+	# letters and a number fit five across with room to spare.
+	var chip: Button = _choice("%s  %s" % [perks.icon(id), price],
 		_build.has_perk(id), _on_perk.bind(id))
 	# Green buys you something, red pays you to accept something. The sign is
 	# the whole decision, so it should not need reading.
@@ -635,11 +637,8 @@ func _perk_chip(perks: PerkDef, id: String, columns: int) -> Control:
 	chip.add_theme_color_override("font_color", hue)
 	chip.add_theme_color_override("font_hover_color", hue.lightened(0.3))
 	chip.custom_minimum_size = Vector2(_perk_chip_width(columns), 32)
-	# Clipped, because a long name must not be allowed to set the column width —
-	# the whole label is on the tooltip that already carries the description.
-	chip.clip_text = true
 	Look.wear_body(chip, Look.TINY)
-	chip.tooltip_text = "%s — %s" % [perks.label(id), perks.desc(id)]
+	chip.tooltip_text = perks.explain(id)
 	# Unaffordable is not the same as unchosen: grey it so the player can see
 	# the perk exists and costs more than they have left.
 	if not _build.has_perk(id) and not _build.can_take_perk(id):

@@ -22,37 +22,45 @@ extends Menu
 # full screen of a club's yellow is a different thing from a badge of it, and
 # everything else (panels, rules, muted text) is derived from those two so the
 # palette can never drift out of the club's identity.
-var BG := Color(0.055, 0.078, 0.063)
-var PANEL := Color(0.086, 0.118, 0.094)
-var ACCENT := Color(0.49, 0.78, 0.45)
-var MUTED := Color(0.47, 0.52, 0.48)
-var TEXT := Color(0.87, 0.90, 0.87)
-var LINE := Color(0.16, 0.22, 0.17)
+# ⚠️ THE DEFAULTS COME FROM `Look` NOW. These were hand-written GREEN —
+# Elifoot's green, kept alive here long after decision 62 took it off the
+# palette. It never showed, because `_wear_club_colours()` overwrites every one
+# of them a frame later, so the file sat asserting something false for months.
+var CANVAS := Look.CANVAS
+var PANEL := Look.PANEL
+var ACCENT := Look.ACCENT
+var MUTED := Look.MUTED
+var INK := Look.INK
+var LINE := Look.LINE
 # The two the widgets used to hardcode: the ground inside a control, and the
 # ink that goes ON the accent when a control is filled with it. Derived like
 # everything else, so a yellow club gets a yellow-black and not a green one.
-var WELL := Color(0.08, 0.11, 0.09)
-var ON_ACCENT := Color(0.05, 0.09, 0.05)
+var WELL := Look.WELL
+var ON_ACCENT := Look.ON_ACCENT
 
 func _wear_club_colours() -> void:
-	var scheme: Dictionary = TeamColors.of(_viewed_club())
-	# HIGH CONTRAST, LITERALLY: the background you chose, the lettering you
-	# chose, and shades of black and white for depth. Nothing is derived into a
-	# third hue any more — a yellow background used to be darkened by 82% into
-	# mustard, and the green lettering beside it was replaced outright.
+	# ⚠️ THE CLUB COLOURS THE BADGE AND THE SELECTION, NOT THE MONITOR.
 	#
-	# `shade` is the direction "away from the background": black on a light one,
-	# white on a dark one. Every panel, well and rule is the background mixed
-	# that way, so the screen has depth without inventing a colour.
-	BG = scheme["plate"]
-	ACCENT = scheme["ink"]
-	TEXT = ACCENT
-	var shade: Color = Color.BLACK if TeamColors.luminance(BG) > 0.4 else Color.WHITE
-	PANEL = BG.lerp(shade, 0.10)
-	WELL = BG.lerp(shade, 0.18)
-	LINE = BG.lerp(shade, 0.32)
-	MUTED = ACCENT.lerp(BG, 0.45)
-	ON_ACCENT = BG
+	# This used to set the page to the club's own background and derive every
+	# panel, well and rule from it, so there was no square of this screen that
+	# was not the club — and the card you open on a player draws eight attributes
+	# in eight CHAKRA hues with nothing to contrast against. A yellow club made
+	# its own sheet unreadable, and it was nobody's bug: every single colour was
+	# the one the player picked.
+	#
+	# The page is black now. The club arrives as the badge (which still carries
+	# its real background, up in `_header()`), as the frame of every window, and
+	# as the fill of whatever is SELECTED — which is more of the club than a wall
+	# of it was, because now you can see where it is.
+	var scheme: Dictionary = Look.club_scheme(_viewed_club())
+	CANVAS = scheme["canvas"]
+	PANEL = Look.PANEL
+	WELL = Look.WELL
+	ACCENT = scheme["signal"]
+	INK = scheme["canvas_ink"]
+	MUTED = scheme["canvas_muted"]
+	LINE = ACCENT.lerp(CANVAS, 0.6)
+	ON_ACCENT = CANVAS
 
 const TAB_SQUAD := "squad"
 const TAB_RIVALS := "rivals"
@@ -132,7 +140,7 @@ func _ready() -> void:
 	Look.fit_window()
 	_wear_club_colours()
 	var bg := ColorRect.new()
-	bg.color = BG
+	bg.color = CANVAS
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
@@ -159,7 +167,7 @@ func _build_ui() -> void:
 	_wear_club_colours()
 	for child: Node in get_children():
 		if child is ColorRect and not child.has_meta("card_layer"):
-			(child as ColorRect).color = BG
+			(child as ColorRect).color = CANVAS
 	Look.clear(_root)
 	# The card is a sibling of the layout and not a child of it, so clearing
 	# `_root` does not clear the card. Without this every click stacked another
@@ -487,7 +495,7 @@ func _name_button(person: Actor, chosen: bool) -> Button:
 	style.set_content_margin_all(0)
 	for state: String in ["normal", "hover", "pressed"]:
 		button.add_theme_stylebox_override(state, style)
-	button.add_theme_color_override("font_color", ACCENT if chosen else TEXT)
+	button.add_theme_color_override("font_color", ACCENT if chosen else INK)
 	button.add_theme_color_override("font_hover_color", ACCENT)
 	button.tooltip_text = UiText.t("team.open_sheet") % person.display_name()
 	button.pressed.connect(_on_pick.bind(person))
@@ -532,7 +540,7 @@ func _heading(text: String, key: String, width: int) -> Button:
 		button.add_theme_stylebox_override(state, style)
 	Look.wear_body(button, Look.TEXT)
 	button.add_theme_color_override("font_color", ACCENT if active else MUTED)
-	button.add_theme_color_override("font_hover_color", TEXT)
+	button.add_theme_color_override("font_hover_color", INK)
 	button.pressed.connect(_on_sort.bind(key))
 	return button
 
@@ -754,7 +762,7 @@ func _slot_row(code: String, who: Actor) -> Control:
 		row.add_child(name_label)
 		return row
 	name_label.text = who.display_name()
-	name_label.add_theme_color_override("font_color", TEXT)
+	name_label.add_theme_color_override("font_color", INK)
 	row.add_child(name_label)
 	var strength := Label.new()
 	strength.text = str(who.overall())
@@ -778,7 +786,7 @@ func _shirt_cell(person: Actor) -> Control:
 	nick.clip_text = true
 	nick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	Look.wear_body(nick, Look.TEXT)
-	nick.add_theme_color_override("font_color", TEXT)
+	nick.add_theme_color_override("font_color", INK)
 	nick.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(nick)
 	var number := Label.new()
@@ -927,7 +935,7 @@ func _card_header() -> Control:
 	var name_label := Label.new()
 	name_label.text = _selected.display_name()
 	Look.wear_display(name_label, Look.PLATE)
-	name_label.add_theme_color_override("font_color", TEXT)
+	name_label.add_theme_color_override("font_color", INK)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
 	var strength := Label.new()
@@ -958,12 +966,20 @@ func _card_header() -> Control:
 
 	var perks := Drive.def("perk") as PerkDef
 	if perks != null:
+		# ⚠️ CODE AND NAME, DESCRIPTION ON THE TOOLTIP. This line used to print the
+		# whole sentence inline — the last place in the game still reading like a
+		# classified ad after `B.6i` cleared every other screen. It survived
+		# because it is behind a click, so nobody looking at the main screens
+		# ever saw it.
 		for perk_id: Variant in _selected.perks():
+			var id: String = String(perk_id)
 			var perk := Label.new()
-			perk.text = "%s %s — %s" % [perks.icon(String(perk_id)),
-				perks.label(String(perk_id)), perks.desc(String(perk_id))]
+			perk.text = "%s · %s" % [perks.icon(id), perks.label(id)]
+			perk.tooltip_text = perks.explain(id)
+			perk.mouse_filter = Control.MOUSE_FILTER_STOP
 			Look.wear_body(perk, Look.TEXT)
-			perk.add_theme_color_override("font_color", ACCENT)
+			perk.add_theme_color_override("font_color",
+				TALENT_BAD if perks.is_flaw(id) else TALENT_GOOD)
 			box.add_child(perk)
 	return box
 
@@ -1004,7 +1020,7 @@ func _career_log() -> Control:
 			code = positions.code(code)
 		line.add_child(_cell(code, 30, ACCENT))
 		line.add_child(_cell("   ".join(gains) if not gains.is_empty()
-			else UiText.t("team.quiet_season"), 460, TEXT if not gains.is_empty() else MUTED))
+			else UiText.t("team.quiet_season"), 460, INK if not gains.is_empty() else MUTED))
 		rows.add_child(line)
 	return box
 
@@ -1304,7 +1320,7 @@ func _flat_button(text: String, on_press: Callable) -> Button:
 		style.set("corner_radius_" + corner, 3)
 	for state: String in ["normal", "hover", "pressed"]:
 		button.add_theme_stylebox_override(state, style)
-	button.add_theme_color_override("font_color", TEXT)
+	button.add_theme_color_override("font_color", INK)
 	if on_press.is_valid():
 		button.pressed.connect(on_press)
 	return button
@@ -1330,10 +1346,12 @@ func _group_caption(text: String) -> Control:
 	label.add_theme_color_override("font_color", MUTED)
 	return label
 
+# A WINDOW, and the border is the club. The fill is near-black on purpose: this
+# same style carries the athlete card, and the card is where the chakras live.
 func _panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = PANEL
-	style.border_color = LINE
+	style.border_color = ACCENT.lerp(CANVAS, 0.35)
 	style.set_border_width_all(1)
 	style.set_content_margin_all(16)
 	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:

@@ -19,6 +19,9 @@ func tests() -> Array:
 		"test_the_canvas_is_the_monitor",
 		"test_the_window_is_never_scaled",
 		"test_the_body_ladder_lands_on_the_font_grid",
+		"test_the_chrome_has_no_hue",
+		"test_the_club_never_paints_the_canvas",
+		"test_the_window_survives_a_black_club_and_a_white_one",
 	]
 
 const MONITORS: Array[Vector2i] = [
@@ -70,3 +73,71 @@ func test_the_body_ladder_lands_on_the_font_grid(t: TestHelper) -> void:
 		t.equal(size % 9, 0, "corpo %d não cai na grade de 9 da Pixel Code" % size)
 	for size: int in [Look.TITLE, Look.PLATE, Look.HEADING, Look.BIG]:
 		t.equal(size % 5, 0, "display %d não cai no múltiplo de 5 da VT323" % size)
+
+
+# ⚠️ NEUTRAL MEANS R = G = B, and "dark navy" and "dark grey" are
+# indistinguishable in a sentence. The decision said grey and the constants
+# stayed blue for months — blue at 2.4x the red — because the only way to tell
+# is to subtract the channels, which no code review does by eye.
+#
+# It matters beyond taste: the chrome is what every coloured thing in the game
+# is drawn ON, and a background with a temperature makes every chakra, every
+# talent and every club argue with it before saying what it came to say.
+const HUE_TOLERANCE := 0.012
+
+func test_the_chrome_has_no_hue(t: TestHelper) -> void:
+	var chrome: Dictionary = {
+		"CANVAS": Look.CANVAS, "PANEL": Look.PANEL, "WELL": Look.WELL,
+		"LINE": Look.LINE, "INK": Look.INK, "MUTED": Look.MUTED,
+		"ACCENT": Look.ACCENT, "ON_ACCENT": Look.ON_ACCENT,
+	}
+	for name: String in chrome.keys():
+		var c: Color = chrome[name]
+		var spread: float = maxf(maxf(c.r, c.g), c.b) - minf(minf(c.r, c.g), c.b)
+		t.check(spread <= HUE_TOLERANCE,
+			"%s tem matiz: r %.3f g %.3f b %.3f (espalhamento %.3f)" % [
+				name, c.r, c.g, c.b, spread])
+	# And the page is genuinely dark, not merely darkish.
+	t.check(TeamColors.luminance(Look.CANVAS) < 0.05,
+		"o canvas não é quase preto (luminância %.3f)" % TeamColors.luminance(Look.CANVAS))
+
+# Pairs on purpose: the two extremes are real clubs. Vasco is black on white and
+# América is white on red, and each of them breaks a different naive rule.
+const CLUBS: Array[Array] = [
+	["#000000", "#ffffff"], ["#ffffff", "#000000"], ["#ffd700", "#00703c"],
+	["#7a1f2b", "#ffffff"], ["#0a0a0a", "#c8102e"], ["#f2f2f2", "#1b1b1b"],
+]
+
+func _club(pair: Array) -> Dictionary:
+	return {"id": "t", "name": "T", "colors": [String(pair[0]), String(pair[1])]}
+
+# THE CLUB DRESSES THE WINDOWS, NOT THE MONITOR. It used to be the page itself,
+# which is how a yellow club made its own athlete card unreadable — eight
+# chakra hues drawn on yellow, and not one of them anybody's mistake.
+func test_the_club_never_paints_the_canvas(t: TestHelper) -> void:
+	for pair: Array in CLUBS:
+		var scheme: Dictionary = Look.club_scheme(_club(pair))
+		t.equal(scheme["canvas"], Look.CANVAS,
+			"o clube %s pintou a página" % str(pair))
+		t.equal(scheme["plate"], TeamColors.of(_club(pair))["plate"],
+			"a janela perdeu a cor de fundo escolhida pelo clube")
+
+# ⚠️ THE CASE THAT BREAKS EVERY NAIVE RULE. `TeamColors` promises the plate and
+# the ink contrast with EACH OTHER and says nothing about either against black,
+# so "use the plate for the border" gives a black border on a black page for one
+# club and "use the ink" gives it for the other. `signal` picks whichever of the
+# two survives, and this is the test that proves both directions.
+const SIGNAL_MIN_CONTRAST := 3.0
+
+func test_the_window_survives_a_black_club_and_a_white_one(t: TestHelper) -> void:
+	for pair: Array in CLUBS:
+		var scheme: Dictionary = Look.club_scheme(_club(pair))
+		var ratio: float = TeamColors.contrast(scheme["signal"], Look.CANVAS)
+		t.check(ratio >= SIGNAL_MIN_CONTRAST,
+			"o clube %s ficou com contraste %.1f contra a página — a janela some"
+				% [str(pair), ratio])
+		# And the signal is one of the two the player actually chose, not a
+		# third hue invented to solve the problem (decisão 70).
+		var chosen: Dictionary = TeamColors.of(_club(pair))
+		t.check(scheme["signal"] == chosen["plate"] or scheme["signal"] == chosen["ink"],
+			"o clube %s recebeu um matiz que ninguém escolheu" % str(pair))
