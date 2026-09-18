@@ -14,6 +14,8 @@ const _SUITES: Array[String] = [
 	"res://tests/test_stat.gd",
 	"res://tests/test_actor.gd",
 	"res://tests/test_ui.gd",
+	"res://tests/test_look.gd",
+	"res://tests/test_glyphs.gd",
 	"res://tests/test_team_colors.gd",
 	"res://tests/test_team_generator.gd",
 	"res://tests/test_category.gd",
@@ -24,6 +26,11 @@ const _SUITES: Array[String] = [
 	"res://tests/test_perk.gd",
 	"res://tests/test_screen_start.gd",
 	"res://tests/test_screen_create_manager.gd",
+	"res://tests/test_rosters.gd",
+	"res://tests/test_league_generator.gd",
+	"res://tests/test_screen_draft.gd",
+	"res://tests/test_screen_team.gd",
+	"res://tests/test_thing_scan.gd",
 	"res://tests/test_lint.gd",
 ]
 

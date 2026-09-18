@@ -60,7 +60,30 @@ var skills: Dictionary = {}   # id -> step
 var height: float = 1.78
 var weight: float = 78.0
 
-var perk: String = ""
+# Perks, plural, and paid for out of their OWN currency (decision 45). Career
+# points are training; a perk is what a career did to you. Keeping them in one
+# pocket meant a talent cost the same as two seasons in the gym, which is not
+# the same kind of thing at all.
+var perks: Array[String] = []
+var perk_points: int = 0
+# Which of the three scenarios this manager came from. It biases the sheet and
+# it decides what kind of club is waiting.
+var origin: String = ""
+# The same ceiling every squad player has (decisions 27 and 34), drawn from the
+# world this scenario drops you into. The manager used to be the only person on
+# screen without one, which is why he came out heroic: a squad player is capped
+# at city level and the manager could build ten steps of anything by hand.
+var potential: int = StatDef.STORED_MAX
+# What the rolled life actually cost. The budget is not a constant any more:
+# 414 was calibrated against a ruler where an average adult sat at five steps,
+# and on the new one a city-level person cannot absorb anywhere near that. So
+# you are handed a person, and the points you may move around are HIS.
+var budget: int = 0
+var rolled_age: int = 0
+# What the lived years were spent doing. Carried through to the Actor so the
+# team screen can put him in the right box without re-deriving it.
+var rolled_position: String = ""
+var rolled_track: String = ""
 
 var _base_stats: Dictionary = {}
 var _base_skills: Dictionary = {}
@@ -91,6 +114,10 @@ static func average_adult() -> SheetBuilder:
 		builder.skills[id] = 0
 	builder.height = START_HEIGHT
 	builder.weight = START_WEIGHT
+	# The hand-built path keeps the classic allowance: a whole life to allocate.
+	# Only the ROLLED path takes its budget from what the roll cost.
+	builder.budget = total_points()
+	builder.rolled_age = END_AGE
 	return builder
 
 # The age the opening roll leaves you at. Twelve years of childhood are rolled
@@ -106,83 +133,135 @@ const OPENING_BODY_TIGHTNESS := 0.55
 const OPENING_APPETITE_SPREAD := 0.45
 # Nobody alive is below a toddler. The floor is bought first so the spread has
 # to work with what is left rather than being free to hollow somebody out.
-const OPENING_FLOOR_STEP := 2
+# One step: enough that nobody is a literal zero across the board, which on
+# this ruler would mean somebody who cannot take a field.
+const OPENING_FLOOR_STEP := 1
+# ⚠️ THREE STEPS, NOT TWO, AND A TEST FORCED IT. The student's whole premise is
+# that he knows the game better than the man who played it — and at a ceiling of
+# two steps he could not, because the ex-player reaches two steps of rules just
+# by living three to six seasons. The two tied, and a scenario that ties with its
+# own opposite is a scenario that does not exist.
+#
+# One signature skill at three is also defensible on its own terms: this is not a
+# random Q1 adult, it is the one who ended up running a club.
+const MIN_MANAGER_POTENTIAL := 35
 # And nobody is a prodigy yet. Two steps past the average ADULT is already a
 # remarkable child; the ruler puts 10 at an Olympic medal contender, and the
 # appetite will happily buy one at twelve if nothing stops it.
-const OPENING_CEILING_STEP := 7
+const OPENING_CEILING_STEP := 10
 
 # Career points the opening roll spends: twelve years of them.
 static func opening_budget() -> int:
 	return OPENING_AGE * CAREER_POINTS_PER_YEAR
 
-# The sheet the screen opens with: a rolled twelve-year-old.
+# The sheet the screen opens with: a rolled twelve-year-old who already leans
+# the way his ORIGIN leans.
 #
 # Four rules, and each one is there for a reason.
 #
-# ATTRIBUTES ONLY. A child has not specialised. Spending the rolled years on
-# skills too would answer the screen's one interesting question — attribute or
-# skill, since a roll is the sum of both — before the player got to it, and
-# answer it badly: spread thin over fifteen skills it reads as a smear rather
-# than a person.
+# ATTRIBUTES AND SKILLS BOTH. The first version left every skill at zero and
+# made you fill fifteen bars from nothing, which is a chore and not a choice —
+# and it got worse once origins existed, because an ex-player with no skills is
+# not an ex-player. You get a whole person; editing one is the game.
 #
-# TWELVE YEARS, NOT ALL OF THEM. What is rolled is a childhood, not a career.
-# The remaining six are the question and they stay open.
+# THE ORIGIN GOES IN FIRST, at full price, before anything is rolled. A founder
+# opens with leadership and a rulebook, an ex-player with hands and routes, a
+# student with the playbook. It is the difference between the three scenarios
+# and it is not a rounding error.
 #
-# NOBODY IS HOLLOW, AND NOBODY IS A PRODIGY. Every attribute is walked up to
-# the floor before the appetite gets to play favourites, and none may pass the
-# ceiling: on this ruler 0 is below a toddler and 9 is nearly a medal
-# contender, and a twelve-year-old is neither.
+# THE WHOLE LIFE, NOT A CHILDHOOD. The roll used to stop at twelve and leave a
+# hundred and thirty points in your pocket — so the screen said "12 anos" while
+# you pumped leadership to eight, and out came a child genius. An eighteen-
+# year-old with everything spent has no such state to be in, and editing him is
+# selling something to buy something, which is a decision and not a chore.
 #
-# A PERK IS FAIR GAME. It is paid for out of those same twelve years — a kid
-# who came out with Craque bought it with attribute points he no longer has,
-# and one who came out with Vidraça is stronger for it — so it gives the rolled
-# character a tone before the player has decided anything.
-#
-# This is NOT the 🎲, which spends all 414 and hands you somebody finished.
-static func rolled_opening(rng: RandomNumberGenerator) -> SheetBuilder:
+# NOBODY IS HOLLOW, AND NOBODY IS A PRODIGY. Every attribute is walked to the
+# floor before the appetite plays favourites, and nothing passes POTENTIAL —
+# the same ceiling a squad player has, drawn from the world the scenario drops
+# you into. The manager was the only person on screen without one.
+# `origin_id` and not `origin`: the class has a member of that name, and a
+# parameter shadowing it in a STATIC function is the confusing kind — the member
+# is not even reachable from here.
+static func rolled_opening(rng: RandomNumberGenerator, origin_id: String = "") -> SheetBuilder:
 	var builder: SheetBuilder = average_adult()
 	var def := Drive.def("stat") as StatDef
+	var origins := Drive.def("origin") as OriginDef
 	if def == null:
 		return builder
-	# average_adult() sets the dictionaries up and opens them on an adult; a
-	# twelve-year-old starts from nothing.
+	builder.origin = origin_id
+
+	# LIVED, NOT ALLOCATED. The manager used to come out of a second generator
+	# with its own appetite, and two generators drift — which is exactly how he
+	# ended up heroic next to the squad he manages. Now he is an Actor like any
+	# other: a birth sheet, a position his scenario put him in, and the years
+	# that scenario gives him.
+	var level: float = origins.club_level(origin_id) if origins != null and origin_id != "" else 1.0
+	var track: String = origins.career_track(origin_id) if origins != null 		else ActorGenerator.TRACK_PLAYER
+	# ONE SPAN, AND IT IS THE SCENARIO'S. ⚠️ There used to be a second, shared
+	# one — three to six years everybody got just for having been around — and
+	# it was load-bearing for the wrong reason: without it the sheet came out at
+	# nothing, a budget of three career points and an uneditable screen.
+	#
+	# But it also made all three the same person underneath, and it is not true
+	# of two of them. THE EX-JOGADOR IS THE ONLY ONE WITH A CAREER. The founder
+	# is a rookie — that is the whole premise, there was no club to have a
+	# career at. The student never played at all.
+	#
+	# What carries the sheet now is the origin's own allocation instead, which is
+	# the honest place for it: the student has a rulebook because he read it, not
+	# because he spent four unnamed years somewhere.
+	var years: int = origins.career_years(origin_id, rng) if origins != null else 0
+	var person: Actor = ActorGenerator.lived(rng, level, track, years)
+
+	# Where the career actually happened, which the BODY decided and not the
+	# scenario. This is the line that stopped every ex-player being a
+	# quarterback: the track says "on the field", the matcher says where.
+	builder.rolled_position = person.position()
+	builder.rolled_track = track
+	builder.potential = maxi(int(person.data.get("potential", 25)), MIN_MANAGER_POTENTIAL)
+	builder.rolled_age = person.age()
+	builder.height = person.height()
+	builder.weight = person.weight()
 	for id: String in def.base_ids():
-		builder.stats[id] = MIN_STAT_STEP
+		builder.stats[id] = def.step(person.stat(id))
 	for id: String in def.skill_ids():
-		builder.skills[id] = MIN_SKILL_STEP
-	builder.perk = ""
-	builder._roll_body(def, rng, OPENING_BODY_TIGHTNESS)
-	builder._roll_perk(rng)
-
-	# The budget is spent by AGE, not down to a remainder. Stopping when the
-	# next step no longer fits under a reserve leaves a tail smaller than the
-	# cheapest purchase — nine career points — and the header then reads eleven
-	# for a childhood that was all but finished. Buying past the birthday by a
-	# few points and stopping is the honest version.
-	var target: int = opening_budget()
-	for id: String in def.base_ids():
-		while int(builder.stats[id]) < OPENING_FLOOR_STEP and builder.can_raise_stat(id):
-			builder.raise_stat(id)
-
-	var appetite: Dictionary = {}
-	for id: String in def.base_ids():
-		appetite[id] = exp(rng.randfn(0.0, OPENING_APPETITE_SPREAD))
-	var guard: int = 0
-	while builder.spent() < target and guard < 400:
-		guard += 1
-		var ids: Array[String] = []
-		var weights: Array[float] = []
-		for id: String in def.base_ids():
-			if int(builder.stats[id]) < OPENING_CEILING_STEP and builder.can_raise_stat(id):
-				ids.append(id)
-				weights.append(float(appetite[id]) / float(int(builder.stats[id]) + 1))
-		if ids.is_empty():
-			break
-		builder.raise_stat(ids[builder._weighted_index(weights, rng)])
+		builder.skills[id] = def.step(person.skill(id))
+	builder.perk_points = origins.perk_points(origin_id) if origins != null and origin_id != "" else 1
+	for id: Variant in person.perks():
+		if builder.can_take_perk(String(id)):
+			builder.perks.append(String(id))
+	builder._apply_origin(def)
+	# The budget IS what this person cost. You cannot make him bigger, only
+	# different — sell a step here to buy one there.
+	builder.budget = builder.spent()
 	return builder
 
-# --- Spending ---# --- Spending ---
+# The origin's own allocation, on top of the lived sheet: the founder brought
+# leadership, the ex-player brought hands, the student brought a rulebook. It
+# is applied before the budget is measured, so it is part of who he is rather
+# than something he has to pay for twice.
+func _apply_origin(def: StatDef) -> void:
+	var origins := Drive.def("origin") as OriginDef
+	if origins == null or origin == "" or not origins.has_origin(origin):
+		return
+	for id: String in origins.stat_bias(origin).keys():
+		if not def.has_base(id):
+			continue
+		var wanted: int = int(origins.stat_bias(origin)[id])
+		while int(stats.get(id, 0)) < wanted \
+				and int(stats.get(id, 0)) < potential_step() \
+				and int(stats.get(id, 0)) < StatDef.MAX_STEP:
+			stats[id] = int(stats[id]) + 1
+	for id: String in origins.skill_bias(origin).keys():
+		if not def.has_skill(id):
+			continue
+		var wanted: int = int(origins.skill_bias(origin)[id])
+		while int(skills.get(id, 0)) < wanted \
+				and int(skills.get(id, 0)) < potential_step() \
+				and int(skills.get(id, 0)) < StatDef.MAX_STEP:
+			skills[id] = int(skills[id]) + 1
+
+# --- Spending ---# --- Spending ---# --- Spending ---
 
 func spent() -> int:
 	var total: int = 0
@@ -190,7 +269,7 @@ func spent() -> int:
 		total += _cost_between(int(_base_stats.get(id, 0)), int(stats[id])) * STAT_POINT_IN_CAREER
 	for id: String in skills.keys():
 		total += _cost_between(int(_base_skills.get(id, 0)), int(skills[id])) * SKILL_POINT_IN_CAREER
-	return total + body_cost() + perk_cost()
+	return total + body_cost()
 
 # The body is billed at exactly what the swap it performs is worth, so shape
 # costs points and power does not come free. Moving away from the centre gives
@@ -214,7 +293,7 @@ func can_move_body(id: String, value: float) -> bool:
 	return after - body_cost() <= remaining()
 
 func remaining() -> int:
-	return total_points() - spent()
+	return budget - spent()
 
 # You leave this screen when there is nothing left to buy — which is not the
 # same as leaving with zero.
@@ -233,19 +312,31 @@ func is_complete() -> bool:
 # maxed out.
 func cheapest_purchase() -> int:
 	var best: int = -1
+	# Only what the sheet would actually ALLOW. Reading the raw price meant a
+	# manager whose every track sat at his ceiling still had a "cheapest
+	# purchase" he could never make, so `is_complete()` never came true and the
+	# start button never opened — the one-career-point deadlock again, wearing
+	# a different hat.
 	for id: String in stats.keys():
+		if int(stats[id]) >= potential_step():
+			continue
 		var cost: int = cost_to_raise_stat(id)
 		if cost >= 0 and (best < 0 or cost < best):
 			best = cost
 	for id: String in skills.keys():
+		if int(skills[id]) >= potential_step():
+			continue
 		var cost: int = cost_to_raise_skill(id)
 		if cost >= 0 and (best < 0 or cost < best):
 			best = cost
 	return best
 
-# The whole point: your age IS how much you spent.
+# The age the life produced, not a function of the budget. Deriving it from
+# spending was what let the header say "12 anos" while the sheet said eight
+# steps of leadership — and with the manager now lived like everybody else,
+# there is a real number to show instead of an inference.
 func age() -> int:
-	return START_AGE + int(floor(float(spent()) / float(CAREER_POINTS_PER_YEAR)))
+	return rolled_age
 
 # In career points, which is the only number the player ever spends.
 func cost_to_raise_stat(id: String) -> int:
@@ -256,11 +347,20 @@ func cost_to_raise_skill(id: String) -> int:
 	var next_step: int = int(skills.get(id, 0)) + 1
 	return -1 if next_step > StatDef.MAX_STEP else next_step * SKILL_POINT_IN_CAREER
 
+# Potential binds the PLAYER's own spending too, not just the roll. Capping
+# only the dice would have left the superhero one click away.
+func potential_step() -> int:
+	return clampi(int(floor(float(potential) / 10.0)), 1, StatDef.MAX_STEP)
+
 func can_raise_stat(id: String) -> bool:
+	if int(stats.get(id, 0)) >= potential_step():
+		return false
 	var cost: int = cost_to_raise_stat(id)
 	return cost >= 0 and cost <= remaining()
 
 func can_raise_skill(id: String) -> bool:
+	if int(skills.get(id, 0)) >= potential_step():
+		return false
 	var cost: int = cost_to_raise_skill(id)
 	return cost >= 0 and cost <= remaining()
 
@@ -289,41 +389,42 @@ func lower_skill(id: String) -> void:
 
 # --- Perks ---
 #
-# One sentence about you, priced in career points, and the price can be
-# negative. A flaw hands points back — which is the only reason anybody would
-# ever pick "drops what he shouldn't" — and the cap of one is what keeps the
-# optimal build from being the whole flaw list.
-#
-# Optional on purpose: passing on the perk and putting everything into the
-# sheet is a real answer, not a wasted slot.
+# Their own budget, spent freely. A flaw PAYS, so Vidraça buys Capitão — take
+# as many as the balance allows and the balance is the only rule. The old cap
+# of one existed because flaws refunded career points and the optimal build was
+# the entire flaw list; on a separate ruler the budget does that job by itself.
 
-func perk_cost() -> int:
-	var def := Drive.def("perk") as PerkDef
-	return def.cost(perk) if def != null and perk != "" else 0
-
-func has_perk() -> bool:
-	return perk != ""
-
-# Swapping counts the difference, so trading a 40-point boon for a 25-point one
-# does not ask you to afford both.
-func can_take_perk(id: String) -> bool:
+func perk_points_spent() -> int:
 	var def := Drive.def("perk") as PerkDef
 	if def == null:
-		return false
-	if id != "" and not def.has_perk(id):
-		return false
-	# Dropping a flaw is a PURCHASE: it costs back the points it paid you, and
-	# without this you could take Vidraça, spend the thirty points, untick it
-	# and walk out thirty points over budget.
-	var wanted: int = def.cost(id) if id != "" else 0
-	return wanted - perk_cost() <= remaining()
+		return 0
+	var total: int = 0
+	for id: String in perks:
+		total += def.cost(id)
+	return total
 
-# Clicking the perk you already have takes it off: there is no "none" button to
-# hunt for.
-func set_perk(id: String) -> void:
-	var wanted: String = "" if id == perk else id
-	if can_take_perk(wanted):
-		perk = wanted
+func perk_points_left() -> int:
+	return perk_points - perk_points_spent()
+
+func has_perk(id: String) -> bool:
+	return perks.has(id)
+
+func can_take_perk(id: String) -> bool:
+	var def := Drive.def("perk") as PerkDef
+	if def == null or not def.has_perk(id):
+		return false
+	if perks.has(id):
+		# Dropping a flaw costs back what it paid you, so it can be refused.
+		return -def.cost(id) <= perk_points_left()
+	return def.cost(id) <= perk_points_left()
+
+func toggle_perk(id: String) -> void:
+	if not can_take_perk(id):
+		return
+	if perks.has(id):
+		perks.erase(id)
+	else:
+		perks.append(id)
 
 # --- The dice ---
 
@@ -350,9 +451,7 @@ func _roll_perk(rng: RandomNumberGenerator) -> void:
 	var pool: Array[String] = def.boons() if rng.randf() < OPENING_BOON_CHANCE else def.flaws()
 	if pool.is_empty():
 		return
-	# Affordability is checked before the sheet is bought, so a 40-point boon is
-	# always payable here and only the sheet gets thinner.
-	set_perk(pool[rng.randi() % pool.size()])
+	toggle_perk(pool[rng.randi() % pool.size()])
 
 func _weighted_index(weights: Array[float], rng: RandomNumberGenerator) -> int:
 	var total: float = 0.0
@@ -387,7 +486,11 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 		"weight": weight,
 		"stats": stored_stats,
 		"skills": stored_skills,
-		"perks": [perk] if perk != "" else [],
+		"perks": perks.duplicate(),
+		"origin": origin,
+		"position": rolled_position,
+		"lineup": _opening_lineup(),
+		"potential": potential,
 		"plays": [],
 		"manages": [],
 		"team": Actor.NO_TEAM,
@@ -396,6 +499,21 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 	payload.merge(name_parts)
 	actor._apply_data("manager_%d" % seed_value, "actor", payload)
 	return actor
+
+# Which boxes you are ticked into on day one. The CHAIR always — the club gave
+# you that the moment it took you on — and, if your years were spent playing,
+# your own position too. The ex-jogador's own description promises he will have
+# to carry the side himself early on; standing in the Comissão with nobody able
+# to field him would have made that a lie.
+func _opening_lineup() -> Array[String]:
+	var origins := Drive.def("origin") as OriginDef
+	var out: Array[String] = []
+	if rolled_track == ActorGenerator.TRACK_PLAYER and rolled_position != "":
+		out.append(rolled_position)
+	var chair: String = origins.chair(origin) if origins != null and origin != "" else ""
+	if chair != "" and not out.has(chair):
+		out.append(chair)
+	return out
 
 # --- Internals ---
 

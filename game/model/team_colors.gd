@@ -1,12 +1,20 @@
-# TeamColors — the Elifoot look: a club's name is printed in its own colours,
-# so you recognise the row before you finish reading the name. Flamengo was
-# red on black, and you knew it was Flamengo from across the room.
+# TeamColors — the Elifoot look: a club's screen is printed in its own two
+# colours, so you know whose turn it is before you read a word. Flamengo was red
+# and black, and you knew it was Flamengo from across the room.
 #
-# Convention: `colors[0]` is the club's primary (the ink), `colors[1]` the
-# secondary (the plate). But a club whose two colours are white and pale blue
-# would render an unreadable row, so the pairing is checked for contrast and
-# repaired before it reaches the screen — the look is never worth an
-# illegible name.
+# ⚠️ CONVENTION: `colors[0]` is the BACKGROUND and `colors[1]` is the LETTERING.
+#
+# It used to be the other way round — primary as the ink, secondary as the plate
+# — and worse, it would SWAP the two when the pairing failed a contrast check.
+# Both of those quietly overrule the person who chose the colours. Somebody
+# picking yellow for the background and green for the letters got a mustard
+# screen with no green in it, because yellow had been made the lettering, then
+# swapped, then the green was replaced outright.
+#
+# The player's choice is not a suggestion. The background is the background; if
+# the lettering does not read on it, only the lettering moves, and only its
+# BRIGHTNESS moves — dark green on yellow is still green, and that is the whole
+# point of letting somebody choose green.
 class_name TeamColors
 
 # WCAG contrast ratio below which we intervene. 4.5 is the AA threshold for
@@ -17,23 +25,17 @@ const _FALLBACK_PLATE := Color(0.16, 0.16, 0.16)
 const _INK_LIGHT := Color(0.96, 0.96, 0.96)
 const _INK_DARK := Color(0.08, 0.08, 0.08)
 
-# Returns { "plate": Color, "ink": Color } ready to paint.
+# Returns { "plate": Color, "ink": Color } ready to paint — the background and
+# the lettering, in that order, as chosen.
 static func of(team: Dictionary) -> Dictionary:
 	var raw: Array = team.get("colors", [])
-	var primary: Color = _parse(raw, 0, _INK_LIGHT)
-	var secondary: Color = _parse(raw, 1, _FALLBACK_PLATE)
-
-	# Preferred reading: primary is the ink, secondary the plate.
-	if contrast(primary, secondary) >= MIN_CONTRAST:
-		return {"plate": secondary, "ink": primary}
-	# Some clubs are declared the other way round; try the swap before giving up.
-	if contrast(secondary, primary) >= MIN_CONTRAST:
-		return {"plate": primary, "ink": secondary}
-	# Both pairings are mud. Do NOT throw the club's colour away — keep the hue
-	# and push its brightness until it reads. Flag Kings' crimson on near-black
-	# fails the raw check, and replacing it with white would erase exactly the
-	# identity this whole feature exists to show.
-	return {"plate": secondary, "ink": legible_against(primary, secondary)}
+	var background: Color = _parse(raw, 0, _FALLBACK_PLATE)
+	var lettering: Color = _parse(raw, 1, _INK_LIGHT)
+	if contrast(lettering, background) >= MIN_CONTRAST:
+		return {"plate": background, "ink": lettering}
+	# NO SWAPPING. The background stays the background — the only thing that may
+	# move is how bright the lettering is, and it keeps its hue while it moves.
+	return {"plate": background, "ink": legible_against(lettering, background)}
 
 # Same hue and saturation, brightness moved until the pair clears MIN_CONTRAST.
 # Falls back to flat black or white only if even the extreme fails.

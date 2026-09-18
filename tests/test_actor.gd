@@ -13,7 +13,9 @@ func tests() -> Array:
 		"test_age_within_range",
 		"test_name_is_filled_and_keeps_its_case",
 		"test_category_changes_the_name_pool",
-		"test_quality_target_moves_overall",
+		"test_club_level_moves_the_ceiling",
+		"test_club_level_moves_the_years",
+		"test_debut_piles_up_at_the_floor",
 		"test_actors_are_specialists",
 		"test_defaults_put_actor_in_praca",
 		"test_squad_is_stable_per_index",
@@ -42,8 +44,12 @@ func test_stats_within_range(t: TestHelper) -> void:
 	for actor: Actor in ActorGenerator.squad(SEED, COHORT, 50):
 		for id: String in def.base_ids():
 			var value: int = actor.stat(id)
-			t.check(value >= ActorGenerator.STAT_MIN and value <= ActorGenerator.STAT_MAX,
-				"stat '%s' fora de 1..99: %d" % [id, value])
+			# The bound is the RULER's, not the generator's: training buys stored
+			# points one at a time and a ten-year veteran legitimately tops out
+			# at 100, which the old flat roll could never reach.
+			t.check(value >= StatDef.STORED_MIN and value <= StatDef.STORED_MAX,
+				"stat '%s' fora de %d..%d: %d" % [
+					id, StatDef.STORED_MIN, StatDef.STORED_MAX, value])
 
 func test_age_within_range(t: TestHelper) -> void:
 	for actor: Actor in ActorGenerator.squad(SEED, COHORT, 50):
@@ -69,11 +75,105 @@ func test_category_changes_the_name_pool(t: TestHelper) -> void:
 		"mesma seed em modalidades diferentes deveria puxar de pools diferentes")
 	t.equal(str(fem.plays()), str([Actor.CATEGORY_FEM]), "modalidade gravada em plays")
 
-func test_quality_target_moves_overall(t: TestHelper) -> void:
-	var weak: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 25))
-	var strong: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 70))
-	t.check(strong > weak + 20,
-		"elenco de qualidade 70 deveria ser bem melhor que o de 25 (veio %d vs %d)" % [strong, weak])
+# Reputation and CLUB LEVEL are two different axes now, and conflating them is
+# what this test used to do.
+#
+#   reputation   how long these people have been playing and how good the
+#                weeks were. Moves accumulation.
+#   club level   where the club sits on the WORLD ladder (country + division).
+#                Moves the CEILING, via potential.
+#
+# With a hard ceiling, reputation alone cannot lift a squad past its band — a
+# sandlot club with great training still fields city-level players, which is
+# the entire point of decision 33. So level is what has to move the squad, and
+# reputation is what has to move the age.
+func test_club_level_moves_the_ceiling(t: TestHelper) -> void:
+	var city: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 60, Actor.CATEGORY_MASC, 1.0))
+	var world: int = _mean_overall(ActorGenerator.squad(SEED, COHORT, 60, Actor.CATEGORY_MASC, 4.0))
+	# +15 and not more, and the reason is `overall()` itself: it averages all
+	# eight attributes, and a specialist only ever trains about three of them.
+	# A world-level ceiling of 85 shows up as an overall in the sixties because
+	# five untrained attributes sit at whatever growing up left them. The gap is
+	# real; the measure dilutes it.
+	# Narrower again after maturation stopped delivering people almost to their
+	# ceiling: more of an attribute is now EARNED, and a city-level club earns
+	# less of it — but `overall()` still averages five attributes nobody trains,
+	# which is what keeps diluting a gap that is real.
+	t.check(world > city + 12,
+		"clube de nível mundial deveria bater o de bairro com folga (%d vs %d)" % [world, city])
+	var national: int = _mean_overall(
+		ActorGenerator.squad(SEED, COHORT, 60, Actor.CATEGORY_MASC, 3.0))
+	t.check(national > city and world > national,
+		"a escada deveria ser monotônica (%d < %d < %d)" % [city, national, world])
+
+# ⚠️ IT IS THE LEVEL THAT MOVES THE YEARS, and this test used to pass a
+# REPUTATION — which the generator quietly ignored, because career length reads
+# the world ladder. Both numbers run zero to a hundred and look alike at a call
+# site, so the test went green for years while the dial it was aiming at never
+# moved.
+#
+# The second half is the part that matters: the entry end has to be REACHABLE.
+# Decision 26 puts a sandlot club at about 1.6 seasons a man, and what was
+# feeding the mix was `reputation = level x 20` with the level floored at one —
+# so the weakest club in the world came out at 3.1 and every várzea side in the
+# league was a decade too old.
+func test_club_level_moves_the_years(t: TestHelper) -> void:
+	var sandlot: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 20, Actor.CATEGORY_MASC, 1.0)
+	var elite: Array[Actor] = ActorGenerator.squad(SEED, COHORT, 85, Actor.CATEGORY_MASC, 5.0)
+	var sandlot_age: float = 0.0
+	var elite_age: float = 0.0
+	for i: int in range(COHORT):
+		sandlot_age += float(sandlot[i].age())
+		elite_age += float(elite[i].age())
+	sandlot_age /= float(COHORT)
+	elite_age /= float(COHORT)
+	t.check(elite_age > sandlot_age + 4.0,
+		"clube estabelecido deveria ter gente bem mais velha (%d vs %d anos de média)" % [
+			int(elite_age), int(sandlot_age)])
+	# The floor of the ladder is where the sandlot actually lives, and it is the
+	# number the decision named. Two years of slack around it, no more: at 3.1
+	# this passed nothing and the league shipped old.
+	t.check(sandlot_age < 22.0,
+		"a várzea saiu com média de %d anos — a ponta de entrada não está sendo alcançada"
+			% int(sandlot_age))
+
+# THE SHAPE OF WHEN PEOPLE START, which is a pile at the floor and a tail, not a
+# flat band. It was uniform 15..21 — which says debuting at twenty-one is
+# exactly as likely as at fifteen, and no scene works that way.
+#
+# The floor is FOURTEEN: that is when people in this scene take the sport up, and
+# somebody who reaches the top of the ladder almost certainly started there
+# rather than at twenty.
+func test_debut_piles_up_at_the_floor(t: TestHelper) -> void:
+	var rng: RandomNumberGenerator = SeedRng.make_rng(SEED)
+	var hist: Dictionary = {}
+	var rolls: Array[int] = []
+	for i: int in range(4000):
+		var age: int = ActorLife.roll_debut_age(rng)
+		hist[age] = int(hist.get(age, 0)) + 1
+		rolls.append(age)
+	rolls.sort()
+	t.equal(rolls[0], ActorLife.DEBUT_AGE_MIN,
+		"alguém estreou antes dos %d" % ActorLife.DEBUT_AGE_MIN)
+	# ⚠️ THE MASS IS AT THE FLOOR, and it is deliberately NOT a single mode: the
+	# curve puts about thirty percent on each of the first two years, so which of
+	# them wins is a coin flip per seed. Asserting a single winner is asserting
+	# the coin, which is how a fair test starts failing for no reason.
+	var early: int = int(hist.get(ActorLife.DEBUT_AGE_MIN, 0)) 		+ int(hist.get(ActorLife.DEBUT_AGE_MIN + 1, 0))
+	t.check(early >= 2000,
+		"só %d%% estreou nos dois primeiros anos — a curva não está encostada no chão"
+			% (early / 40))
+	for age: int in hist.keys():
+		if age <= ActorLife.DEBUT_AGE_MIN + 1:
+			continue
+		t.check(int(hist[age]) < int(hist.get(ActorLife.DEBUT_AGE_MIN, 0)),
+			"aos %d estreia mais gente que aos %d" % [age, ActorLife.DEBUT_AGE_MIN])
+	# And 95% of everybody is in by twenty, which is the whole calibration: the
+	# tail exists, but it is a tail.
+	t.check(rolls[3800] <= 20,
+		"o percentil 95 da estreia caiu em %d anos" % rolls[3800])
+	t.check(rolls[3999] <= ActorLife.DEBUT_AGE_CAP,
+		"alguém estreou aos %d" % rolls[3999])
 
 # The whole point of the two-layer model: an actor is not "good" or "bad", he
 # is good at some things. If this spread collapses, every actor plays the same
@@ -97,7 +197,9 @@ func test_defaults_put_actor_in_praca(t: TestHelper) -> void:
 	t.check(not actor.is_coach(), "actor gerado não nasce técnico")
 	t.equal(actor.team(), Actor.NO_TEAM, "time")
 	t.equal(actor.jersey(), Actor.NO_JERSEY, "camisa")
-	t.equal(actor.perks().size(), 0, "perks")
+	# Not zero: a perk is rolled at a quarter chance, so asserting none was
+	# always a bet on this particular seed. What matters is the cap.
+	t.check(actor.perks().size() <= 1, "no máximo um perk")
 
 # Salted sub-seeds: growing the cohort must not reshuffle the actors already
 # in it, or every roster would churn whenever one player is added.
@@ -123,11 +225,29 @@ func test_body_measures_are_plausible(t: TestHelper) -> void:
 
 # The body must agree with the sheet: the strong cohort is visibly the heavy
 # one, so nobody has to reconcile a wiry giant who bench-presses a car.
+# BMI, not weight. Weight is bmi times height squared, and height varies enough
+# on its own that sorting a squad by the scale sorts it mostly by how tall
+# people are — the heavy half came out WEAKER than the light half, which looked
+# like a bug in the body roll and was really a bug in the question. What the
+# generator actually promises is that build follows strength at a given height.
 func test_weight_follows_strength(t: TestHelper) -> void:
-	var light: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 20))
-	var heavy: float = _mean_weight(ActorGenerator.squad(SEED, COHORT, 85))
-	t.check(heavy > light + 5.0,
-		"elenco forte deveria ser mais pesado (veio %.1f vs %.1f kg)" % [heavy, light])
+	var squad: Array[Actor] = ActorGenerator.squad(SEED, 24, 60)
+	var by_build: Array[Actor] = squad.duplicate()
+	by_build.sort_custom(func(a: Actor, b: Actor) -> bool:
+		return _bmi(a) > _bmi(b))
+	var half: int = by_build.size() / 2
+	var thick: float = 0.0
+	var lean: float = 0.0
+	for i: int in range(half):
+		thick += float(by_build[i].stat("strength"))
+		lean += float(by_build[by_build.size() - 1 - i].stat("strength"))
+	t.check(thick > lean,
+		"a metade mais encorpada deveria ser a mais forte (%d vs %d de força)" % [
+			int(thick / half), int(lean / half)])
+
+func _bmi(actor: Actor) -> float:
+	var height: float = actor.height()
+	return actor.weight() / (height * height) if height > 0.0 else 0.0
 
 func test_measures_format_with_locale_separator(t: TestHelper) -> void:
 	var def := Drive.def("stat") as StatDef

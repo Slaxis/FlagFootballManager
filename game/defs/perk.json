@@ -1,87 +1,642 @@
 {
-  "max_per_actor": 1,
-
   "perks": [
     {
       "id": "craque",
-      "icon": "★",
-      "cost": 40,
-      "label": {"pt": "Craque", "en": "Star"},
-      "desc": {"pt": "O cara. Puxa o time nos ombros quando o jogo aperta", "en": "The one. Carries the side on his back when it tightens"},
-      "effect": {"kind": "roll_bonus", "scope": "all", "amount": 1}
+      "icon": "CRQ",
+      "cost": 3,
+      "label": {
+        "pt": "Craque",
+        "en": "Star"
+      },
+      "desc": {
+        "pt": "O cara. Puxa o time nos ombros quando o jogo aperta",
+        "en": "The one. Carries the side on his back when it tightens"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "all",
+        "amount": 1
+      },
+      "tag": {
+        "pt": "Craque",
+        "en": "Star"
+      },
+      "glyph": "*"
     },
     {
       "id": "foguete",
-      "icon": "⚡",
-      "cost": 25,
-      "label": {"pt": "Foguete", "en": "Rocket"},
-      "desc": {"pt": "Velocidade fora da curva — ninguém acompanha no campo aberto", "en": "Speed off the chart — nobody keeps up in the open field"},
-      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "route", "amount": 2}
+      "icon": "FOG",
+      "cost": 2,
+      "label": {
+        "pt": "Foguete",
+        "en": "Rocket"
+      },
+      "desc": {
+        "pt": "Velocidade fora da curva — ninguém acompanha no campo aberto",
+        "en": "Speed off the chart — nobody keeps up in the open field"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "route",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Foguete",
+        "en": "Rocket"
+      },
+      "glyph": ">"
     },
     {
       "id": "cerebro",
-      "icon": "🧠",
-      "cost": 25,
-      "label": {"pt": "Cérebro", "en": "Brain"},
-      "desc": {"pt": "Lê a jogada antes de ela acontecer", "en": "Reads the play before it happens"},
-      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "coverage", "amount": 2}
+      "icon": "CER",
+      "cost": 2,
+      "label": {
+        "pt": "Cérebro",
+        "en": "Brain"
+      },
+      "desc": {
+        "pt": "Lê a jogada antes de ela acontecer",
+        "en": "Reads the play before it happens"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "coverage",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Cérebro",
+        "en": "Brain"
+      },
+      "glyph": "?"
     },
     {
       "id": "maos_de_cola",
-      "icon": "✋",
-      "cost": 25,
-      "label": {"pt": "Mãos de cola", "en": "Glue Hands"},
-      "desc": {"pt": "O que encosta na mão, fica", "en": "What touches the hand, stays"},
-      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "catching", "amount": 2}
+      "icon": "COL",
+      "cost": 2,
+      "label": {
+        "pt": "Mãos de cola",
+        "en": "Glue Hands"
+      },
+      "desc": {
+        "pt": "O que encosta na mão, fica",
+        "en": "What touches the hand, stays"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "catching",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Cola",
+        "en": "Glue"
+      },
+      "glyph": "&"
     },
     {
       "id": "ferrolho",
-      "icon": "🎯",
-      "cost": 25,
-      "label": {"pt": "Ferrolho", "en": "Bolt"},
-      "desc": {"pt": "Arranca a flag na primeira, sempre", "en": "Rips the flag on the first try, always"},
-      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "tackle", "amount": 2}
+      "icon": "FLH",
+      "cost": 2,
+      "label": {
+        "pt": "Ferrolho",
+        "en": "Bolt"
+      },
+      "desc": {
+        "pt": "Arranca a flag na primeira, sempre",
+        "en": "Rips the flag on the first try, always"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "tackle",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Ferrolho",
+        "en": "Bolt"
+      },
+      "glyph": "#"
     },
     {
       "id": "capitao",
-      "icon": "📣",
-      "cost": 30,
-      "label": {"pt": "Capitão", "en": "Captain"},
-      "desc": {"pt": "A voz que o elenco inteiro escuta", "en": "The voice the whole squad listens to"},
-      "effect": {"kind": "team_bonus", "scope": "morale", "amount": 1}
+      "icon": "CAP",
+      "cost": 2,
+      "label": {
+        "pt": "Capitão",
+        "en": "Captain"
+      },
+      "desc": {
+        "pt": "A voz que o elenco inteiro escuta",
+        "en": "The voice the whole squad listens to"
+      },
+      "effect": {
+        "kind": "team_bonus",
+        "scope": "morale",
+        "amount": 1
+      },
+      "tag": {
+        "pt": "Capitão",
+        "en": "Captain"
+      },
+      "glyph": "!"
     },
     {
       "id": "padrinho",
-      "icon": "💸",
-      "cost": 20,
-      "label": {"pt": "Padrinho", "en": "Godfather"},
-      "desc": {"pt": "Conhece quem paga a conta, e paga a dele em dia", "en": "Knows who foots the bill, and pays his own on time"},
-      "effect": {"kind": "finance_bonus", "scope": "sponsorship", "amount": 1}
+      "icon": "PAD",
+      "cost": 1,
+      "label": {
+        "pt": "Padrinho",
+        "en": "Godfather"
+      },
+      "desc": {
+        "pt": "Conhece quem paga a conta, e paga a dele em dia",
+        "en": "Knows who foots the bill, and pays his own on time"
+      },
+      "effect": {
+        "kind": "finance_bonus",
+        "scope": "sponsorship",
+        "amount": 1
+      },
+      "tag": {
+        "pt": "Padrinho",
+        "en": "Godfather"
+      },
+      "glyph": "$"
     },
-
     {
       "id": "maos_de_pedra",
-      "icon": "🪨",
-      "cost": -25,
-      "label": {"pt": "Mãos de pedra", "en": "Stone Hands"},
-      "desc": {"pt": "Derruba o que não devia, na hora que não devia", "en": "Drops what he shouldn't, when he shouldn't"},
-      "effect": {"kind": "roll_bonus", "scope": "skill", "target": "catching", "amount": -2}
+      "icon": "PED",
+      "cost": -1,
+      "label": {
+        "pt": "Mãos de pedra",
+        "en": "Stone Hands"
+      },
+      "desc": {
+        "pt": "Derruba o que não devia, na hora que não devia",
+        "en": "Drops what he shouldn't, when he shouldn't"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "catching",
+        "amount": -2
+      },
+      "tag": {
+        "pt": "Pedra",
+        "en": "Stone"
+      },
+      "glyph": "x"
     },
     {
       "id": "sumido",
-      "icon": "👻",
-      "cost": -30,
-      "label": {"pt": "Sumido", "en": "Ghost"},
-      "desc": {"pt": "Falta treino sem avisar, e reaparece como se nada fosse", "en": "Misses sessions without a word, then turns up like nothing happened"},
-      "effect": {"kind": "training_penalty", "scope": "attendance", "amount": -2}
+      "icon": "SUM",
+      "cost": -2,
+      "label": {
+        "pt": "Sumido",
+        "en": "Ghost"
+      },
+      "desc": {
+        "pt": "Falta treino sem avisar, e reaparece como se nada fosse",
+        "en": "Misses sessions without a word, then turns up like nothing happened"
+      },
+      "effect": {
+        "kind": "training_penalty",
+        "scope": "attendance",
+        "amount": -2
+      },
+      "tag": {
+        "pt": "Sumido",
+        "en": "Ghost"
+      },
+      "glyph": "."
     },
     {
       "id": "vidraca",
-      "icon": "🩹",
-      "cost": -30,
-      "label": {"pt": "Vidraça", "en": "Glass"},
-      "desc": {"pt": "Lesiona no aquecimento, lesiona no jogo, lesiona vendo o jogo", "en": "Gets hurt warming up, playing, and watching"},
-      "effect": {"kind": "injury_risk", "scope": "all", "amount": 2}
+      "icon": "VID",
+      "cost": -2,
+      "label": {
+        "pt": "Vidraça",
+        "en": "Glass"
+      },
+      "desc": {
+        "pt": "Lesiona no aquecimento, lesiona no jogo, lesiona vendo o jogo",
+        "en": "Gets hurt warming up, playing, and watching"
+      },
+      "effect": {
+        "kind": "injury_risk",
+        "scope": "all",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Vidraça",
+        "en": "Glass"
+      },
+      "glyph": "\\"
+    },
+    {
+      "id": "braco_de_ouro",
+      "icon": "BRC",
+      "cost": 2,
+      "label": {
+        "pt": "Braço de ouro",
+        "en": "Golden arm"
+      },
+      "desc": {
+        "pt": "Acerta o passe longo que ninguém mais tenta. É por isso que ele é o QB",
+        "en": "Lands the deep ball nobody else attempts. It is why he is the quarterback"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "throwing",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Braço",
+        "en": "Arm"
+      },
+      "glyph": "~"
+    },
+    {
+      "id": "arrancada",
+      "icon": "ARR",
+      "cost": 2,
+      "label": {
+        "pt": "Arrancada",
+        "en": "First step"
+      },
+      "desc": {
+        "pt": "Os três primeiros passos dele acabam a jogada antes de ela começar",
+        "en": "His first three steps end the play before it starts"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "rush",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Arrancada",
+        "en": "Burst"
+      },
+      "glyph": "^"
+    },
+    {
+      "id": "leitura_de_jogo",
+      "icon": "LEI",
+      "cost": 2,
+      "label": {
+        "pt": "Leitura de jogo",
+        "en": "Reads the game"
+      },
+      "desc": {
+        "pt": "Sabe onde a bola vai antes de sair da mão. Corta passe que ninguém viu",
+        "en": "Knows where the ball is going before it leaves the hand"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "deflection",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Leitura",
+        "en": "Read"
+      },
+      "glyph": ":"
+    },
+    {
+      "id": "snap_de_relogio",
+      "icon": "SNR",
+      "cost": 1,
+      "label": {
+        "pt": "Snap de relógio",
+        "en": "Clockwork snap"
+      },
+      "desc": {
+        "pt": "A bola sai na mesma fração de segundo, jogada após jogada. Ninguém nota até faltar",
+        "en": "The ball comes back on the same fraction of a second, every snap. Nobody notices until it is missing"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "snap",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Relógio",
+        "en": "Clockwork"
+      },
+      "glyph": "|"
+    },
+    {
+      "id": "rato_de_regra",
+      "icon": "RAT",
+      "cost": 1,
+      "label": {
+        "pt": "Rato de regra",
+        "en": "Rulebook rat"
+      },
+      "desc": {
+        "pt": "Leu o regulamento inteiro e lembra do parágrafo. Discute com árbitro e às vezes ganha",
+        "en": "Read the whole rulebook and remembers the paragraph. Argues with officials and sometimes wins"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "rules",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Regra",
+        "en": "Rulebook"
+      },
+      "glyph": "="
+    },
+    {
+      "id": "olho_clinico",
+      "icon": "OLC",
+      "cost": 2,
+      "label": {
+        "pt": "Olho clínico",
+        "en": "Clinical eye"
+      },
+      "desc": {
+        "pt": "Assiste vinte minutos de coletivo e sabe quem presta. Vale um olheiro",
+        "en": "Watches twenty minutes of a scrimmage and knows who is worth it. Worth a scout"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "scouting",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Olho",
+        "en": "Eye"
+      },
+      "glyph": "@"
+    },
+    {
+      "id": "prancheta",
+      "icon": "PRA",
+      "cost": 2,
+      "label": {
+        "pt": "Prancheta",
+        "en": "The clipboard"
+      },
+      "desc": {
+        "pt": "Chama a jogada certa na hora errada do adversário",
+        "en": "Calls the right play at the wrong moment for the other side"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "play_calling",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Prancheta",
+        "en": "Clipboard"
+      },
+      "glyph": "+"
+    },
+    {
+      "id": "ferro",
+      "icon": "FER",
+      "cost": 2,
+      "label": {
+        "pt": "Ferro",
+        "en": "Iron"
+      },
+      "desc": {
+        "pt": "Joga machucado, joga no sol, joga no domingo depois do sábado. Não quebra",
+        "en": "Plays hurt, plays in the sun, plays on Sunday after Saturday. Does not break"
+      },
+      "effect": {
+        "kind": "injury_risk",
+        "scope": "all",
+        "amount": -2
+      },
+      "tag": {
+        "pt": "Ferro",
+        "en": "Iron"
+      },
+      "glyph": "%"
+    },
+    {
+      "id": "motorista",
+      "icon": "MOT",
+      "cost": 1,
+      "label": {
+        "pt": "Motorista",
+        "en": "The driver"
+      },
+      "desc": {
+        "pt": "Tem van e não cobra. Numa liga onde a viagem custa mais que a temporada, isso é dinheiro",
+        "en": "Has a van and does not charge. In a league where the trip costs more than the season, that is money"
+      },
+      "effect": {
+        "kind": "finance_bonus",
+        "scope": "travel",
+        "amount": 1
+      },
+      "tag": {
+        "pt": "Motorista",
+        "en": "Driver"
+      },
+      "glyph": "_"
+    },
+    {
+      "id": "pavio_curto",
+      "icon": "PAV",
+      "cost": -2,
+      "label": {
+        "pt": "Pavio curto",
+        "en": "Short fuse"
+      },
+      "desc": {
+        "pt": "Responde. Sempre. A falta vem junto e às vezes o cartão também",
+        "en": "Answers back. Always. The flag comes with it, and sometimes the card too"
+      },
+      "effect": {
+        "kind": "penalty_risk",
+        "scope": "all",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Pavio",
+        "en": "Fuse"
+      },
+      "glyph": "'"
+    },
+    {
+      "id": "so_no_ataque",
+      "icon": "SNA",
+      "cost": -1,
+      "label": {
+        "pt": "Só no ataque",
+        "en": "Offence only"
+      },
+      "desc": {
+        "pt": "Voltar pra defender não é com ele. Passa reto do lado de quem ia puxar a bandeira",
+        "en": "Coming back to defend is not his thing. Walks past the man who was going for the flag"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "tackle",
+        "amount": -2
+      },
+      "tag": {
+        "pt": "Turista",
+        "en": "Tourist"
+      },
+      "glyph": ","
+    },
+    {
+      "id": "dono_da_bola",
+      "icon": "DON",
+      "cost": -2,
+      "label": {
+        "pt": "Dono da bola",
+        "en": "Owns the ball"
+      },
+      "desc": {
+        "pt": "A bola é dele, então a jogada é dele. O vestiário aprende a engolir e não engole por muito tempo",
+        "en": "The ball is his, so the play is his. The locker room learns to swallow it, and does not for long"
+      },
+      "effect": {
+        "kind": "team_bonus",
+        "scope": "morale",
+        "amount": -1
+      },
+      "tag": {
+        "pt": "Dono",
+        "en": "Owner"
+      },
+      "glyph": "("
+    },
+    {
+      "id": "sem_condicao",
+      "icon": "SCD",
+      "cost": -1,
+      "label": {
+        "pt": "Sem condição",
+        "en": "No engine"
+      },
+      "desc": {
+        "pt": "Vai bem os primeiros dez minutos. O coletivo tem noventa",
+        "en": "Fine for the first ten minutes. The scrimmage is ninety"
+      },
+      "effect": {
+        "kind": "training_penalty",
+        "scope": "conditioning",
+        "amount": -2
+      },
+      "tag": {
+        "pt": "Cansaço",
+        "en": "Gassed"
+      },
+      "glyph": "-"
+    },
+    {
+      "id": "quebra_de_cintura",
+      "icon": "QBC",
+      "cost": 2,
+      "label": {
+        "pt": "Quebra de cintura",
+        "en": "Hips"
+      },
+      "desc": {
+        "pt": "Dá um passo pra um lado e vai pro outro. A bandeira fica na mão de ninguém",
+        "en": "Steps one way and goes the other. The flag ends up in nobody’s hand"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "juke",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Cintura",
+        "en": "Hips"
+      },
+      "glyph": "<"
+    },
+    {
+      "id": "voz_de_comando",
+      "icon": "VOZ",
+      "cost": 1,
+      "label": {
+        "pt": "Voz de comando",
+        "en": "Carries a voice"
+      },
+      "desc": {
+        "pt": "Fala uma vez e o time ouve. Não precisa gritar duas",
+        "en": "Says it once and the side hears it. Does not need to say it twice"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "leadership",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Voz",
+        "en": "Voice"
+      },
+      "glyph": "\""
+    },
+    {
+      "id": "dentro_da_cabeca",
+      "icon": "DTC",
+      "cost": 1,
+      "label": {
+        "pt": "Dentro da cabeça",
+        "en": "In your head"
+      },
+      "desc": {
+        "pt": "Conversa com o marcador a jogada inteira. Na terceira ele já errou duas",
+        "en": "Talks to his man all play. By the third he has missed two"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "trash_talk",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Cabeça",
+        "en": "Headgame"
+      },
+      "glyph": ";"
+    },
+    {
+      "id": "didatico",
+      "icon": "DID",
+      "cost": 2,
+      "label": {
+        "pt": "Didático",
+        "en": "Good teacher"
+      },
+      "desc": {
+        "pt": "Explica de um jeito que o novato entende na primeira. Vale mais que um treino",
+        "en": "Explains it so the rookie gets it first time. Worth more than a session"
+      },
+      "effect": {
+        "kind": "roll_bonus",
+        "scope": "skill",
+        "target": "coaching",
+        "amount": 2
+      },
+      "tag": {
+        "pt": "Didático",
+        "en": "Teacher"
+      },
+      "glyph": "/"
     }
   ]
 }

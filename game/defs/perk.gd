@@ -5,11 +5,16 @@
 # back like nothing happened". It is what makes two actors with the same
 # overall play differently.
 #
-# Perks are PRICED IN CAREER POINTS, and the price can be negative. A flaw
-# hands points back, which is the whole reason the cap exists: without a
-# ceiling the optimal build is every flaw in the catalogue. With `max_per_actor`
-# at one, taking a flaw is a real decision — you get one sentence, and you
-# choose whether it flatters you.
+# PERKS HAVE THEIR OWN CURRENCY, and it is not career points. Career points are
+# training — weeks in the gym, seasons on the field. A perk is not something
+# you train into; it is what a career DID to you, so it is paid for out of perk
+# points, earned at the big moments rather than accumulated by the week.
+#
+# Which also frees the Zomboid trade: take as many as you like, and a flaw pays
+# for a talent. Somebody can be Mãos de pedra AND Capitão AND Vidraça, and that
+# person is a real person. The old rule of one existed only because flaws
+# refunded career points and the optimal build was the whole flaw list; on a
+# separate ruler the budget does that job by itself.
 #
 # The `effect` block is DECLARED here and consumed by the systems that own the
 # rule: `C.1-match-engine` reads `roll_bonus`, training reads
@@ -18,10 +23,7 @@
 extends Def
 class_name PerkDef
 
-const DEFAULT_MAX := 1
 const NONE := ""
-
-var max_per_actor: int = DEFAULT_MAX
 
 var _perks: Dictionary = {}
 var _order: Array[String] = []
@@ -29,7 +31,6 @@ var _order: Array[String] = []
 func load_data(raw: Dictionary) -> void:
 	_perks.clear()
 	_order.clear()
-	max_per_actor = int(raw.get("max_per_actor", DEFAULT_MAX))
 	_ingest(raw.get("perks", []))
 
 # A module may bring its own perks — a regional league with its own folklore —
@@ -63,15 +64,51 @@ func has_perk(id: String) -> bool:
 func perk(id: String) -> Dictionary:
 	return _perks.get(_key(id), {})
 
-# In career points. Positive is a price, negative is a refund.
+# In PERK POINTS. Positive is a price, negative is what a flaw pays you.
 func cost(id: String) -> int:
 	return int(perk(id).get("cost", 0))
 
 func label(id: String) -> String:
 	return I18n.text(perk(id).get("label", id), id)
 
+# ONE WORD, AND IT IS NOT THE NAME. Twenty-seven three-letter codes is a screen
+# you read with the mouse, one tooltip at a time — which is fine for the eight
+# attributes you learn once and terrible for a catalogue you browse. The code
+# earns its place in the roster's 34px column, where there is room for nothing
+# else; the chip has room for a word, so it gets one.
+#
+# `tag` is a nickname and not an abbreviation of `label`: "Só no ataque" has no
+# short form, and TURISTA says the same thing in one word. A flaw's tag has to
+# read as a flaw on its own — ATAQUE and FÔLEGO would both sound like praise.
+func tag(id: String) -> String:
+	return I18n.text(perk(id).get("tag", ""), label(id))
+
+# Its mark: one ASCII character, from the catalogue and not from a table in the
+# UI, so a module shipping its own talents ships their marks with them.
+func glyph(id: String) -> String:
+	return String(perk(id).get("glyph", ""))
+
 func icon(id: String) -> String:
 	return String(perk(id).get("icon", ""))
+
+# Code, name and description as one block — the shape a tooltip wants, and the
+# same contract as `StatDef.explain()`: the screen shows three letters, the
+# tooltip carries everything those three letters stand for.
+func explain(id: String) -> String:
+	return "%s · %s
+
+%s" % [icon(id), label(id), desc(id)]
+
+# ⚠️ THE MARK FIRST, AND IN BRACKETS: `[>] FOGUETE`.
+#
+# It read `FOGUETE > 2` for a while, which says "foguete is greater than two" to
+# anybody who has ever seen an expression — the glyph looked like an OPERATOR
+# between the name and the price rather than a mark belonging to the name. The
+# brackets make it a label, and putting it first makes the row teach the mapping:
+# your eye goes down a column of marks and each one is followed by what it means,
+# which is how you end up recognising `>` in the roster without being told.
+func plate(id: String) -> String:
+	return "[%s] %s" % [glyph(id), tag(id).to_upper()]
 
 func desc(id: String) -> String:
 	return I18n.text(perk(id).get("desc", ""), "")

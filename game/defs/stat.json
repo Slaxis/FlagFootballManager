@@ -4,71 +4,71 @@
     "average_adult": 5,
     "anchors": [
       {
-        "step": 1,
+        "step": 0,
         "label": {
-          "pt": "criança pequena",
-          "en": "toddler"
+          "pt": "adulto comum, nunca treinou — e a criança de 12",
+          "en": "an ordinary adult who never trained — and the twelve-year-old"
         }
       },
       {
-        "step": 5,
+        "step": 2,
         "label": {
-          "pt": "adulto mediano",
-          "en": "average adult"
+          "pt": "joga na várzea do bairro",
+          "en": "plays on the neighbourhood sandlot"
+        }
+      },
+      {
+        "step": 4,
+        "label": {
+          "pt": "disputa o estadual",
+          "en": "competes at state level"
+        }
+      },
+      {
+        "step": 6,
+        "label": {
+          "pt": "seleção brasileira",
+          "en": "the Brazil squad"
+        }
+      },
+      {
+        "step": 8,
+        "label": {
+          "pt": "encara México e Estados Unidos",
+          "en": "faces Mexico and the United States"
         }
       },
       {
         "step": 10,
         "label": {
-          "pt": "atleta olímpico, candidato a medalha",
-          "en": "Olympic athlete, medal contender"
+          "pt": "estrela da IFAF",
+          "en": "an IFAF star"
         }
       }
     ]
   },
   "base": [
     {
-      "id": "strength",
+      "id": "intelligence",
       "label": {
-        "pt": "Força",
-        "en": "Strength"
+        "pt": "Inteligência",
+        "en": "Intelligence"
       },
       "desc": {
-        "pt": "Força muscular geral",
-        "en": "Overall muscular strength"
-      }
-    },
-    {
-      "id": "stamina",
-      "label": {
-        "pt": "Vitalidade",
-        "en": "Stamina"
+        "pt": "Capacidade cognitiva: aprender jogadas, memória e uso dela",
+        "en": "Cognition: learning plays, memory and using it"
       },
-      "desc": {
-        "pt": "Condicionamento físico",
-        "en": "Physical conditioning"
-      }
-    },
-    {
-      "id": "agility",
-      "label": {
-        "pt": "Agilidade",
-        "en": "Agility"
+      "chakra": {
+        "id": "sahasrara",
+        "color": "#9B6BD6",
+        "label": {
+          "pt": "Coroa",
+          "en": "Crown"
+        }
       },
-      "desc": {
-        "pt": "Habilidade com as pernas: aceleração, mudança de movimento",
-        "en": "Legs: acceleration, change of direction"
-      }
-    },
-    {
-      "id": "dexterity",
-      "label": {
-        "pt": "Destreza",
-        "en": "Dexterity"
-      },
-      "desc": {
-        "pt": "Habilidade com as mãos: recepção, lançamento",
-        "en": "Hands: catching, throwing"
+      "code": {
+        "pt": "INT",
+        "en": "INT"
       }
     },
     {
@@ -80,17 +80,18 @@
       "desc": {
         "pt": "Capacidade visual e leitura de padrões",
         "en": "Vision and pattern reading"
-      }
-    },
-    {
-      "id": "intelligence",
-      "label": {
-        "pt": "Inteligência",
-        "en": "Intelligence"
       },
-      "desc": {
-        "pt": "Capacidade cognitiva: aprender jogadas, memória e uso dela",
-        "en": "Cognition: learning plays, memory and using it"
+      "chakra": {
+        "id": "ajna",
+        "color": "#6B7FD6",
+        "label": {
+          "pt": "Terceiro olho",
+          "en": "Third eye"
+        }
+      },
+      "code": {
+        "pt": "PER",
+        "en": "PER"
       }
     },
     {
@@ -102,6 +103,18 @@
       "desc": {
         "pt": "Capacidade interpessoal: magnetismo, beleza, oratória",
         "en": "Interpersonal: magnetism, looks, oratory"
+      },
+      "chakra": {
+        "id": "vishuddha",
+        "color": "#4FA8D8",
+        "label": {
+          "pt": "Garganta",
+          "en": "Throat"
+        }
+      },
+      "code": {
+        "pt": "CAR",
+        "en": "CHA"
       }
     },
     {
@@ -113,6 +126,110 @@
       "desc": {
         "pt": "Resiliência mental: ir a todo treino no horário, e continuar indo com o time na lanterna",
         "en": "Mental resilience: showing up to every session on time, and still showing up when the club is bottom of the table"
+      },
+      "chakra": {
+        "id": "anahata",
+        "color": "#5FC46A",
+        "label": {
+          "pt": "Coração",
+          "en": "Heart"
+        }
+      },
+      "code": {
+        "pt": "VON",
+        "en": "WIL"
+      }
+    },
+    {
+      "id": "stamina",
+      "label": {
+        "pt": "Vitalidade",
+        "en": "Stamina"
+      },
+      "desc": {
+        "pt": "Condicionamento físico",
+        "en": "Physical conditioning"
+      },
+      "chakra": {
+        "id": "manipura",
+        "color": "#D8C64F",
+        "label": {
+          "pt": "Plexo solar",
+          "en": "Solar plexus"
+        }
+      },
+      "code": {
+        "pt": "VIT",
+        "en": "STA"
+      }
+    },
+    {
+      "id": "dexterity",
+      "label": {
+        "pt": "Destreza",
+        "en": "Dexterity"
+      },
+      "desc": {
+        "pt": "Habilidade com as mãos: recepção, lançamento",
+        "en": "Hands: catching, throwing"
+      },
+      "chakra": {
+        "id": "hasta",
+        "color": "#D8994F",
+        "label": {
+          "pt": "Mãos",
+          "en": "Hands"
+        }
+      },
+      "code": {
+        "pt": "DES",
+        "en": "DEX"
+      }
+    },
+    {
+      "id": "agility",
+      "label": {
+        "pt": "Agilidade",
+        "en": "Agility"
+      },
+      "desc": {
+        "pt": "Habilidade com as pernas: aceleração, mudança de movimento",
+        "en": "Legs: acceleration, change of direction"
+      },
+      "chakra": {
+        "id": "svadhisthana",
+        "color": "#D8704F",
+        "label": {
+          "pt": "Sacral",
+          "en": "Sacral"
+        }
+      },
+      "code": {
+        "pt": "AGI",
+        "en": "AGI"
+      }
+    },
+    {
+      "id": "strength",
+      "label": {
+        "pt": "Força",
+        "en": "Strength"
+      },
+      "desc": {
+        "pt": "Força muscular geral",
+        "en": "Overall muscular strength"
+      },
+      "chakra": {
+        "id": "muladhara",
+        "color": "#D85454",
+        "label": {
+          "pt": "Raiz",
+          "en": "Root"
+        }
+      },
+      "code": {
+        "pt": "FOR",
+        "en": "STR"
       }
     }
   ],
@@ -134,7 +251,7 @@
       "center": 1.8,
       "band": 0.1,
       "increment": 0.01,
-      "cap": 3,
+      "cap": 1,
       "affects": {
         "perception": 1,
         "agility": -1
@@ -157,7 +274,7 @@
       "center": 80,
       "band": 10,
       "increment": 1,
-      "cap": 3,
+      "cap": 1,
       "affects": {
         "strength": 1,
         "stamina": -1
@@ -176,6 +293,10 @@
       "desc": {
         "pt": "Colocar a bola onde só o seu recebedor alcança",
         "en": "Putting the ball where only your receiver can reach"
+      },
+      "code": {
+        "pt": "LAN",
+        "en": "THR"
       }
     },
     {
@@ -189,6 +310,10 @@
       "desc": {
         "pt": "Segurar o que dá pra segurar — e o que não dá",
         "en": "Holding the catchable, and the uncatchable"
+      },
+      "code": {
+        "pt": "REC",
+        "en": "CAT"
       }
     },
     {
@@ -202,6 +327,10 @@
       "desc": {
         "pt": "Correr a jogada certa no tempo certo",
         "en": "Running the right route at the right time"
+      },
+      "code": {
+        "pt": "ROT",
+        "en": "RTE"
       }
     },
     {
@@ -215,6 +344,10 @@
       "desc": {
         "pt": "Entregar a bola limpa e ainda entrar na jogada",
         "en": "Delivering a clean ball and still joining the play"
+      },
+      "code": {
+        "pt": "SNP",
+        "en": "SNP"
       }
     },
     {
@@ -228,6 +361,10 @@
       "desc": {
         "pt": "Escapar da puxada no espaço curto",
         "en": "Escaping the flag pull in tight space"
+      },
+      "code": {
+        "pt": "DRI",
+        "en": "JUK"
       }
     },
     {
@@ -241,6 +378,10 @@
       "desc": {
         "pt": "Arrancar a flag na primeira tentativa",
         "en": "Ripping the flag on the first try"
+      },
+      "code": {
+        "pt": "TAC",
+        "en": "TAK"
       }
     },
     {
@@ -254,6 +395,10 @@
       "desc": {
         "pt": "Grudar no recebedor o jogo inteiro",
         "en": "Sticking to the receiver all game"
+      },
+      "code": {
+        "pt": "COB",
+        "en": "COV"
       }
     },
     {
@@ -267,6 +412,10 @@
       "desc": {
         "pt": "Contar os segundos e chegar no quarterback",
         "en": "Counting the seconds and reaching the quarterback"
+      },
+      "code": {
+        "pt": "RSH",
+        "en": "RSH"
       }
     },
     {
@@ -280,6 +429,10 @@
       "desc": {
         "pt": "Tipar a bola na mão do recebedor",
         "en": "Tipping the ball out of the receiver's hands"
+      },
+      "code": {
+        "pt": "DEF",
+        "en": "DFL"
       }
     },
     {
@@ -293,6 +446,10 @@
       "desc": {
         "pt": "No amador, saber a regra ganha jogo",
         "en": "In amateur play, knowing the rulebook wins games"
+      },
+      "code": {
+        "pt": "REG",
+        "en": "RUL"
       }
     },
     {
@@ -306,6 +463,10 @@
       "desc": {
         "pt": "Lê a jogada, comunica, e o time inteiro joga melhor",
         "en": "Reads the play, calls it, and the whole side plays better"
+      },
+      "code": {
+        "pt": "LID",
+        "en": "LDR"
       }
     },
     {
@@ -319,6 +480,10 @@
       "desc": {
         "pt": "Acha o ponto fraco do adversário e não larga",
         "en": "Finds the opponent's weak spot and never lets go"
+      },
+      "code": {
+        "pt": "PRO",
+        "en": "TLK"
       }
     },
     {
@@ -332,6 +497,10 @@
       "desc": {
         "pt": "Escolher a jogada certa para o momento certo",
         "en": "Choosing the right play for the moment"
+      },
+      "code": {
+        "pt": "CHM",
+        "en": "CAL"
       }
     },
     {
@@ -345,6 +514,10 @@
       "desc": {
         "pt": "Fazer o elenco evoluir semana após semana",
         "en": "Making the squad improve week after week"
+      },
+      "code": {
+        "pt": "TRE",
+        "en": "COA"
       }
     },
     {
@@ -358,7 +531,81 @@
       "desc": {
         "pt": "Bater o olho e saber quem presta",
         "en": "One look and you know who can play"
+      },
+      "code": {
+        "pt": "OLH",
+        "en": "SCT"
       }
     }
-  ]
+  ],
+  "quantiles": {
+    "odds_ratio": 4,
+    "bands": [
+      {
+        "id": "q1",
+        "min": 10,
+        "max": 30,
+        "label": {
+          "pt": "Nível cidade",
+          "en": "City level"
+        },
+        "desc": {
+          "pt": "Joga bem na várzea do bairro",
+          "en": "Good on the neighbourhood sandlot"
+        }
+      },
+      {
+        "id": "q2",
+        "min": 30,
+        "max": 50,
+        "label": {
+          "pt": "Nível estadual",
+          "en": "State level"
+        },
+        "desc": {
+          "pt": "Aparece no estadual, disputa vaga",
+          "en": "Shows up at state level, competes for a spot"
+        }
+      },
+      {
+        "id": "q3",
+        "min": 50,
+        "max": 70,
+        "label": {
+          "pt": "Nível nacional",
+          "en": "National level"
+        },
+        "desc": {
+          "pt": "Seleção brasileira. O Brasil é isto",
+          "en": "The Brazil squad. This is what Brazil is"
+        }
+      },
+      {
+        "id": "q4",
+        "min": 70,
+        "max": 90,
+        "label": {
+          "pt": "Nível mundial menor",
+          "en": "World level, minor"
+        },
+        "desc": {
+          "pt": "Encara México e EUA e não passa vergonha",
+          "en": "Faces Mexico and the USA and holds up"
+        }
+      },
+      {
+        "id": "q5",
+        "min": 90,
+        "max": 100,
+        "label": {
+          "pt": "Nível mundial maior",
+          "en": "World level, major"
+        },
+        "desc": {
+          "pt": "Estrela da IFAF. O Brasil inteiro talvez tenha três",
+          "en": "An IFAF star. All of Brazil might have three"
+        }
+      }
+    ]
+  }
 }

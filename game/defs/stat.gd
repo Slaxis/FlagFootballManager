@@ -4,9 +4,22 @@
 # THE SCALE. Everything is stored 0..100 but read in STEPS of ten, and the
 # steps are what the game actually uses:
 #
-#     1 step   a toddler
-#     5 steps  an average adult          ← the anchor, and the zero of every modifier
-#    10 steps  an Olympic medal contender
+#     0 steps  an ordinary adult who never trained — and the twelve-year-old
+#     2 steps  plays on the neighbourhood sandlot     Q1
+#     4 steps  competes at state level                Q2
+#     6 steps  the Brazil squad                       Q3
+#     8 steps  faces Mexico and the United States     Q4
+#    10 steps  an IFAF star                           Q5
+#
+# ZERO IS THE TWENTIETH PERCENTILE OF PEOPLE, not the bottom of them. Below it
+# nobody is taking a field at all — children, and adults who never did this. So
+# the ruler measures athletic development ABOVE that floor, which is why "good
+# for the sandlot" is two steps and not five.
+#
+# THE ANCHOR IS THE QUANTILE. There used to be two systems stacked on each
+# other — a ruler anchored on "average adult" and a quantile ladder laid over
+# it — and they disagreed about what a number meant. Now every other step names
+# a band and there is one answer.
 #
 # Storing at ten times the resolution is what lets weekly training move someone
 # by three points: you feel the progress before the bar lights up. Rolls, team
@@ -28,13 +41,23 @@ extends Def
 class_name StatDef
 
 const DEFAULT_STORED_PER_STEP := 10
+# The neutral point of the leader modifier (decision 20) — NOT "the average
+# adult" any more. On the new ruler five steps is the Brazil squad, so a
+# sandlot manager leads at minus two and actively costs his side until he
+# learns better. That is the intended shape: America Red Lions lost a Carioca
+# Bowl because the bench forgot to stop the clock, with the better athletes on
+# the field.
 const DEFAULT_AVERAGE_STEP := 5
 const MAX_STEP := 10
 const STORED_MIN := 0
 const STORED_MAX := 100
-# Where "notable" begins, in steps, on either side of the average adult.
+# Where "notable" begins, in steps. High is world level and stayed put. Low had
+# to fall to the floor: on the new ruler a city-level player sits at one or two
+# steps in everything, so "three or below" would have called every amateur in
+# the game a cripple and flooded the nickname generator with mockery again.
+# Only an actual zero — the thing he plainly cannot do — is worth a name.
 const NOTABLE_HIGH := 7
-const NOTABLE_LOW := 3
+const NOTABLE_LOW := 0
 
 var stored_per_step: int = DEFAULT_STORED_PER_STEP
 var average_step: int = DEFAULT_AVERAGE_STEP
@@ -43,6 +66,8 @@ var _base: Dictionary = {}
 var _measures: Dictionary = {}
 var _skills: Dictionary = {}
 var _anchors: Array = []
+var _quantiles: Array = []
+var _odds_ratio: int = 4
 
 func load_data(raw: Dictionary) -> void:
 	_base.clear()
@@ -52,6 +77,9 @@ func load_data(raw: Dictionary) -> void:
 	stored_per_step = int(scale.get("stored_per_step", DEFAULT_STORED_PER_STEP))
 	average_step = int(scale.get("average_adult", DEFAULT_AVERAGE_STEP))
 	_anchors = scale.get("anchors", [])
+	var quantiles: Dictionary = raw.get("quantiles", {})
+	_quantiles = quantiles.get("bands", [])
+	_odds_ratio = int(quantiles.get("odds_ratio", 4))
 	_ingest(raw.get("base", []), _base)
 	_ingest(raw.get("measures", []), _measures)
 	_ingest(raw.get("skills", []), _skills, "attribute")
@@ -74,7 +102,7 @@ func _ingest(entries: Variant, into: Dictionary, required_field: String = "") ->
 # --- Scale ---
 
 # Stored value to the step the game reads. Everything above 100 clamps: 10 is
-# the medal contender and there is nothing past it.
+# the IFAF star and there is nothing past it.
 func step(stored: int) -> int:
 	return clampi(int(floor(float(stored) / float(stored_per_step))), 0, MAX_STEP)
 
@@ -295,3 +323,107 @@ func notable_traits(stat_steps: Dictionary, skill_steps: Dictionary = {}) -> Arr
 	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["distance"]) > int(b["distance"]))
 	return found
+
+
+# --- The quantile ladder ---
+#
+# The ruler is ABSOLUTE: 10 is the best there is, on Earth. So a number needs a
+# second reading that says which league that number belongs to, and the five
+# bands are it:
+#
+#   Q1  city level      plays well on the neighbourhood sandlot
+#   Q2  state level     shows up at the state championship
+#   Q3  national        the Brazil squad IS this
+#   Q4  world, minor    faces Mexico and the USA and holds up
+#   Q5  world, major    an IFAF star; all of Brazil might have three
+#
+# Adjacent bands sit at the declared odds ratio — 4:1, so 80/20 — which is what
+# makes Q5 vanishingly rare instead of merely uncommon. Reading a roster
+# against this is how "a 26-year-old at a Piedade club with international-level
+# coaching" becomes a visible mistake rather than just a big number.
+func quantile_count() -> int:
+	return _quantiles.size()
+
+func odds_ratio() -> int:
+	return _odds_ratio
+
+# 1-based, so quantile_of(72) is 3.
+func quantile_of(stored: int) -> int:
+	for i: int in range(_quantiles.size()):
+		if stored < int((_quantiles[i] as Dictionary).get("max", StatDef.STORED_MAX)):
+			return i + 1
+	return maxi(_quantiles.size(), 1)
+
+func quantile_band(quantile: int) -> Dictionary:
+	var index: int = clampi(quantile, 1, maxi(_quantiles.size(), 1)) - 1
+	return _quantiles[index] if index < _quantiles.size() else {}
+
+# THE THREE LETTERS. Every attribute and every skill carries one, and the screens
+# show it instead of the name.
+#
+# "Chamada de jogada" is seventeen characters beside a ten-slot bar; twenty-three
+# rows of that read as a classified ad rather than a sheet. Three letters in a
+# fixed column reads as a TABLE, which is what it is — and the name and the
+# description move to the tooltip, where they stop competing with the numbers and
+# start being a tutorial that is always one hover away.
+#
+# Per language, because the mnemonic is the point: VIT is Vitalidade and STA is
+# Stamina, and a code that does not match the word next to it in the tooltip
+# helps nobody. `tests/test_stat.gd` keeps them three letters, uppercase and
+# unique inside each language.
+func code(id: String) -> String:
+	var key: String = _key(id)
+	var spec: Dictionary = _base.get(key, _skills.get(key, {}))
+	return I18n.text(spec.get("code", ""), key.substr(0, 3).to_upper())
+
+# Name and description in one string, for the tooltip that replaced them on
+# screen. Blank line between, so the name reads as a heading.
+func explain(id: String) -> String:
+	var key: String = _key(id)
+	var spec: Dictionary = _base.get(key, _skills.get(key, {}))
+	var name: String = I18n.text(spec.get("label", key), key)
+	var desc: String = I18n.text(spec.get("desc", ""), "")
+	return "%s\n\n%s" % [name, desc] if desc != "" else name
+
+func quantile_label(quantile: int) -> String:
+	# Not `band`: this class already has a `band()` for the height and weight
+	# bands, and a local of the same name shadows it.
+	var entry: Dictionary = quantile_band(quantile)
+	return I18n.text(entry.get("label", ""), "Q%d" % quantile)
+
+# A value drawn inside a band, so "Q2" becomes an actual number.
+func quantile_value(quantile: int, rng: RandomNumberGenerator) -> int:
+	# Not `band`: this class has a `band()` for the height and weight bands, and
+	# a local of that name shadows it.
+	var entry: Dictionary = quantile_band(quantile)
+	if entry.is_empty():
+		return 50
+	return rng.randi_range(int(entry.get("min", 30)), int(entry.get("max", 55)))
+
+
+# --- Chakras ---
+#
+# Each attribute sits on a point of the body and the eight are declared head to
+# foot, so every screen that walks `base_ids()` reads top-down like a person
+# standing up: mind, eyes, voice, heart, core, hands, hips, feet.
+#
+# A liberty, stated plainly: the classic system has seven wheels and the sheet
+# has eight attributes, so DEXTERITY gets a point of its own at the hands. A
+# body has hands; the tradition just never had to roll for catching.
+#
+# The colour is the point. A skill inherits the colour of the attribute that
+# governs it, so "Lançamento" and "Destreza" are the same amber and the link
+# between aptitude and practice is visible instead of being a rule you memorise.
+func chakra(stat_id: String) -> Dictionary:
+	return base_stat(stat_id).get("chakra", {})
+
+func chakra_label(stat_id: String) -> String:
+	return I18n.text(chakra(stat_id).get("label", ""), "")
+
+func chakra_color(stat_id: String) -> Color:
+	var raw: String = String(chakra(stat_id).get("color", ""))
+	return Color(raw) if raw != "" else Color(0.49, 0.78, 0.45)
+
+# The colour a SKILL wears: its governing attribute's.
+func skill_color(skill_id: String) -> Color:
+	return chakra_color(skill_attribute(skill_id))

@@ -226,6 +226,59 @@ func jersey() -> int:
 func set_jersey(number: int) -> void:
 	data["jersey"] = number
 
+# --- Positions ---
+#
+# Two different questions, and they must not be confused:
+#
+#   `position`   where the career was SPENT. Set by the lifecycle, and it is
+#                what the skills grew around. History, not a choice.
+#   `lineup`     where the manager has CLEARED him to play. A choice, changed
+#                from the roster screen, and the thing the match reads.
+#
+# Somebody who lived ten years at cornerback usually gets fielded there, but a
+# manager who is short a safety can tick the box and find out.
+
+func position() -> String:
+	return String(attr("position", ""))
+
+func lineup() -> Array:
+	return data.get("lineup", [])
+
+func plays_position(position_id: String) -> bool:
+	return lineup().has(String(position_id).strip_edges().to_lower())
+
+# Toggles, because the roster row is a button and a button is a toggle.
+func toggle_position(position_id: String) -> bool:
+	var id: String = String(position_id).strip_edges().to_lower()
+	var current: Array = lineup().duplicate()
+	if current.has(id):
+		current.erase(id)
+	else:
+		current.append(id)
+	data["lineup"] = current
+	return current.has(id)
+
+# --- Career ---
+#
+# One entry per season lived: {age, position, team, gains}. Written by
+# ActorLife for a simulated actor and declared in JSON by a curator for a real
+# one — the same list either way (decision 28).
+
+func career() -> Array:
+	return data.get("career", [])
+
+func career_years() -> int:
+	var declared: int = career().size()
+	if declared > 0:
+		return declared
+	# Falls back on the arithmetic for an actor whose seasons were never
+	# written down, so the number is never a lie by omission.
+	var debut: int = int(attr("debut_age", 0))
+	return maxi(age() - debut, 0) if debut > 0 else 0
+
+func debut_age() -> int:
+	return int(attr("debut_age", 0))
+
 # --- Perks ---
 
 func perks() -> Array:

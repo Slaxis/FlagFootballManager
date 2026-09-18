@@ -10,6 +10,7 @@ const BASE_IDS: Array[String] = [
 
 func tests() -> Array:
 	return [
+		"test_every_track_has_a_unique_three_letter_code",
 		"test_eight_attributes_including_will",
 		"test_fifteen_skills_each_governed_by_a_real_attribute",
 		"test_no_derived_layer_survives",
@@ -22,6 +23,9 @@ func tests() -> Array:
 		"test_body_price_matches_the_swap_it_performs",
 		"test_roll_base_sums_aptitude_and_practice",
 		"test_quality_stays_inside_the_adult_band",
+		"test_every_attribute_sits_on_a_chakra",
+		"test_attributes_are_ordered_head_to_foot",
+		"test_a_skill_wears_its_attribute_colour",
 	]
 
 func _def() -> StatDef:
@@ -100,12 +104,16 @@ func test_body_shifts_whole_steps(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
+	# ONE step, not three. On the new ruler a city-level player lives between
+	# one and three steps, so a body worth three of them was worth more than
+	# everything the person ever trained — and it drew a zeroed attribute as a
+	# one that refused to come down.
 	var tall: Dictionary = def.body_effect({"height": 2.10, "weight": 80})
-	t.equal(int(tall.get("perception", 0)), 3, "alto deveria enxergar 3 passos mais")
-	t.equal(int(tall.get("agility", 0)), -3, "alto deveria perder 3 passos de agilidade")
+	t.equal(int(tall.get("perception", 0)), 1, "alto deveria enxergar 1 passo mais")
+	t.equal(int(tall.get("agility", 0)), -1, "alto deveria perder 1 passo de agilidade")
 	var heavy: Dictionary = def.body_effect({"height": 1.80, "weight": 110})
-	t.equal(int(heavy.get("strength", 0)), 3, "pesado deveria ganhar 3 de força")
-	t.equal(int(heavy.get("stamina", 0)), -3, "pesado deveria perder 3 de vitalidade")
+	t.equal(int(heavy.get("strength", 0)), 1, "pesado deveria ganhar 1 de força")
+	t.equal(int(heavy.get("stamina", 0)), -1, "pesado deveria perder 1 de vitalidade")
 	for value: int in def.body_effect({"height": 1.80, "weight": 80}).values():
 		t.equal(value, 0, "o corpo central não deveria mexer em nada")
 
@@ -132,10 +140,11 @@ func test_body_price_matches_the_swap_it_performs(t: TestHelper) -> void:
 	var def := _def()
 	if def == null:
 		t.fail("StatDef ausente"); return
+	# Capped at one band, so the price caps with it: the extreme body is worth
+	# a single step and costs a single point.
 	t.equal(def.body_value({"height": 1.90, "weight": 80}), 1, "uma faixa")
-	t.equal(def.body_value({"height": 2.00, "weight": 80}), 4, "duas faixas")
-	t.equal(def.body_value({"height": 2.10, "weight": 80}), 9, "três faixas")
-	t.equal(def.body_value({"height": 2.10, "weight": 110}), 18, "extremo nos dois")
+	t.equal(def.body_value({"height": 2.10, "weight": 80}), 1, "além do teto continua um")
+	t.equal(def.body_value({"height": 2.10, "weight": 110}), 2, "extremo nos dois")
 
 func test_roll_base_sums_aptitude_and_practice(t: TestHelper) -> void:
 	var def := _def()
@@ -159,3 +168,81 @@ func test_quality_stays_inside_the_adult_band(t: TestHelper) -> void:
 	t.check(worst >= 35 and worst <= 45, "várzea saiu com qualidade %d" % worst)
 	t.check(best >= 70 and best <= 85, "campeão saiu com qualidade %d" % best)
 	t.check(best > worst + 20, "a distância entre várzea e elite ficou pequena")
+
+
+# The colour is the point: a skill inherits the colour of the attribute that
+# governs it, so aptitude and practice are visibly the same thing instead of a
+# rule you have to remember.
+func test_every_attribute_sits_on_a_chakra(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var seen: Dictionary = {}
+	for id: String in def.base_ids():
+		var chakra: Dictionary = def.chakra(id)
+		t.check(not chakra.is_empty(), "'%s' sem chakra" % id)
+		var colour: Color = def.chakra_color(id)
+		t.check(colour.get_luminance() > 0.12,
+			"a cor de '%s' é escura demais para uma barra" % id)
+		var key: String = colour.to_html(false)
+		t.check(not seen.has(key), "'%s' repete a cor de '%s'" % [id, seen.get(key, "")])
+		seen[key] = id
+		t.check(def.chakra_label(id).strip_edges() != "", "'%s' sem nome de chakra" % id)
+
+# Declared head to foot, so every screen that walks base_ids() reads top-down
+# like a person standing up.
+func test_attributes_are_ordered_head_to_foot(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var expected: Array[String] = ["intelligence", "perception", "charisma", "will",
+		"stamina", "dexterity", "agility", "strength"]
+	var actual: Array = def.base_ids()
+	t.equal(actual.size(), expected.size(), "quantidade de atributos")
+	for i: int in range(mini(actual.size(), expected.size())):
+		t.equal(String(actual[i]), expected[i], "atributo na posição %d" % i)
+
+func test_a_skill_wears_its_attribute_colour(t: TestHelper) -> void:
+	var def := _def()
+	if def == null:
+		t.fail("StatDef ausente"); return
+	for id: String in def.skill_ids():
+		var governing: String = def.skill_attribute(id)
+		t.equal(def.skill_color(id).to_html(false), def.chakra_color(governing).to_html(false),
+			"'%s' deveria usar a cor de '%s'" % [id, governing])
+	# And the one that started it: throwing hangs off dexterity, the hands.
+	t.equal(def.skill_color("throwing").to_html(false),
+		def.chakra_color("dexterity").to_html(false), "lançamento é cor de mãos")
+
+# THE CODE IS THE COLUMN. Screens show three letters where the name used to be —
+# "Chamada de jogada" is seventeen characters beside a ten-slot bar, and
+# twenty-three rows of that read as a classified ad — so a code that is missing,
+# the wrong length or shared with another track breaks the table quietly.
+#
+# Per language, because the mnemonic is the point: VIT for Vitalidade, STA for
+# Stamina. Uniqueness only has to hold WITHIN a language.
+func test_every_track_has_a_unique_three_letter_code(t: TestHelper) -> void:
+	var def := Drive.def("stat") as StatDef
+	if def == null:
+		t.fail("StatDef ausente"); return
+	var previous: String = I18n.get_lang()
+	var tracks: Array[String] = []
+	tracks.append_array(def.base_ids())
+	tracks.append_array(def.skill_ids())
+	for lang: String in ["pt", "en"]:
+		I18n.set_lang(lang)
+		var owner_of: Dictionary = {}
+		for id: String in tracks:
+			var code: String = def.code(id)
+			t.equal(code.length(), 3, "[%s] '%s' tem código '%s'" % [lang, id, code])
+			t.equal(code, code.to_upper(), "[%s] '%s' não está em maiúsculas" % [lang, id])
+			if owner_of.has(code):
+				t.fail("[%s] código '%s' repetido entre '%s' e '%s'" %
+					[lang, code, owner_of[code], id])
+			owner_of[code] = id
+		t.equal(owner_of.size(), tracks.size(), "[%s] códigos distintos" % lang)
+		# And the tooltip that replaced the name on screen has to carry it.
+		for id: String in tracks:
+			t.check(def.explain(id).strip_edges() != "",
+				"[%s] '%s' sem texto de tooltip" % [lang, id])
+	I18n.set_lang(previous)

@@ -13,11 +13,14 @@ const _SAVE_EXISTS := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# The window may have changed since the last screen, and the canvas has to
+	# follow it on a whole-pixel boundary or nothing drawn here lands on one.
+	Look.fit_window()
 	_build_ui()
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = Color(0.07, 0.10, 0.08)
+	bg.color = Look.CANVAS
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
@@ -25,6 +28,22 @@ func _build_ui() -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
+
+	# Bottom-right, quiet. A pixel game lives or dies on whether the window is an
+	# exact multiple of its canvas, and that is invisible until it is written
+	# down: a 1x here means the screen is being upscaled by the compositor and
+	# nothing else about the picture will look right.
+	var scale_note := Label.new()
+	scale_note.text = Look.scale_line()
+	scale_note.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	scale_note.offset_left = -560
+	scale_note.offset_top = -34
+	scale_note.offset_right = -16
+	scale_note.offset_bottom = -12
+	scale_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	scale_note.add_theme_color_override("font_color", Look.MUTED.darkened(0.3))
+	Look.wear_body(scale_note, Look.TEXT)
+	add_child(scale_note)
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
@@ -40,7 +59,7 @@ func _build_ui() -> void:
 	tagline.text = UiText.t("start.tagline")
 	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tagline.add_theme_font_size_override("font_size", 20)
-	tagline.add_theme_color_override("font_color", Color(0.58, 0.70, 0.60))
+	tagline.add_theme_color_override("font_color", Look.MUTED)
 	box.add_child(tagline)
 
 	box.add_child(_spacer(32))
@@ -55,7 +74,7 @@ func _build_ui() -> void:
 		hint.text = UiText.t("start.continue_hint")
 		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		hint.add_theme_font_size_override("font_size", 13)
-		hint.add_theme_color_override("font_color", Color(0.45, 0.47, 0.45))
+		hint.add_theme_color_override("font_color", Look.MUTED.darkened(0.2))
 		box.add_child(hint)
 
 	var new_game := _menu_button(UiText.t("start.new_game"))

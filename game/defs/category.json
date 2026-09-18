@@ -2,31 +2,57 @@
   "categories": [
     {
       "id": "masc",
-      "label": {"pt": "Masculino", "en": "Men's"},
-      "min_women": 0
+      "label": {
+        "pt": "Masculino",
+        "en": "Men's"
+      },
+      "min_women": 0,
+      "code": {
+        "pt": "MASC",
+        "en": "MEN"
+      }
     },
     {
       "id": "fem",
-      "label": {"pt": "Feminino", "en": "Women's"},
-      "min_women": "all"
+      "label": {
+        "pt": "Feminino",
+        "en": "Women's"
+      },
+      "min_women": "all",
+      "code": {
+        "pt": "FEM",
+        "en": "WOM"
+      }
     },
     {
       "id": "misto",
-      "label": {"pt": "Misto", "en": "Mixed"},
-      "min_women": 2
+      "label": {
+        "pt": "Misto",
+        "en": "Mixed"
+      },
+      "min_women": 2,
+      "code": {
+        "pt": "MIS",
+        "en": "MIX"
+      }
     }
   ],
-
   "formats": [
     {
       "id": "5x5",
-      "label": {"pt": "5×5", "en": "5×5"},
+      "label": {
+        "pt": "5×5",
+        "en": "5×5"
+      },
       "on_field": 5,
       "surface": "campo"
     },
     {
       "id": "4x4",
-      "label": {"pt": "4×4 Areia", "en": "4×4 Beach"},
+      "label": {
+        "pt": "4×4 Areia",
+        "en": "4×4 Beach"
+      },
       "on_field": 4,
       "surface": "areia"
     }

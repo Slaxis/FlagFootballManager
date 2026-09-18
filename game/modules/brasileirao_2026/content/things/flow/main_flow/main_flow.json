@@ -26,7 +26,7 @@
         "career"
       ],
       "transitions": {
-        "created": "club_select",
+        "created": "draft",
         "back": "module_select"
       }
     },
@@ -38,14 +38,30 @@
       }
     },
     {
-      "id": "club_select",
-      "scene_file": "club_select",
-      "transitions": {
-        "back": "start"
-      },
+      "id": "draft",
+      "scene_file": "draft",
       "consumes": [
         "career"
-      ]
+      ],
+      "produces": [
+        "rosters",
+        "praca"
+      ],
+      "transitions": {
+        "drafted": "team",
+        "back": "start"
+      }
+    },
+    {
+      "id": "team",
+      "scene_file": "team",
+      "consumes": [
+        "career",
+        "rosters"
+      ],
+      "transitions": {
+        "back": "start"
+      }
     }
   ]
 }

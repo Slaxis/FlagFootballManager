@@ -1,0 +1,425 @@
+{
+  "positions": [
+    {
+      "id": "qb",
+      "code": "QB",
+      "side": "offense",
+      "label": {
+        "pt": "Quarterback",
+        "en": "Quarterback"
+      },
+      "desc": {
+        "pt": "Passador. Lê a defesa, decide em dois segundos e acerta a janela",
+        "en": "Passer. Reads the defence, decides in two seconds and hits the window"
+      },
+      "affinity": {
+        "dexterity": 1,
+        "intelligence": 1,
+        "perception": 1,
+        "will": 1,
+        "throwing": 1,
+        "play_calling": 1,
+        "rules": 1,
+        "leadership": 1,
+        "trash_talk": -1,
+        "rush": -1
+      },
+      "trains": {
+        "throwing": 5,
+        "play_calling": 3,
+        "rules": 2,
+        "juke": 1,
+        "leadership": 2
+      },
+      "slots": 1
+    },
+    {
+      "id": "center",
+      "code": "C",
+      "side": "offense",
+      "label": {
+        "pt": "Center",
+        "en": "Center"
+      },
+      "desc": {
+        "pt": "Faz o snap e vira alvo. No flag o center recebe passe, diferente do futebol americano",
+        "en": "Snaps and becomes a target. In flag the center is an eligible receiver, unlike tackle football"
+      },
+      "affinity": {
+        "strength": 1,
+        "dexterity": 1,
+        "stamina": 1,
+        "snap": 1,
+        "catching": 1,
+        "rush": 1,
+        "tackle": 1,
+        "route": -1
+      },
+      "trains": {
+        "snap": 5,
+        "catching": 2,
+        "rush": 2,
+        "tackle": 2,
+        "route": 1,
+        "rules": 1
+      },
+      "slots": 1
+    },
+    {
+      "id": "receiver",
+      "code": "WR",
+      "side": "offense",
+      "label": {
+        "pt": "Recebedor",
+        "en": "Wide Receiver"
+      },
+      "desc": {
+        "pt": "Corre a rota no ponto, ganha a costura e não derruba",
+        "en": "Runs the route on time, wins the seam and does not drop it"
+      },
+      "affinity": {
+        "agility": 1,
+        "dexterity": 1,
+        "perception": 1,
+        "route": 1,
+        "catching": 1,
+        "juke": 1,
+        "coverage": 1,
+        "snap": -1,
+        "throwing": -1
+      },
+      "trains": {
+        "route": 4,
+        "catching": 4,
+        "juke": 3,
+        "coverage": 2,
+        "rules": 1
+      },
+      "slots": 3
+    },
+    {
+      "id": "rusher",
+      "code": "R",
+      "side": "defense",
+      "label": {
+        "pt": "Rusher",
+        "en": "Rusher"
+      },
+      "desc": {
+        "pt": "Sai dos sete pés no snap e conta os segundos até chegar no QB",
+        "en": "Starts seven feet off the line and counts the seconds to the QB"
+      },
+      "affinity": {
+        "agility": 1,
+        "stamina": 1,
+        "strength": 1,
+        "rush": 1,
+        "tackle": 1,
+        "deflection": 1,
+        "juke": 1,
+        "trash_talk": 1,
+        "coverage": -1,
+        "throwing": -1
+      },
+      "trains": {
+        "rush": 5,
+        "tackle": 3,
+        "deflection": 2,
+        "juke": 2,
+        "rules": 1
+      },
+      "slots": 1
+    },
+    {
+      "id": "cornerback",
+      "code": "CB",
+      "side": "defense",
+      "label": {
+        "pt": "Cornerback",
+        "en": "Cornerback"
+      },
+      "desc": {
+        "pt": "Marca o recebedor de fora, homem a homem ou na zona. Espelha a rota",
+        "en": "Covers the outside receiver, man or zone. Mirrors the route"
+      },
+      "affinity": {
+        "agility": 1,
+        "perception": 1,
+        "dexterity": 1,
+        "coverage": 1,
+        "deflection": 1,
+        "juke": 1,
+        "route": 1,
+        "tackle": 1,
+        "snap": -1,
+        "throwing": -1
+      },
+      "trains": {
+        "coverage": 5,
+        "deflection": 3,
+        "tackle": 2,
+        "route": 2,
+        "rush": 1
+      },
+      "slots": 2
+    },
+    {
+      "id": "safety",
+      "code": "S",
+      "side": "defense",
+      "label": {
+        "pt": "Safety",
+        "en": "Safety"
+      },
+      "desc": {
+        "pt": "Último homem, atrás dos defensive backs. Cobre o passe profundo e não pode errar",
+        "en": "Last man, behind the backs. Covers the deep ball and cannot be wrong"
+      },
+      "affinity": {
+        "perception": 1,
+        "intelligence": 1,
+        "will": 1,
+        "agility": 1,
+        "coverage": 1,
+        "deflection": 1,
+        "tackle": 1,
+        "rules": 1,
+        "rush": -1,
+        "snap": -1
+      },
+      "trains": {
+        "coverage": 4,
+        "deflection": 3,
+        "tackle": 3,
+        "rules": 2,
+        "leadership": 1
+      },
+      "slots": 2
+    },
+    {
+      "id": "head_coach",
+      "code": "HC",
+      "side": "staff",
+      "label": {
+        "pt": "Técnico",
+        "en": "Head Coach"
+      },
+      "desc": {
+        "pt": "Manda no elenco. Escolhe quem joga, aguenta a pressão e a galera escuta",
+        "en": "Runs the squad. Picks who plays, carries the pressure, and the room listens"
+      },
+      "affinity": {
+        "intelligence": 1,
+        "charisma": 1,
+        "will": 1,
+        "perception": 1,
+        "coaching": 1,
+        "leadership": 1,
+        "play_calling": 1,
+        "rules": 1,
+        "trash_talk": -1
+      },
+      "trains": {
+        "coaching": 4,
+        "leadership": 3,
+        "play_calling": 3,
+        "rules": 2
+      },
+      "slots": 1
+    },
+    {
+      "id": "offense_coord",
+      "code": "OC",
+      "side": "staff",
+      "label": {
+        "pt": "Coordenador de Ataque",
+        "en": "Offensive Coordinator"
+      },
+      "desc": {
+        "pt": "Desenha o ataque e chama a jogada. Sabe onde a defesa vai estar",
+        "en": "Draws up the offence and calls the play. Knows where the defence will be"
+      },
+      "affinity": {
+        "intelligence": 1,
+        "perception": 1,
+        "play_calling": 1,
+        "throwing": 1,
+        "route": 1,
+        "rules": 1,
+        "tackle": -1
+      },
+      "trains": {
+        "play_calling": 5,
+        "throwing": 2,
+        "route": 2,
+        "rules": 2
+      },
+      "slots": 1
+    },
+    {
+      "id": "defense_coord",
+      "code": "DC",
+      "side": "staff",
+      "label": {
+        "pt": "Coordenador de Defesa",
+        "en": "Defensive Coordinator"
+      },
+      "desc": {
+        "pt": "Arma a defesa. Decide entre homem a homem, zona e blitz",
+        "en": "Sets the defence. Decides between man, zone and blitz"
+      },
+      "affinity": {
+        "intelligence": 1,
+        "perception": 1,
+        "will": 1,
+        "play_calling": 1,
+        "coverage": 1,
+        "deflection": 1,
+        "rules": 1,
+        "throwing": -1
+      },
+      "trains": {
+        "play_calling": 5,
+        "coverage": 2,
+        "deflection": 2,
+        "rules": 2
+      },
+      "slots": 1
+    },
+    {
+      "id": "fitness",
+      "code": "PF",
+      "side": "staff",
+      "label": {
+        "pt": "Preparador Físico",
+        "en": "Fitness Coach"
+      },
+      "desc": {
+        "pt": "Cuida do corpo do elenco. Faz o time chegar no fim do jogo de pé",
+        "en": "Looks after the bodies. Gets the side to the end of the game standing"
+      },
+      "affinity": {
+        "will": 1,
+        "strength": 1,
+        "stamina": 1,
+        "coaching": 1,
+        "play_calling": -1
+      },
+      "trains": {
+        "coaching": 5,
+        "rules": 1
+      },
+      "slots": 1
+    },
+    {
+      "id": "scout",
+      "code": "OL",
+      "side": "staff",
+      "label": {
+        "pt": "Olheiro",
+        "en": "Scout"
+      },
+      "desc": {
+        "pt": "Acha gente. Enxerga num moleque de 16 o que ele vai ser aos 22",
+        "en": "Finds people. Sees in a sixteen-year-old what he will be at twenty-two"
+      },
+      "affinity": {
+        "perception": 1,
+        "intelligence": 1,
+        "scouting": 1,
+        "rules": 1,
+        "trash_talk": -1
+      },
+      "trains": {
+        "scouting": 5,
+        "rules": 2,
+        "coaching": 1
+      },
+      "slots": 1
+    },
+    {
+      "id": "president",
+      "code": "PRE",
+      "side": "admin",
+      "slots": 1,
+      "label": {
+        "pt": "Presidente",
+        "en": "President"
+      },
+      "desc": {
+        "pt": "Responde pelo clube. Decide quem senta em cada cadeira e leva a culpa por todas",
+        "en": "Answers for the club. Decides who sits in every chair and takes the blame for all of them"
+      },
+      "affinity": {
+        "charisma": 1,
+        "will": 1,
+        "intelligence": 1,
+        "leadership": 1,
+        "rules": 1,
+        "trash_talk": -1
+      },
+      "trains": {
+        "leadership": 4,
+        "rules": 3,
+        "play_calling": 1
+      }
+    },
+    {
+      "id": "treasurer",
+      "code": "TES",
+      "side": "admin",
+      "slots": 1,
+      "label": {
+        "pt": "Tesoureiro",
+        "en": "Treasurer"
+      },
+      "desc": {
+        "pt": "Cuida do caixa. No amador isso é rateio, colete, aluguel de quadra e a viagem que não cabe",
+        "en": "Minds the money. In the amateur game that is dues, vests, pitch rent and the trip that does not fit"
+      },
+      "affinity": {
+        "intelligence": 1,
+        "will": 1,
+        "perception": 1,
+        "rules": 1,
+        "scouting": 1,
+        "trash_talk": -1
+      },
+      "trains": {
+        "rules": 4,
+        "scouting": 2,
+        "leadership": 1
+      }
+    },
+    {
+      "id": "media",
+      "code": "COM",
+      "side": "admin",
+      "slots": 1,
+      "label": {
+        "pt": "Comunicação",
+        "en": "Media"
+      },
+      "desc": {
+        "pt": "Fala com o mundo. Instagram, patrocinador, convite pro torneio e a treta que não precisava existir",
+        "en": "Talks to the world. Instagram, the sponsor, the tournament invite and the row nobody needed"
+      },
+      "affinity": {
+        "charisma": 1,
+        "perception": 1,
+        "intelligence": 1,
+        "leadership": 1,
+        "trash_talk": 1
+      },
+      "trains": {
+        "leadership": 3,
+        "trash_talk": 3,
+        "rules": 1
+      }
+    }
+  ],
+  "squad": {
+    "minimum": 7,
+    "usual": 12
+  }
+}

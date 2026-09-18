@@ -109,8 +109,8 @@
       "en": "You coach"
     },
     "manager.plays_none": {
-      "pt": "Não jogo",
-      "en": "I don't play"
+      "pt": "Ñ JOGO",
+      "en": "NONE"
     },
     "manager.career_type": {
       "pt": "TIPO DE CARREIRA",
@@ -133,8 +133,8 @@
       "en": "Elifoot style: a sandlot club calls you"
     },
     "manager.drafted": {
-      "pt": "Você é o novo técnico do",
-      "en": "You are the new coach of"
+      "pt": "ONDE VOCÊ COMEÇA",
+      "en": "WHERE YOU START"
     },
     "manager.not_fielded": {
       "pt": "você não poderá se escalar: o clube não tem equipe dessa modalidade",
@@ -149,8 +149,8 @@
       "en": "seed %d"
     },
     "manager.seed_hint": {
-      "pt": "a semente vem do nome + sobrenome + apelido — edite os três para fixar um mundo e voltar a ele depois",
-      "en": "the seed comes from first name + surname + nickname — edit the three to pin a world down and come back to it"
+      "pt": "Sai do nome + sobrenome + apelido. Edite os três para fixar um mundo e voltar a ele.",
+      "en": "Comes from first name + surname + nickname. Edit the three to pin a world and come back to it."
     },
     "manager.body": {
       "pt": "CORPO",
@@ -185,16 +185,16 @@
       "en": "%d career points"
     },
     "manager.invest_hint": {
-      "pt": "Você nasce zerado e aloca a vida inteira. Atributo custa 3 career points por passo, habilidade custa 2 — crescer é mais caro que aprender.",
-      "en": "You are born at zero and allocate a whole life. An attribute costs 3 career points a step, a skill costs 2 — growing is dearer than learning."
+      "pt": "Atributo custa 3 career points por passo, habilidade 2. Crescer é mais caro que aprender.",
+      "en": "An attribute costs 3 career points a step, a skill 2. Growing is dearer than learning."
     },
     "manager.team_bonus": {
       "pt": "seu time ganha %+d nesta stat",
       "en": "your squad gets %+d in this stat"
     },
     "manager.body_hint": {
-      "pt": "sair do centro dá um passo a um atributo e tira de outro — e custa career points, porque o passo que você ganha vale mais que o que você entrega",
-      "en": "leaving the centre gives one attribute a step and takes one from another — and costs career points, because the step you gain is dearer than the one you give up"
+      "pt": "Sair do centro dá um passo a um atributo e tira de outro — e custa career points.",
+      "en": "Leaving the middle gives one attribute a step and takes one from another — and costs career points."
     },
     "skillgroup.offense": {
       "pt": "Ataque",
@@ -217,8 +217,8 @@
       "en": "a check on this skill rolls %d + 2d5*"
     },
     "manager.must_spend": {
-      "pt": "você ainda tem %d anos para viver — gaste tudo antes de começar",
-      "en": "you still have %d years to live — spend them all before starting"
+      "pt": "gaste os %d que sobram antes de começar",
+      "en": "spend the %d you have left before starting"
     },
     "manager.body_cost": {
       "pt": "corpo: %d cp",
@@ -229,12 +229,12 @@
       "en": "you spent %d career points more than you lived"
     },
     "manager.leftover_one": {
-      "pt": "sobra 1 career point e nada custa tão pouco — pode começar",
-      "en": "1 career point left and nothing costs that little — you can start"
+      "pt": "sobra 1 e nada custa tão pouco — pode começar",
+      "en": "1 left over and nothing costs that little — you can start"
     },
     "manager.leftover_many": {
-      "pt": "sobram %d career points e nada custa tão pouco — pode começar",
-      "en": "%d career points left and nothing costs that little — you can start"
+      "pt": "sobram %d e nada custa tão pouco — pode começar",
+      "en": "%d left over and nothing costs that little — you can start"
     },
     "manager.first_name": {
       "pt": "Nome",
@@ -253,28 +253,372 @@
       "en": "roll another"
     },
     "manager.perks": {
-      "pt": "PERK",
-      "en": "PERK"
+      "pt": "TALENTOS",
+      "en": "TALENTS"
     },
     "manager.perks_hint": {
-      "pt": "no máximo 1, e não pegar nenhum é uma resposta — tudo vai para a ficha. Um defeito DEVOLVE career points: você joga pior de um jeito específico e treina mais em troca.",
-      "en": "one at most, and taking none is an answer — it all goes into the sheet. A flaw GIVES career points back: you are worse in one specific way and train more in exchange."
-    },
-    "manager.perk_none": {
-      "pt": "nenhum perk escolhido",
-      "en": "no perk taken"
+      "pt": "Moeda à parte do treino: um defeito PAGA por um talento.",
+      "en": "A currency apart from training: a flaw PAYS for a talent."
     },
     "manager.perk_price": {
-      "pt": "%d cp",
-      "en": "%d cp"
+      "pt": "%d",
+      "en": "%d"
     },
     "manager.perk_refund": {
-      "pt": "+%d cp",
-      "en": "+%d cp"
+      "pt": "+%d",
+      "en": "+%d"
     },
     "manager.plays_hint": {
-      "pt": "dá para marcar mais de uma: masculino ou feminino, e o misto junto. Misto sozinho não vale — o time misto tem cota de mulheres, então ele precisa saber se você ocupa vaga de homem ou de mulher.",
-      "en": "more than one is fine: men’s or women’s, plus mixed. Mixed alone is not — a mixed squad carries a women’s quota, so it has to know which slot you fill."
+      "pt": "Masculino ou feminino, e o misto junto. Misto sozinho não vale: a cota precisa saber que vaga você ocupa.",
+      "en": "Men’s or women’s, with mixed alongside. Mixed alone will not do: the quota has to know which slot you fill."
+    },
+    "team.squad": {
+      "pt": "Elenco",
+      "en": "Squad"
+    },
+    "team.rivals": {
+      "pt": "Adversários",
+      "en": "Rivals"
+    },
+    "team.name": {
+      "pt": "Nome",
+      "en": "Name"
+    },
+    "team.age": {
+      "pt": "Idade",
+      "en": "Age"
+    },
+    "team.years": {
+      "pt": "%d anos",
+      "en": "%d years old"
+    },
+    "team.week": {
+      "pt": "Semana %d/%d",
+      "en": "Week %d/%d"
+    },
+    "team.pick_someone": {
+      "pt": "escolha alguém do elenco para ver a ficha",
+      "en": "pick someone from the squad to see their sheet"
+    },
+    "team.perk": {
+      "pt": "Perk",
+      "en": "Perk"
+    },
+    "team.strength": {
+      "pt": "Geral",
+      "en": "Ovr"
+    },
+    "team.back_to_mine": {
+      "pt": "← meu clube",
+      "en": "← my club"
+    },
+    "team.see_squad": {
+      "pt": "ver o elenco do %s",
+      "en": "see %s's squad"
+    },
+    "team.sort_by": {
+      "pt": "ordenar por %s",
+      "en": "sort by %s"
+    },
+    "team.fit": {
+      "pt": "afinidade",
+      "en": "fit"
+    },
+    "team.profile": {
+      "pt": "PERFIL",
+      "en": "PROFILE"
+    },
+    "team.lineup": {
+      "pt": "ESCALAÇÃO",
+      "en": "LINEUP"
+    },
+    "team.staff": {
+      "pt": "COMISSÃO",
+      "en": "STAFF"
+    },
+    "team.side_offense": {
+      "pt": "ATAQUE",
+      "en": "OFFENSE"
+    },
+    "team.side_defense": {
+      "pt": "DEFESA",
+      "en": "DEFENSE"
+    },
+    "team.reserves": {
+      "pt": "RESERVAS (%d)",
+      "en": "RESERVES (%d)"
+    },
+    "team.empty_slot": {
+      "pt": "vazio",
+      "en": "empty"
+    },
+    "team.registered": {
+      "pt": "%d/%d inscritos",
+      "en": "%d/%d registered"
+    },
+    "team.below_minimum": {
+      "pt": "A competição exige %d inscritos. Abaixo disso o clube não entra em quadra.",
+      "en": "The competition demands %d registered. Below that the club does not take the field."
+    },
+    "team.career": {
+      "pt": "CARREIRA — %d anos",
+      "en": "CAREER — %d years"
+    },
+    "team.career_years": {
+      "pt": "%d anos de carreira",
+      "en": "%d years in"
+    },
+    "team.no_career": {
+      "pt": "sem temporadas registradas",
+      "en": "no seasons on record"
+    },
+    "team.quiet_season": {
+      "pt": "ano parado",
+      "en": "a quiet year"
+    },
+    "common.close": {
+      "pt": "Fechar",
+      "en": "Close"
+    },
+    "team.as_athlete": {
+      "pt": "ATLETA",
+      "en": "ATHLETE"
+    },
+    "team.as_staff": {
+      "pt": "COMISSÃO",
+      "en": "STAFF"
+    },
+    "team.shirt": {
+      "pt": "Camisa",
+      "en": "Shirt"
+    },
+    "team.talent": {
+      "pt": "Talento",
+      "en": "Talent"
+    },
+    "team.unit_overall": {
+      "pt": "%s %d",
+      "en": "%s %d"
+    },
+    "manager.origin": {
+      "pt": "DE ONDE VOCÊ VEM",
+      "en": "WHERE YOU COME FROM"
+    },
+    "manager.origin_hint": {
+      "pt": "Por que VOCÊ é o gestor. Muda a ficha, o clube que te espera e a dificuldade.",
+      "en": "Why YOU are the manager. It changes the sheet, the club waiting for you, and the difficulty."
+    },
+    "team.admin": {
+      "pt": "ADMINISTRAÇÃO",
+      "en": "ADMINISTRATION"
+    },
+    "team.admin_hint": {
+      "pt": "Existe até no menor clube: alguém responde, alguém paga e alguém fala.",
+      "en": "Even the smallest club has one: somebody answers, somebody pays, somebody speaks."
+    },
+    "manager.club": {
+      "pt": "SEU CLUBE",
+      "en": "YOUR CLUB"
+    },
+    "manager.club_hint": {
+      "pt": "Só o Fundador batiza o próprio clube. Já vem sorteado — aceite ou escreva por cima.",
+      "en": "Only the Founder names his own club. It arrives rolled — accept it or type over it."
+    },
+    "manager.club_name": {
+      "pt": "Nome do time",
+      "en": "Club name"
+    },
+    "manager.club_neighborhood": {
+      "pt": "Bairro",
+      "en": "Neighbourhood"
+    },
+    "manager.club_city": {
+      "pt": "Cidade",
+      "en": "City"
+    },
+    "draft.title": {
+      "pt": "MONTANDO A LIGA",
+      "en": "BUILDING THE LEAGUE"
+    },
+    "draft.subtitle": {
+      "pt": "Ninguém é inventado por um clube. Cada time faz peneira pelas posições que faltam — o alcance dele decide quantos aparecem — e quem não passa fica na praça, junto com quem apareceu sozinho. Depois os times pegam da praça, do melhor pro pior. O log abaixo é quem foi pra onde e por quê.",
+      "en": "Nobody is invented by a club. Each side holds a tryout for the positions it lacks — its reach decides how many turn up — and whoever is not picked stays in the square, alongside the people who simply showed up. Then the clubs shop the square, best first. The log below is who went where, and why."
+    },
+    "draft.phase_setup": {
+      "pt": "sentando os atletas curados",
+      "en": "seating the curated athletes"
+    },
+    "draft.phase_settle": {
+      "pt": "fechando os elencos",
+      "en": "closing the squads"
+    },
+    "draft.phase_done": {
+      "pt": "pronto",
+      "en": "done"
+    },
+    "draft.header": {
+      "pt": "#  %d clubes  ·  nível médio %.2f",
+      "en": "#  %d clubs  ·  average level %.2f"
+    },
+    "draft.curated": {
+      "pt": "—  %d curado(s) sentam no %s",
+      "en": "—  %d curated take their seats at %s"
+    },
+    "draft.signed": {
+      "pt": ">  %-34s ->  %-26s %s",
+      "en": ">  %-34s ->  %-26s %s"
+    },
+    "draft.settled": {
+      "pt": "=  %-26s %2d atletas + %d comissão · geral %2d · %s",
+      "en": "=  %-26s %2d athletes + %d staff · overall %2d · %s"
+    },
+    "draft.gave_up": {
+      "pt": "!  desisti depois de %d rodadas",
+      "en": "!  gave up after %d rounds"
+    },
+    "draft.why_hole": {
+      "pt": "(buraco na formação)",
+      "en": "(hole in the formation)"
+    },
+    "draft.why_minimum": {
+      "pt": "(abaixo do mínimo de inscritos)",
+      "en": "(below the registered minimum)"
+    },
+    "draft.why_short": {
+      "pt": "(faltava gente na posição)",
+      "en": "(short at the position)"
+    },
+    "draft.why_depth": {
+      "pt": "(banco)",
+      "en": "(depth)"
+    },
+    "draft.ok": {
+      "pt": "OK — ver o elenco",
+      "en": "OK — see the squad"
+    },
+    "draft.working": {
+      "pt": "montando…",
+      "en": "building…"
+    },
+    "draft.phase_tryouts": {
+      "pt": "peneiras",
+      "en": "tryouts"
+    },
+    "draft.phase_indie": {
+      "pt": "quem apareceu sozinho",
+      "en": "the ones who just turned up"
+    },
+    "draft.phase_market": {
+      "pt": "draft da praça",
+      "en": "drafting from the square"
+    },
+    "draft.phase_topup": {
+      "pt": "deixando mercado pra trás",
+      "en": "leaving a market behind"
+    },
+    "draft.round": {
+      "pt": "— rodada %d",
+      "en": "— round %d"
+    },
+    "draft.tryout": {
+      "pt": "?  %s abre peneira  ·  %d apareceram  ·  procurando %s",
+      "en": "?  %s holds a tryout  ·  %d turned up  ·  looking for %s"
+    },
+    "draft.passed_over": {
+      "pt": ".  %-34s não passou -> praça",
+      "en": ".  %-34s not picked -> the square"
+    },
+    "draft.indie": {
+      "pt": "+  %d apareceram por conta própria",
+      "en": "+  %d turned up on their own"
+    },
+    "draft.from_market": {
+      "pt": "<  %-34s <-  %-26s %s",
+      "en": "<  %-34s <-  %-26s %s"
+    },
+    "draft.market_left": {
+      "pt": "~  praça: %d pessoas · idade mediana %d · nível mediano %.2f",
+      "en": "~  square: %d people · median age %d · median level %.2f"
+    },
+    "draft.stalled": {
+      "pt": "!  a rodada %d não trouxe ninguém — encerrando com elencos curtos",
+      "en": "!  round %d signed nobody — closing with short squads"
+    },
+    "manager.club_reroll": {
+      "pt": "Sorteia outro clube — nome, bairro e cores",
+      "en": "Roll another club — name, neighbourhood and colours"
+    },
+    "manager.perk_boons": {
+      "pt": "QUALIDADES — custam pp",
+      "en": "QUALITIES — they cost pp"
+    },
+    "manager.perk_flaws": {
+      "pt": "DEFEITOS — pagam pp",
+      "en": "FLAWS — they pay pp"
+    },
+    "manager.identity_hint": {
+      "pt": "Nome, sobrenome e apelido. Os três viram a semente do mundo.",
+      "en": "First name, surname, nickname. The three of them become the world seed."
+    },
+    "manager.club_crest_hint": {
+      "pt": "O clube como ele vai aparecer na tabela.",
+      "en": "The club as it will appear in the table."
+    },
+    "manager.attributes_hint": {
+      "pt": "O que você É. Todo teste rola atributo + habilidade + 2d5*.",
+      "en": "What you ARE. Every check rolls attribute + skill + 2d5*."
+    },
+    "manager.skills_hint": {
+      "pt": "O que você TREINOU. Cada uma soma com o atributo que a sustenta.",
+      "en": "What you TRAINED. Each one adds to the attribute under it."
+    },
+    "manager.points_hint": {
+      "pt": "Career points ainda por gastar. A ficha só fecha em zero.",
+      "en": "Career points still unspent. The sheet only settles at zero."
+    },
+    "manager.step_up": {
+      "pt": "Sobe um passo — %d cp",
+      "en": "One step up — %d cp"
+    },
+    "manager.step_down": {
+      "pt": "Devolve um passo",
+      "en": "Hand a step back"
+    },
+    "manager.club_colour_main": {
+      "pt": "Cor principal do clube. O contraste é corrigido se o par ficar ilegível.",
+      "en": "The club’s main colour. The pair is repaired if it comes out unreadable."
+    },
+    "manager.club_colour_second": {
+      "pt": "Cor secundária — é ela que escreve por cima da principal.",
+      "en": "Secondary colour — it is the one that writes over the main one."
+    },
+    "team.president_fixed": {
+      "pt": "A presidência é sua e não se troca. Todo outro cargo, sim.",
+      "en": "The presidency is yours and does not change hands. Every other chair does."
+    },
+    "team.open_sheet": {
+      "pt": "Abrir a ficha de %s",
+      "en": "Open %s’s sheet"
+    },
+    "team.lineup_hint": {
+      "pt": "Clique numa caixa da tabela para escalar. O número é a afinidade; o preenchimento compara com o resto do elenco.",
+      "en": "Click a box in the table to field somebody. The number is the affinity; the fill compares him with the rest of the squad."
+    },
+    "manager.talent_points": {
+      "pt": "%d tp",
+      "en": "%d tp"
+    },
+    "manager.talent_points_hint": {
+      "pt": "Talent points. Moeda separada do treino — não se compra com career point, e um defeito devolve.",
+      "en": "Talent points. A currency apart from training — career points cannot buy them, and a flaw gives them back."
+    },
+    "manager.drafted_hint": {
+      "pt": "Um clube existente te contrata no draft. Só o Fundador batiza o próprio — é isso que o cenário escolhe.",
+      "en": "An existing club signs you in the draft. Only the Founder names his own — that is what the scenario picks."
+    },
+    "manager.drafted_line": {
+      "pt": "Sorteado no draft · várzea carioca",
+      "en": "Drawn in the draft · Rio sandlot"
     }
   }
 }
