@@ -2,6 +2,48 @@
 
 ## [Unreleased]
 
+### Added - B.8: as cinco barras e as tres moedas (2026-09-19)
+- **Um pool e um PAR, `agora` e `maximo`** — e isso e o que faz uma barra ser
+  barra. O formato vem antes de qualquer coisa gastar de proposito: tela que
+  mostra um numero so precisa ser reescrita no dia em que algo drena, e tela que
+  mostra fracao nunca precisa
+- As cinco: **Health** (o corpo; no fundo voce se lesiona e vai pro banco, entao
+  e escudo contra evento e nao numero que desce sozinho), **Stamina** (quantas
+  jogadas seguidas antes de sair), **Sanity** (forca mental, quebra sob
+  pressao), **Emotional** (chamar o companheiro, entrar na cabeca do adversario,
+  puxar a torcida) e **Loyalty** (no fundo da barra, ele pode ir embora)
+- Os quatro primeiros tem teto de atributo, porque o que teu corpo e tua cabeca
+  aguentam e quem voce e. **O da Loyalty nao**: nada num jogador diz o quanto ele
+  pode se importar com um clube em que ainda nao entrou. Ela abre pela distancia
+  entre o nivel do clube e o dele — quem entrou num time acima do proprio nivel e
+  grato, craque em time de varzea ja esta sendo ligado pelo vizinho
+- **Piso 4 em todos** (decisao 43): o passo 0 e o percentil 20 das pessoas e nao
+  o fundo delas. Sem piso, a Q1 inteira teria duas ou tres de saude, que le como
+  "o fraco e feito de papel" em vez de "o forte dura mais"
+- **A cor da barra e o quanto ela esta cheia**, nao qual pool ela e. Cinco
+  matizes pra cinco barras poriam cinco cores novas numa tela cuja premissa e que
+  cor significa alguma coisa (decisao 71) — e diriam a coisa errada, porque o que
+  voce precisa desse bloco de relance nao e "essa e a da sanidade", e "tem
+  alguma coisa aqui quase vazia"
+- **As tres moedas** (`Influence`): Logos pelo intelecto, Ethos pela autoridade,
+  Pathos pelo carisma. Renda `1 + passo/2`, estoque de duas semanas
+- ⚠️ **A renda dividia por TRES e nao separava nada.** Os tres cenarios abrem por
+  volta do passo 2, o passo 2 e o comeco inteiro do jogo, e `1 + 2/3` e 1 pros
+  tres. As formulas estavam certas e o jogo estava plano. Em `/2` o Fundador abre
+  com 5 pontos por semana e os outros dois com 4
+- ⚠️ **E Logos e Pathos pendiam pro ATRIBUTO**, pelo que parecia bom argumento —
+  "a discussao e ganha por quem entendeu o jogo". O Estudado empatou com o
+  Ex-jogador em 2 a 2, porque algumas temporadas pegam regra suficiente pra
+  arredondar no mesmo degrau e inteligencia crua nao e um cenario. O atributo e a
+  capacidade que todo mundo tem um pouco; a habilidade e o que aquela pessoa fez
+- A carreira do Ethos e **limitada em 12 anos**: sem teto, vinte e seis
+  temporadas dividido por tres ja sao nove degraus antes de contar a vontade
+- Testes: `test_pools` e `test_influence` novos, mais dois de tela. Os que
+  importam sao os de calibracao — `test_each_scenario_owns_a_different_corner` e
+  `test_the_income_separates_the_scenarios` — que sao os dois que pegaram os dois
+  bugs acima. As formulas tem tres linhas e nunca iam estar erradas
+- Decisoes 29 e 30 reescritas no roadmap
+
 ### Changed - B.7d: o formulario em uma coluna (2026-09-18)
 - **A criacao virou UMA coluna** e foi pra 1564x860. O 2x2 so e compacto se as
   duas celulas de uma linha tem mais ou menos a mesma altura, e elas nao tem:

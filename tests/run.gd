@@ -27,6 +27,8 @@ const _SUITES: Array[String] = [
 	"res://tests/test_screen_start.gd",
 	"res://tests/test_screen_create_manager.gd",
 	"res://tests/test_rosters.gd",
+	"res://tests/test_pools.gd",
+	"res://tests/test_influence.gd",
 	"res://tests/test_league_generator.gd",
 	"res://tests/test_screen_draft.gd",
 	"res://tests/test_screen_team.gd",

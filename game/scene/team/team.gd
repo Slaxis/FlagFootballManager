@@ -295,7 +295,16 @@ func _header() -> Control:
 	where.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(where)
 
-	# Fixed text until C.4 makes the calendar move. Showing it now is how the
+	# YOUR THREE CURRENCIES, beside the week they are spent in. Nothing spends
+	# them until `C.1`, and showing them now is not decoration: they come off the
+	# sheet you filled in on the creation screen, and this is the first screen
+	# that tells you what that sheet BOUGHT.
+	var career: Career = _career()
+	if career != null and career.manager != null:
+		for id: String in Influence.ALL:
+			row.add_child(_influence_chip(career.manager, id))
+
+	# Fixed text until C.5 makes the calendar move. Showing it now is how the
 	# screen says where the week is going to live.
 	var week := Label.new()
 	week.text = UiText.t("team.week") % [1, 2026]
@@ -303,6 +312,33 @@ func _header() -> Control:
 	week.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(week)
 	return row
+
+func _influence_chip(manager: Actor, id: String) -> Control:
+	var purse: Dictionary = Influence.of(manager).get(id, {})
+	var held: int = int(purse.get("held", 0))
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 0)
+	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	box.tooltip_text = "%s\n\n%s\n\n%s" % [
+		UiText.t("influence." + id), UiText.t("influence." + id + ".desc"),
+		UiText.t("influence.held") % [held, int(purse.get("cap", 0)),
+			int(purse.get("income", 0))]]
+	box.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	var caption := Label.new()
+	caption.text = UiText.t("influence." + id)
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	caption.add_theme_color_override("font_color", MUTED)
+	Look.wear_body(caption, Look.TEXT)
+	box.add_child(caption)
+
+	var value := Label.new()
+	value.text = str(held)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value.add_theme_color_override("font_color", ACCENT if held > 0 else MUTED)
+	Look.wear_display(value, Look.HEADING)
+	box.add_child(value)
+	return box
 
 func _tab_bar() -> Control:
 	var row := HBoxContainer.new()
@@ -913,6 +949,10 @@ func _show_card() -> void:
 		left.add_child(StatBar.row(stats.code(id), _selected.step(id) * 10,
 			"%s\n%s" % [stats.chakra_label(id), stats.explain(id)],
 			CARD_CODE, stats.chakra_color(id)))
+	left.add_child(_spacer_cell(0))
+	left.add_child(_group_caption(UiText.t("team.pools")))
+	for id: String in Pools.ALL:
+		left.add_child(_pool_row(id))
 	columns.add_child(left)
 
 	# Two columns with a MEANING, not just a fold. Left is attack and defence —
@@ -942,6 +982,28 @@ func _show_card() -> void:
 
 	box.add_child(_career_log())
 	box.add_child(_flat_button(UiText.t("common.close"), _on_close_card))
+
+# ⚠️ THE COLOUR IS HOW FULL IT IS, NOT WHICH POOL IT IS. Five hues for five bars
+# would put five new colours on a screen whose whole point is that colour means
+# something (decision 71) — and it would say the wrong thing anyway, because
+# what you need from this block at a glance is not "this is the sanity one", it
+# is "something here is nearly empty". The code beside the bar says which.
+const POOL_CRITICAL := 25
+const POOL_LOW := 50
+
+func _pool_row(id: String) -> Control:
+	var pool: Dictionary = Pools.of(_selected, _viewed_club()).get(id, {})
+	var fraction: int = Pools.fraction(pool)
+	var hue: Color = ACCENT
+	if fraction <= POOL_CRITICAL:
+		hue = Look.BAD
+	elif fraction <= POOL_LOW:
+		hue = Look.WARN
+	return StatBar.row(UiText.t("pool." + id), fraction,
+		"%s  %d/%d\n\n%s" % [UiText.t("pool." + id + ".name"),
+			int(pool.get("now", 0)), int(pool.get("max", 0)),
+			UiText.t("pool." + id + ".desc")],
+		CARD_CODE, hue)
 
 func _card_header() -> Control:
 	var box := VBoxContainer.new()

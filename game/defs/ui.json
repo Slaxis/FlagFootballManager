@@ -619,6 +619,98 @@
     "manager.drafted_line": {
       "pt": "Sorteado no draft · várzea carioca",
       "en": "Drawn in the draft · Rio sandlot"
+    },
+    "team.pools": {
+      "pt": "RESERVAS",
+      "en": "POOLS"
+    },
+    "pool.health": {
+      "pt": "VID",
+      "en": "HP"
+    },
+    "pool.stamina": {
+      "pt": "FOL",
+      "en": "STA"
+    },
+    "pool.sanity": {
+      "pt": "SAN",
+      "en": "SAN"
+    },
+    "pool.emotional": {
+      "pt": "EMO",
+      "en": "EMO"
+    },
+    "pool.loyalty": {
+      "pt": "LEA",
+      "en": "LOY"
+    },
+    "pool.health.name": {
+      "pt": "Saúde",
+      "en": "Health"
+    },
+    "pool.stamina.name": {
+      "pt": "Fôlego",
+      "en": "Stamina"
+    },
+    "pool.sanity.name": {
+      "pt": "Sanidade",
+      "en": "Sanity"
+    },
+    "pool.emotional.name": {
+      "pt": "Emocional",
+      "en": "Emotional"
+    },
+    "pool.loyalty.name": {
+      "pt": "Lealdade",
+      "en": "Loyalty"
+    },
+    "pool.health.desc": {
+      "pt": "O corpo. Aguenta a pancada, e no fundo da barra você se lesiona e vai pro banco.",
+      "en": "The body. It takes the hit, and at the bottom of the bar you are injured and benched."
+    },
+    "pool.stamina.desc": {
+      "pt": "Quantas jogadas seguidas antes de sair pra respirar.",
+      "en": "How many plays in a row before you come off to breathe."
+    },
+    "pool.sanity.desc": {
+      "pt": "Força mental. No fundo da barra você quebra sob pressão.",
+      "en": "Mental strength. At the bottom of the bar you break under pressure."
+    },
+    "pool.emotional.desc": {
+      "pt": "Força emocional: chamar o companheiro, entrar na cabeça do adversário, puxar a torcida.",
+      "en": "Emotional strength: calling a team-mate over, getting into an opponent's head, pulling the touchline in."
+    },
+    "pool.loyalty.desc": {
+      "pt": "O quanto ele está comprometido com ESTE clube. No fundo da barra, ele pode ir embora.",
+      "en": "How committed he is to THIS club. At the bottom of the bar, he can leave."
+    },
+    "influence.ethos": {
+      "pt": "ETHOS",
+      "en": "ETHOS"
+    },
+    "influence.pathos": {
+      "pt": "PATHOS",
+      "en": "PATHOS"
+    },
+    "influence.logos": {
+      "pt": "LOGOS",
+      "en": "LOGOS"
+    },
+    "influence.ethos.desc": {
+      "pt": "Autoridade. Você convence porque é você — sai das temporadas nas costas e dos títulos na estante, e é a única das três que não se compra.",
+      "en": "Standing. You convince because you are you — it comes off the seasons behind you and the silverware on the shelf, and it is the one of the three you cannot buy."
+    },
+    "influence.pathos.desc": {
+      "pt": "Carisma. Você convence porque gostam de você. Quase fixa na criação: carisma é carisma.",
+      "en": "Charisma. You convince because they like you. Almost fixed at creation: charisma is charisma."
+    },
+    "influence.logos.desc": {
+      "pt": "Lógica. Você convence porque está certo — inteligência, regra e chamada de jogada. Cresce com estudo.",
+      "en": "Logic. You convince because you are right — intelligence, rules and play calling. It grows with study."
+    },
+    "influence.held": {
+      "pt": "%d/%d por semana: %d",
+      "en": "%d/%d per week: %d"
     }
   }
 }

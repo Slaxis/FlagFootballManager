@@ -26,6 +26,8 @@ func tests() -> Array:
 		"test_the_lineup_panel_shows_empty_slots",
 		"test_an_extra_at_a_position_becomes_a_reserve",
 		"test_the_card_shows_the_career",
+		"test_the_card_shows_the_five_bars",
+		"test_the_header_shows_what_the_sheet_bought",
 	]
 
 # --- Harness ---
@@ -564,4 +566,51 @@ func test_the_card_shows_the_career(t: TestHelper) -> void:
 	for entry: Variant in veteran.career():
 		t.check(shown.contains(str(int((entry as Dictionary).get("age", 0)))),
 			"temporada dos %d anos não aparece" % int((entry as Dictionary).get("age", 0)))
+	_close(screen)
+
+
+# The five bars, on the card, for whoever you clicked. `B.8` is display only —
+# nothing drains them yet — so what this pins is that they ARRIVE: a pool the
+# model computes and no screen shows is a pool that will be wrong for months
+# before anybody notices.
+func test_the_card_shows_the_five_bars(t: TestHelper) -> void:
+	var screen: Control = _open()
+	if screen == null:
+		t.fail("não consegui instanciar a tela"); return
+	var rows: Array = _tagged(screen, "roster_row")
+	if rows.is_empty():
+		t.fail("elenco vazio"); _close(screen); return
+	(rows[0] as Button).pressed.emit()
+	var shown: String = _texts(screen)
+	for id: String in Pools.ALL:
+		t.check(shown.contains(UiText.t("pool." + id)),
+			"o card não mostra a reserva '%s'" % id)
+	# And the whole word is one hover away, same contract as every other code on
+	# this screen.
+	var tips: String = _tooltips(screen)
+	for id: String in Pools.ALL:
+		t.check(tips.contains(UiText.t("pool." + id + ".name")),
+			"a reserva '%s' não diz em lugar nenhum o que é" % id)
+	_close(screen)
+
+# ⚠️ THIS IS THE FIRST SCREEN THAT TELLS YOU WHAT THE CREATION SHEET BOUGHT.
+# Until now the manager's own attributes decided a starting roster and then
+# stopped mattering; the three currencies are what carry them into the week, so
+# they belong beside the week.
+func test_the_header_shows_what_the_sheet_bought(t: TestHelper) -> void:
+	var screen: Control = _open()
+	if screen == null:
+		t.fail("não consegui instanciar a tela"); return
+	var shown: String = _texts(screen)
+	for id: String in Influence.ALL:
+		t.check(shown.contains(UiText.t("influence." + id)),
+			"o cabeçalho não mostra %s" % id)
+	var career := The.board.get("career", null) as Career
+	if career == null or career.manager == null:
+		t.fail("sem carreira no board"); _close(screen); return
+	# The number on screen is the purse, and a fresh manager opens with one
+	# week of each — an empty purse is a first turn with no decision in it.
+	for id: String in Influence.ALL:
+		var purse: Dictionary = Influence.of(career.manager).get(id, {})
+		t.check(int(purse.get("held", 0)) > 0, "o manager abriu sem %s" % id)
 	_close(screen)
