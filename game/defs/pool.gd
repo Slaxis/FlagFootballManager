@@ -21,10 +21,12 @@ const LOYALTY := "loyalty"
 
 var _pools: Dictionary = {}   # id -> raw
 var _floor: int = 4
+var _scale: int = 24
 
 func load_data(raw: Dictionary) -> void:
 	_pools.clear()
 	_floor = int(raw.get("floor", 4))
+	_scale = int(raw.get("scale", 24))
 	for entry: Variant in raw.get("pools", []):
 		if entry is Dictionary:
 			var id: String = _key(String((entry as Dictionary).get("id", "")))
@@ -46,6 +48,13 @@ func pool(id: String) -> Dictionary:
 
 func floor_value() -> int:
 	return _floor
+
+# The highest any pool can reach, which is what a gauge measures against. The
+# floor plus two attributes at the top of the ruler — without it the bar would
+# have to normalise against the biggest pool ON SCREEN, and then the same
+# player's bar would change length depending on who he was standing next to.
+func scale_value() -> int:
+	return _scale
 
 # The two attributes that hold a bar up, or empty for the one that has none.
 func sources(id: String) -> Array:

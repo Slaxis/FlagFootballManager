@@ -281,10 +281,9 @@ func _pools_block() -> Control:
 	var carried: Dictionary = Pools.of(person, _club)
 	for id: String in Pools.ids():
 		var pool: Dictionary = carried.get(id, {})
-		box.add_child(StatBar.row(pools.code(id), Pools.fraction(pool),
-			"%s  %d/%d
-
-%s" % [pools.label(id),
+		box.add_child(StatBar.gauge_row(pools.code(id),
+			int(pool.get("now", 0)), int(pool.get("max", 0)), pools.scale_value(),
+			"%s  %d/%d\n\n%s" % [pools.label(id),
 				int(pool.get("now", 0)), int(pool.get("max", 0)), pools.desc(id)],
 			CODE_WIDTH, pools.color(id)))
 	return box

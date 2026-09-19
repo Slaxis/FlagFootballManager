@@ -1075,7 +1075,8 @@ func _pool_row(id: String) -> Control:
 	if pools == null:
 		return _spacer_cell(0)
 	var pool: Dictionary = Pools.of(_selected, _viewed_club()).get(id, {})
-	return StatBar.row(pools.code(id), Pools.fraction(pool),
+	return StatBar.gauge_row(pools.code(id),
+		int(pool.get("now", 0)), int(pool.get("max", 0)), pools.scale_value(),
 		"%s  %d/%d\n\n%s" % [pools.label(id),
 			int(pool.get("now", 0)), int(pool.get("max", 0)), pools.desc(id)],
 		CARD_CODE, pools.color(id))

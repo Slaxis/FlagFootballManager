@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Fixed - B.8e: barra nao e medidor (2026-09-19)
+- ⚠️ **As cinco reservas pareciam fixas porque eu desenhei a coisa errada.** A
+  ficha variava — medido: o teto de ANIMO ia de 4 a 11 entre sorteios — e a
+  barra desenhava `100 100 100 100 50` toda vez
+- `StatBar.row()` mostra uma FRACAO, que e o certo pra um atributo, onde o unico
+  numero e o valor. Um pool tem DOIS numeros e nada drena ele ainda, entao
+  `agora == maximo` e a fracao e cem por cento sempre. O que varia e o teto, e a
+  fracao joga o teto fora
+- **`StatBar.gauge()`**: tres estados, que e como toda barra de HP ja desenhada
+  funciona — **acesa** ate `agora`, **vazia** ate o teto, e **ausente** depois
+  dele. O comprimento e o teto e o preenchimento e o presente. Rola um corpo
+  melhor e a barra fica MAIOR, que e a coisa que o player esta escolhendo
+- A escala e dado (`scale: 24` no `pool.json`) e nao a maior barra da tela: se
+  fosse relativa, a barra do mesmo jogador mudaria de tamanho dependendo de quem
+  esta do lado
+- Agora: ANIMO de duas a cinco casas entre sorteios, e a LEALDADE e a unica com
+  parte vazia visivel, porque e a unica que nao abre cheia
+- `test_the_bar_gets_longer_and_not_fuller` fixa justamente isso: as duas
+  fracoes tem que ser iguais (era esse o engano) e o numero de casas tem que
+  diferir
+- E duas strings de GDScript tinham sido escritas com quebra de linha de verdade
+  no lugar de `
+` — herdado de um heredoc meu. Remontadas
+
 ### Fixed - B.8d: o dado que nao mudava nada, e a ordem da tabela (2026-09-19)
 - ⚠️ **O 🎲 nao mudava as reservas porque nao mudava a FICHA.** Medido: o
   Estudado saia com **quinze fichas distintas em duzentos sorteios** e dez

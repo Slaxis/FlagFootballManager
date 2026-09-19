@@ -14,6 +14,7 @@ func tests() -> Array:
 		"test_loyalty_is_about_the_club_and_not_the_player",
 		"test_a_founder_is_harder_to_lose",
 		"test_a_fraction_is_safe_and_reads_zero_to_a_hundred",
+		"test_the_bar_gets_longer_and_not_fuller",
 	]
 
 func _person(stats: Dictionary, level: float = 1.0, founder: bool = false) -> Actor:
@@ -121,3 +122,40 @@ func test_a_fraction_is_safe_and_reads_zero_to_a_hundred(t: TestHelper) -> void:
 	# catalogue and a division by zero inside a draw call is a black screen.
 	t.equal(Pools.fraction({"now": 3, "max": 0}), 0, "teto zero derrubou a conta")
 	t.equal(Pools.fraction({}), 0, "pool vazio derrubou a conta")
+
+
+# ⚠️ THE BAR THAT NEVER MOVED. The pools were drawn with `StatBar.row`, which
+# shows a FRACTION — and since nothing drains them yet, `now == max` and every
+# one of them came out at a hundred per cent on every roll. Five full bars,
+# forever, while the ceiling underneath went from four to eleven.
+#
+# A pool has two numbers and a fraction throws one away. What a gauge does is
+# what every HP bar does: the LENGTH is the ceiling and the FILL is the present.
+# This pins the thing that was broken — reroll a body and the bar has to change
+# SIZE — rather than the arithmetic, which was never wrong.
+func test_the_bar_gets_longer_and_not_fuller(t: TestHelper) -> void:
+	var def := Drive.def("pool") as PoolDef
+	if def == null:
+		t.fail("PoolDef ausente"); return
+	t.check(def.scale_value() > 0, "a escala do medidor é zero")
+	var weak: Actor = _person(_flat(0))
+	var strong: Actor = _person(_flat(8))
+	for id: String in Pools.ids():
+		if def.sources(id).is_empty():
+			continue
+		var small: Dictionary = Pools.of(weak, {}).get(id, {})
+		var big: Dictionary = Pools.of(strong, {}).get(id, {})
+		# The fraction is identical — that IS the bug, written down.
+		t.equal(Pools.fraction(small), Pools.fraction(big),
+			"%s: as duas frações deveriam ser 100, e a fração é o que enganava" % id)
+		t.check(int(big["max"]) > int(small["max"]),
+			"%s: o teto não cresceu, então não há o que a barra possa mostrar" % id)
+		# And the gauge has to turn that into a visibly different number of slots.
+		t.check(_slots(int(big["max"]), def.scale_value())
+				> _slots(int(small["max"]), def.scale_value()),
+			"%s: teto %d e teto %d desenham o mesmo número de casas" % [
+				id, int(small["max"]), int(big["max"])])
+
+func _slots(top: int, scale: int) -> int:
+	return clampi(int(round(float(top) * float(StatBar.SLOTS) / float(scale))),
+		1, StatBar.SLOTS)
