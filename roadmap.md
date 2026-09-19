@@ -387,6 +387,27 @@ existir uma semana.
 | `F.4-season-rollover` | Virada de ano, envelhecimento do elenco *(era `E.6`)* |
 | `F.5-team-lifecycle` | Fusão e extinção de clubes, redistribuindo os actors *(era `E.7`)* |
 
+### Fase G — O corte  🚀 *fim desta fase = v0.1.0 nas mãos de gente*
+| Branch | Entrega |
+|---|---|
+| `G.1-tudo-em-json` | O que ainda mora em GDScript e é **conteúdo** sai: as fórmulas das três moedas, as paletas de clube, o tamanho de elenco por divisão, a curva de envelhecimento. ⚠️ **Vem antes do `C.1`, não depois** — cada consumidor novo encarece a mudança, e o People Management vai ler as moedas o tempo todo |
+| `G.2-curadoria` | **A passada manual em TODO o conteúdo**, feita pelo autor e não pelo gerador: nomes, apelidos, talentos, cenários, clubes, eventos, textos de rolo. É a última coisa antes do corte, e é o que separa "o sistema funciona" de "o jogo tem voz" |
+| `G.3-v0.1.0` | Export **HTML pro itch.io** e um **.exe** pra mandar por link. Dois meses de treino jogáveis pros alpha players |
+
+> **A regra que a Fase G existe pra garantir, e que vale pra tudo que for
+> escrito daqui em diante:** todo evento e todo rolo é **injetável por JSON**,
+> com script opcional ligado pelo nome (`things/event/<id>/<id>.json` +
+> `<id>.gd extends ThingPart`, que a lib auto-liga e o `ScriptBindingValidator`
+> confere no boot). O JSON declara o comum — texto, quais stats e skills entram,
+> dificuldade, buffs, debuffs, desfechos — e o script é a válvula de escape.
+>
+> O vocabulário desses campos é **fechado e coberto por teste**, igual ao
+> `effect` dos talentos: um `"kind"` escrito errado tem que quebrar no boot, não
+> virar desbalanceamento inexplicável três branches depois.
+>
+> Fazer um desenvolvimento desse tamanho sem essa garantia é perder tempo: o
+> conteúdo que não se alcança pelo JSON é conteúdo que não dá pra curar.
+
 ### Movidas e absorvidas
 | Branch | |
 |---|---|
