@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+### Added - B.9: a vaga vazia vira porta (2026-09-19)
+- **Clicar numa vaga do painel abre a lista de quem pode ocupa-la**, ordenada
+  pela afinidade NAQUELA posicao. E o caminho inverso do que ja existia — achar
+  a coluna entre dezoito, ordenar por ela e clicar na celula — e os dois passam
+  a valer
+- O painel da esquerda era um RELATORIO: dizia o que estava vazio e nao podia
+  fazer nada a respeito, que e a metade errada do trabalho
+- ⚠️ **`_affinity()` extraido, e os dois leem dele.** A celula calculava inline,
+  o que era suficiente enquanto ela era o unico lugar onde um encaixe era
+  desenhado. No instante em que a lista diz "ordenado por quem encaixa melhor"
+  sao dois leitores — e dois leitores da mesma ideia calculando separado e como
+  a lista acaba dizendo que o cara e o melhor center enquanto a barra dele na
+  tabela esta fria
+- **A lista e o elenco INTEIRO**, nao "os centers". Decisao 47: ninguem E
+  center, alguem e o melhor center disponivel hoje — filtrar seria o jogo
+  decidindo por voce, e esconderia justamente o cara que voce ia converter
+- Quem ja esta sentado **diz onde**. Trocar dois e dois cliques, nao um
+  quebra-cabeca de desalocar primeiro
+- ⚠️ **`_change_seat()` e funil unico**, e isso e o objetivo da funcao e nao
+  efeito colateral dela: agora sao duas portas, e o `C.1` vai cobrar Ethos por
+  tirar alguem de uma cadeira que ele ja ocupa. Custo aplicado numa de duas
+  portas e custo que da pra contornar
+- ⚠️ **O indice da vaga e artefato de tela, nao endereco.** O modelo guarda um
+  CONJUNTO por posicao, entao "WR vaga 2" nao existe no dado — clicar em
+  qualquer linha de WR abre a lista da POSICAO. Esta escrito no codigo porque
+  alguem vai tentar "consertar" isso pra enderecamento por vaga, o que seria
+  inventar uma ordenacao que o jogo nao tem
+- A presidencia nao abre: voce nao se nomeia (decisao 72)
+- Testes: cinco, e o que importa e **`test_the_list_is_in_the_same_order_as_the_
+  column`** — a lista e a coluna sao a mesma pergunta feita de duas direcoes, e
+  o teste existe pra que o dia em que alguem "otimizar" uma delas a outra
+  reclame
+- ⚠️ E o teste de "a lista diz onde cada um esta" nasceu errado: ele lia um
+  elenco novo, achava todo `lineup` vazio, e foi salvo pela propria guarda "o
+  teste nao testou nada". **Ninguem chega sentado** (decisao 72) — o teste tem
+  que CRIAR a situacao de que fala. A guarda ganhando o salario dela
+- E a janela e um modal, entao o `fit_check` nao a ve: medida no teste de tela,
+  como a ficha do atleta
+
 ### Changed - B.8g: dez categorias de apelido, e as reservas na regua (2026-09-19)
 - **As reservas passam a ser a MEDIA dos dois atributos**, 0 a 10, e chegam a 10
   so quando os dois estao em 10. Corpo que nao cansa e corpo maximo nas duas

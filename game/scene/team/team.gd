@@ -100,6 +100,11 @@ const CARD_CODE := 52
 # the career log underneath, which are as much part of the card as the columns
 # are. 880 was the arithmetic and it was wrong by a quarter.
 const CARD_WIDTH := 1064
+# The picker: a name, an affinity and where he sits. Narrower than the card on
+# purpose — it is a list, not a sheet.
+const PICKER_WIDTH := 520
+const PICKER_HEIGHT := 560
+const PICKER_NAME := 250
 # Mark, name, shirt, talent, Geral, age.
 const PROFILE_COLUMNS := 6
 # Hairlines are counted by `_column_plan`, not declared — see the warning there.
@@ -131,6 +136,9 @@ var _tab: String = TAB_SQUAD
 # the reason the tab is a view and not a fixed page.
 var _viewing: String = ""
 var _selected: Actor = null
+# Which position's picker is open, empty when none. State-driven like the card:
+# `_build_ui` draws it, so a rebuild cannot leave a stale panel behind.
+var _slot_open: String = ""
 # Which column the roster is ordered by, and which way. Sorting a roster is
 # how a manager actually reads it: who is oldest, who is best, who can play
 # corner.
@@ -208,6 +216,130 @@ func _build_ui() -> void:
 	# out as a long ribbon nobody could read at a glance.
 	if _selected != null:
 		_show_card()
+	elif _slot_open != "":
+		_show_slot_picker()
+
+# THE WHOLE SQUAD, ORDERED BY HOW WELL THEY FIT THIS SEAT — and not filtered to
+# "the centers", because there is no such thing. Decision 47: nobody IS a
+# center, somebody is the best center available today, and hiding the rest
+# would be the game deciding for you.
+#
+# Everybody already sitting somewhere says where. Swapping two people is two
+# clicks, not a puzzle of un-seating one of them first.
+func _show_slot_picker() -> void:
+	var positions := Drive.def("position") as PositionDef
+	if positions == null:
+		return
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.55)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	shade.gui_input.connect(_on_slot_background)
+	shade.set_meta("card_layer", true)
+	add_child(shade)
+
+	var centre := CenterContainer.new()
+	centre.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	centre.set_meta("card_layer", true)
+	add_child(centre)
+
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style())
+	panel.custom_minimum_size = Vector2(PICKER_WIDTH, 0)
+	panel.set_meta("slot_picker", true)
+	centre.add_child(panel)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	panel.add_child(box)
+
+	var title := Label.new()
+	title.text = "%s  %s" % [positions.code(_slot_open), positions.label(_slot_open)]
+	Look.wear_display(title, Look.PLATE)
+	title.add_theme_color_override("font_color", ACCENT)
+	box.add_child(title)
+	box.add_child(_rule())
+
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(0, PICKER_HEIGHT)
+	box.add_child(scroll)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 2)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	for person: Actor in _candidates(_slot_open, positions):
+		list.add_child(_candidate_row(person, positions, _slot_open))
+
+	box.add_child(_flat_button(UiText.t("common.close"), _close_slot))
+
+# Ordered by the SAME affinity the table paints, because they are the same
+# question asked from two directions.
+func _candidates(position_id: String, positions: PositionDef) -> Array[Actor]:
+	var out: Array[Actor] = _rosters().squad(_viewed_id(), _category()).duplicate()
+	out.sort_custom(func(a: Actor, b: Actor) -> bool:
+		var fa: float = float(_affinity(a, positions, position_id)["raw"])
+		var fb: float = float(_affinity(b, positions, position_id)["raw"])
+		if not is_equal_approx(fa, fb):
+			return fa > fb
+		return a.display_name() < b.display_name())
+	return out
+
+func _candidate_row(person: Actor, positions: PositionDef, position_id: String) -> Control:
+	var here: bool = person.plays_position(position_id)
+	var button := Button.new()
+	button.set_meta("candidate", person.thing_id)
+	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size = Vector2(0, 26)
+	var style := StyleBoxFlat.new()
+	style.bg_color = ACCENT.lerp(CANVAS, 0.65) if here else Color(0, 0, 0, 0)
+	style.set_content_margin_all(2)
+	var hover := StyleBoxFlat.new()
+	hover.bg_color = ACCENT.lerp(CANVAS, 0.8)
+	hover.set_content_margin_all(2)
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("pressed", style)
+	button.add_theme_stylebox_override("hover", hover)
+	button.pressed.connect(_on_slot_pick.bind(person, position_id))
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var name_label := Label.new()
+	name_label.text = person.display_name()
+	name_label.custom_minimum_size = Vector2(PICKER_NAME, 0)
+	name_label.clip_text = true
+	Look.wear_body(name_label, Look.TEXT)
+	name_label.add_theme_color_override("font_color", INK)
+	row.add_child(name_label)
+
+	var reading: Dictionary = _affinity(person, positions, position_id)
+	var mark := Label.new()
+	mark.text = str(int(reading["shown"]))
+	mark.custom_minimum_size = Vector2(40, 0)
+	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	Look.wear_body(mark, Look.TEXT)
+	mark.add_theme_color_override("font_color",
+		StatBar.tint(int(round(float(reading["fit"]) * 100.0)), ACCENT))
+	row.add_child(mark)
+
+	# Where he is TODAY. An empty seat is a decision; a seat you are taking
+	# somebody out of is a different decision, and the row has to say which.
+	var seats: Array[String] = []
+	for id: Variant in person.lineup():
+		if String(id) != position_id:
+			seats.append(positions.code(String(id)))
+	var where := Label.new()
+	where.text = " ".join(seats) if not seats.is_empty() else "·"
+	where.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Look.wear_body(where, Look.TEXT)
+	where.add_theme_color_override("font_color", MUTED)
+	row.add_child(where)
+
+	button.add_child(row)
+	return button
 
 # --- Chrome ---
 
@@ -675,13 +807,13 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 	for id: String in positions.ids_on_side("admin"):
 		var chairs: Array = assigned.get(id, [])
 		box.add_child(_slot_row(positions.code(id),
-			chairs[0] if not chairs.is_empty() else null))
+			chairs[0] if not chairs.is_empty() else null, id))
 	box.add_child(_unit_caption(UiText.t("team.staff"),
 		_unit_overall(assigned, positions, "staff")))
 	for id: String in positions.ids_on_side("staff"):
 		var chairs: Array = assigned.get(id, [])
 		box.add_child(_slot_row(positions.code(id),
-			chairs[0] if not chairs.is_empty() else null))
+			chairs[0] if not chairs.is_empty() else null, id))
 	var short: bool = _squad_is_short(people, positions)
 	box.add_child(_panel_title(UiText.t("team.lineup"), _squad_note(people, positions),
 		UiText.t("team.below_minimum") % positions.squad_minimum if short
@@ -694,7 +826,7 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 			var picked: Array = assigned.get(id, [])
 			for slot: int in range(positions.slots(id)):
 				var who: Actor = picked[slot] if slot < picked.size() else null
-				box.add_child(_slot_row(positions.code(id) if slot == 0 else "", who))
+				box.add_child(_slot_row(positions.code(id) if slot == 0 else "", who, id))
 			for extra: int in range(positions.slots(id), picked.size()):
 				reserves.append({"position": id, "actor": picked[extra]})
 
@@ -702,7 +834,7 @@ func _lineup_panel(people: Array[Actor]) -> Control:
 		box.add_child(_group_caption(UiText.t("team.reserves") % reserves.size()))
 		for entry: Dictionary in reserves:
 			box.add_child(_slot_row(positions.code(String(entry["position"])),
-				entry["actor"] as Actor))
+				entry["actor"] as Actor, String(entry["position"])))
 
 	return panel
 
@@ -835,9 +967,41 @@ func _panel_title(text: String, note: String, tip: String = "",
 	box.add_child(_rule())
 	return box
 
-func _slot_row(code: String, who: Actor) -> Control:
+# ⚠️ THE ROW IS THE DOOR NOW. It used to be a report — an HBox you could read
+# and not touch — so the only way to fill a seat was to find its column among
+# eighteen, sort by it, and click the cell. The panel said what was empty and
+# could not do anything about it, which is the wrong half of the job.
+#
+# `position_id` empty means the row is not a seat (a reserve line, a caption),
+# and those stay unclickable.
+func _slot_row(code: String, who: Actor, position_id: String = "") -> Control:
+	if position_id != "" and position_id != OriginDef.CHAIR_OF_THE_CLUB:
+		return _slot_button(code, who, position_id)
+	return _slot_face(code, who)
+
+func _slot_button(code: String, who: Actor, position_id: String) -> Control:
+	var button := Button.new()
+	button.set_meta("slot", position_id)
+	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size = Vector2(0, 24)
+	button.tooltip_text = UiText.t("team.slot_hint")
+	var flat := StyleBoxFlat.new()
+	flat.bg_color = Color(0, 0, 0, 0)
+	flat.set_content_margin_all(0)
+	var lit := StyleBoxFlat.new()
+	lit.bg_color = ACCENT.lerp(CANVAS, 0.82)
+	lit.set_content_margin_all(0)
+	button.add_theme_stylebox_override("normal", flat)
+	button.add_theme_stylebox_override("pressed", flat)
+	button.add_theme_stylebox_override("hover", lit)
+	button.add_child(_slot_face(code, who))
+	button.pressed.connect(_open_slot.bind(position_id))
+	return button
+
+func _slot_face(code: String, who: Actor) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var tag := Label.new()
 	tag.text = code
 	tag.custom_minimum_size = Vector2(36, 0)
@@ -1290,9 +1454,45 @@ func _on_sort(key: String) -> void:
 		_sort_desc = key != SORT_NAME
 	_build_ui()
 
-func _on_toggle_position(person: Actor, position_id: String) -> void:
+# ⚠️ EVERY CHANGE OF SEAT COMES THROUGH HERE, and that is the point of the
+# function rather than a side effect of it. There are two doors now — the cell
+# in the table and the slot picker — and `C.1` is going to charge Ethos for
+# taking somebody out of a chair he already holds. A cost applied in one of two
+# doors is a cost you can walk around.
+func _change_seat(person: Actor, position_id: String) -> void:
 	person.toggle_position(position_id)
+
+func _on_toggle_position(person: Actor, position_id: String) -> void:
+	_change_seat(person, position_id)
 	_build_ui()
+
+# --- The slot picker ---
+#
+# The inverse of the table: instead of finding the column and clicking the cell,
+# you click the EMPTY SEAT and are shown who could fill it. Both doors write
+# through `_change_seat`, so they cannot drift.
+#
+# ⚠️ THE SLOT INDEX IS A DISPLAY ARTEFACT, NOT AN ADDRESS. The model holds a SET
+# per position — `lineup` on each actor, sorted by Geral when it is drawn — so
+# "WR slot 2" does not exist in the data. Clicking any of a position's rows opens
+# that POSITION's list. Somebody will try to "fix" this into per-slot addressing;
+# it would mean inventing an ordering the game does not have.
+func _open_slot(position_id: String) -> void:
+	_slot_open = position_id
+	_selected = null
+	_build_ui()
+
+func _close_slot() -> void:
+	_slot_open = ""
+	_build_ui()
+
+func _on_slot_background(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		_close_slot()
+
+func _on_slot_pick(person: Actor, position_id: String) -> void:
+	_change_seat(person, position_id)
+	_close_slot()
 
 func _on_pick(person: Actor) -> void:
 	_selected = person
@@ -1309,16 +1509,32 @@ func _on_pick(person: Actor) -> void:
 # text has nowhere to be seen. Filled area reads at a glance down a whole
 # column, which is the point: the roster becomes a heat map of who could play
 # what before the manager has decided anything.
-func _position_button(person: Actor, positions: PositionDef, id: String,
-		ceiling: float) -> Button:
-	var chosen: bool = person.plays_position(id)
-	# NORMALISED to the best in this column, not to an absolute scale. You never
-	# pick a quarterback against the world, you pick him against the eleven
-	# other people in the room — so the fullest box in a column is the club's
-	# best option there, and the rest read as fractions of him.
+# ⚠️ ONE AFFINITY, AND EVERY READER ASKS IT. The cell used to compute this
+# inline, which was fine while the cell was the only place a fit was drawn. The
+# moment the slot picker lists the squad "ordered by how well they fit", there
+# are two readers — and two readers of the same idea computing it separately is
+# how the list ends up saying somebody is the best center while his own box in
+# the table is cold.
+#
+# NORMALISED to the best in this column, not to an absolute scale. You never
+# pick a quarterback against the world, you pick him against the eleven other
+# people in the room — so the fullest box in a column is the club's best option
+# there, and the rest read as fractions of him.
+func _affinity(person: Actor, positions: PositionDef, id: String) -> Dictionary:
+	var ceiling: float = float(_fit_ceilings.get(id, 1.0))
 	var raw: float = maxf(positions.fit(id, person.stats(), person.skills()), 0.0)
-	var fit: float = clampf(raw / ceiling, 0.0, 1.0) if ceiling > 0.0 else 0.0
-	var shown: int = int(round(raw * 100.0))
+	return {
+		"raw": raw,
+		"fit": clampf(raw / ceiling, 0.0, 1.0) if ceiling > 0.0 else 0.0,
+		"shown": int(round(raw * 100.0)),
+	}
+
+func _position_button(person: Actor, positions: PositionDef, id: String,
+		_ceiling: float) -> Button:
+	var chosen: bool = person.plays_position(id)
+	var reading: Dictionary = _affinity(person, positions, id)
+	var fit: float = float(reading["fit"])
+	var shown: int = int(reading["shown"])
 
 	var button := Button.new()
 	button.set_meta("role", id)

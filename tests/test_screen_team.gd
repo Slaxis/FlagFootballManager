@@ -27,6 +27,11 @@ func tests() -> Array:
 		"test_an_extra_at_a_position_becomes_a_reserve",
 		"test_the_card_shows_the_career",
 		"test_the_card_shows_the_five_bars",
+		"test_an_empty_seat_opens_the_list",
+		"test_the_list_is_in_the_same_order_as_the_column",
+		"test_picking_from_the_list_seats_the_person",
+		"test_the_presidency_does_not_open",
+		"test_the_list_says_where_everybody_already_is",
 		"test_the_header_shows_what_the_sheet_bought",
 	]
 
@@ -659,3 +664,164 @@ func test_the_header_shows_what_the_sheet_bought(t: TestHelper) -> void:
 		var purse: Dictionary = Influence.of(career.manager).get(id, {})
 		t.check(int(purse.get("held", 0)) > 0, "o manager abriu sem %s" % id)
 	_close(screen)
+
+
+# --- The slot picker (B.9) ---
+
+func _slots(screen: Control) -> Array:
+	return _tagged(screen, "slot")
+
+func _open_first_slot(screen: Control, wanted: String = "") -> String:
+	for node: Variant in _slots(screen):
+		var button := node as Button
+		var id: String = String(button.get_meta("slot"))
+		if wanted == "" or id == wanted:
+			button.pressed.emit()
+			return id
+	return ""
+
+# THE INVERSE OF THE TABLE. Before this, the only way to fill a seat was to find
+# its column among eighteen, sort by it and click the cell — the panel on the
+# left said what was empty and could not do anything about it.
+func test_an_empty_seat_opens_the_list(t: TestHelper) -> void:
+	var screen: Control = _open()
+	if screen == null:
+		t.fail("não consegui instanciar a tela"); return
+	t.check(not _slots(screen).is_empty(), "nenhuma vaga é clicável")
+	var opened: String = _open_first_slot(screen)
+	t.check(opened != "", "não consegui abrir nenhuma vaga")
+	var panels: Array = _marked(screen, "slot_picker", [])
+	t.equal(panels.size(), 1, "abriu %d janelas de vaga" % panels.size())
+
+	# ⚠️ THE WHOLE SQUAD, NOT "THE CENTERS". Decision 47: nobody IS a center,
+	# somebody is the best center available today — filtering would be the game
+	# deciding for you, and it would hide the guy you were about to convert.
+	var people: Array[Actor] = _squad_of("flag_kings", Actor.CATEGORY_MASC)
+	t.equal(_tagged(screen, "candidate").size(), people.size(),
+		"a lista tem %d nomes para um elenco de %d" % [
+			_tagged(screen, "candidate").size(), people.size()])
+	_close(screen)
+
+# ⚠️ THE TEST OF THE DECISION, NOT OF THE FEATURE. The list and the column are
+# the same question asked from two directions, and if they compute it
+# separately they drift — the list saying somebody is the best center while his
+# own box in the table is cold. This pins that they agree, so the day somebody
+# "optimises" one of them the other one complains.
+func test_the_list_is_in_the_same_order_as_the_column(t: TestHelper) -> void:
+	var positions := Drive.def("position") as PositionDef
+	var screen: Control = _open()
+	if screen == null or positions == null:
+		t.fail("não consegui instanciar a tela"); return
+	var opened: String = _open_first_slot(screen)
+	if opened == "":
+		t.fail("não abriu vaga"); _close(screen); return
+
+	var shown: Array[String] = []
+	for node: Variant in _tagged(screen, "candidate"):
+		shown.append(String((node as Button).get_meta("candidate")))
+
+	var expected: Array[Actor] = _squad_of("flag_kings", Actor.CATEGORY_MASC).duplicate()
+	expected.sort_custom(func(a: Actor, b: Actor) -> bool:
+		var fa: float = maxf(positions.fit(opened, a.stats(), a.skills()), 0.0)
+		var fb: float = maxf(positions.fit(opened, b.stats(), b.skills()), 0.0)
+		if not is_equal_approx(fa, fb):
+			return fa > fb
+		return a.display_name() < b.display_name())
+	var wanted: Array[String] = []
+	for person: Actor in expected:
+		wanted.append(person.thing_id)
+	t.equal(shown, wanted, "a lista não está na ordem da afinidade daquela coluna")
+	_close(screen)
+
+func test_picking_from_the_list_seats_the_person(t: TestHelper) -> void:
+	var screen: Control = _open()
+	if screen == null:
+		t.fail("não consegui instanciar a tela"); return
+	var opened: String = _open_first_slot(screen)
+	var candidates: Array = _tagged(screen, "candidate")
+	if opened == "" or candidates.is_empty():
+		t.fail("não abriu vaga com candidatos"); _close(screen); return
+	var who: String = String((candidates[0] as Button).get_meta("candidate"))
+	var person: Actor = null
+	for one: Actor in _squad_of("flag_kings", Actor.CATEGORY_MASC):
+		if one.thing_id == who:
+			person = one
+	if person == null:
+		t.fail("o candidato não está no elenco"); _close(screen); return
+	var was: bool = person.plays_position(opened)
+	(candidates[0] as Button).pressed.emit()
+	t.check(person.plays_position(opened) != was,
+		"escolher da lista não mexeu na cadeira '%s'" % opened)
+	# And it closes: a picker that stays open after a pick is a picker you
+	# click twice by accident.
+	t.equal(_marked(screen, "slot_picker", []).size(), 0, "a janela não fechou")
+	_close(screen)
+
+# You do not appoint yourself (decisão 72), so the one seat that is not a job
+# is not a door either.
+func test_the_presidency_does_not_open(t: TestHelper) -> void:
+	var screen: Control = _open()
+	if screen == null:
+		t.fail("não consegui instanciar a tela"); return
+	var found: bool = false
+	for node: Variant in _slots(screen):
+		if String((node as Button).get_meta("slot")) == OriginDef.CHAIR_OF_THE_CLUB:
+			found = true
+	t.check(not found, "a presidência virou uma vaga clicável")
+	# And the check only means something if other seats ARE doors.
+	t.check(not _slots(screen).is_empty(), "nenhuma vaga é clicável — o teste não testou nada")
+	_close(screen)
+
+func test_the_list_says_where_everybody_already_is(t: TestHelper) -> void:
+	var positions := Drive.def("position") as PositionDef
+	var screen: Control = _open()
+	if screen == null or positions == null:
+		t.fail("não consegui instanciar a tela"); return
+	# ⚠️ NOBODY ARRIVES SEATED (decisão 72), so this test has to CREATE the
+	# situation it is about. The first version read a fresh roster, found every
+	# `lineup` empty, and was saved by its own "o teste não testou nada" guard —
+	# which is the guard earning its keep rather than a bug.
+	var seats: Array[String] = []
+	for node: Variant in _slots(screen):
+		var id: String = String((node as Button).get_meta("slot"))
+		if not seats.has(id):
+			seats.append(id)
+	if seats.size() < 2:
+		t.fail("preciso de duas vagas diferentes"); _close(screen); return
+
+	_open_first_slot(screen, seats[0])
+	var candidates: Array = _tagged(screen, "candidate")
+	if candidates.is_empty():
+		t.fail("a primeira vaga abriu vazia"); _close(screen); return
+	var who: String = String((candidates[0] as Button).get_meta("candidate"))
+	(candidates[0] as Button).pressed.emit()
+
+	# Now open a DIFFERENT seat and look for him.
+	_open_first_slot(screen, seats[1])
+	var shown: String = _texts(screen)
+	t.check(shown.contains(positions.code(seats[0])),
+		"a lista de '%s' não diz que alguém já ocupa '%s'" % [seats[1], seats[0]])
+	var still: bool = false
+	for person: Actor in _squad_of("flag_kings", Actor.CATEGORY_MASC):
+		if person.thing_id == who and person.plays_position(seats[0]):
+			still = true
+	t.check(still, "o cara que eu sentei não continuou sentado")
+
+	# ⚠️ AND THE PICKER IS A MODAL, SO `fit_check` NEVER SEES IT. Same blind spot
+	# the athlete card sat in for months: every other surface is measured by that
+	# harness, and anything built on a click can only be measured here.
+	for node: Variant in _marked(screen, "slot_picker", []):
+		var panel := node as Control
+		t.check(panel.get_combined_minimum_size().x <= float(Look.DESIGN_MIN.x),
+			"a janela da vaga pede %.0fpx" % panel.get_combined_minimum_size().x)
+		var burst: Array[String] = []
+		_card_overflow(panel, burst, "")
+		for line: String in burst:
+			t.fail("vaga: " + line)
+		t.check(burst.is_empty(), "a janela da vaga tem controle estourando")
+	_close(screen)
+
+
+func _squad_of(team_id: String, category: String) -> Array[Actor]:
+	var rosters := The.board.get("rosters", null) as Rosters
+	return rosters.squad(team_id, category) if rosters != null else [] as Array[Actor]

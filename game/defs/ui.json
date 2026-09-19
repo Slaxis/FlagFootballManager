@@ -667,6 +667,10 @@
     "manager.pools_hint": {
       "pt": "Derivadas dos atributos, então se mexem sozinhas enquanto você gasta. A lealdade é a única que não é sua: ela é a sua relação com o clube.",
       "en": "Derived from the attributes, so they move on their own while you spend. Loyalty is the only one that is not yours: it is your relationship with the club."
+    },
+    "team.slot_hint": {
+      "pt": "Clique pra ver quem pode ocupar essa vaga, do melhor encaixe pro pior.",
+      "en": "Click to see who could fill this seat, best fit first."
     }
   }
 }
