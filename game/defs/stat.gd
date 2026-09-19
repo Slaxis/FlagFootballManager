@@ -340,9 +340,52 @@ func notable_traits(stat_steps: Dictionary, skill_steps: Dictionary = {}) -> Arr
 		var trained: int = int(skill_steps[id])
 		if trained >= NOTABLE_HIGH:
 			found.append({"stat": id, "dir": "high", "distance": trained - average_step})
+	# ⚠️ AND IF NOTHING CLEARED THE ABSOLUTE BAR, ASK WHAT HE IS NOTABLE FOR
+	# AMONG HIS OWN NUMBERS. Seven steps is the national team; a sandlot squad
+	# lives between one and three, so 63% of a real league had NO notable trait
+	# and the whole "what he is known for" half of the apelido system never
+	# fired — which is why every other player was a Pedrinho.
+	#
+	# Notability is relative at the field. The full-back with agility 3 and
+	# everything else at 1 is the Foguete OF THAT SIDE, and that is exactly how
+	# an apelido gets handed out: by comparison with the people standing around,
+	# not with the Brazil squad.
+	#
+	# It needs a real gap, though. A flat sheet has no standout, and calling its
+	# highest number a trait would name everybody after a coin flip.
+	if found.is_empty():
+		found = _own_extremes(stat_steps, skill_steps)
 	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["distance"]) > int(b["distance"]))
 	return found
+
+# How far above the rest of his own sheet a number has to sit to be the thing
+# people call him.
+const RELATIVE_GAP := 2
+
+func _own_extremes(stat_steps: Dictionary, skill_steps: Dictionary) -> Array:
+	var values: Array[int] = []
+	for id: String in stat_steps.keys():
+		values.append(int(stat_steps[id]))
+	if values.size() < 2:
+		return []
+	values.sort()
+	@warning_ignore("integer_division")
+	var middle: int = values[values.size() / 2]
+	var out: Array = []
+	for id: String in stat_steps.keys():
+		var value: int = int(stat_steps[id])
+		if value - middle >= RELATIVE_GAP:
+			out.append({"stat": id, "dir": "high", "distance": value - middle})
+		elif middle - value >= RELATIVE_GAP:
+			out.append({"stat": id, "dir": "low", "distance": middle - value})
+	# Skills only upward, same reason as above: nobody is born knowing how to
+	# cover a receiver, so a zero there is not a failing.
+	for id: String in skill_steps.keys():
+		var trained: int = int(skill_steps[id])
+		if trained - middle >= RELATIVE_GAP:
+			out.append({"stat": id, "dir": "high", "distance": trained - middle})
+	return out
 
 
 # --- The quantile ladder ---

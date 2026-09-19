@@ -313,12 +313,6 @@
     "Lanchonete da {first_female}",
     "Bar do {first_male}"
   ],
-  "nickname_weights": {
-    "stat": 45,
-    "first": 25,
-    "last": 20,
-    "random": 10
-  },
   "nickname_suffixes": {
     "masc": [
       "inho",
@@ -916,6 +910,236 @@
         "Lupa",
         "Garimpeira"
       ]
+    }
+  ],
+  "nickname_categories": [
+    {
+      "id": "size",
+      "pool": [
+        "Grandão",
+        "Torre",
+        "Gigante",
+        "Brucutu",
+        "Tampinha",
+        "Baixinho",
+        "Meio-Metro",
+        "Pituco",
+        "Tiquinho",
+        "Mirim",
+        "Bolão",
+        "Bolinha"
+      ],
+      "fem": [
+        "Grandona",
+        "Torre",
+        "Giganta",
+        "Tampinha",
+        "Baixinha",
+        "Meio-Metro",
+        "Pituca",
+        "Tiquinha",
+        "Mirim",
+        "Bolona",
+        "Bolinha"
+      ]
+    },
+    {
+      "id": "name",
+      "kind": "morphology"
+    },
+    {
+      "id": "look",
+      "pool": [
+        "Careca",
+        "Barba",
+        "Ruivo",
+        "Sardento",
+        "Canhoto",
+        "Grisalho",
+        "Moreno",
+        "Sobrancelha",
+        "Cabeludo",
+        "Neguinho",
+        "Alemão",
+        "Xerém"
+      ],
+      "fem": [
+        "Careca",
+        "Ruiva",
+        "Sardenta",
+        "Canhota",
+        "Grisalha",
+        "Morena",
+        "Sobrancelha",
+        "Cabeluda",
+        "Neguinha",
+        "Alemã",
+        "Trança"
+      ]
+    },
+    {
+      "id": "body",
+      "pool": [
+        "Perna",
+        "Braço",
+        "Cabeção",
+        "Orelha",
+        "Dentinho",
+        "Pezão",
+        "Queixo",
+        "Costela",
+        "Joelho",
+        "Punho",
+        "Peitoral",
+        "Canela"
+      ],
+      "fem": [
+        "Perna",
+        "Braço",
+        "Cabeção",
+        "Orelha",
+        "Dentinho",
+        "Pezão",
+        "Queixo",
+        "Costela",
+        "Joelho",
+        "Punho",
+        "Canela"
+      ]
+    },
+    {
+      "id": "animal",
+      "pool": [
+        "Tigre",
+        "Zebra",
+        "Formiga",
+        "Peixe",
+        "Macaco",
+        "Gavião",
+        "Jacaré",
+        "Búfalo",
+        "Gato",
+        "Coruja",
+        "Pantera",
+        "Urubu",
+        "Cavalo",
+        "Mosquito"
+      ],
+      "fem": [
+        "Tigresa",
+        "Zebra",
+        "Formiga",
+        "Peixe",
+        "Macaca",
+        "Gaviã",
+        "Jacaré",
+        "Gata",
+        "Coruja",
+        "Pantera",
+        "Cobra",
+        "Mosquito"
+      ]
+    },
+    {
+      "id": "trait",
+      "kind": "trait"
+    },
+    {
+      "id": "origin",
+      "pool": [
+        "Baiano",
+        "Mineiro",
+        "Serrano",
+        "Paraíba",
+        "Gaúcho",
+        "Cearense",
+        "Japa",
+        "Turco",
+        "Polaco",
+        "Caiçara",
+        "Sertão",
+        "Ilhéu"
+      ],
+      "fem": [
+        "Baiana",
+        "Mineira",
+        "Serrana",
+        "Paraíba",
+        "Gaúcha",
+        "Cearense",
+        "Japa",
+        "Turca",
+        "Polaca",
+        "Caiçara",
+        "Sertão",
+        "Ilhoa"
+      ]
+    },
+    {
+      "id": "trade",
+      "pool": [
+        "Padeiro",
+        "Doutor",
+        "Sargento",
+        "Professor",
+        "Pedreiro",
+        "Motoboy",
+        "Frentista",
+        "Marceneiro",
+        "Juiz",
+        "Contador",
+        "Vigia",
+        "Garçom"
+      ],
+      "fem": [
+        "Padeira",
+        "Doutora",
+        "Sargento",
+        "Professora",
+        "Pedreira",
+        "Motoboy",
+        "Frentista",
+        "Marceneira",
+        "Juíza",
+        "Contadora",
+        "Vigia",
+        "Garçonete"
+      ]
+    },
+    {
+      "id": "food",
+      "pool": [
+        "Feijão",
+        "Cebola",
+        "Bolacha",
+        "Café",
+        "Pipoca",
+        "Farofa",
+        "Mandioca",
+        "Pastel",
+        "Coxinha",
+        "Azeitona",
+        "Melancia",
+        "Rapadura"
+      ],
+      "fem": [
+        "Feijão",
+        "Cebola",
+        "Bolacha",
+        "Café",
+        "Pipoca",
+        "Farofa",
+        "Mandioca",
+        "Pastel",
+        "Coxinha",
+        "Azeitona",
+        "Melancia",
+        "Rapadura"
+      ]
+    },
+    {
+      "id": "compound",
+      "kind": "compound"
     }
   ]
 }

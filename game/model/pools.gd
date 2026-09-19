@@ -32,12 +32,17 @@ static func ids() -> Array:
 
 # --- Ceilings ---
 
-# ⚠️ EVERYBODY HAS A BODY, which is what the floor is for. Decision 43 puts step
-# 0 at the twentieth percentile of people, not at the bottom of them — the adult
-# who never trained still walks onto the pitch and still absorbs a shoulder.
-# Without it a Q1 player would have four points of health against a Q5's
-# sixteen, which reads as "the weak ones are made of paper" rather than "the
-# strong ones last longer".
+# ⚠️ THE MEAN OF THE TWO, WHICH IS WHAT PUTS IT ON THE RULER. Nought to ten like
+# every other number in the game, and **ten only when both attributes are ten** —
+# a body that never tires is a body that is maximal at both of the things that
+# make it, and nothing less buys it.
+#
+# It was `4 + a + b`, running to twenty-four, which is a second ruler: every
+# screen showing a pool beside an attribute had to teach which scale was which.
+# The floor went with it, and that is right even though I argued for it — step 0
+# already means the twentieth percentile of PEOPLE rather than the bottom of
+# them, so a pool of zero says exactly what an attribute of zero says, and
+# giving one of them an exception was the mistake.
 static func ceiling(actor: Actor, pool_id: String) -> int:
 	var def: PoolDef = _def()
 	var stats := Drive.def("stat") as StatDef
@@ -48,9 +53,9 @@ static func ceiling(actor: Actor, pool_id: String) -> int:
 		return def.ceiling_value(pool_id) \
 			+ (def.founder_bonus(pool_id) if _is_founder(actor) else 0)
 	if stats == null or pair.size() < 2:
-		return def.floor_value()
-	return def.floor_value() + stats.step(actor.stat(String(pair[0]))) \
-		+ stats.step(actor.stat(String(pair[1])))
+		return 0
+	return int(round((float(stats.step(actor.stat(String(pair[0]))))
+		+ float(stats.step(actor.stat(String(pair[1]))))) / 2.0))
 
 # --- Where a pool starts ---
 #
@@ -69,6 +74,10 @@ static func opening(actor: Actor, pool_id: String, club: Dictionary = {}) -> int
 	var nations := Drive.def("nation") as NationDef
 	var club_level: float = nations.club_level(club) if nations != null and not club.is_empty() else 1.0
 	var own_level: float = float(actor.data.get("level", 1.0))
+	# Nobody is born able to love a club at ten. Loyalty's ceiling is six — nine
+	# if you built the place — and where it STARTS is the gap between the club
+	# and the player, because on day one that gap is the whole relationship.
+	# `C.1` and `C.3` are what move it afterwards.
 	@warning_ignore("integer_division")
 	var middle: int = top / 2
 	return clampi(middle

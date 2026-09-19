@@ -1,6 +1,5 @@
 {
-  "floor": 4,
-  "scale": 24,
+  "scale": 10,
   "pools": [
     {
       "id": "health",
@@ -84,9 +83,9 @@
     },
     {
       "id": "loyalty",
-      "ceiling": 12,
-      "founder_bonus": 6,
-      "per_level": 3,
+      "ceiling": 6,
+      "founder_bonus": 3,
+      "per_level": 1,
       "color": "#D8A93F",
       "code": {
         "pt": "LEA",

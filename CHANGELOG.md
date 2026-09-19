@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+### Changed - B.8g: dez categorias de apelido, e as reservas na regua (2026-09-19)
+- **As reservas passam a ser a MEDIA dos dois atributos**, 0 a 10, e chegam a 10
+  so quando os dois estao em 10. Corpo que nao cansa e corpo maximo nas duas
+  coisas que o fazem, e nada menos compra isso
+- Eram `4 + a + b`, indo ate 24, que e uma **segunda regua** num jogo cuja
+  calibracao inteira e o 0..10 da decisao 43 — toda tela que mostrasse uma
+  reserva ao lado de um atributo tinha que ensinar qual escala era qual. E agora
+  o medidor mapeia uma casa por degrau
+- O piso de 4 saiu junto, e esta certo mesmo tendo sido eu quem defendeu: o
+  degrau 0 ja significa o percentil 20 das PESSOAS e nao o fundo delas, entao
+  reserva 0 diz exatamente o que atributo 0 diz. Inventar excecao pra uma delas
+  era o erro
+- **Lealdade**: teto 6, ou 9 pra quem fundou o clube. Ninguem nasce capaz de
+  amar um clube em 10 — isso se conquista, e quem escreve e o `C.1`
+- ⚠️ **O apelido virou DEZ CATEGORIAS com sorteio uniforme**, e os numeros que
+  isso substitui merecem registro. Eram quatro fontes com peso (stat 45, first
+  25, last 20, random 10). Medido em 600 atletas de varzea, o que saia era
+  **morfologia 62%, pool aberto 20%, stat 16%**
+- A causa e a queda em cascata: fonte que nao produz nada passa a vez, e `stat`
+  nao produz nada pra quem nao tem traco notavel — o que, com o limiar em sete
+  degraus e um elenco que vive entre um e tres, e **63% da liga**. Os 45 pontos
+  de peso iam pras duas fontes de morfologia, e 45 de 55 e 82% de toda rolagem
+  que nao tinha pra onde ir. A metade saborosa do sistema foi calibrada pra um
+  mundo onde a galera chega no degrau sete, e esse mundo e a selecao
+- As dez: **tamanho · nome · fisico · corpo · bicho · traco · origem · oficio ·
+  comida · composto**. A decima sorteia duas das outras nove e junta — "Cavalo
+  Baiano", "Vieirinho Vigia", "Feijao Ruivo"
+- E o sorteio e uma ORDEM EMBARALHADA e nao um sorteio unico: uma categoria que
+  nao tem o que dar devolveria apelido vazio, e com `traco` calado pra dois
+  tercos do elenco isso e muito ninguem. Andar numa ordem embaralhada mantem o
+  sorteio uniforme **entre as que sabem responder**
+- ⚠️ **E `notable_traits` passou a olhar os extremos DA PESSOA** quando nada
+  cruza o limiar absoluto. Notabilidade no campo e relativa: o lateral com
+  agilidade 3 e o resto em 1 e o Foguete daquele time, que e exatamente como
+  apelido se ganha — por comparacao com quem esta em volta, nao com a selecao.
+  Precisa de folga real (2 degraus acima da mediana dele), senao ficha plana
+  batizaria todo mundo no cara-ou-coroa
+- Depois: as dez categorias entre 7% e 12% cada, morfologia em 8%, traco de 4%
+  pra 8%
+
 ### Fixed - B.8f: o presidente que tambem jogava, e o preco no botao (2026-09-19)
 - ⚠️ **O manager chegava marcado numa posicao de jogo alem da presidencia.**
   `_opening_lineup()` marcava a posicao rolada sempre que os anos foram

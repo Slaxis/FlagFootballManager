@@ -5,12 +5,37 @@ class_name NameGenDef
 # name — nobody at the field knows the guy's surname — so a generated one that
 # has nothing to do with the person reads as filler immediately.
 #
-# Four sources, and three of them COHERE with the actor:
+# ⚠️ TEN CATEGORIES, DRAWN UNIFORMLY — and the thing it replaced is worth
+# writing down, because the numbers lied for months.
 #
-#   first   morphology on the given name   Pedro -> Pedrinho, Lucas -> Luquinho
-#   last    morphology on the surname      Vasconcelos -> Vasco, Silva -> Silvão
-#   stat    what he is notable FOR         9 agility -> Foguete, 2 will -> Chorão
-#   random  the open pool                  the fourth, kept small on purpose
+# It was four weighted sources: `stat` 45, `first` 25, `last` 20, `random` 10.
+# Measured on six hundred sandlot athletes, what actually came out was
+# morphology 62%, open pool 20%, stat 16%. The declared 45% of "what he is
+# notable FOR" delivered sixteen.
+#
+# The cause is the fallthrough. A source that produces nothing hands the turn to
+# the next one, and `stat` produces nothing when the person has no notable
+# trait — which, with the threshold at seven steps on a squad that lives between
+# one and three, is 63% of a sandlot league. Those forty-five points of weight
+# went to the two morphology sources, which is the whole of the -inho/-ão flood:
+# 45 of the remaining 55 is 82% of every roll that had nowhere else to go.
+#
+# So the flavourful half of the system was calibrated for a world where people
+# reach step seven, and that world is the national team.
+#
+# Uniform across the categories that CAN produce something fixes the shape at
+# the source: with ten of them the morphology is one in ten instead of six.
+#
+#   1 size      Grandão, Tampinha, Torre
+#   2 name      morphology — Pedro -> Pedrinho, Vasconcelos -> Vasco
+#   3 look      Careca, Ruivo, Canhoto
+#   4 body      Perna, Cabeção, Orelha
+#   5 animal    Tigre, Formiga, Gavião
+#   6 trait     what he is notable FOR — Foguete, Tanque
+#   7 origin    Baiano, Serrano, Japa
+#   8 trade     Padeiro, Sargento, Doutor
+#   9 food      Feijão, Coxinha, Farofa
+#  10 compound  two of the nine above — Thiago Perna, Feijão Ruivo
 #
 # The morphology is the real Portuguese rule (drop an unstressed final vowel
 # and add -inho, otherwise add -zinho) with the orthographic repair that keeps
@@ -36,6 +61,15 @@ const DIR_LOW := "low"
 const MIN_SHORT := 3
 const MAX_SHORT := 6
 
+# The three categories that are COMPUTED rather than drawn from a list. Every
+# other one is a pool in the catalogue, which is what lets a module add a tenth
+# bucket of its own without touching this file.
+const KIND_MORPHOLOGY := "morphology"
+const KIND_TRAIT := "trait"
+const KIND_COMPOUND := "compound"
+
+# Kept so an older module that still declares the four weighted sources loads
+# without exploding; nothing reads them any more.
 const SOURCE_STAT := "stat"
 const SOURCE_FIRST := "first"
 const SOURCE_LAST := "last"
@@ -55,6 +89,8 @@ var place_patterns: Array[String] = []
 var team_patterns: Array[String] = []
 
 var nickname_weights: Dictionary = {}
+# One entry per category: {"id", "kind"} or {"id", "pool", "fem"}.
+var nickname_categories: Array = []
 var suffixes_male: Array[String] = []
 var suffixes_female: Array[String] = []
 # One entry per (stat, direction): {"stat", "dir", "pool", "fem"}.
@@ -73,6 +109,7 @@ func load_data(raw: Dictionary) -> void:
 	place_patterns   = _load_strings(raw.get("place_patterns", []))
 	team_patterns    = _load_strings(raw.get("team_patterns", []))
 	nickname_weights = raw.get("nickname_weights", {})
+	nickname_categories = raw.get("nickname_categories", []).duplicate()
 	var suffixes: Dictionary = raw.get("nickname_suffixes", {})
 	suffixes_male    = _load_strings(suffixes.get("masc", []))
 	suffixes_female  = _load_strings(suffixes.get("fem", []))
@@ -106,6 +143,7 @@ func merge_data(raw: Dictionary) -> void:
 	# Weights are a single dial, not a pool: a module that states one replaces
 	# it rather than adding a second opinion.
 	nickname_weights.merge(raw.get("nickname_weights", {}), true)
+	nickname_categories.append_array(raw.get("nickname_categories", []))
 
 func _load_strings(raw: Variant) -> Array[String]:
 	var out: Array[String] = []
@@ -147,20 +185,88 @@ func random_full_name(gender: String, rng: RandomNumberGenerator) -> String:
 # falls through to the surname or the pool instead of returning nothing.
 func nickname_for(first: String, last: String, gender: String,
 		traits: Array, rng: RandomNumberGenerator) -> String:
-	for source: String in _source_order(traits, rng):
-		var candidate: String = _from_source(source, first, last, gender, traits, rng)
+	for id: String in _category_order(rng):
+		var candidate: String = _from_category(id, first, last, gender, traits, rng)
 		if candidate != "":
 			return candidate
 	return ""
+
+# ⚠️ SHUFFLED, NOT PICKED ONCE. A single uniform draw that lands on a category
+# with nothing to give would return an empty apelido — and with `trait` silent
+# for two thirds of a sandlot squad that is a lot of nobody. Walking a shuffled
+# order keeps the draw uniform AMONG THE ONES THAT CAN ANSWER, which is what was
+# actually wanted, without having to ask each one twice.
+func _category_order(rng: RandomNumberGenerator) -> Array[String]:
+	var out: Array[String] = []
+	for entry: Variant in nickname_categories:
+		if entry is Dictionary:
+			var id: String = _key(String((entry as Dictionary).get("id", "")))
+			if id != "":
+				out.append(id)
+	for i: int in range(out.size() - 1, 0, -1):
+		var j: int = rng.randi() % (i + 1)
+		var swap: String = out[i]
+		out[i] = out[j]
+		out[j] = swap
+	return out
+
+func _category(id: String) -> Dictionary:
+	for entry: Variant in nickname_categories:
+		if entry is Dictionary and _key(String((entry as Dictionary).get("id", ""))) == _key(id):
+			return entry as Dictionary
+	return {}
+
+func _from_category(id: String, first: String, last: String, gender: String,
+		traits: Array, rng: RandomNumberGenerator) -> String:
+	var spec: Dictionary = _category(id)
+	match String(spec.get("kind", "")):
+		KIND_MORPHOLOGY:
+			# Either name, so the morphology category is one bucket and not two.
+			var from_first: String = name_nickname(first, gender, rng)
+			var from_last: String = name_nickname(last, gender, rng)
+			if from_first != "" and from_last != "":
+				return from_first if rng.randf() < 0.5 else from_last
+			return from_first if from_first != "" else from_last
+		KIND_TRAIT:
+			return stat_nickname(traits, gender, rng)
+		KIND_COMPOUND:
+			return _compound(first, last, gender, traits, rng)
+	return _pick(_category_pool(spec, gender), rng)
+
+# Two apelidos from two DIFFERENT categories, joined: Thiago Perna, Feijão
+# Ruivo. It draws from the same nine — never from itself, or a compound could
+# nest into a sentence.
+const COMPOUND_PARTS := 2
+
+func _compound(first: String, last: String, gender: String,
+		traits: Array, rng: RandomNumberGenerator) -> String:
+	var parts: Array[String] = []
+	for id: String in _category_order(rng):
+		if String(_category(id).get("kind", "")) == KIND_COMPOUND:
+			continue
+		var piece: String = _from_category(id, first, last, gender, traits, rng)
+		if piece != "" and not parts.has(piece):
+			parts.append(piece)
+		if parts.size() == COMPOUND_PARTS:
+			return " ".join(parts)
+	return ""
+
+func _category_pool(spec: Dictionary, gender: String) -> Array[String]:
+	var key: String = "fem" if _is_female(gender) else "pool"
+	var raw: Array = spec.get(key, spec.get("pool", []))
+	return _load_strings(raw)
 
 # Every apelido this person could plausibly answer to. The screen uses it to
 # offer alternatives; the tests use it to prove each source produces something.
 func nickname_options(first: String, last: String, gender: String,
 		traits: Array) -> Array[String]:
 	var out: Array[String] = []
-	for candidate: String in (_name_forms(first, gender)
-			+ _name_forms(last, gender)
-			+ _stat_options(traits, gender)):
+	var everything: Array[String] = _name_forms(first, gender) \
+		+ _name_forms(last, gender) + _stat_options(traits, gender)
+	for entry: Variant in nickname_categories:
+		if entry is Dictionary and not (entry as Dictionary).has("kind"):
+			everything.append_array(_category_pool(entry as Dictionary, gender))
+	for candidate: String in everything:
 		if candidate != "" and not out.has(candidate):
 			out.append(candidate)
 	return out

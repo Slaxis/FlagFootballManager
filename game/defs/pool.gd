@@ -20,13 +20,11 @@ class_name PoolDef
 const LOYALTY := "loyalty"
 
 var _pools: Dictionary = {}   # id -> raw
-var _floor: int = 4
-var _scale: int = 24
+var _scale: int = 10
 
 func load_data(raw: Dictionary) -> void:
 	_pools.clear()
-	_floor = int(raw.get("floor", 4))
-	_scale = int(raw.get("scale", 24))
+	_scale = int(raw.get("scale", 10))
 	for entry: Variant in raw.get("pools", []):
 		if entry is Dictionary:
 			var id: String = _key(String((entry as Dictionary).get("id", "")))
@@ -46,13 +44,18 @@ func has_pool(id: String) -> bool:
 func pool(id: String) -> Dictionary:
 	return _pools.get(_key(id), {})
 
-func floor_value() -> int:
-	return _floor
-
-# The highest any pool can reach, which is what a gauge measures against. The
-# floor plus two attributes at the top of the ruler — without it the bar would
-# have to normalise against the biggest pool ON SCREEN, and then the same
-# player's bar would change length depending on who he was standing next to.
+# ⚠️ TEN, LIKE EVERYTHING ELSE. The pools briefly ran 4..24 — a floor plus two
+# attributes — which is a SECOND RULER in a game whose whole calibration is
+# decision 43's nought to ten. Two rulers means every screen that shows both has
+# to teach which one it is showing.
+#
+# It also means the gauge maps one slot to one step, so a pool of five is five
+# lit squares and not "five twenty-fourths of a bar".
+#
+# The floor went with it, and that is the right trade even though I argued for
+# it: step 0 already means the twentieth percentile of PEOPLE rather than the
+# bottom of them, so a pool of zero says exactly what an attribute of zero says.
+# Inventing a floor for one of them was inventing an exception.
 func scale_value() -> int:
 	return _scale
 

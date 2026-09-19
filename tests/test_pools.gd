@@ -9,7 +9,7 @@ const SEED := 20260919
 func tests() -> Array:
 	return [
 		"test_every_pool_opens_inside_its_own_ceiling",
-		"test_the_weakest_body_is_not_made_of_paper",
+		"test_only_two_tens_buy_a_ten",
 		"test_a_stronger_body_holds_more",
 		"test_loyalty_is_about_the_club_and_not_the_player",
 		"test_a_founder_is_harder_to_lose",
@@ -51,21 +51,31 @@ func test_every_pool_opens_inside_its_own_ceiling(t: TestHelper) -> void:
 			"%s abriu com %d de %d" % [id, int(pool["now"]), int(pool["max"])])
 		t.check(int(pool["now"]) >= 0, "%s abriu negativo" % id)
 
-# ⚠️ DECISION 43, AND IT IS THE REASON THE FLOOR EXISTS. Step 0 is the twentieth
-# percentile of PEOPLE, not the bottom of them — the adult who never trained
-# still walks onto the pitch and still absorbs a shoulder. Without a floor the
-# whole Q1 league would have two or three points of health, which reads as "the
-# weak ones are made of paper" instead of "the strong ones last longer".
-func test_the_weakest_body_is_not_made_of_paper(t: TestHelper) -> void:
+# ⚠️ TEN ONLY AT TEN AND TEN. The pool is the mean of the two attributes that
+# hold it up, which is what puts it on decision 43's ruler instead of a second
+# one — and it makes the ceiling unbuyable except by maxing BOTH halves of it.
+# A body that never tires is maximal at vitality and at agility, and anything
+# less than that is not a ten.
+func test_only_two_tens_buy_a_ten(t: TestHelper) -> void:
 	var def := Drive.def("pool") as PoolDef
-	if def == null:
-		t.fail("PoolDef ausente"); return
-	var actor: Actor = _person(_flat(0))
+	var stats := Drive.def("stat") as StatDef
+	if def == null or stats == null:
+		t.fail("Defs ausentes"); return
+	var perfect: Actor = _person(_flat(StatDef.MAX_STEP))
+	var nothing: Actor = _person(_flat(0))
 	for id: String in Pools.ids():
-		if def.sources(id).is_empty():
+		var pair: Array = def.sources(id)
+		if pair.is_empty():
 			continue
-		t.equal(Pools.ceiling(actor, id), def.floor_value(),
-			"%s de quem não treinou nada" % id)
+		t.equal(Pools.ceiling(perfect, id), StatDef.MAX_STEP,
+			"%s não chega a 10 nem com os dois atributos em 10" % id)
+		t.equal(Pools.ceiling(nothing, id), 0,
+			"%s não está na régua de 0 a 10" % id)
+		# One of the two at the top is not enough, which is the whole point.
+		var half: Dictionary = _flat(0)
+		half[String(pair[0])] = StatDef.MAX_STEP * 10
+		t.check(Pools.ceiling(_person(half), id) < StatDef.MAX_STEP,
+			"%s chegou a 10 com só um dos dois atributos no topo" % id)
 
 func test_a_stronger_body_holds_more(t: TestHelper) -> void:
 	var def := Drive.def("pool") as PoolDef
@@ -138,7 +148,12 @@ func test_the_bar_gets_longer_and_not_fuller(t: TestHelper) -> void:
 	if def == null:
 		t.fail("PoolDef ausente"); return
 	t.check(def.scale_value() > 0, "a escala do medidor é zero")
-	var weak: Actor = _person(_flat(0))
+	# ⚠️ TWO AND EIGHT, NOT ZERO AND EIGHT. Now that the pools run 0..10 with no
+	# floor, a sheet at step zero has a ceiling of zero — an honest answer, and
+	# one that makes the fraction 0 instead of 100, which would let this test
+	# pass for the wrong reason. Both bodies have to actually HAVE the bar for
+	# "the fill is identical and the length is not" to be the thing measured.
+	var weak: Actor = _person(_flat(2))
 	var strong: Actor = _person(_flat(8))
 	for id: String in Pools.ids():
 		if def.sources(id).is_empty():
