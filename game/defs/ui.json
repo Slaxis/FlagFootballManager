@@ -577,12 +577,12 @@
       "en": "Career points still unspent. The sheet only settles at zero."
     },
     "manager.step_up": {
-      "pt": "Sobe um passo — %d cp",
-      "en": "One step up — %d cp"
+      "pt": "O próximo degrau custa %d cp",
+      "en": "The next step costs %d cp"
     },
     "manager.step_down": {
-      "pt": "Devolve um passo",
-      "en": "Hand a step back"
+      "pt": "Vender este degrau devolve %d cp",
+      "en": "Selling this step gives %d cp back"
     },
     "manager.club_colour_main": {
       "pt": "Cor principal do clube. O contraste é corrigido se o par ficar ilegível.",

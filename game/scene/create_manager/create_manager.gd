@@ -81,6 +81,8 @@ const SKILL_COLUMNS := 2
 # The three letters in every attribute and skill row.
 # Three characters at 12px each. It was 52, sized before the face was measured.
 const CODE_WIDTH := 40
+# Two digits of career point, which is the most a single step ever costs.
+const PRICE_WIDTH := 30
 
 # WIDE ENOUGH FOR THE WIDEST CHIP, measured and not guessed: the body face is
 # monospaced at 12px a character and "ARRANCADA ^ 2" is thirteen of them, so
@@ -222,6 +224,13 @@ func _column(width: int) -> VBoxContainer:
 # as tall as it needs to be and the hole cannot exist.
 func _left_column() -> Control:
 	var box: VBoxContainer = _column(COL_LEFT)
+	# ⚠️ MODALIDADE FIRST, AND IT IS A DEPENDENCY AND NOT A PREFERENCE. Which
+	# category you play decides which pool the names are drawn from, so a form
+	# that asks for the name first is a form that has to re-roll it the moment
+	# you answer a question further down. Ask the question that constrains the
+	# others before the ones it constrains.
+	box.add_child(_section(UiText.t("manager.modality"), UiText.t("manager.plays_hint")))
+	box.add_child(_plays_row())
 	box.add_child(_section(UiText.t("manager.origin"), UiText.t("manager.origin_hint")))
 	box.add_child(_origin_row())
 	box.add_child(_section(UiText.t("manager.identity"), UiText.t("manager.identity_hint")))
@@ -230,8 +239,6 @@ func _left_column() -> Control:
 	# name — what you look like on paper — so they sit with it rather than under
 	# the attributes they happen to shift.
 	box.add_child(_body_row())
-	box.add_child(_section(UiText.t("manager.modality"), UiText.t("manager.plays_hint")))
-	box.add_child(_plays_row())
 	box.add_child(_section(
 		UiText.t("manager.club") if _authors_club() else UiText.t("manager.drafted"),
 		UiText.t("manager.club_hint") if _authors_club() else UiText.t("manager.drafted_hint")))
@@ -832,10 +839,10 @@ func _attribute_row(stats: StatDef, id: String) -> Control:
 	]
 	row.mouse_filter = Control.MOUSE_FILTER_STOP
 
-	row.add_child(_step_button("−", _on_lower_stat.bind(id), _build.can_lower_stat(id),
-		UiText.t("manager.step_down")))
-	row.add_child(_step_button("+", _on_raise_stat.bind(id), _build.can_raise_stat(id),
-		UiText.t("manager.step_up") % maxi(_build.cost_to_raise_stat(id), 0)))
+	row.add_child(_price_button(false, _build.refund_for_lower_stat(id),
+		_on_lower_stat.bind(id), _build.can_lower_stat(id)))
+	row.add_child(_price_button(true, _build.cost_to_raise_stat(id),
+		_on_raise_stat.bind(id), _build.can_raise_stat(id)))
 
 	row.add_child(_track_code(stats.code(id)))
 	# The RAW value, not the effective one. The bar used to include the body
@@ -875,14 +882,33 @@ func _skill_row(stats: StatDef, id: String) -> Control:
 	]
 	row.mouse_filter = Control.MOUSE_FILTER_STOP
 
-	row.add_child(_step_button("−", _on_lower_skill.bind(id), _build.can_lower_skill(id),
-		UiText.t("manager.step_down")))
-	row.add_child(_step_button("+", _on_raise_skill.bind(id), _build.can_raise_skill(id),
-		UiText.t("manager.step_up") % maxi(_build.cost_to_raise_skill(id), 0)))
+	row.add_child(_price_button(false, _build.refund_for_lower_skill(id),
+		_on_lower_skill.bind(id), _build.can_lower_skill(id)))
+	row.add_child(_price_button(true, _build.cost_to_raise_skill(id),
+		_on_raise_skill.bind(id), _build.can_raise_skill(id)))
 
 	row.add_child(_track_code(stats.code(id)))
 	row.add_child(StatBar.bar(step_value * 10, stats.skill_color(id)))
 
+	# ⚠️ THE MODIFIER OF THE ROLL, NOT OF THE SKILL. An attribute's ± is how far
+	# it sits from the average adult, and subtracting the same five from a SKILL
+	# would say every untrained person is at minus five — which is not a
+	# modifier, it is the definition of untrained.
+	#
+	# A roll is `attribute + skill + 2d5*`, and an ordinary adult attempting the
+	# same thing brings five and nothing. So the honest number beside a skill is
+	# what the pair of them is worth against that: it answers "am I better than
+	# a random person at this", which is the question, and it moves when you
+	# raise EITHER of the two numbers that feed it.
+	var reach: int = attribute_step + step_value - stats.average_step
+	var mod := Label.new()
+	mod.text = "%+d" % reach if reach != 0 else "·"
+	mod.custom_minimum_size = Vector2(26, 0)
+	mod.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	mod.add_theme_font_size_override("font_size", 12)
+	mod.add_theme_color_override("font_color",
+		ACCENT if reach > 0 else (WARN if reach < 0 else MUTED))
+	row.add_child(mod)
 	return row
 
 # Not a single choice. You can play the men's side and the mixed side, or the
@@ -1148,7 +1174,7 @@ func _roll_name(rng: RandomNumberGenerator) -> Dictionary:
 	var names := Drive.def("name_gen") as NameGenDef
 	if names == null:
 		return {"first_name": "", "last_name": "", "nickname": ""}
-	var pool: String = Actor.CATEGORY_FEM if rng.randf() < 0.5 else Actor.CATEGORY_MASC
+	var pool: String = _name_pool(rng)
 	var first: String = names.random_first_name(pool, rng)
 	var last: String = names.random_last_name(rng)
 	return {
@@ -1156,6 +1182,24 @@ func _roll_name(rng: RandomNumberGenerator) -> Dictionary:
 		"last_name": last,
 		"nickname": names.nickname_for(first, last, pool, _traits(), rng),
 	}
+
+# ⚠️ THE CATEGORY PICKS THE POOL, which is the whole reason this screen asks
+# which side you play instead of asking your gender. It was a coin flip, so
+# ticking FEM and rolling again gave you a men's name half the time — the one
+# question the form does ask about this was being ignored by the one thing it
+# should decide.
+#
+# Nothing ticked means nothing decided, so the coin comes back: somebody who
+# does not play has not told us, and picking for them would be the gender
+# question by the back door.
+func _name_pool(rng: RandomNumberGenerator) -> String:
+	var masc: bool = _plays.has(Actor.CATEGORY_MASC)
+	var fem: bool = _plays.has(Actor.CATEGORY_FEM)
+	if masc and not fem:
+		return Actor.CATEGORY_MASC
+	if fem and not masc:
+		return Actor.CATEGORY_FEM
+	return Actor.CATEGORY_FEM if rng.randf() < 0.5 else Actor.CATEGORY_MASC
 
 # What the current build is notable for, in the steps the nickname table reads.
 func _traits() -> Array:
@@ -1222,6 +1266,26 @@ func _field_label(text: String) -> Control:
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_color", TEXT)
 	return label
+
+# ⚠️ THE BUTTON SAYS THE PRICE, not the direction. It was "−" and "+", with the
+# cost hidden on the tooltip of the plus — so the one number you need to decide
+# anything ("what does this step cost me?") was behind a hover, on twenty-three
+# rows, while the button had room to just print it.
+#
+# The colour is the same convention the talents already use: GREEN takes career
+# points off you and RED hands them back. It reads backwards for one second and
+# then never again, because it is the same everywhere.
+func _price_button(spending: bool, amount: int, on_press: Callable, enabled: bool) -> Button:
+	var button: Button = _step_button(
+		str(maxi(amount, 0)), on_press, enabled,
+		UiText.t("manager.step_up" if spending else "manager.step_down")
+			% maxi(amount, 0))
+	var hue: Color = TALENT_GOOD if spending else TALENT_BAD
+	button.custom_minimum_size = Vector2(PRICE_WIDTH, 24)
+	button.add_theme_color_override("font_color", hue)
+	button.add_theme_color_override("font_hover_color", hue.lightened(0.3))
+	button.add_theme_color_override("font_disabled_color", MUTED.darkened(0.4))
+	return button
 
 func _step_button(text: String, on_press: Callable, enabled: bool,
 		tip: String = "") -> Button:

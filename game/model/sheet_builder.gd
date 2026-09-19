@@ -374,6 +374,17 @@ func cost_to_raise_skill(id: String) -> int:
 	var next_step: int = int(skills.get(id, 0)) + 1
 	return -1 if next_step > StatDef.MAX_STEP else next_step * SKILL_POINT_IN_CAREER
 
+# And what the step you are standing on hands back if you sell it. Entering step
+# N costs N, so leaving it refunds N — the two are the same triangular number
+# read in opposite directions, which is what makes the sheet reversible.
+func refund_for_lower_stat(id: String) -> int:
+	var here: int = int(stats.get(id, 0))
+	return 0 if here <= MIN_STAT_STEP else here * STAT_POINT_IN_CAREER
+
+func refund_for_lower_skill(id: String) -> int:
+	var here: int = int(skills.get(id, 0))
+	return 0 if here <= MIN_SKILL_STEP else here * SKILL_POINT_IN_CAREER
+
 # Potential binds the PLAYER's own spending too, not just the roll. Capping
 # only the dice would have left the superhero one click away.
 func potential_step() -> int:
@@ -527,20 +538,21 @@ func to_actor(seed_value: int, name_parts: Dictionary) -> Actor:
 	actor._apply_data("manager_%d" % seed_value, "actor", payload)
 	return actor
 
-# Which boxes you are ticked into on day one. The CHAIR always — the club gave
-# you that the moment it took you on — and, if your years were spent playing,
-# your own position too. The ex-jogador's own description promises he will have
-# to carry the side himself early on; standing in the Comissão with nobody able
-# to field him would have made that a lie.
+# ⚠️ THE CHAIR, AND ONLY THE CHAIR. It used to tick your rolled POSITION as well
+# whenever your years were spent playing — and both the Fundador and the
+# Ex-jogador are on the player track, so every manager arrived already in the
+# starting five of a side he had not seen.
+#
+# That is decision 72 applied to yourself. Signing somebody is not giving him
+# the chair, and being the president is not selecting yourself to play: the
+# presidency is the one seat you cannot refuse, and where you play is a decision
+# the roster screen exists to let you make. The Ex-jogador still can field
+# himself on day one — his affinities are right there in his own column — he
+# just has to say so.
 func _opening_lineup() -> Array[String]:
 	var origins := Drive.def("origin") as OriginDef
-	var out: Array[String] = []
-	if rolled_track == ActorGenerator.TRACK_PLAYER and rolled_position != "":
-		out.append(rolled_position)
 	var chair: String = origins.chair(origin) if origins != null and origin != "" else ""
-	if chair != "" and not out.has(chair):
-		out.append(chair)
-	return out
+	return [chair] as Array[String] if chair != "" else [] as Array[String]
 
 # --- Internals ---
 

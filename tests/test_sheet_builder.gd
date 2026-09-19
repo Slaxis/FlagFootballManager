@@ -458,10 +458,18 @@ func test_the_scenario_is_a_trajectory_not_a_chair(t: TestHelper) -> void:
 		t.check(staff.has(build.rolled_position),
 			"o estudado foi parar em '%s'" % build.rolled_position)
 
-# You do not walk into the club and stand in the corridor. The chair is the one
-# thing about the manager that is ASSIGNED rather than lived — it is the club's
-# decision — and if you played, your own position comes with you, because the
-# ex-jogador's own pitch is that early on he has to carry the side himself.
+# ⚠️ THE CHAIR, AND NOTHING ELSE. You do not walk into the club and stand in the
+# corridor — the presidency is the one thing about the manager that is ASSIGNED
+# rather than lived, because you do not appoint yourself, you already are it.
+#
+# It also used to tick your rolled POSITION whenever your years were spent
+# playing, and both the Fundador and the Ex-jogador are on the player track — so
+# every manager arrived already in the starting five of a side he had not seen.
+# That is decision 72 pointed at yourself: signing somebody is not giving him
+# the chair, and being the president is not selecting yourself to play.
+#
+# The Ex-jogador can still field himself on day one. His affinity is in his own
+# column, where everybody else's is. He just has to say so.
 func test_you_arrive_sitting_in_your_chair(t: TestHelper) -> void:
 	var origins := Drive.def("origin") as OriginDef
 	if origins == null:
@@ -471,11 +479,15 @@ func test_you_arrive_sitting_in_your_chair(t: TestHelper) -> void:
 		var person: Actor = build.to_actor(7, {"first_name": "Teste", "last_name": "Um"})
 		t.check(person.plays_position(origins.chair(id)),
 			"origem '%s': ninguém sentou na cadeira '%s'" % [id, origins.chair(id)])
+		t.equal(person.lineup().size(), 1,
+			"origem '%s': chegou marcado em %d vagas, e a cadeira é uma"
+				% [id, person.lineup().size()])
 		t.equal(person.position(), build.rolled_position,
 			"origem '%s': a carreira não chegou no actor" % id)
-		if origins.career_track(id) == ActorGenerator.TRACK_PLAYER:
-			t.check(person.plays_position(build.rolled_position),
-				"origem '%s': quem jogou deveria poder ser escalado" % id)
+		# The position he WOULD play is still known — it is what the body
+		# decided — it simply is not ticked.
+		t.check(build.rolled_position != "",
+			"origem '%s': ninguém sabe onde ele jogaria" % id)
 
 # The screen's whole proposition is "here is a person, now move his points
 # around". A roll that produces a fifteen-year-old with one step to his name

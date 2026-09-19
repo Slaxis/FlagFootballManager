@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Fixed - B.8f: o presidente que tambem jogava, e o preco no botao (2026-09-19)
+- ⚠️ **O manager chegava marcado numa posicao de jogo alem da presidencia.**
+  `_opening_lineup()` marcava a posicao rolada sempre que os anos foram
+  jogados — e tanto o Fundador quanto o Ex-jogador estao na trilha de jogador,
+  entao TODO manager aparecia ja escalado num time que ele nao tinha visto
+- E a decisao 72 apontada pra voce mesmo: contratar alguem nao e dar a cadeira a
+  ele, e ser presidente nao e se escalar. A presidencia e a unica cadeira que
+  voce nao pode recusar; onde voce joga e decisao que a tela do elenco existe pra
+  deixar voce tomar. O Ex-jogador continua podendo se escalar no dia um — a
+  afinidade dele esta na propria coluna — ele so tem que dizer
+- **Ordem das secoes**: MODALIDADE, DE ONDE VC VEM, IDENTIDADE. E dependencia e
+  nao preferencia: a categoria decide de que pool os nomes saem, entao um
+  formulario que pede o nome primeiro e um formulario que tem que re-sortear
+  quando voce responde a pergunta de baixo
+- **O nome passa a sair da categoria marcada**: MASC so masculinos, FEM so
+  femininos, nada marcado sorteia os dois. Era cara-ou-coroa, entao marcar FEM e
+  rolar de novo dava nome masculino metade das vezes — a unica pergunta que essa
+  tela faz sobre isso estava sendo ignorada pela unica coisa que ela devia
+  decidir
+- **Os botoes de degrau dizem o PRECO**, nao a direcao: `-` mostra quantos cp
+  voce recebe de volta em vermelho, `+` quanto custa em verde. A mesma convencao
+  dos talentos — verde tira career point de voce, vermelho devolve. O numero
+  estava escondido no tooltip do mais, em vinte e tres linhas, e e o unico numero
+  que decide alguma coisa
+- **As habilidades ganharam o ± que os atributos tem** — e e o modificador do
+  ROLO, nao da habilidade. Subtrair os mesmos cinco de uma habilidade diria que
+  todo mundo destreinado esta em menos cinco, o que nao e um modificador, e a
+  definicao de destreinado. Um rolo e `atributo + habilidade + 2d5*`, e um
+  adulto comum traz cinco e nada — entao o numero honesto e o que o par vale
+  contra isso, e ele se mexe quando voce levanta qualquer um dos dois
+
 ### Fixed - B.8e: barra nao e medidor (2026-09-19)
 - ⚠️ **As cinco reservas pareciam fixas porque eu desenhei a coisa errada.** A
   ficha variava — medido: o teto de ANIMO ia de 4 a 11 entre sorteios — e a
