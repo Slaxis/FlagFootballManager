@@ -591,7 +591,47 @@ func test_the_card_shows_the_five_bars(t: TestHelper) -> void:
 	for id: String in Pools.ALL:
 		t.check(tips.contains(UiText.t("pool." + id + ".name")),
 			"a reserva '%s' não diz em lugar nenhum o que é" % id)
+
+	# ⚠️ THE CARD IS A MODAL, SO `fit_check` NEVER SEES IT. Every other surface in
+	# the game is measured by that harness — this one is built on a click, so the
+	# only place its width can be checked is here, and the same rule applies:
+	# nothing inside a cell may be wider than the cell.
+	#
+	# It matters because the card is where a column was added (the pools) without
+	# the layout being asked whether it had room, which is exactly how the four
+	# groups ended up piled into the left half.
+	# ⚠️ NOT `_tagged`: that helper only walks Buttons, and the card is a panel.
+	var cards: Array = _marked(screen, "athlete_card", [])
+	t.equal(cards.size(), 1, "abriu %d fichas" % cards.size())
+	for node: Variant in cards:
+		var card := node as Control
+		var need: Vector2 = card.get_combined_minimum_size()
+		t.check(need.x <= float(Look.DESIGN_MIN.x),
+			"a ficha pede %.0fpx de largura" % need.x)
+		var burst: Array[String] = []
+		_card_overflow(card, burst, "")
+		for line: String in burst:
+			t.fail("ficha: " + line)
+		t.check(burst.is_empty(), "a ficha tem %d controle(s) estourando" % burst.size())
 	_close(screen)
+
+func _marked(node: Node, key: String, into: Array) -> Array:
+	if node.has_meta(key):
+		into.append(node)
+	for child: Node in node.get_children():
+		_marked(child, key, into)
+	return into
+
+func _card_overflow(node: Node, into: Array[String], path: String) -> void:
+	if node is Control:
+		var control := node as Control
+		var wants: float = control.get_combined_minimum_size().x
+		var said: float = control.custom_minimum_size.x
+		if said > 0.0 and wants > said + 0.5:
+			into.append("%s pede %.0fpx e declarou %.0f   %s" % [
+				node.get_class(), wants, said, path])
+	for child: Node in node.get_children():
+		_card_overflow(child, into, path + "/" + child.get_class())
 
 # ⚠️ THIS IS THE FIRST SCREEN THAT TELLS YOU WHAT THE CREATION SHEET BOUGHT.
 # Until now the manager's own attributes decided a starting roster and then

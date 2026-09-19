@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Changed - B.8b: as moedas em portugues, e a ficha em quatro colunas (2026-09-19)
+- As tres moedas passam a ler **AUT · EMO · LOG** (Autoridade, Emoção, Lógica),
+  com a palavra inteira no tooltip
+- ⚠️ **`EMO` ja era o codigo da reserva Emocional**, entao a moeda e a reserva
+  ficariam com as mesmas tres letras na mesma tela — as moedas no cabecalho, as
+  reservas na ficha por cima dele. A moeda fica com EMO e a reserva vira
+  **ANIMO (ANI)**, que e exatamente o que ela sempre foi: o que chama o
+  companheiro, provoca o adversario e puxa a torcida. O `id` continua `emotional`
+- **A ficha do atleta virou quatro colunas que dividem a largura**: atributos,
+  reservas, o que ele faz com a bola, o que ele faz com a prancheta. Era um
+  split de dois com as reservas empilhadas EMBAIXO dos atributos, entao um lado
+  cresceu pra treze linhas, o outro ficou com oito, e a ficha inteira se
+  amontoou na metade esquerda com ar do lado
+- ⚠️ A causa e aninhar coluna dentro de coluna: um VBox interno abraca o proprio
+  conteudo, o HBox de fora nao distribui folga nenhuma, e cada grupo acaba tao
+  estreito quanto a linha mais estreita dele por mais espaco que o painel tenha.
+  `SIZE_EXPAND_FILL` nos quatro irmaos e a largura passa a ser dividida em vez
+  de amontoada
+- ⚠️ **E a ficha e um modal, entao o `fit_check` nunca a viu.** Toda outra
+  superficie do jogo e medida por aquele arranjo; essa e construida num clique,
+  entao a unica hora de medir e no teste de tela. Passou a ser medida — e pegou
+  de primeira que a ficha pede **1064px** e nao os 880 que eu tinha calculado na
+  mao. A diferenca e o cabecalho e o log de carreira, que sao tao parte da ficha
+  quanto as colunas
+
 ### Added - B.8: as cinco barras e as tres moedas (2026-09-19)
 - **Um pool e um PAR, `agora` e `maximo`** — e isso e o que faz uma barra ser
   barra. O formato vem antes de qualquer coisa gastar de proposito: tela que

@@ -637,8 +637,8 @@
       "en": "SAN"
     },
     "pool.emotional": {
-      "pt": "EMO",
-      "en": "EMO"
+      "pt": "ANI",
+      "en": "SPI"
     },
     "pool.loyalty": {
       "pt": "LEA",
@@ -657,8 +657,8 @@
       "en": "Sanity"
     },
     "pool.emotional.name": {
-      "pt": "Emocional",
-      "en": "Emotional"
+      "pt": "Ânimo",
+      "en": "Spirit"
     },
     "pool.loyalty.name": {
       "pt": "Lealdade",
@@ -685,32 +685,44 @@
       "en": "How committed he is to THIS club. At the bottom of the bar, he can leave."
     },
     "influence.ethos": {
-      "pt": "ETHOS",
-      "en": "ETHOS"
+      "pt": "AUT",
+      "en": "AUT"
     },
     "influence.pathos": {
-      "pt": "PATHOS",
-      "en": "PATHOS"
+      "pt": "EMO",
+      "en": "EMO"
     },
     "influence.logos": {
-      "pt": "LOGOS",
-      "en": "LOGOS"
+      "pt": "LOG",
+      "en": "LOG"
     },
     "influence.ethos.desc": {
-      "pt": "Autoridade. Você convence porque é você — sai das temporadas nas costas e dos títulos na estante, e é a única das três que não se compra.",
-      "en": "Standing. You convince because you are you — it comes off the seasons behind you and the silverware on the shelf, and it is the one of the three you cannot buy."
+      "pt": "Você convence porque é você. Sai das temporadas nas costas e dos títulos na estante — é a única das três que não se compra.",
+      "en": "You convince because you are you. It comes off the seasons behind you and the silverware on the shelf — the one of the three you cannot buy."
     },
     "influence.pathos.desc": {
-      "pt": "Carisma. Você convence porque gostam de você. Quase fixa na criação: carisma é carisma.",
-      "en": "Charisma. You convince because they like you. Almost fixed at creation: charisma is charisma."
+      "pt": "Você convence porque gostam de você. Quase fixa na criação: carisma é carisma.",
+      "en": "You convince because they like you. Almost fixed at creation: charisma is charisma."
     },
     "influence.logos.desc": {
-      "pt": "Lógica. Você convence porque está certo — inteligência, regra e chamada de jogada. Cresce com estudo.",
-      "en": "Logic. You convince because you are right — intelligence, rules and play calling. It grows with study."
+      "pt": "Você convence porque está certo — regra e chamada de jogada, com a inteligência por baixo. Cresce com estudo.",
+      "en": "You convince because you are right — rules and play calling, with intelligence underneath. It grows with study."
     },
     "influence.held": {
       "pt": "%d/%d por semana: %d",
       "en": "%d/%d per week: %d"
+    },
+    "influence.ethos.name": {
+      "pt": "Autoridade",
+      "en": "Authority"
+    },
+    "influence.pathos.name": {
+      "pt": "Emoção",
+      "en": "Emotion"
+    },
+    "influence.logos.name": {
+      "pt": "Lógica",
+      "en": "Logic"
     }
   }
 }

@@ -93,6 +93,11 @@ const COL_ROLE := 36
 const COL_GAP := 5
 # The three-letter code column on the athlete card.
 const CARD_CODE := 52
+# ⚠️ MEASURED, NOT ESTIMATED. Four columns of a code and a ten-slot bar come to
+# 806 on paper, and the card asks for 1064 — the difference is the header and
+# the career log underneath, which are as much part of the card as the columns
+# are. 880 was the arithmetic and it was wrong by a quarter.
+const CARD_WIDTH := 1064
 # Mark, name, shirt, talent, Geral, age.
 const PROFILE_COLUMNS := 6
 # Hairlines are counted by `_column_plan`, not declared — see the warning there.
@@ -320,7 +325,7 @@ func _influence_chip(manager: Actor, id: String) -> Control:
 	box.add_theme_constant_override("separation", 0)
 	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	box.tooltip_text = "%s\n\n%s\n\n%s" % [
-		UiText.t("influence." + id), UiText.t("influence." + id + ".desc"),
+		UiText.t("influence." + id + ".name"), UiText.t("influence." + id + ".desc"),
 		UiText.t("influence.held") % [held, int(purse.get("cap", 0)),
 			int(purse.get("income", 0))]]
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -898,11 +903,22 @@ func _cell(text: String, width: int, color: Color) -> Control:
 
 # --- The card ---
 #
-# SQUARE, not a ribbon. Attributes on the left, the fifteen skills in two
-# columns on the right, the body and the perk in the header, and the CAREER at
-# the bottom — which was the thing missing entirely: a rolled thirty-year-old
-# had nine seasons of history and the sheet showed none of it, so there was no
-# way to tell a veteran QB from a kid who happens to throw.
+# ⚠️ FOUR COLUMNS THAT SHARE THE WIDTH, and the nesting is why they did not.
+# The card used to be a two-column split — attributes on the left, skills on the
+# right — and then the pools were added UNDER the attributes, so one side grew
+# to thirteen rows while the other kept eight and the whole sheet piled up in
+# the left half with air beside it.
+#
+# Nesting a column inside a column is what does that: an inner VBox hugs its own
+# content, the outer HBox hands out no slack, and every group ends up as narrow
+# as its narrowest row no matter how much room the panel has. Four siblings on
+# one row, each set to EXPAND_FILL, and the width is divided instead of clumped.
+#
+# The order is a reading order, not a packing order: who he IS (attributes),
+# what he HAS LEFT (pools), what he does with the ball, what he does with a
+# clipboard. The body and the talent are in the header and the CAREER is at the
+# bottom — which was the thing missing entirely at first: a rolled thirty-year-
+# old had nine seasons of history and the sheet showed none of it.
 func _show_card() -> void:
 	var shade := ColorRect.new()
 	shade.color = Color(0, 0, 0, 0.55)
@@ -920,7 +936,9 @@ func _show_card() -> void:
 
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _panel_style())
-	panel.custom_minimum_size = Vector2(700, 0)
+	# Four columns of a code and a ten-slot bar, measured: 40 + 118 plus the
+	# separations. At 700 the fourth one had nowhere to go.
+	panel.custom_minimum_size = Vector2(CARD_WIDTH, 0)
 	panel.set_meta("athlete_card", true)
 	centre.add_child(panel)
 
@@ -934,51 +952,44 @@ func _show_card() -> void:
 	if stats == null:
 		return
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 22)
+	columns.add_theme_constant_override("separation", 18)
 	box.add_child(columns)
 
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 2)
-	left.add_child(_group_caption(UiText.t("manager.attributes")))
-	# Declared head to foot in the JSON, so this loop reads top-down like a
-	# person standing up: mind, eyes, voice, heart, core, hands, hips, feet.
-	# THE THREE-LETTER CODE, same as the creation sheet. Twenty-three named rows
-	# beside twenty-three bars is a wall of words competing with the numbers they
-	# label; the name and the description are one hover away instead.
+	# WHO HE IS. Declared head to foot in the JSON, so this loop reads top-down
+	# like a person standing up: mind, eyes, voice, heart, core, hands, hips,
+	# feet. THE THREE-LETTER CODE, same as the creation sheet — twenty-three
+	# named rows beside twenty-three bars is a wall of words competing with the
+	# numbers they label, and the name is one hover away.
+	var attributes: VBoxContainer = _card_column(UiText.t("manager.attributes"))
 	for id: String in stats.base_ids():
-		left.add_child(StatBar.row(stats.code(id), _selected.step(id) * 10,
+		attributes.add_child(StatBar.row(stats.code(id), _selected.step(id) * 10,
 			"%s\n%s" % [stats.chakra_label(id), stats.explain(id)],
 			CARD_CODE, stats.chakra_color(id)))
-	left.add_child(_spacer_cell(0))
-	left.add_child(_group_caption(UiText.t("team.pools")))
-	for id: String in Pools.ALL:
-		left.add_child(_pool_row(id))
-	columns.add_child(left)
+	columns.add_child(attributes)
 
-	# Two columns with a MEANING, not just a fold. Left is attack and defence —
-	# what makes an athlete. Right is general and staff — what makes a coach. So
-	# the card answers "player or clipboard" before you read a single number.
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 2)
-	var pair := HBoxContainer.new()
-	pair.add_theme_constant_override("separation", 18)
-	right.add_child(pair)
+	# WHAT HE HAS LEFT.
+	var pools: VBoxContainer = _card_column(UiText.t("team.pools"))
+	for id: String in Pools.ALL:
+		pools.add_child(_pool_row(id))
+	columns.add_child(pools)
+
+	# WHAT HE DOES WITH THE BALL, and then with a clipboard. Two columns with a
+	# MEANING rather than a fold: the card answers "player or clipboard" before
+	# you have read a single number.
 	for half: Array in [["offense", "defense"], ["general", "staff"]]:
-		var column := VBoxContainer.new()
-		column.add_theme_constant_override("separation", 2)
-		column.add_child(_group_caption(UiText.t(
-			"team.as_athlete" if half[0] == "offense" else "team.as_staff")))
-		pair.add_child(column)
+		var column: VBoxContainer = _card_column(UiText.t(
+			"team.as_athlete" if half[0] == "offense" else "team.as_staff"))
 		for group: Variant in half:
 			var ids: Array = stats.skills_in_group(String(group))
 			if ids.is_empty():
 				continue
-			column.add_child(_group_caption(UiText.t("skillgroup." + String(group), String(group))))
+			column.add_child(_group_caption(UiText.t(
+				"skillgroup." + String(group), String(group))))
 			for id: String in ids:
 				column.add_child(StatBar.row(stats.code(id),
 					_selected.skill_step(id) * 10,
 					stats.explain(id), CARD_CODE, stats.skill_color(id)))
-	columns.add_child(right)
+		columns.add_child(column)
 
 	box.add_child(_career_log())
 	box.add_child(_flat_button(UiText.t("common.close"), _on_close_card))
@@ -990,6 +1001,17 @@ func _show_card() -> void:
 # is "something here is nearly empty". The code beside the bar says which.
 const POOL_CRITICAL := 25
 const POOL_LOW := 50
+
+# ⚠️ `EXPAND_FILL` IS THE WHOLE FIX. Without it a VBox is exactly as wide as its
+# widest child, four of them add up to less than the panel, and an HBox leaves
+# the remainder on the right — which reads as "everything is stuck to the left"
+# and is really "nobody asked for the space".
+func _card_column(caption: String) -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(_group_caption(caption))
+	return box
 
 func _pool_row(id: String) -> Control:
 	var pool: Dictionary = Pools.of(_selected, _viewed_club()).get(id, {})
