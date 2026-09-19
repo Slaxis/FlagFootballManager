@@ -230,7 +230,7 @@ static func rolled_opening(rng: RandomNumberGenerator, origin_id: String = "") -
 	for id: Variant in person.perks():
 		if builder.can_take_perk(String(id)):
 			builder.perks.append(String(id))
-	builder._apply_origin(def)
+	builder._apply_origin(def, rng)
 	# The budget IS what this person cost. You cannot make him bigger, only
 	# different — sell a step here to buy one there.
 	builder.budget = builder.spent()
@@ -240,26 +240,53 @@ static func rolled_opening(rng: RandomNumberGenerator, origin_id: String = "") -
 # leadership, the ex-player brought hands, the student brought a rulebook. It
 # is applied before the budget is measured, so it is part of who he is rather
 # than something he has to pay for twice.
-func _apply_origin(def: StatDef) -> void:
+# ⚠️ IT TAKES AN RNG NOW, and that is the fix for a dice button that did nothing.
+# The bias used to be a fixed number, and a fixed number OVERWRITES the only
+# variance a rookie has — with no career years the sheet is the birth roll, the
+# birth roll lives entirely inside steps 0 and 1, and the bias pins the tracks
+# that would have differed. Measured: the Estudado had fifteen distinct sheets
+# in two hundred rolls, and ten distinct sets of pool ceilings. Pressing 🎲
+# changed his name.
+func _apply_origin(def: StatDef, rng: RandomNumberGenerator) -> void:
 	var origins := Drive.def("origin") as OriginDef
 	if origins == null or origin == "" or not origins.has_origin(origin):
 		return
-	for id: String in origins.stat_bias(origin).keys():
-		if not def.has_base(id):
-			continue
-		var wanted: int = int(origins.stat_bias(origin)[id])
-		while int(stats.get(id, 0)) < wanted \
-				and int(stats.get(id, 0)) < potential_step() \
-				and int(stats.get(id, 0)) < StatDef.MAX_STEP:
-			stats[id] = int(stats[id]) + 1
-	for id: String in origins.skill_bias(origin).keys():
-		if not def.has_skill(id):
-			continue
-		var wanted: int = int(origins.skill_bias(origin)[id])
-		while int(skills.get(id, 0)) < wanted \
-				and int(skills.get(id, 0)) < potential_step() \
-				and int(skills.get(id, 0)) < StatDef.MAX_STEP:
-			skills[id] = int(skills[id]) + 1
+	var wanted_stats: Dictionary = origins.rolled_stat_bias(origin, rng)
+	for id: String in wanted_stats.keys():
+		if def.has_base(id):
+			_lift_stat(id, int(wanted_stats[id]))
+	var wanted_skills: Dictionary = origins.rolled_skill_bias(origin, rng)
+	for id: String in wanted_skills.keys():
+		if def.has_skill(id):
+			_lift_skill(id, int(wanted_skills[id]))
+	_scatter(def, origins.spare_steps(origin), rng)
+
+# What sixteen years of being a person gives you even when none of it happened
+# at a club — and, unlike the shared span of unnamed career years this replaced,
+# it is rolled PER ATTRIBUTE, so it makes two founders different from each other
+# instead of making all three scenarios the same person underneath.
+#
+# It goes on the attributes and not the skills on purpose: a skill is something
+# you were taught, and nobody taught him.
+func _scatter(def: StatDef, points: int, rng: RandomNumberGenerator) -> void:
+	var ids: Array = def.base_ids()
+	if ids.is_empty():
+		return
+	for i: int in range(points):
+		var id: String = String(ids[rng.randi() % ids.size()])
+		_lift_stat(id, int(stats.get(id, 0)) + 1)
+
+func _lift_stat(id: String, wanted: int) -> void:
+	while int(stats.get(id, 0)) < wanted \
+			and int(stats.get(id, 0)) < potential_step() \
+			and int(stats.get(id, 0)) < StatDef.MAX_STEP:
+		stats[id] = int(stats.get(id, 0)) + 1
+
+func _lift_skill(id: String, wanted: int) -> void:
+	while int(skills.get(id, 0)) < wanted \
+			and int(skills.get(id, 0)) < potential_step() \
+			and int(skills.get(id, 0)) < StatDef.MAX_STEP:
+		skills[id] = int(skills.get(id, 0)) + 1
 
 # --- Spending ---# --- Spending ---# --- Spending ---
 

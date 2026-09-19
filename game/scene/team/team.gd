@@ -86,6 +86,8 @@ const HEAD_CHAR := 12
 const COL_MARK := 18
 const COL_NAME := 204
 const COL_SHIRT := 156
+# What is left of the shirt once " #99" has had its four characters.
+const NICK_WIDTH := 108
 const COL_PERK := 96
 const COL_STRENGTH := 72
 const COL_AGE := 72
@@ -448,13 +450,27 @@ func _column_plan(positions: PositionDef) -> Array:
 func _table_columns(positions: PositionDef) -> int:
 	return PROFILE_COLUMNS + _column_plan(positions).size()
 
+# ⚠️ ONE LIST, TWO READERS — the same lesson `_column_plan` learned for the
+# eighteen role columns, applied to the six that come before them. The header
+# spelled its cells out and `_fill_row` spelled the same six out again in the
+# same order, which is an ordering maintained by hand in two places: reordering
+# them meant editing both, and editing one is a table that slides by a column.
+const PROFILE_PLAN: Array[Dictionary] = [
+	{"kind": "mark", "sort": "", "width": COL_MARK},
+	{"kind": "name", "sort": SORT_NAME, "head": "team.name", "width": COL_NAME},
+	{"kind": "talent", "sort": SORT_PERK, "head": "team.talent", "width": COL_PERK},
+	{"kind": "age", "sort": SORT_AGE, "head": "team.age", "width": COL_AGE},
+	{"kind": "strength", "sort": SORT_STRENGTH, "head": "team.strength", "width": COL_STRENGTH},
+	{"kind": "shirt", "sort": SORT_SHIRT, "head": "team.shirt", "width": COL_SHIRT},
+]
+
 func _fill_header(grid: GridContainer, positions: PositionDef) -> void:
-	grid.add_child(_spacer_cell(COL_MARK))
-	grid.add_child(_heading(UiText.t("team.name"), SORT_NAME, COL_NAME))
-	grid.add_child(_heading(UiText.t("team.shirt"), SORT_SHIRT, COL_SHIRT))
-	grid.add_child(_heading(UiText.t("team.talent"), SORT_PERK, COL_PERK))
-	grid.add_child(_heading(UiText.t("team.strength"), SORT_STRENGTH, COL_STRENGTH))
-	grid.add_child(_heading(UiText.t("team.age"), SORT_AGE, COL_AGE))
+	for step: Dictionary in PROFILE_PLAN:
+		if not step.has("head"):
+			grid.add_child(_spacer_cell(int(step["width"])))
+			continue
+		grid.add_child(_heading(UiText.t(String(step["head"])),
+			String(step["sort"]), int(step["width"])))
 	# The group NAMES are gone. Three words spanning eighteen columns cannot be
 	# expressed in a grid without a span, and they were not earning the row: the
 	# codes are unambiguous, the hairlines mark the boundaries, and the panel on
@@ -466,6 +482,36 @@ func _fill_header(grid: GridContainer, positions: PositionDef) -> void:
 			continue
 		var id: String = String(step["role"])
 		grid.add_child(_heading(positions.code(id), "fit:" + id, COL_ROLE))
+
+func _profile_cell(person: Actor, kind: String, chosen: bool, is_manager: bool) -> Control:
+	match kind:
+		"mark":
+			return _cell("\u2605" if is_manager else "", COL_MARK,
+				ACCENT if is_manager else MUTED)
+		"name":
+			return _name_button(person, chosen)
+		"talent":
+			return _talent_mark(person)
+		"age":
+			# THE SAME RAMP AS GERAL, ASKING A DIFFERENT QUESTION. Geral runs
+			# low-to-high because more is better; age does not — twenty is not
+			# worse than thirty, it is earlier — so the heat peaks in the middle
+			# and falls off both ways. The squad reads as a map of who is ready
+			# NOW, which is the question a roster is for.
+			return _cell(str(person.age()), COL_AGE,
+				StatBar.tint(ActorLife.prime_heat(person.age()), ACCENT))
+		"strength":
+			# Elifoot calls this Geral and so does this column: one number for
+			# how good somebody is, tinted so the roster reads before it is read.
+			# ⚠️ TINTED AGAINST THE SQUAD, NOT AGAINST 0..100. Geral at this tier
+			# runs from about 14 to 30, so a ramp calibrated on a hundred put
+			# every number fourteen to thirty per cent of the way from grey to
+			# the club's colour — which is to say grey.
+			return _cell(str(person.overall()), COL_STRENGTH,
+				StatBar.tint(_in_squad(person.overall()), ACCENT))
+		"shirt":
+			return _shirt_cell(person)
+	return _spacer_cell(0)
 
 # Offence and defence are one block on this screen: they are the side that takes
 # the field, and a hairline between them would say they are different kinds of
@@ -481,28 +527,10 @@ func _same_block(a: String, b: String) -> bool:
 func _fill_row(grid: GridContainer, person: Actor, positions: PositionDef,
 		is_manager: bool, index: int) -> void:
 	var chosen: bool = _selected != null and _selected.thing_id == person.thing_id
-	_put(grid, person, "mark", _cell("\u2605" if is_manager else "", COL_MARK,
-		ACCENT if is_manager else MUTED), chosen, index)
-	_put(grid, person, "name", _name_button(person, chosen), chosen, index)
-	_put(grid, person, "shirt", _shirt_cell(person), chosen, index)
-	_put(grid, person, "talent", _talent_chip(person), chosen, index)
-	# Elifoot calls this Geral and so does this column: one number for how good
-	# somebody is, tinted so the roster reads before it is read.
-	# ⚠️ TINTED AGAINST THE SQUAD, NOT AGAINST 0..100. Geral at this tier runs
-	# from about 14 to 30, so a ramp calibrated on a hundred put every number
-	# fourteen to thirty per cent of the way from grey to the club's colour —
-	# which is to say grey. The club's hue was there the whole time and no value
-	# ever reached far enough along the ramp to show it.
-	var strength: int = person.overall()
-	_put(grid, person, "strength", _cell(str(strength), COL_STRENGTH,
-		StatBar.tint(_in_squad(strength), ACCENT)), chosen, index)
-	# THE SAME RAMP AS GERAL, ASKING A DIFFERENT QUESTION. Geral runs low-to-high
-	# because more is better; age does not — twenty is not worse than thirty, it
-	# is earlier — so the heat peaks in the middle and falls off both ways. The
-	# squad reads as a map of who is ready NOW, which is the question a roster is
-	# for, and the two columns share a language because they share the ramp.
-	_put(grid, person, "age", _cell(str(person.age()), COL_AGE,
-		StatBar.tint(ActorLife.prime_heat(person.age()), ACCENT)), chosen, index)
+	for step: Dictionary in PROFILE_PLAN:
+		var kind: String = String(step["kind"])
+		_put(grid, person, kind, _profile_cell(person, kind, chosen, is_manager),
+			chosen, index)
 	for step: Dictionary in _column_plan(positions):
 		if step.has("rule"):
 			grid.add_child(_rule_cell())
@@ -563,9 +591,18 @@ func _name_button(person: Actor, chosen: bool) -> Button:
 # Administration, then the coaching staff, then who takes the field — the order
 # a club is actually built in. Somebody has to answer for the place before
 # anybody picks a quarterback.
+# ⚠️ NO COLUMN FOR THE PRESIDENCY. Every cell in it said the same thing — you,
+# and only you — because you do not appoint yourself, you already are it
+# (decision 72). A column whose every value is known before you open the screen
+# is 96px of table and forty cells of nothing, and it made the one genuinely
+# fixed chair look like a choice you had already made.
+#
+# The star in the first column already says which row is yours.
 func _role_order(positions: PositionDef) -> Array[String]:
 	var out: Array[String] = []
-	out.append_array(positions.ids_on_side("admin"))
+	for id: String in positions.ids_on_side("admin"):
+		if id != OriginDef.CHAIR_OF_THE_CLUB:
+			out.append(id)
 	out.append_array(positions.ids_on_side("staff"))
 	for side: String in SIDES_IN_LINEUP:
 		out.append_array(positions.ids_on_side(side))
@@ -848,9 +885,21 @@ func _shirt_cell(person: Actor) -> Control:
 	# nickname were missing from a player who simply has not got one. Forty per
 	# cent of a squad goes by no nickname, and a shirt with just a number on it
 	# is what that actually looks like.
+	# ⚠️ CLIPPED **AND** GIVEN A WIDTH, and it needs both. `clip_text` alone makes
+	# a Label report a minimum of ZERO, so inside an HBox it is the first thing
+	# squeezed — the apelido was crushed to nothing against the number beside it,
+	# which reads exactly like the apelido not being there. It used to survive
+	# because it also had EXPAND_FILL to claim the slack, and taking that away to
+	# close the gap took the width with it.
+	#
+	# Dropping the clip instead is the other trap: the column then grows to
+	# whatever the longest nickname in THIS squad happens to be, and a module
+	# with longer ones silently widens the table. A floor plus a clip is bounded
+	# in both directions.
 	var nick := Label.new()
 	nick.text = person.nickname()
 	nick.clip_text = true
+	nick.custom_minimum_size = Vector2(NICK_WIDTH, 0)
 	Look.wear_body(nick, Look.TEXT)
 	nick.add_theme_color_override("font_color", INK)
 	nick.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -863,38 +912,28 @@ func _shirt_cell(person: Actor) -> Control:
 	box.add_child(number)
 	return box
 
-# A chip, and the colour carries the sign: green is a talent, red is a
-# disadvantage. Fixed hues on purpose — they read the same on every club's
-# palette, so "that one is a liability" never depends on whose kit you are
-# wearing.
-func _talent_chip(person: Actor) -> Control:
+# ⚠️ THE MARK, IN ITS COLOUR. NO BOX. It was a PanelContainer with a filled
+# background and a border, which on a table of forty rows is forty little red
+# and green rectangles fighting the roster for attention — a chip is a thing you
+# click, and this one does nothing.
+#
+# The glyph is the same one the creation screen puts in brackets beside the
+# name, which is the point: you learn `[>] FOGUETE` while building your manager
+# and then recognise `[>]` here without being told. The colour still carries the
+# sign, because green-is-a-talent and red-is-a-liability is the one comparison a
+# player makes constantly — and it is a FIXED green and red so that a liability
+# never disguises itself as a strength because the shirt happened to be red.
+func _talent_mark(person: Actor) -> Control:
 	var perks := Drive.def("perk") as PerkDef
 	var ids: Array = person.perks()
 	if perks == null or ids.is_empty():
 		return _cell("\u00b7", COL_PERK, MUTED.darkened(0.45))
 	var id: String = String(ids[0])
-	var flaw: bool = perks.is_flaw(id)
-	var hue: Color = TALENT_BAD if flaw else TALENT_GOOD
-	var chip := PanelContainer.new()
-	chip.custom_minimum_size = Vector2(COL_PERK, 0)
-	chip.tooltip_text = "%s \u2014 %s" % [perks.label(id), perks.desc(id)]
-	chip.mouse_filter = Control.MOUSE_FILTER_STOP
-	var style := StyleBoxFlat.new()
-	style.bg_color = hue.darkened(0.55)
-	style.border_color = hue
-	style.set_border_width_all(1)
-	style.set_content_margin_all(1)
-	for corner: String in ["top_left", "top_right", "bottom_left", "bottom_right"]:
-		style.set("corner_radius_" + corner, 3)
-	chip.add_theme_stylebox_override("panel", style)
-	var label := Label.new()
-	label.text = perks.icon(id)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Look.wear_body(label, Look.TEXT)
-	label.add_theme_color_override("font_color", hue.lightened(0.3))
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_child(label)
-	return chip
+	var mark: Control = _cell("[%s]" % perks.glyph(id), COL_PERK,
+		TALENT_BAD if perks.is_flaw(id) else TALENT_GOOD)
+	mark.tooltip_text = perks.explain(id)
+	mark.mouse_filter = Control.MOUSE_FILTER_STOP
+	return mark
 
 func _cell(text: String, width: int, color: Color) -> Control:
 	var label := Label.new()

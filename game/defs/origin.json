@@ -24,13 +24,26 @@
       },
       "sheet": {
         "stats": {
-          "will": 2,
-          "charisma": 2
+          "will": [
+            1,
+            3
+          ],
+          "charisma": [
+            1,
+            3
+          ]
         },
         "skills": {
-          "leadership": 2,
-          "rules": 2
-        }
+          "leadership": [
+            1,
+            3
+          ],
+          "rules": [
+            1,
+            3
+          ]
+        },
+        "spare": 4
       },
       "career": {
         "track": "player",
@@ -64,13 +77,26 @@
       "squad": {},
       "sheet": {
         "stats": {
-          "agility": 1,
-          "dexterity": 1
+          "agility": [
+            0,
+            2
+          ],
+          "dexterity": [
+            0,
+            2
+          ]
         },
         "skills": {
-          "catching": 2,
-          "route": 1
-        }
+          "catching": [
+            1,
+            3
+          ],
+          "route": [
+            0,
+            2
+          ]
+        },
+        "spare": 2
       },
       "career": {
         "track": "player",
@@ -104,14 +130,30 @@
       "squad": {},
       "sheet": {
         "stats": {
-          "intelligence": 2,
-          "perception": 2
+          "intelligence": [
+            1,
+            3
+          ],
+          "perception": [
+            1,
+            3
+          ]
         },
         "skills": {
-          "rules": 3,
-          "play_calling": 2,
-          "coaching": 1
-        }
+          "rules": [
+            2,
+            4
+          ],
+          "play_calling": [
+            1,
+            3
+          ],
+          "coaching": [
+            0,
+            2
+          ]
+        },
+        "spare": 4
       },
       "career": {
         "track": "staff",

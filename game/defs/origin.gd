@@ -78,6 +78,50 @@ func stat_bias(id: String) -> Dictionary:
 func skill_bias(id: String) -> Dictionary:
 	return sheet(id).get("skills", {})
 
+# ⚠️ A RANGE, NOT A NUMBER, AND A MEASUREMENT FORCED IT. A fixed bias OVERWRITES
+# the only variance a rookie has: with no career years the sheet is the birth
+# roll, the birth roll lives entirely inside step 0 and 1, and the bias then
+# pins the handful of tracks that would have differed. The Estudado came out
+# with FIFTEEN distinct sheets in two hundred rolls — the dice button changed
+# his name and nothing else.
+#
+# A range is variance that is ABOUT the scenario, which is the right kind: one
+# student read more of the rulebook than another. A plain number still works and
+# means a range of one, so a module that wants a fixed value writes one.
+func rolled_stat_bias(id: String, rng: RandomNumberGenerator) -> Dictionary:
+	return _roll_bias(stat_bias(id), rng)
+
+func rolled_skill_bias(id: String, rng: RandomNumberGenerator) -> Dictionary:
+	return _roll_bias(skill_bias(id), rng)
+
+# Free steps scattered over the eight attributes — what sixteen years of being a
+# person gives you even when none of it happened at a club. It is NOT the shared
+# span of unnamed career years that used to be here: those made all three
+# scenarios the same person underneath, and these are rolled per attribute, so
+# they make two founders different from each other instead.
+func spare_steps(id: String) -> int:
+	return int(sheet(id).get("spare", 0))
+
+# The floor of a bias, whether it is a range or a plain number: the least this
+# scenario promises. A range rolls between this and its top; a number is a range
+# of one and promises itself.
+static func promises(value: Variant) -> int:
+	if value is Array and (value as Array).size() >= 1:
+		return int((value as Array)[0])
+	return int(value)
+
+func _roll_bias(raw: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
+	var out: Dictionary = {}
+	for key: String in raw.keys():
+		var value: Variant = raw[key]
+		if value is Array and (value as Array).size() >= 2:
+			var low: int = int((value as Array)[0])
+			var high: int = int((value as Array)[1])
+			out[key] = rng.randi_range(mini(low, high), maxi(low, high))
+		else:
+			out[key] = int(value)
+	return out
+
 # Where on the world ladder this scenario drops you. A founder is starting a
 # club in his own neighbourhood; a student was picked up by somebody who
 # already had one. It is the same dial NationDef gives a club, so the manager

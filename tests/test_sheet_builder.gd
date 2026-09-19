@@ -318,10 +318,10 @@ func test_each_origin_leans_its_own_way(t: TestHelper) -> void:
 		var builder: SheetBuilder = SheetBuilder.rolled_opening(SeedRng.make_rng(11), id)
 		t.equal(builder.origin, id, "a origem não ficou registrada")
 		for skill_id: String in origins.skill_bias(id).keys():
-			t.check(int(builder.skills.get(skill_id, 0)) >= int(origins.skill_bias(id)[skill_id]),
+			t.check(int(builder.skills.get(skill_id, 0)) >= OriginDef.promises(origins.skill_bias(id)[skill_id]),
 				"origem '%s': '%s' abaixo do que ela promete" % [id, skill_id])
 		for stat_id: String in origins.stat_bias(id).keys():
-			t.check(int(builder.stats.get(stat_id, 0)) >= int(origins.stat_bias(id)[stat_id]),
+			t.check(int(builder.stats.get(stat_id, 0)) >= OriginDef.promises(origins.stat_bias(id)[stat_id]),
 				"origem '%s': '%s' abaixo do que ela promete" % [id, stat_id])
 	# The ex-player knows how to catch; the student knows the rulebook.
 	#

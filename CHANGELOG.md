@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+### Fixed - B.8d: o dado que nao mudava nada, e a ordem da tabela (2026-09-19)
+- ⚠️ **O 🎲 nao mudava as reservas porque nao mudava a FICHA.** Medido: o
+  Estudado saia com **quinze fichas distintas em duzentos sorteios** e dez
+  combinacoes de teto de pool. Apertar o dado trocava o nome dele
+- A causa: com zero anos de carreira a ficha e o sorteio de nascimento mais o
+  vies da origem. O sorteio de nascimento inteiro cabe nos degraus 0 e 1, e o
+  vies era um NUMERO FIXO — entao ele sobrescrevia exatamente as faixas que
+  teriam variado. O ex-jogador escapava porque vive de tres a seis anos
+- **O vies virou FAIXA** (`"rules": [2, 4]`), que e variancia SOBRE o cenario:
+  um estudado leu mais do regulamento que outro. Numero simples continua
+  valendo e significa uma faixa de um
+- E cada origem ganhou alguns **degraus livres espalhados** pelos oito
+  atributos — o que dezesseis anos de ser uma pessoa dao mesmo quando nada
+  daquilo aconteceu num clube. Nao e o intervalo de anos sem dono que saiu no
+  B.6q: aquele fazia os tres cenarios serem a mesma pessoa por baixo, esse e
+  rolado por atributo e faz dois fundadores diferentes um do outro
+- Depois: Estudado **187** fichas distintas e 104 combinacoes de teto, Fundador
+  196, Ex-jogador 182
+- **A coluna PRE saiu da tabela.** Toda celula dela dizia a mesma coisa — voce, e
+  so voce — porque ninguem se nomeia presidente (decisao 72). Coluna cujo valor
+  inteiro se conhece antes de abrir a tela sao 96px de tabela e quarenta celulas
+  de nada, e ainda fazia a unica cadeira fixa parecer escolha ja feita
+- **O talento perdeu a caixinha.** Era um PanelContainer com fundo e borda, que
+  numa tabela de quarenta linhas sao quarenta retangulos vermelhos e verdes
+  brigando com o elenco — e chip e coisa que se clica, e esse nao faz nada.
+  Virou `[>]` na cor do talento, o mesmo glifo que a criacao poe ao lado do nome
+- ⚠️ **O apelido precisava de corte E de largura.** `clip_text` sozinho faz o
+  Label reportar minimo ZERO, entao dentro de um HBox ele e o primeiro a ser
+  espremido — o apelido estava sendo esmagado contra o numero, que le exatamente
+  como o apelido nao estar la. Tirar o corte e a outra armadilha: a coluna passa
+  a crescer ate o apelido mais longo DAQUELE elenco
+- **Ordem nova**: Nome · Talento · Idade · Geral · Camisa · alocacoes. E as seis
+  colunas de perfil viram **uma lista so**, percorrida pelo cabecalho e por toda
+  linha — a mesma licao que o `_column_plan` aprendeu pras dezoito de posicao:
+  reordenar era editar dois lugares, e editar um e uma tabela deslizada
+- O teste dos cantos das moedas passou a **tirar media de quarenta sementes**,
+  porque agora ha variancia: uma semente pode cair no fundo da faixa do estudado
+  e no topo da do ex-jogador, e ai o teste reprova o dado em vez do desenho
+
 ### Changed - B.8c: as reservas viram catalogo, e a cor classica (2026-09-19)
 - **`PoolDef` + `pool.json`.** A tabela de qual atributo sustenta qual barra era
   um `const Dictionary` dentro de `Pools` — e durou um dia, que foi o bastante

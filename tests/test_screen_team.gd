@@ -282,7 +282,9 @@ func test_the_roster_has_a_perk_column(t: TestHelper) -> void:
 		if person.perks().is_empty():
 			continue
 		with_perk += 1
-		t.check(shown.contains(perks.icon(String(person.perks()[0]))),
+		# THE MARK, not the code: the table shows `[>]` in the talent's colour,
+		# which is the same glyph the creation screen puts beside the name.
+		t.check(shown.contains("[%s]" % perks.glyph(String(person.perks()[0]))),
 			"o perk de %s não apareceu na lista" % person.display_name())
 	t.check(with_perk > 0, "nenhum jogador do elenco tem perk — o teste não testou nada")
 	_close(screen)
