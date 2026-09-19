@@ -582,14 +582,17 @@ func test_the_card_shows_the_five_bars(t: TestHelper) -> void:
 		t.fail("elenco vazio"); _close(screen); return
 	(rows[0] as Button).pressed.emit()
 	var shown: String = _texts(screen)
-	for id: String in Pools.ALL:
-		t.check(shown.contains(UiText.t("pool." + id)),
+	var pools := Drive.def("pool") as PoolDef
+	if pools == null:
+		t.fail("PoolDef ausente"); _close(screen); return
+	for id: String in Pools.ids():
+		t.check(shown.contains(pools.code(id)),
 			"o card não mostra a reserva '%s'" % id)
 	# And the whole word is one hover away, same contract as every other code on
 	# this screen.
 	var tips: String = _tooltips(screen)
-	for id: String in Pools.ALL:
-		t.check(tips.contains(UiText.t("pool." + id + ".name")),
+	for id: String in Pools.ids():
+		t.check(tips.contains(pools.label(id)),
 			"a reserva '%s' não diz em lugar nenhum o que é" % id)
 
 	# ⚠️ THE CARD IS A MODAL, SO `fit_check` NEVER SEES IT. Every other surface in

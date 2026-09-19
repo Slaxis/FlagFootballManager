@@ -842,8 +842,14 @@ func _shirt_cell(person: Actor) -> Control:
 	# the number to the right edge of a 190px column and left a run of empty
 	# table between them — the dotted line of a menu, on something that should
 	# read the way it reads on the back of the shirt.
+	# ⚠️ THE APELIDO, AND NOTHING STANDING IN FOR IT. It fell back to the first
+	# name when there was none, which put "João" in the shirt column beside "João
+	# das Couves" in the name column — the same word twice, reading as though the
+	# nickname were missing from a player who simply has not got one. Forty per
+	# cent of a squad goes by no nickname, and a shirt with just a number on it
+	# is what that actually looks like.
 	var nick := Label.new()
-	nick.text = person.nickname() if person.nickname() != "" else person.first_name()
+	nick.text = person.nickname()
 	nick.clip_text = true
 	Look.wear_body(nick, Look.TEXT)
 	nick.add_theme_color_override("font_color", INK)
@@ -969,7 +975,7 @@ func _show_card() -> void:
 
 	# WHAT HE HAS LEFT.
 	var pools: VBoxContainer = _card_column(UiText.t("team.pools"))
-	for id: String in Pools.ALL:
+	for id: String in Pools.ids():
 		pools.add_child(_pool_row(id))
 	columns.add_child(pools)
 
@@ -1013,19 +1019,27 @@ func _card_column(caption: String) -> VBoxContainer:
 	box.add_child(_group_caption(caption))
 	return box
 
+# ⚠️ THE HUE IS WHICH POOL IT IS, AND THAT BEATS WHAT I HAD. I made it the FILL
+# LEVEL first — neutral when healthy, amber below half, red below a quarter — on
+# the grounds that five hues would spend the colour budget decision 71 reserves
+# for meaning, and that "something here is nearly empty" is what you need from
+# this block at a glance.
+#
+# It is the wrong trade. Red health, green stamina and blue for the mental bar
+# are forty years of convention: the player reads them without being taught,
+# which is a stronger kind of meaning than any rule about a budget. And the fill
+# level was never lost — a bar shows it by construction, with the unlit slots
+# dimmed in the same hue. It says how much AND which, the way an HP bar always
+# has.
 func _pool_row(id: String) -> Control:
+	var pools := Drive.def("pool") as PoolDef
+	if pools == null:
+		return _spacer_cell(0)
 	var pool: Dictionary = Pools.of(_selected, _viewed_club()).get(id, {})
-	var fraction: int = Pools.fraction(pool)
-	var hue: Color = ACCENT
-	if fraction <= POOL_CRITICAL:
-		hue = Look.BAD
-	elif fraction <= POOL_LOW:
-		hue = Look.WARN
-	return StatBar.row(UiText.t("pool." + id), fraction,
-		"%s  %d/%d\n\n%s" % [UiText.t("pool." + id + ".name"),
-			int(pool.get("now", 0)), int(pool.get("max", 0)),
-			UiText.t("pool." + id + ".desc")],
-		CARD_CODE, hue)
+	return StatBar.row(pools.code(id), Pools.fraction(pool),
+		"%s  %d/%d\n\n%s" % [pools.label(id),
+			int(pool.get("now", 0)), int(pool.get("max", 0)), pools.desc(id)],
+		CARD_CODE, pools.color(id))
 
 func _card_header() -> Control:
 	var box := VBoxContainer.new()

@@ -57,7 +57,7 @@ const PANEL_WIDTH := 1564
 # block does not make the frame jump when you click between scenarios.
 # Above the fullest scenario, so the frame never moves: the three measure 806,
 # 807 and 806, and one pixel of drift is still the screen jumping under you.
-const PANEL_HEIGHT := 860
+const PANEL_HEIGHT := 918
 # FOUR SECTIONS IN TWO ROWS, not seven stacked. The left column was a single
 # file — cenário, identidade, corpo, semente, modalidade, clube — and half of
 # those are two controls wide, so it read as a list of headings with air between
@@ -252,11 +252,41 @@ func _right_area() -> Control:
 	var tracks := HBoxContainer.new()
 	tracks.add_theme_constant_override("separation", 24)
 	box.add_child(tracks)
-	tracks.add_child(_attributes_column())
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 6)
+	left.add_child(_attributes_column())
+	left.add_child(_pools_block())
+	tracks.add_child(left)
 	tracks.add_child(_skills_column())
 	box.add_child(_section(UiText.t("manager.perks"),
 		UiText.t("manager.perks_hint")))
 	box.add_child(_perk_row())
+	return box
+
+# THE SAME FIVE BARS AS THE ROSTER CARD, on the sheet that builds them. Nothing
+# here edits them directly — which is exactly why they belong on this screen:
+# moving one step of VIT moves two of them at once, and until now there was no
+# way to watch that happen while deciding whether to pay for it.
+#
+# Under the attributes rather than beside the skills, because those are the
+# eight numbers they are made of.
+func _pools_block() -> Control:
+	var pools := Drive.def("pool") as PoolDef
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	if pools == null:
+		return box
+	box.add_child(_section(UiText.t("team.pools"), UiText.t("manager.pools_hint")))
+	var person: Actor = _build.to_actor(_career_seed(), _name)
+	var carried: Dictionary = Pools.of(person, _club)
+	for id: String in Pools.ids():
+		var pool: Dictionary = carried.get(id, {})
+		box.add_child(StatBar.row(pools.code(id), Pools.fraction(pool),
+			"%s  %d/%d
+
+%s" % [pools.label(id),
+				int(pool.get("now", 0)), int(pool.get("max", 0)), pools.desc(id)],
+			CODE_WIDTH, pools.color(id)))
 	return box
 
 func _attributes_column() -> Control:

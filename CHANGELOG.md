@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+### Changed - B.8c: as reservas viram catalogo, e a cor classica (2026-09-19)
+- **`PoolDef` + `pool.json`.** A tabela de qual atributo sustenta qual barra era
+  um `const Dictionary` dentro de `Pools` — e durou um dia, que foi o bastante
+  pra notar o problema: o que a barra significa, de que cor ela e, quais dois
+  atributos a sustentam e como ela se chama sao **conteudo**, e conteudo num
+  `.gd` e conteudo que um modulo nao consegue trocar. Ficou no `Pools` so a
+  parte que nao e conteudo: como um teto se monta e onde a lealdade comeca
+- ⚠️ **A cor volta a ser QUAL reserva, e isso e melhor do que o que eu tinha
+  feito.** Eu tinha posto o nivel de preenchimento — neutro cheio, ambar abaixo
+  da metade, vermelho abaixo de um quarto — argumentando que cinco matizes
+  gastariam o orcamento de cor que a decisao 71 reserva pra significado. E a
+  troca errada: vida vermelha, folego verde e azul pra barra mental sao quarenta
+  anos de convencao, e o player le sem ser ensinado, que e um tipo mais forte de
+  significado que qualquer regra de orcamento. E o preenchimento nunca se perdeu
+  — a barra mostra por construcao, com as casas apagadas no mesmo tom
+- **A ordem sai do chakra, e e derivada e nao declarada.** As reservas vem
+  ordenadas pelo chakra do atributo que as sustenta, e as **habilidades** tambem
+  passaram a vir, dentro do proprio grupo. Ordenar pela ordem do JSON seria uma
+  segunda fonte pra uma coisa que o `StatDef` ja decide — e os dois blocos
+  ficavam lado a lado na ficha discordando um do outro
+- E a ordenacao mora dentro de `skills_in_group()`, nao nos dois chamadores,
+  porque sao dois chamadores
+- **As cinco barras entraram na ficha de criacao**, debaixo dos atributos de que
+  sao feitas. Nada ali edita elas direto — que e exatamente por que elas
+  pertencem aquela tela: mexer um degrau de VIT mexe duas delas ao mesmo tempo, e
+  ate agora nao dava pra ver isso acontecer enquanto se decide se vale pagar
+- ⚠️ **A camisa mostra o APELIDO e nada no lugar dele.** Ela caia pro primeiro
+  nome quando nao havia apelido, o que punha "Joao" na coluna da camisa ao lado
+  de "Joao das Couves" na coluna do nome — a mesma palavra duas vezes, lendo
+  como se o apelido estivesse faltando num jogador que simplesmente nao tem um.
+  Quarenta por cento de um elenco nao tem apelido, e camisa so com numero e o
+  que isso e de verdade
+
 ### Changed - B.8b: as moedas em portugues, e a ficha em quatro colunas (2026-09-19)
 - As tres moedas passam a ler **AUT · EMO · LOG** (Autoridade, Emoção, Lógica),
   com a palavra inteira no tooltip

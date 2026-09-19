@@ -38,9 +38,12 @@ func _flat(step_value: int) -> Dictionary:
 
 func test_every_pool_opens_inside_its_own_ceiling(t: TestHelper) -> void:
 	var actor: Actor = _person(_flat(4))
+	var def := Drive.def("pool") as PoolDef
+	if def == null:
+		t.fail("PoolDef ausente"); return
 	var pools: Dictionary = Pools.of(actor, {})
-	t.equal(pools.size(), Pools.ALL.size(), "faltou pool")
-	for id: String in Pools.ALL:
+	t.equal(pools.size(), Pools.ids().size(), "faltou pool")
+	for id: String in Pools.ids():
 		var pool: Dictionary = pools[id]
 		t.check(int(pool["max"]) > 0, "%s abriu com teto zero" % id)
 		t.check(int(pool["now"]) <= int(pool["max"]),
@@ -53,15 +56,25 @@ func test_every_pool_opens_inside_its_own_ceiling(t: TestHelper) -> void:
 # whole Q1 league would have two or three points of health, which reads as "the
 # weak ones are made of paper" instead of "the strong ones last longer".
 func test_the_weakest_body_is_not_made_of_paper(t: TestHelper) -> void:
+	var def := Drive.def("pool") as PoolDef
+	if def == null:
+		t.fail("PoolDef ausente"); return
 	var actor: Actor = _person(_flat(0))
-	for id: String in [Pools.HEALTH, Pools.STAMINA, Pools.SANITY, Pools.EMOTIONAL]:
-		t.equal(Pools.ceiling(actor, id), Pools.FLOOR,
+	for id: String in Pools.ids():
+		if def.sources(id).is_empty():
+			continue
+		t.equal(Pools.ceiling(actor, id), def.floor_value(),
 			"%s de quem não treinou nada" % id)
 
 func test_a_stronger_body_holds_more(t: TestHelper) -> void:
+	var def := Drive.def("pool") as PoolDef
+	if def == null:
+		t.fail("PoolDef ausente"); return
 	var weak: Actor = _person(_flat(2))
 	var strong: Actor = _person(_flat(8))
-	for id: String in [Pools.HEALTH, Pools.STAMINA, Pools.SANITY, Pools.EMOTIONAL]:
+	for id: String in Pools.ids():
+		if def.sources(id).is_empty():
+			continue
 		t.check(Pools.ceiling(strong, id) > Pools.ceiling(weak, id),
 			"%s não separou o Q1 do Q4 (%d vs %d)" % [id,
 				Pools.ceiling(weak, id), Pools.ceiling(strong, id)])
@@ -93,8 +106,11 @@ func test_loyalty_is_about_the_club_and_not_the_player(t: TestHelper) -> void:
 func test_a_founder_is_harder_to_lose(t: TestHelper) -> void:
 	var plain: Actor = _person(_flat(4))
 	var founder: Actor = _person(_flat(4), 1.0, true)
+	var def := Drive.def("pool") as PoolDef
+	if def == null:
+		t.fail("PoolDef ausente"); return
 	t.equal(Pools.ceiling(founder, Pools.LOYALTY),
-		Pools.ceiling(plain, Pools.LOYALTY) + Pools.LOYALTY_FOUNDER,
+		Pools.ceiling(plain, Pools.LOYALTY) + def.founder_bonus(Pools.LOYALTY),
 		"quem fundou o clube devia ser mais difícil de perder")
 
 func test_a_fraction_is_safe_and_reads_zero_to_a_hundred(t: TestHelper) -> void:

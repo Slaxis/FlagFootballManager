@@ -1,0 +1,62 @@
+{
+  "floor": 4,
+  "pools": [
+    {
+      "id": "health",
+      "from": ["stamina", "strength"],
+      "color": "#D84C4C",
+      "code": { "pt": "VID", "en": "HP" },
+      "label": { "pt": "Vida", "en": "Health" },
+      "desc": {
+        "pt": "O corpo. Aguenta a pancada, e no fundo da barra você se lesiona e vai pro banco.",
+        "en": "The body. It takes the hit, and at the bottom of the bar you are injured and benched."
+      }
+    },
+    {
+      "id": "stamina",
+      "from": ["stamina", "agility"],
+      "color": "#5FC46A",
+      "code": { "pt": "FOL", "en": "STA" },
+      "label": { "pt": "Fôlego", "en": "Stamina" },
+      "desc": {
+        "pt": "Quantas jogadas seguidas antes de sair pra respirar.",
+        "en": "How many plays in a row before you come off to breathe."
+      }
+    },
+    {
+      "id": "sanity",
+      "from": ["will", "intelligence"],
+      "color": "#4F7FD8",
+      "code": { "pt": "SAN", "en": "SAN" },
+      "label": { "pt": "Sanidade", "en": "Sanity" },
+      "desc": {
+        "pt": "Força mental. No fundo da barra você quebra sob pressão.",
+        "en": "Mental strength. At the bottom of the bar you break under pressure."
+      }
+    },
+    {
+      "id": "emotional",
+      "from": ["charisma", "will"],
+      "color": "#B44FD8",
+      "code": { "pt": "ANI", "en": "SPI" },
+      "label": { "pt": "Ânimo", "en": "Spirit" },
+      "desc": {
+        "pt": "Força emocional: chamar o companheiro, entrar na cabeça do adversário, puxar a torcida.",
+        "en": "Emotional strength: calling a team-mate over, getting into an opponent's head, pulling the touchline in."
+      }
+    },
+    {
+      "id": "loyalty",
+      "ceiling": 12,
+      "founder_bonus": 6,
+      "per_level": 3,
+      "color": "#D8A93F",
+      "code": { "pt": "LEA", "en": "LOY" },
+      "label": { "pt": "Lealdade", "en": "Loyalty" },
+      "desc": {
+        "pt": "O quanto ele está comprometido com ESTE clube. No fundo da barra, ele pode ir embora.",
+        "en": "How committed he is to THIS club. At the bottom of the bar, he can leave."
+      }
+    }
+  ]
+}

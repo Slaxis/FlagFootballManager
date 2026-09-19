@@ -624,66 +624,6 @@
       "pt": "RESERVAS",
       "en": "POOLS"
     },
-    "pool.health": {
-      "pt": "VID",
-      "en": "HP"
-    },
-    "pool.stamina": {
-      "pt": "FOL",
-      "en": "STA"
-    },
-    "pool.sanity": {
-      "pt": "SAN",
-      "en": "SAN"
-    },
-    "pool.emotional": {
-      "pt": "ANI",
-      "en": "SPI"
-    },
-    "pool.loyalty": {
-      "pt": "LEA",
-      "en": "LOY"
-    },
-    "pool.health.name": {
-      "pt": "Saúde",
-      "en": "Health"
-    },
-    "pool.stamina.name": {
-      "pt": "Fôlego",
-      "en": "Stamina"
-    },
-    "pool.sanity.name": {
-      "pt": "Sanidade",
-      "en": "Sanity"
-    },
-    "pool.emotional.name": {
-      "pt": "Ânimo",
-      "en": "Spirit"
-    },
-    "pool.loyalty.name": {
-      "pt": "Lealdade",
-      "en": "Loyalty"
-    },
-    "pool.health.desc": {
-      "pt": "O corpo. Aguenta a pancada, e no fundo da barra você se lesiona e vai pro banco.",
-      "en": "The body. It takes the hit, and at the bottom of the bar you are injured and benched."
-    },
-    "pool.stamina.desc": {
-      "pt": "Quantas jogadas seguidas antes de sair pra respirar.",
-      "en": "How many plays in a row before you come off to breathe."
-    },
-    "pool.sanity.desc": {
-      "pt": "Força mental. No fundo da barra você quebra sob pressão.",
-      "en": "Mental strength. At the bottom of the bar you break under pressure."
-    },
-    "pool.emotional.desc": {
-      "pt": "Força emocional: chamar o companheiro, entrar na cabeça do adversário, puxar a torcida.",
-      "en": "Emotional strength: calling a team-mate over, getting into an opponent's head, pulling the touchline in."
-    },
-    "pool.loyalty.desc": {
-      "pt": "O quanto ele está comprometido com ESTE clube. No fundo da barra, ele pode ir embora.",
-      "en": "How committed he is to THIS club. At the bottom of the bar, he can leave."
-    },
     "influence.ethos": {
       "pt": "AUT",
       "en": "AUT"
@@ -723,6 +663,10 @@
     "influence.logos.name": {
       "pt": "Lógica",
       "en": "Logic"
+    },
+    "manager.pools_hint": {
+      "pt": "Derivadas dos atributos, então se mexem sozinhas enquanto você gasta. A lealdade é a única que não é sua: ela é a sua relação com o clube.",
+      "en": "Derived from the attributes, so they move on their own while you spend. Loyalty is the only one that is not yours: it is your relationship with the club."
     }
   }
 }

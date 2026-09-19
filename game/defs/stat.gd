@@ -254,12 +254,32 @@ func skill_attribute(id: String) -> String:
 func skill_group(id: String) -> String:
 	return _key(String(skill(id).get("group", "")))
 
+# ⚠️ SORTED BY THE CHAKRA OF THE ATTRIBUTE THAT GOVERNS THE SKILL, so a column
+# of skills reads top-down the same way the attribute column does: mind, eyes,
+# voice, heart, core, hands, hips, feet. It used to come out in whatever order
+# the JSON happened to list them, which is a second ordering for something the
+# attributes already decide — and the two blocks sat side by side on the card
+# disagreeing with each other.
+#
+# Sorted HERE and not at the two call sites, because there are two call sites.
 func skills_in_group(group: String) -> Array:
 	var target: String = _key(group)
 	var out: Array = []
 	for id: String in _skills.keys():
 		if skill_group(id) == target:
 			out.append(id)
+	var order: Array = base_ids()
+	var last: int = order.size() + 1
+	out.sort_custom(func(a: String, b: String) -> bool:
+		var ia: int = order.find(skill_attribute(a))
+		var ib: int = order.find(skill_attribute(b))
+		if ia < 0:
+			ia = last
+		if ib < 0:
+			ib = last
+		if ia != ib:
+			return ia < ib
+		return a < b)
 	return out
 
 func skill_groups() -> Array:
